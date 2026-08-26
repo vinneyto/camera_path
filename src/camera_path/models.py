@@ -27,6 +27,21 @@ class Anchor(AnchorCreate):
     id: str = Field(default_factory=lambda: str(uuid4()))
 
 
+class AnchorUpdate(BaseModel):
+    label: str | None = Field(default=None, min_length=1, max_length=64)
+    surface_position: Vec3 | None = None
+    surface_normal: Vec3 | None = None
+    lift: float | None = None
+    lift_axis: Literal["world_up", "surface_normal"] | None = None
+
+    @field_validator("surface_normal")
+    @classmethod
+    def normal_must_be_nonzero(cls, value: Vec3 | None) -> Vec3 | None:
+        if value is not None and sum(component * component for component in value) < 1e-16:
+            raise ValueError("surface_normal must be non-zero")
+        return value
+
+
 class SplineSegmentCreate(BaseModel):
     anchor_ids: list[str] = Field(min_length=2)
     tension: float = Field(default=0.0, ge=0.0, le=1.0)

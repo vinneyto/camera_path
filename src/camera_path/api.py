@@ -8,6 +8,7 @@ from camera_path.config import settings
 from camera_path.geometry import GeometryError
 from camera_path.models import (
     AnchorCreate,
+    AnchorUpdate,
     ChatMessage,
     ChatResult,
     CompiledTrajectory,
@@ -63,6 +64,24 @@ async def get_project(project_id: str) -> Project:
 @app.post("/projects/{project_id}/anchors", response_model=Project)
 async def add_anchor(project_id: str, data: AnchorCreate) -> Project:
     return await service.add_anchor(project_id, data)
+
+
+@app.patch("/projects/{project_id}/anchors/{anchor_id}", response_model=Project)
+async def update_anchor(project_id: str, anchor_id: str, data: AnchorUpdate) -> Project:
+    try:
+        return await service.update_anchor(project_id, anchor_id, data)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.delete("/projects/{project_id}/anchors/{anchor_id}", response_model=Project)
+async def delete_anchor(project_id: str, anchor_id: str) -> Project:
+    try:
+        return await service.delete_anchor(project_id, anchor_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
 
 
 @app.post("/projects/{project_id}/segments/spline", response_model=Project)

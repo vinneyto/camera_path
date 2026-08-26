@@ -53,6 +53,26 @@ async def test_missing_anchor_is_rejected() -> None:
         assert response.status_code == 422
 
 
+async def test_anchor_can_be_lifted_after_creation() -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        project = (await client.post("/projects", json={})).json()
+        project = (
+            await client.post(
+                f"/projects/{project['id']}/anchors",
+                json={"label": "A", "surface_position": [1, 2, 3]},
+            )
+        ).json()
+        anchor_id = next(iter(project["anchors"]))
+
+        response = await client.patch(
+            f"/projects/{project['id']}/anchors/{anchor_id}", json={"lift": 4}
+        )
+
+        assert response.status_code == 200
+        assert response.json()["anchors"][anchor_id]["surface_position"] == [1.0, 2.0, 3.0]
+        assert response.json()["anchors"][anchor_id]["lift"] == 4.0
+
+
 async def test_chat_requires_api_key(monkeypatch) -> None:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
