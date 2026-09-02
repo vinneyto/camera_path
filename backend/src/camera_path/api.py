@@ -26,13 +26,13 @@ from camera_path.models import (
     SplineSegmentCreate,
 )
 from camera_path.repository import (
-    InMemoryProjectRepository,
     ProjectNotFoundError,
     RevisionConflictError,
+    SQLiteProjectRepository,
 )
 from camera_path.service import TrajectoryService
 
-repository = InMemoryProjectRepository()
+repository = SQLiteProjectRepository(settings.database_path)
 service = TrajectoryService(repository)
 agent = TrajectoryAgent(repository, settings.openai_model)
 
@@ -62,6 +62,11 @@ async def health() -> dict[str, str]:
 @app.post("/projects", response_model=Project, status_code=status.HTTP_201_CREATED)
 async def create_project(data: ProjectCreate) -> Project:
     return await service.create_project(data)
+
+
+@app.get("/projects", response_model=list[Project])
+async def list_projects() -> list[Project]:
+    return await repository.list()
 
 
 @app.get("/projects/{project_id}", response_model=Project)

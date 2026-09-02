@@ -42,6 +42,9 @@ async def test_project_edit_compile_and_undo() -> None:
         response = await client.post(f"/projects/{project['id']}/redo")
         assert len(response.json()["segments"]) == 1
 
+        projects = (await client.get("/projects")).json()
+        assert any(item["id"] == project["id"] for item in projects)
+
 
 async def test_missing_anchor_is_rejected() -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:

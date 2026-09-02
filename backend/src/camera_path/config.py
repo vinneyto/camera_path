@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -6,6 +8,7 @@ class Settings(BaseSettings):
 
     openai_model: str = "gpt-5.6-luna"
     compile_tolerance: float = 1e-3
+    database_path: Path = Path.home() / ".camera-path" / "camera_path.sqlite3"
 
 
 settings = Settings()

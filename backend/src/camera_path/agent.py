@@ -18,7 +18,7 @@ from camera_path.models import (
     SpiralSegment,
     SplineSegment,
 )
-from camera_path.repository import InMemoryProjectRepository
+from camera_path.repository import SQLiteProjectRepository
 
 SYSTEM_PROMPT = """You incrementally edit a semantic 3D camera trajectory.
 The project state is durable and earlier user/assistant messages are included as context.
@@ -276,7 +276,7 @@ class AgentUnavailableError(RuntimeError):
 
 
 class TrajectoryAgent:
-    def __init__(self, repository: InMemoryProjectRepository, model: str) -> None:
+    def __init__(self, repository: SQLiteProjectRepository, model: str) -> None:
         self.repository = repository
         self.model = model
 

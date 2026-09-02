@@ -2,10 +2,10 @@ from types import SimpleNamespace
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.models import Project
-from camera_path.repository import InMemoryProjectRepository
+from camera_path.repository import SQLiteProjectRepository
 
 
-async def test_agent_persists_conversation_context(monkeypatch) -> None:
+async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> None:
     calls = []
 
     class Responses:
@@ -18,7 +18,7 @@ async def test_agent_persists_conversation_context(monkeypatch) -> None:
         "camera_path.agent.AsyncOpenAI",
         lambda: SimpleNamespace(responses=Responses()),
     )
-    repository = InMemoryProjectRepository()
+    repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
     project = await repository.create(Project())
     agent = TrajectoryAgent(repository, "test-model")
 

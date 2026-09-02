@@ -25,11 +25,11 @@ from camera_path.models import (
     SplineSegment,
     SplineSegmentCreate,
 )
-from camera_path.repository import InMemoryProjectRepository
+from camera_path.repository import SQLiteProjectRepository
 
 
 class TrajectoryService:
-    def __init__(self, repository: InMemoryProjectRepository) -> None:
+    def __init__(self, repository: SQLiteProjectRepository) -> None:
         self.repository = repository
 
     async def create_project(self, data: ProjectCreate) -> Project:

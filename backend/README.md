@@ -8,6 +8,10 @@ MCP is intentionally not part of this version. The model calls narrow in-process
 the OpenAI Responses API. The agent receives saved conversation history and current project state,
 then atomically creates, updates or deletes individual objects.
 
+Projects, scene data, trajectory controls, chat history, and undo/redo snapshots are stored in
+SQLite at `~/.camera-path/camera_path.sqlite3` by default. Set `CAMERA_PATH_DATABASE_PATH` to use
+another file. Projects therefore survive backend restarts during development.
+
 ## Run
 
 ```bash
@@ -52,6 +56,7 @@ them with the key transition weight, normalizes the result, and constructs orien
 ## REST workflow
 
 1. Create a project with `POST /projects`.
+   Use `GET /projects` to restore the project list after an application restart.
 2. Add lifted path anchors with `POST /projects/{id}/anchors`.
 3. Add spline or spiral segments, or delete one with `DELETE /projects/{id}/segments/{segment_id}`.
 4. Manage look targets under `/projects/{id}/scene-points`.
@@ -63,4 +68,4 @@ them with the key transition weight, normalizes the result, and constructs orien
 
 Deleting a referenced scene point returns `409` unless `?cascade=true` is supplied; cascade also
 deletes its camera keys. All mutations participate in the existing revision history and undo/redo.
-Storage remains in-memory behind the repository boundary for now.
+SQLite stores each project revision as a validated JSON snapshot behind the repository boundary.
