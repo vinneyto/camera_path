@@ -9,9 +9,18 @@ from numpy.typing import NDArray
 from camera_path.models import (
     Anchor,
     ArcLengthSample,
+    CameraAim,
+    CompiledCameraKeyframe,
+    CompiledCameraTrack,
+    CompiledMotionProfile,
     CompiledTrajectory,
     CubicBezier3D,
+    FollowPathAim,
+    LookAtPointAim,
     Project,
+    ResolvedCameraAim,
+    ResolvedLookAtPointAim,
+    SpeedKeyframe,
     SpiralSegment,
     SplineSegment,
     Vec3,
@@ -162,7 +171,67 @@ def validate_project(project: Project) -> list[str]:
         )
         if first_end != second_start:
             warnings.append(f"segments {first.id} and {second.id} are not C0-connected")
+
+    speed_positions = [item.path_position for item in project.motion_profile.keyframes.values()]
+    if len(speed_positions) != len(set(speed_positions)):
+        raise GeometryError("speed keyframes must have unique path positions")
+    camera_positions = [item.path_position for item in project.camera_track.keyframes.values()]
+    if len(camera_positions) != len(set(camera_positions)):
+        raise GeometryError("camera keyframes must have unique path positions")
+
+    aims = [project.camera_track.default_aim]
+    aims.extend(item.aim for item in project.camera_track.keyframes.values())
+    missing_scene_points = {
+        aim.scene_point_id
+        for aim in aims
+        if isinstance(aim, LookAtPointAim) and aim.scene_point_id not in project.scene_points
+    }
+    if missing_scene_points:
+        raise GeometryError(
+            f"camera track references missing scene points: {sorted(missing_scene_points)}"
+        )
+    if np.linalg.norm(_v(project.camera_track.world_up)) < 1e-8:
+        raise GeometryError("camera world_up must be non-zero")
     return warnings
+
+
+def _speed_duration(project: Project, total_length: float) -> float:
+    if total_length == 0.0:
+        return 0.0
+    keys = sorted(project.motion_profile.keyframes.values(), key=lambda item: item.path_position)
+    controls: list[tuple[float, float, str]] = [
+        (item.path_position, item.speed, item.interpolation_to_next) for item in keys
+    ]
+    if not controls or controls[0][0] > 0.0:
+        controls.insert(0, (0.0, project.motion_profile.default_speed, "smoothstep"))
+    if controls[-1][0] < 1.0:
+        controls.append((1.0, project.motion_profile.default_speed, "smoothstep"))
+
+    nodes, weights = np.polynomial.legendre.leggauss(16)
+    normalized_time = 0.0
+    for left, right in zip(controls, controls[1:], strict=False):
+        start, start_speed, interpolation = left
+        end, end_speed, _ = right
+        width = end - start
+        if width <= 0.0:
+            continue
+        u = (nodes + 1.0) * 0.5
+        if interpolation == "hold":
+            blend = np.zeros_like(u)
+        elif interpolation == "linear":
+            blend = u
+        else:
+            blend = u * u * (3.0 - 2.0 * u)
+        speeds = start_speed + (end_speed - start_speed) * blend
+        normalized_time += width * 0.5 * float(np.dot(weights, 1.0 / speeds))
+    return total_length * normalized_time
+
+
+def _resolve_aim(project: Project, aim: CameraAim) -> ResolvedCameraAim:
+    if isinstance(aim, FollowPathAim):
+        return aim
+    point = project.scene_points[aim.scene_point_id]
+    return ResolvedLookAtPointAim(scene_point_id=point.id, position=point.position)
 
 
 def compile_project(project: Project) -> CompiledTrajectory:
@@ -180,12 +249,35 @@ def compile_project(project: Project) -> CompiledTrajectory:
     for index, curve in enumerate(curves):
         distance += curve.length
         table.append(ArcLengthSample(segment_index=index, t=1.0, distance=distance))
+    speed_keys: list[SpeedKeyframe] = sorted(
+        project.motion_profile.keyframes.values(), key=lambda item: item.path_position
+    )
+    camera_keys = [
+        CompiledCameraKeyframe(
+            id=item.id,
+            path_position=item.path_position,
+            aim=_resolve_aim(project, item.aim),
+            interpolation_to_next=item.interpolation_to_next,
+        )
+        for item in sorted(
+            project.camera_track.keyframes.values(), key=lambda item: item.path_position
+        )
+    ]
     return CompiledTrajectory(
         project_id=project.id,
         revision=project.revision,
         position_segments=curves,
         arc_length_table=table,
         total_length=distance,
-        duration_seconds=distance / project.motion_profile.speed,
+        duration_seconds=_speed_duration(project, distance),
+        motion_profile=CompiledMotionProfile(
+            default_speed=project.motion_profile.default_speed,
+            keyframes=speed_keys,
+        ),
+        camera_track=CompiledCameraTrack(
+            default_aim=_resolve_aim(project, project.camera_track.default_aim),
+            keyframes=camera_keys,
+            world_up=project.camera_track.world_up,
+        ),
         warnings=warnings,
     )

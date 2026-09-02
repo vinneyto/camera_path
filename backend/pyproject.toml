@@ -1,6 +1,6 @@
 [project]
 name = "camera-path"
-version = "0.1.0"
+version = "0.2.0"
 description = "Async backend for AI-assisted 3D camera path authoring"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -40,4 +40,3 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-
