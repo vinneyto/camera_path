@@ -22,7 +22,7 @@ dev = [
 
 [project.scripts]
 camera-path = "camera_path.main:run"
-"db:populate" = "camera_path.seed:run"
+db-populate = "camera_path.seed:run"
 
 [build-system]
 requires = ["hatchling"]

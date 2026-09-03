@@ -46,13 +46,13 @@ deterministic, and rerunning the command with the same seed does not create dupl
 
 ```bash
 cd backend
-uv run db:populate
+uv run db-populate
 ```
 
 Use another seed to create another pair of demo projects:
 
 ```bash
-uv run db:populate --seed 17
+uv run db-populate --seed 17
 ```
 
 ## Trajectory controls
