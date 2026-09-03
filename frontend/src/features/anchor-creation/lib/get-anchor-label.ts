@@ -1,4 +1,4 @@
-import type { Anchor } from "@/entities/project/model/types";
+import type { Anchor } from "@/entities/project";
 
 export function getAnchorLabel(anchors: Anchor[]): string {
   const used = new Set(anchors.map((anchor) => anchor.label));

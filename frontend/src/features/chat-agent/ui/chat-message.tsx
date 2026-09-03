@@ -1,6 +1,6 @@
 import { Bot, UserRound } from "lucide-react";
 
-import type { ChatHistoryMessage } from "@/entities/project/model/types";
+import type { ChatHistoryMessage } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
 
 export function ChatMessage({ content, role }: ChatHistoryMessage) {

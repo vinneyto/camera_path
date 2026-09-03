@@ -2,9 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import { CameraHelper, PerspectiveCamera, Vector3 } from "three";
 
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
-import { evaluateAim } from "@/entities/trajectory/lib/evaluate-aim";
-import { locateOnPath } from "@/entities/trajectory/lib/locate-on-path";
+import { evaluateAim, locateOnPath, type CompiledTrajectory } from "@/entities/trajectory";
 
 interface PlaybackCameraProps {
   pathPosition: number;

@@ -3,11 +3,11 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Send } from "lucide-react";
 
-import type { Anchor, ChatHistoryMessage } from "@/entities/project/model/types";
-import { AnchorReferencePicker } from "@/features/chat-agent/ui/anchor-reference-picker";
-import { ChatMessage } from "@/features/chat-agent/ui/chat-message";
-import { Button } from "@/shared/ui/button";
-import { Textarea } from "@/shared/ui/textarea";
+import type { Anchor, ChatHistoryMessage } from "@/entities/project";
+import { Button, Textarea } from "@/shared/ui";
+
+import { AnchorReferencePicker } from "./anchor-reference-picker";
+import { ChatMessage } from "./chat-message";
 
 interface ChatPanelProps {
   anchors: Anchor[];

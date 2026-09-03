@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import "@/app/globals.css";
+import { AppProviders } from "@/app/providers";
 
 export const metadata: Metadata = {
   title: "Camera Path",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><AppProviders>{children}</AppProviders></body>
     </html>
   );
 }

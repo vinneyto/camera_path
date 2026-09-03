@@ -4,6 +4,27 @@ Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The so
 Feature-Sliced Design layers: route composition in `app`, business actions in `features`, domain
 models in `entities`, large interface blocks in `widgets`, and reusable code in `shared`.
 
+## Frontend architecture
+
+The state is intentionally split by ownership instead of being placed in one global store:
+
+- TanStack Query owns server state: project lists, projects, compiled trajectories, request status,
+  cache updates, and optimistic chat messages. Query hooks live in `entities/project`; mutations live
+  beside the user action in `features`.
+- Zustand owns synchronous editor state shared by several interface blocks: playback position,
+  elapsed time, play/pause, and trajectory selection. It lives in `features/project-editor` and does
+  not copy project data from the query cache.
+- Local component state is reserved for temporary input such as the current chat draft or project
+  name.
+
+Each FSD slice exposes a public API through its root `index.ts`. Cross-slice imports use those public
+APIs, while files inside a slice use relative imports. Route composition therefore reads as
+`app -> widgets -> features -> entities -> shared`; lower layers do not depend on interface widgets.
+
+Trajectory geometry stays in pure functions under `entities/trajectory`. Camera lookup builds and
+caches a sampled arc-length table, then maps normalized path distance back to Bezier `t`. This keeps
+camera speed uniform along curved segments instead of treating Bezier `t` as physical distance.
+
 ## Run
 
 Start the backend first, then:

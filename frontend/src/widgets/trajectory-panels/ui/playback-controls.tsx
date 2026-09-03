@@ -1,9 +1,10 @@
 import { Pause, Play, RotateCcw } from "lucide-react";
 
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 interface PlaybackControlsProps {
   duration: number;
+  elapsed: number;
   pathPosition: number;
   playing: boolean;
   onSeek: (position: number) => void;
@@ -12,6 +13,7 @@ interface PlaybackControlsProps {
 
 export function PlaybackControls({
   duration,
+  elapsed,
   pathPosition,
   playing,
   onSeek,
@@ -36,7 +38,7 @@ export function PlaybackControls({
         value={pathPosition}
       />
       <span className="w-20 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
-        {(pathPosition * duration).toFixed(1)} / {duration.toFixed(1)} s
+        {elapsed.toFixed(1)} / {duration.toFixed(1)} s
       </span>
     </div>
   );

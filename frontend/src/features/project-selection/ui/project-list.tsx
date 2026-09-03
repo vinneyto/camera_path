@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, Box, LoaderCircle } from "lucide-react";
 
-import type { Project } from "@/entities/project/model/types";
-import { Card } from "@/shared/ui/card";
+import type { Project } from "@/entities/project";
+import { Card } from "@/shared/ui";
 
 interface ProjectListProps {
   loading: boolean;

@@ -1,4 +1,4 @@
-import { ProjectListPage } from "@/widgets/project-list/ui/project-list-page";
+import { ProjectListPage } from "@/widgets/project-list";
 
 export default function HomePage() {
   return <ProjectListPage />;

@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, Boxes, MapPin } from "lucide-react";
 
-import type { Project } from "@/entities/project/model/types";
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
+import type { Project } from "@/entities/project";
+import { Badge, Button } from "@/shared/ui";
 
 interface ProjectHeaderProps {
   project: Project;

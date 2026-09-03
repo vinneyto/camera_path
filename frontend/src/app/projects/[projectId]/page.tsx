@@ -1,4 +1,4 @@
-import { ProjectWorkspace } from "@/widgets/project-workspace/ui/project-workspace";
+import { ProjectWorkspace } from "@/widgets/project-workspace";
 
 interface ProjectPageProps {
   params: Promise<{ projectId: string }>;

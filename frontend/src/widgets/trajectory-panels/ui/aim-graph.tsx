@@ -1,6 +1,5 @@
-import type { Project } from "@/entities/project/model/types";
-import { getAimLabel } from "@/entities/trajectory/lib/get-aim-label";
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
+import type { Project } from "@/entities/project";
+import { getAimLabel, type CompiledTrajectory } from "@/entities/trajectory";
 
 interface AimGraphProps {
   pathPosition: number;

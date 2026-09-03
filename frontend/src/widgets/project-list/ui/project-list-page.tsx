@@ -1,36 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { projectApi } from "@/entities/project/api/project-api";
-import type { Project } from "@/entities/project/model/types";
-import { ProjectCreateForm } from "@/features/project-selection/ui/project-create-form";
-import { ProjectList } from "@/features/project-selection/ui/project-list";
+import { useProjectsQuery } from "@/entities/project";
+import { ProjectCreateForm, ProjectList, useCreateProject } from "@/features/project-selection";
 
 export function ProjectListPage() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-
-  useEffect(() => {
-    projectApi.list()
-      .then(setProjects)
-      .catch((reason: Error) => setError(reason.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const projectsQuery = useProjectsQuery();
+  const createProjectMutation = useCreateProject();
+  const error = projectsQuery.error ?? createProjectMutation.error;
 
   async function createProject(name: string) {
-    setCreating(true);
-    setError(null);
     try {
-      const project = await projectApi.create(name);
+      const project = await createProjectMutation.mutateAsync(name);
       router.push(`/projects/${project.id}`);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not create project");
-      setCreating(false);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -42,10 +29,14 @@ export function ProjectListPage() {
         <p className="mt-1 text-xs text-muted-foreground">Choose a saved scene or start a new trajectory.</p>
       </div>
       <div className="mb-4">
-        <ProjectCreateForm disabled={creating} onCreate={createProject} />
+        <ProjectCreateForm disabled={createProjectMutation.isPending} onCreate={createProject} />
       </div>
-      {error && <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">{error}</p>}
-      <ProjectList loading={loading} projects={projects} />
+      {error && (
+        <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
+          {error instanceof Error ? error.message : "Could not load projects"}
+        </p>
+      )}
+      <ProjectList loading={projectsQuery.isPending} projects={projectsQuery.data ?? []} />
     </main>
   );
 }
