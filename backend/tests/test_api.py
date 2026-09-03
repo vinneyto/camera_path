@@ -1,9 +1,19 @@
+import pytest
 from httpx import ASGITransport, AsyncClient
 
-from camera_path.api import app
+from camera_path.api import create_app
+from camera_path.config import Settings
+from camera_path.models import ChatHistoryMessage, ChatResult, ProjectCreate
+from camera_path.repository import SQLiteProjectRepository
 
 
-async def test_frontend_origin_is_allowed() -> None:
+@pytest.fixture
+def app(tmp_path):
+    settings = Settings(_env_file=None, database_path=tmp_path / "api.sqlite3")
+    return create_app(settings, SQLiteProjectRepository(settings.database_path))
+
+
+async def test_frontend_origin_is_allowed(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.options(
             "/projects",
@@ -17,7 +27,7 @@ async def test_frontend_origin_is_allowed() -> None:
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
 
 
-async def test_project_edit_compile_and_undo() -> None:
+async def test_project_edit_compile_and_undo(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/projects", json={"name": "Demo"})
         assert response.status_code == 201
@@ -60,7 +70,7 @@ async def test_project_edit_compile_and_undo() -> None:
         assert any(item["id"] == project["id"] for item in projects)
 
 
-async def test_missing_anchor_is_rejected() -> None:
+async def test_missing_anchor_is_rejected(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
         response = await client.post(
@@ -70,7 +80,7 @@ async def test_missing_anchor_is_rejected() -> None:
         assert response.status_code == 422
 
 
-async def test_anchor_can_be_lifted_after_creation() -> None:
+async def test_anchor_can_be_lifted_after_creation(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
         project = (
@@ -90,8 +100,8 @@ async def test_anchor_can_be_lifted_after_creation() -> None:
         assert response.json()["anchors"][anchor_id]["lift"] == 4.0
 
 
-async def test_chat_requires_api_key(monkeypatch) -> None:
-    monkeypatch.setattr("camera_path.api.agent.api_key", None)
+async def test_chat_requires_api_key(app) -> None:
+    app.state.trajectory_agent.api_key = None
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
         response = await client.post(
@@ -102,7 +112,7 @@ async def test_chat_requires_api_key(monkeypatch) -> None:
         assert "OPENAI_API_KEY" in response.json()["detail"]
 
 
-async def test_client_can_edit_speed_and_camera_graphs() -> None:
+async def test_client_can_edit_speed_and_camera_graphs(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={"name": "Controls"})).json()
         project_id = project["id"]
@@ -155,7 +165,7 @@ async def test_client_can_edit_speed_and_camera_graphs() -> None:
         assert camera_id not in project["camera_track"]["keyframes"]
 
 
-async def test_duplicate_graph_positions_are_rejected() -> None:
+async def test_duplicate_graph_positions_are_rejected(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
         url = f"/projects/{project['id']}/motion/keyframes"
@@ -164,7 +174,7 @@ async def test_duplicate_graph_positions_are_rejected() -> None:
         assert (await client.post(url, json=payload)).status_code == 422
 
 
-async def test_client_can_change_default_speed_and_aim() -> None:
+async def test_client_can_change_default_speed_and_aim(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
         project_id = project["id"]
@@ -176,9 +186,7 @@ async def test_client_can_change_default_speed_and_aim() -> None:
         ).json()
         point_id = next(iter(point_project["scene_points"]))
 
-        motion = await client.patch(
-            f"/projects/{project_id}/motion", json={"default_speed": 3.0}
-        )
+        motion = await client.patch(f"/projects/{project_id}/motion", json={"default_speed": 3.0})
         camera = await client.patch(
             f"/projects/{project_id}/camera",
             json={"default_aim": {"kind": "look_at_point", "scene_point_id": point_id}},
@@ -188,3 +196,95 @@ async def test_client_can_change_default_speed_and_aim() -> None:
         assert motion.json()["motion_profile"]["default_speed"] == 3.0
         assert camera.status_code == 200
         assert camera.json()["camera_track"]["default_aim"]["scene_point_id"] == point_id
+
+
+async def test_project_lifecycle_endpoints(app) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        project = (await client.post("/projects", json={"name": "Before"})).json()
+        project_id = project["id"]
+        project = (
+            await client.post(
+                f"/projects/{project_id}/anchors",
+                json={"label": "A", "surface_position": [0, 0, 0]},
+            )
+        ).json()
+
+        renamed = await client.patch(f"/projects/{project_id}", json={"name": "After"})
+        assert renamed.status_code == 200
+        assert renamed.json()["name"] == "After"
+
+        draft = await app.state.trajectory_service.get_project(project_id)
+        draft.chat_history.append(ChatHistoryMessage(role="user", content="Old context"))
+        await app.state.trajectory_service.commit_draft(draft, draft.revision)
+        cleared_chat = await client.delete(f"/projects/{project_id}/chat")
+        assert cleared_chat.status_code == 200
+        assert cleared_chat.json()["chat_history"] == []
+
+        reset = await client.post(f"/projects/{project_id}/reset")
+        assert reset.status_code == 200
+        assert reset.json()["id"] == project_id
+        assert reset.json()["name"] == "After"
+        assert reset.json()["anchors"] == {}
+
+        deleted = await client.delete(f"/projects/{project_id}")
+        assert deleted.status_code == 204
+        assert (await client.get(f"/projects/{project_id}")).status_code == 404
+
+
+async def test_clear_trajectory_preserves_scene_setup(app) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        project = (await client.post("/projects", json={})).json()
+        project_id = project["id"]
+        for label, position in (("A", [0, 0, 0]), ("B", [1, 0, 0])):
+            project = (
+                await client.post(
+                    f"/projects/{project_id}/anchors",
+                    json={"label": label, "surface_position": position},
+                )
+            ).json()
+        anchor_ids = list(project["anchors"])
+        await client.post(
+            f"/projects/{project_id}/segments/spline",
+            json={"anchor_ids": anchor_ids},
+        )
+
+        cleared = await client.delete(f"/projects/{project_id}/trajectory")
+
+        assert cleared.status_code == 200
+        assert set(cleared.json()["anchors"]) == set(anchor_ids)
+        assert cleared.json()["segments"] == []
+        assert cleared.json()["motion_profile"]["keyframes"] == {}
+        assert cleared.json()["camera_track"]["keyframes"] == {}
+
+
+async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:
+    service = app.state.trajectory_service
+    project = await service.create_project(ProjectCreate(name="Streaming"))
+    result = ChatResult(
+        answer="hello",
+        project=project,
+        compiled=service.compile_draft(project),
+    )
+
+    class FakeAgent:
+        def ensure_available(self) -> None:
+            pass
+
+        async def handle_stream(self, project_id: str, message: str):
+            assert project_id == project.id
+            assert message == "Say hello"
+            yield {"type": "delta", "text": "hel"}
+            yield {"type": "delta", "text": "lo"}
+            yield {"type": "result", "result": result}
+
+    app.state.trajectory_agent = FakeAgent()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            f"/projects/{project.id}/chat/messages/stream",
+            json={"message": "Say hello"},
+        )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert 'event: delta\ndata: {"text": "hel"}' in response.text
+    assert "event: result\n" in response.text

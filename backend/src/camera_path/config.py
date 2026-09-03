@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     openai_api_key: SecretStr | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_model: str = "gpt-5.6-luna"
-    compile_tolerance: float = 1e-3
+    compile_tolerance: float = Field(default=1e-3, gt=0.0)
     database_path: Path = Path.home() / ".camera-path" / "camera_path.sqlite3"
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 

@@ -8,12 +8,15 @@ from camera_path.models import (
     CameraKeyframe,
     CameraKeyframeCreate,
     CameraKeyframeUpdate,
+    CameraTrack,
     CameraTrackUpdate,
     CompiledTrajectory,
     LookAtPointAim,
+    MotionProfile,
     MotionProfileUpdate,
     Project,
     ProjectCreate,
+    ProjectUpdate,
     ScenePoint,
     ScenePointCreate,
     ScenePointUpdate,
@@ -25,19 +28,64 @@ from camera_path.models import (
     SplineSegment,
     SplineSegmentCreate,
 )
-from camera_path.repository import SQLiteProjectRepository
+from camera_path.repository import ProjectRepository
 
 
 class TrajectoryService:
-    def __init__(self, repository: SQLiteProjectRepository) -> None:
+    def __init__(self, repository: ProjectRepository, compile_tolerance: float = 1e-3) -> None:
         self.repository = repository
+        self.compile_tolerance = compile_tolerance
 
     async def create_project(self, data: ProjectCreate) -> Project:
         return await self.repository.create(Project(name=data.name))
 
+    async def list_projects(self) -> list[Project]:
+        return await self.repository.list()
+
+    async def get_project(self, project_id: str) -> Project:
+        return await self.repository.get(project_id)
+
+    async def update_project(self, project_id: str, data: ProjectUpdate) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.name = data.name
+        return await self._commit(draft, expected)
+
+    async def delete_project(self, project_id: str) -> None:
+        await self.repository.delete(project_id)
+
+    async def clear_chat(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.chat_history.clear()
+        return await self._commit(draft, expected)
+
+    async def clear_trajectory(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.segments.clear()
+        draft.motion_profile = MotionProfile()
+        draft.camera_track = CameraTrack()
+        return await self._commit(draft, expected)
+
+    async def reset_project(self, project_id: str) -> Project:
+        current = await self.repository.get(project_id)
+        draft = Project(id=current.id, name=current.name, revision=current.revision)
+        return await self._commit(draft, current.revision)
+
+    async def undo(self, project_id: str) -> Project:
+        return await self.repository.undo(project_id)
+
+    async def redo(self, project_id: str) -> Project:
+        return await self.repository.redo(project_id)
+
     async def _commit(self, draft: Project, expected: int) -> Project:
         validate_project(draft)
         return await self.repository.commit(draft, expected)
+
+    async def commit_draft(self, draft: Project, expected_revision: int) -> Project:
+        self.compile_draft(draft)
+        return await self.repository.commit(draft, expected_revision)
 
     async def add_anchor(self, project_id: str, data: AnchorCreate) -> Project:
         draft = await self.repository.get(project_id)
@@ -124,7 +172,7 @@ class TrajectoryService:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         draft.segments.append(SpiralSegment(**data.model_dump()))
-        compile_project(draft)
+        self.compile_draft(draft)
         return await self._commit(draft, expected)
 
     async def delete_segment(self, project_id: str, segment_id: str) -> Project:
@@ -136,18 +184,14 @@ class TrajectoryService:
             raise KeyError(f"segment {segment_id} not found")
         return await self._commit(draft, expected)
 
-    async def add_speed_keyframe(
-        self, project_id: str, data: SpeedKeyframeCreate
-    ) -> Project:
+    async def add_speed_keyframe(self, project_id: str, data: SpeedKeyframeCreate) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         item = SpeedKeyframe(**data.model_dump())
         draft.motion_profile.keyframes[item.id] = item
         return await self._commit(draft, expected)
 
-    async def update_motion_profile(
-        self, project_id: str, data: MotionProfileUpdate
-    ) -> Project:
+    async def update_motion_profile(self, project_id: str, data: MotionProfileUpdate) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         draft.motion_profile.default_speed = data.default_speed
@@ -173,9 +217,7 @@ class TrajectoryService:
         del draft.motion_profile.keyframes[keyframe_id]
         return await self._commit(draft, expected)
 
-    async def add_camera_keyframe(
-        self, project_id: str, data: CameraKeyframeCreate
-    ) -> Project:
+    async def add_camera_keyframe(self, project_id: str, data: CameraKeyframeCreate) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         item = CameraKeyframe(**data.model_dump())
@@ -213,4 +255,7 @@ class TrajectoryService:
         return await self._commit(draft, expected)
 
     async def compile(self, project_id: str) -> CompiledTrajectory:
-        return compile_project(await self.repository.get(project_id))
+        return self.compile_draft(await self.repository.get(project_id))
+
+    def compile_draft(self, project: Project) -> CompiledTrajectory:
+        return compile_project(project, tolerance=self.compile_tolerance)
