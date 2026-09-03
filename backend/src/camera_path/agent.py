@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from typing import Any
 
 from openai import AsyncOpenAI
@@ -276,16 +275,19 @@ class AgentUnavailableError(RuntimeError):
 
 
 class TrajectoryAgent:
-    def __init__(self, repository: SQLiteProjectRepository, model: str) -> None:
+    def __init__(
+        self, repository: SQLiteProjectRepository, model: str, api_key: str | None = None
+    ) -> None:
         self.repository = repository
         self.model = model
+        self.api_key = api_key
 
     async def handle(self, project_id: str, message: str) -> ChatResult:
-        if not os.getenv("OPENAI_API_KEY"):
+        if not self.api_key:
             raise AgentUnavailableError("OPENAI_API_KEY is not configured")
         draft = await self.repository.get(project_id)
         expected_revision = draft.revision
-        client = AsyncOpenAI()
+        client = AsyncOpenAI(api_key=self.api_key)
         inputs: list[Any] = [item.model_dump() for item in draft.chat_history]
         inputs.append({"role": "user", "content": message})
 

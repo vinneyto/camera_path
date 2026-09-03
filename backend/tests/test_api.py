@@ -91,7 +91,7 @@ async def test_anchor_can_be_lifted_after_creation() -> None:
 
 
 async def test_chat_requires_api_key(monkeypatch) -> None:
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr("camera_path.api.agent.api_key", None)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
         response = await client.post(

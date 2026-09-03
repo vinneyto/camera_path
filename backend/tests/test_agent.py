@@ -13,14 +13,13 @@ async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> Non
             calls.append(kwargs)
             return SimpleNamespace(output=[], output_text=f"answer {len(calls)}")
 
-    monkeypatch.setenv("OPENAI_API_KEY", "test")
     monkeypatch.setattr(
         "camera_path.agent.AsyncOpenAI",
-        lambda: SimpleNamespace(responses=Responses()),
+        lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
     project = await repository.create(Project())
-    agent = TrajectoryAgent(repository, "test-model")
+    agent = TrajectoryAgent(repository, "test-model", api_key="test")
 
     first = await agent.handle(project.id, "first request")
     second = await agent.handle(project.id, "second request")
