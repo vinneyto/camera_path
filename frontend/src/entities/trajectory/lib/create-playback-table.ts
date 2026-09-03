@@ -21,5 +21,12 @@ export function createPlaybackTable(
     time += trajectory.total_length / sampleCount / Math.max(meanSpeed, 1e-6);
     table.push({ pathPosition, time });
   }
+
+  if (time > 0 && trajectory.duration_seconds > 0) {
+    const durationScale = trajectory.duration_seconds / time;
+    const scaled = table.map((sample) => ({ ...sample, time: sample.time * durationScale }));
+    scaled[scaled.length - 1] = { pathPosition: 1, time: trajectory.duration_seconds };
+    return scaled;
+  }
   return table;
 }

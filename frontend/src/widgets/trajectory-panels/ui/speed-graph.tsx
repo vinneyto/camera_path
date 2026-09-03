@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
-import { evaluateSpeed } from "@/entities/trajectory/lib/evaluate-speed";
+import { evaluateSpeed, type CompiledTrajectory } from "@/entities/trajectory";
 
 interface SpeedGraphProps {
   pathPosition: number;

@@ -1,7 +1,7 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { Vector3 } from "three";
 
-import type { Vec3 } from "@/entities/project/model/types";
+import type { Vec3 } from "@/entities/project";
 
 interface SimpleSceneProps {
   onSurfaceClick: (position: Vec3, normal: Vec3) => void;

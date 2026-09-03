@@ -1,10 +1,11 @@
 import { X } from "lucide-react";
 
-import type { Project } from "@/entities/project/model/types";
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
-import { Button } from "@/shared/ui/button";
-import { AimGraph } from "@/widgets/trajectory-panels/ui/aim-graph";
-import { SpeedGraph } from "@/widgets/trajectory-panels/ui/speed-graph";
+import type { Project } from "@/entities/project";
+import type { CompiledTrajectory } from "@/entities/trajectory";
+import { Button } from "@/shared/ui";
+
+import { AimGraph } from "./aim-graph";
+import { SpeedGraph } from "./speed-graph";
 
 interface TrajectoryInspectorProps {
   pathPosition: number;

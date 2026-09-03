@@ -2,8 +2,7 @@ import { Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useMemo } from "react";
 
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
-import { sampleTrajectory } from "@/entities/trajectory/lib/sample-trajectory";
+import { sampleTrajectory, type CompiledTrajectory } from "@/entities/trajectory";
 
 interface TrajectoryLineProps {
   selected: boolean;

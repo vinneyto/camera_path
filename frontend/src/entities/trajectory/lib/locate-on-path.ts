@@ -15,21 +15,33 @@ export function locateOnPath(trajectory: CompiledTrajectory, pathPosition: numbe
     return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
   }
 
-  const targetDistance = Math.min(1, Math.max(0, pathPosition)) * trajectory.total_length;
-  let distanceBefore = 0;
-
-  for (const segment of segments) {
-    const distanceAfter = distanceBefore + segment.length;
-    if (targetDistance <= distanceAfter || segment === segments.at(-1)) {
-      const t = segment.length > 0 ? (targetDistance - distanceBefore) / segment.length : 0;
-      const clampedT = Math.min(1, Math.max(0, t));
-      return {
-        position: evaluateBezier(segment, clampedT),
-        tangent: evaluateBezierTangent(segment, clampedT),
-      };
-    }
-    distanceBefore = distanceAfter;
+  const table = trajectory.arc_length_table;
+  if (table.length === 0) {
+    return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
   }
 
-  return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
+  const targetDistance = Math.min(1, Math.max(0, pathPosition)) * trajectory.total_length;
+  let low = 0;
+  let high = table.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (table[middle].distance <= targetDistance) low = middle + 1;
+    else high = middle;
+  }
+
+  const rightIndex = Math.min(table.length - 1, low);
+  const leftIndex = Math.max(0, rightIndex - 1);
+  const left = table[leftIndex];
+  const right = table[rightIndex];
+  const distanceWidth = right.distance - left.distance;
+  const weight = distanceWidth > 0 ? (targetDistance - left.distance) / distanceWidth : 0;
+  const segmentIndex = right.segment_index;
+  const leftT = left.segment_index === segmentIndex ? left.t : 0;
+  const t = leftT + (right.t - leftT) * Math.min(1, Math.max(0, weight));
+  const segment = segments[segmentIndex];
+
+  return {
+    position: evaluateBezier(segment, t),
+    tangent: evaluateBezierTangent(segment, t),
+  };
 }

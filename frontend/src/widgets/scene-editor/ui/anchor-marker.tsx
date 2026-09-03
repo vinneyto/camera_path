@@ -1,7 +1,7 @@
 import { Html } from "@react-three/drei";
 import { MapPin } from "lucide-react";
 
-import type { Anchor } from "@/entities/project/model/types";
+import type { Anchor } from "@/entities/project";
 
 interface AnchorMarkerProps {
   anchor: Anchor;

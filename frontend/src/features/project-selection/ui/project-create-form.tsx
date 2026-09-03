@@ -3,12 +3,11 @@
 import { FormEvent, useState } from "react";
 import { Plus } from "lucide-react";
 
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
+import { Button, Input } from "@/shared/ui";
 
 interface ProjectCreateFormProps {
   disabled?: boolean;
-  onCreate: (name: string) => Promise<void>;
+  onCreate: (name: string) => Promise<boolean>;
 }
 
 export function ProjectCreateForm({ disabled, onCreate }: ProjectCreateFormProps) {
@@ -18,8 +17,7 @@ export function ProjectCreateForm({ disabled, onCreate }: ProjectCreateFormProps
     event.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return;
-    await onCreate(trimmedName);
-    setName("");
+    if (await onCreate(trimmedName)) setName("");
   }
 
   return (

@@ -3,12 +3,13 @@
 import { OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 
-import type { Anchor, Vec3 } from "@/entities/project/model/types";
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
-import { AnchorMarker } from "@/widgets/scene-editor/ui/anchor-marker";
-import { PlaybackCamera } from "@/widgets/scene-editor/ui/playback-camera";
-import { SimpleScene } from "@/widgets/scene-editor/ui/simple-scene";
-import { TrajectoryLine } from "@/widgets/scene-editor/ui/trajectory-line";
+import type { Anchor, Vec3 } from "@/entities/project";
+import type { CompiledTrajectory } from "@/entities/trajectory";
+
+import { AnchorMarker } from "./anchor-marker";
+import { PlaybackCamera } from "./playback-camera";
+import { SimpleScene } from "./simple-scene";
+import { TrajectoryLine } from "./trajectory-line";
 
 interface SceneCanvasProps {
   anchors: Anchor[];

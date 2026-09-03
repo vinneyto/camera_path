@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 
-import type { Anchor } from "@/entities/project/model/types";
-import { Button } from "@/shared/ui/button";
+import type { Anchor } from "@/entities/project";
+import { Button } from "@/shared/ui";
 
 interface AnchorReferencePickerProps {
   anchors: Anchor[];

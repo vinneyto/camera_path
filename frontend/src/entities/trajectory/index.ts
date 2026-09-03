@@ -1,0 +1,9 @@
+export { createPlaybackTable } from "./lib/create-playback-table";
+export { evaluateAim } from "./lib/evaluate-aim";
+export { evaluateSpeed } from "./lib/evaluate-speed";
+export { getAimLabel } from "./lib/get-aim-label";
+export { locateOnPath } from "./lib/locate-on-path";
+export { pathPositionAtTime } from "./lib/path-position-at-time";
+export { sampleTrajectory } from "./lib/sample-trajectory";
+export { timeAtPathPosition } from "./lib/time-at-path-position";
+export type { ChatResult, CompiledTrajectory } from "./model/types";
