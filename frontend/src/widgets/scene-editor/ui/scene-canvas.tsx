@@ -1,7 +1,7 @@
 "use client";
 
 import { OrbitControls } from "@react-three/drei";
-import { Canvas, type CanvasProps, useThree } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import { MapPinPlus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import type { GaussianCloud as GaussianCloudObject } from "3dgs-tile-webgpu";
@@ -9,7 +9,6 @@ import {
   Camera,
   PerspectiveCamera,
   Sphere,
-  WebGPURenderer,
 } from "three/webgpu";
 
 import type { Anchor, Vec3 } from "@/entities/project";
@@ -20,7 +19,7 @@ import {
 } from "@/features/anchor-creation";
 import { useEditorStore } from "@/features/project-editor";
 import { useTheme } from "@/features/theme-switcher";
-import { GaussianCloud, GaussianTile } from "@/shared/three";
+import { GaussianCloud, GaussianTile, RenderPipelineCanvas } from "@/shared/three";
 import { Button, ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
 import { AnchorMarker } from "./anchor-marker";
@@ -45,9 +44,6 @@ interface SceneCanvasProps {
   onDeleteAnchor: (anchor: Anchor) => void;
   onSelectTrajectory: () => void;
 }
-
-type FunctionParameter<T> = T extends (props: infer P) => unknown ? P : never;
-type CanvasGlProps = FunctionParameter<NonNullable<CanvasProps["gl"]>>;
 
 export function SceneCanvas({
   anchors,
@@ -118,10 +114,9 @@ export function SceneCanvas({
   return (
     <div className="relative h-full w-full">
       {webGpuAvailable && (
-        <Canvas
+        <RenderPipelineCanvas
           camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
           dpr={[1, 2]}
-          gl={createWebGpuRenderer}
           shadows
         >
           <GaussianTile background={dark ? DARK_BACKGROUND : LIGHT_BACKGROUND}>
@@ -144,7 +139,7 @@ export function SceneCanvas({
               trajectory={trajectory}
             />
           </GaussianTile>
-        </Canvas>
+        </RenderPipelineCanvas>
       )}
       {webGpuAvailable === false && (
         <SceneMessage message="WebGPU is unavailable in this browser" />
@@ -284,16 +279,6 @@ function SceneContents({
       />
     </>
   );
-}
-
-async function createWebGpuRenderer({ canvas }: CanvasGlProps) {
-  const renderer = new WebGPURenderer({
-    antialias: false,
-    canvas: canvas as HTMLCanvasElement,
-  });
-  await renderer.init();
-  renderer.setClearColor(0x000000, 0);
-  return renderer;
 }
 
 function subscribeToWebGpuAvailability() {

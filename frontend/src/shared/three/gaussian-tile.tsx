@@ -7,11 +7,10 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   type RefObject,
   useState,
 } from "react";
-import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
 import {
   GaussianCloud as GaussianCloudObject,
   GaussianStore,
@@ -19,11 +18,9 @@ import {
 } from "3dgs-tile-webgpu";
 import {
   PerspectiveCamera,
-  RenderPipeline,
-  WebGPURenderer,
-  type Node,
 } from "three/webgpu";
-import { pass as scenePass, vec4 } from "three/tsl";
+
+import { useRenderPipeline } from "./render-pipeline";
 
 type GaussianBackground = readonly [number, number, number, number];
 
@@ -48,14 +45,11 @@ interface GaussianCloudProps {
 
 const GaussianTileContext = createContext<GaussianTileContextValue | null>(null);
 
-/** Owns the shared GaussianStore and composites the regular R3F scene over it. */
+/** Owns the shared GaussianStore and contributes its pass to the app pipeline. */
 export function GaussianTile({ background, children }: GaussianTileProps) {
-  const camera = useThree((state) => state.camera);
-  const renderer = useThree((state) => state.gl);
-  const scene = useThree((state) => state.scene);
+  const { camera, registerLayer, renderer } = useRenderPipeline();
   const [store] = useState(() => new GaussianStore());
   const [cloudCount, setCloudCount] = useState(0);
-  const pipelineRef = useRef<RenderPipeline | null>(null);
 
   const registerCloud = useCallback(() => {
     setCloudCount((count) => count + 1);
@@ -72,34 +66,22 @@ export function GaussianTile({ background, children }: GaussianTileProps) {
 
   useEffect(() => {
     if (cloudCount === 0) return;
-    if (!(renderer instanceof WebGPURenderer)) {
-      throw new TypeError("GaussianTile requires Three.js WebGPURenderer");
-    }
     if (!(camera instanceof PerspectiveCamera)) {
       throw new TypeError("GaussianTile requires a PerspectiveCamera");
     }
 
     const pass = gaussianPass(renderer, camera, store, { background });
-    const overlayPass = scenePass(scene, camera);
-    const pipeline = new RenderPipeline(renderer);
-    pipeline.outputNode = compositePremultipliedOver(pass, overlayPass);
-    pipelineRef.current = pipeline;
+    const unregister = registerLayer(pass, { order: -100 });
 
     return () => {
-      pipelineRef.current = null;
-      pipeline.dispose();
-      overlayPass.dispose();
+      unregister();
       pass.dispose();
     };
   // backgroundKey deliberately tracks tuple values instead of tuple identity.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backgroundKey, camera, cloudCount, renderer, scene, store]);
+  }, [backgroundKey, camera, cloudCount, registerLayer, renderer, store]);
 
   useEffect(() => () => store.dispose(), [store]);
-
-  useFrame(() => {
-    pipelineRef.current?.render();
-  }, 1);
 
   return (
     <GaussianTileContext.Provider value={value}>
@@ -165,19 +147,6 @@ export function useGaussianTile(): GaussianTileContextValue {
     throw new Error("GaussianCloud must be rendered inside GaussianTile");
   }
   return value;
-}
-
-function compositePremultipliedOver(
-  base: Node<"vec4">,
-  overlay: Node<"vec4">,
-): Node<"vec4"> {
-  const baseColor = vec4(base);
-  const overlayColor = vec4(overlay);
-  const inverseOverlayAlpha = overlayColor.a.oneMinus();
-  return vec4(
-    overlayColor.rgb.add(baseColor.rgb.mul(inverseOverlayAlpha)),
-    overlayColor.a.add(baseColor.a.mul(inverseOverlayAlpha)),
-  );
 }
 
 function toError(reason: unknown): Error {
