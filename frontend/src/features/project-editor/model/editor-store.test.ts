@@ -27,7 +27,6 @@ describe("editor store", () => {
     expect(useEditorStore.getState()).toMatchObject({
       anchorPlacementMode: "inactive",
       anchorPlacementPhase: "surface",
-      anchorPlacementShiftHeld: false,
       elapsed: 0,
       pathPosition: 0,
       playing: false,
@@ -62,9 +61,8 @@ describe("editor store", () => {
     useEditorStore.getState().setAnchorPlacementShiftHeld(false);
 
     expect(useEditorStore.getState()).toMatchObject({
-      anchorPlacementMode: "held",
+      anchorPlacementMode: "inactive",
       anchorPlacementPhase: "height",
-      anchorPlacementShiftHeld: false,
     });
 
     useEditorStore.getState().finishAnchorPlacement();
@@ -82,7 +80,6 @@ describe("editor store", () => {
     expect(useEditorStore.getState()).toMatchObject({
       anchorPlacementMode: "held",
       anchorPlacementPhase: "surface",
-      anchorPlacementShiftHeld: true,
     });
   });
 });

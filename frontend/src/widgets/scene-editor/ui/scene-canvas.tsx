@@ -46,11 +46,12 @@ export function SceneCanvas({
   const dark = theme === "dark";
   const surfaceRoot = useRef<Group>(null);
   const anchorPlacementMode = useEditorStore((state) => state.anchorPlacementMode);
+  const anchorPlacementPhase = useEditorStore((state) => state.anchorPlacementPhase);
   const finishAnchorPlacement = useEditorStore((state) => state.finishAnchorPlacement);
   const setAnchorToolPhase = useEditorStore((state) => state.setAnchorPlacementPhase);
   const setAnchorPlacementShiftHeld = useEditorStore((state) => state.setAnchorPlacementShiftHeld);
   const toggleAnchorPlacementPinned = useEditorStore((state) => state.toggleAnchorPlacementPinned);
-  const anchorToolActive = anchorPlacementMode !== "inactive";
+  const anchorToolActive = anchorPlacementMode !== "inactive" || anchorPlacementPhase === "height";
   const anchorToolPinned = anchorPlacementMode === "pinned";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
   const completeAnchor = useCallback((placement: AnchorPlacement) => {
