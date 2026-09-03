@@ -48,7 +48,8 @@ npm run lint
 npm run build
 ```
 
-Select the anchor tool, click a scene surface to set its base, then click again to place the anchor
-above or below that surface along the world Y axis. Insert the resulting anchor token into chat,
-ask the agent to build a spline or spiral, then click the rendered trajectory to open its speed and
-camera-aim panels. Playback uses the compiled speed profile and camera direction track.
+Select the anchor tool (or hold Shift), click a scene surface to set its base, then click again to
+place the anchor above or below that surface along the world Y axis. Insert the resulting anchor
+token into chat, ask the agent to build a spline or spiral, then click the rendered trajectory to
+open its speed and camera-aim panels. Playback uses the compiled speed profile and camera direction
+track.

@@ -3,7 +3,7 @@
 import { OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { MapPinPlus } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Group } from "three";
 
 import type { Anchor, Vec3 } from "@/entities/project";
@@ -11,8 +11,8 @@ import type { CompiledTrajectory } from "@/entities/trajectory";
 import {
   AnchorPlacementTool,
   type AnchorPlacement,
-  type AnchorPlacementPhase,
 } from "@/features/anchor-creation";
+import { useEditorStore } from "@/features/project-editor";
 import { useTheme } from "@/features/theme-switcher";
 import { Button, ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
@@ -45,15 +45,48 @@ export function SceneCanvas({
   const { theme } = useTheme();
   const dark = theme === "dark";
   const surfaceRoot = useRef<Group>(null);
-  const [anchorToolActive, setAnchorToolActive] = useState(false);
-  const [anchorToolPhase, setAnchorToolPhase] = useState<AnchorPlacementPhase>("surface");
+  const anchorPlacementMode = useEditorStore((state) => state.anchorPlacementMode);
+  const anchorToolPhase = useEditorStore((state) => state.anchorPlacementPhase);
+  const setAnchorToolPhase = useEditorStore((state) => state.setAnchorPlacementPhase);
+  const setAnchorPlacementShiftHeld = useEditorStore((state) => state.setAnchorPlacementShiftHeld);
+  const toggleAnchorPlacementPinned = useEditorStore((state) => state.toggleAnchorPlacementPinned);
+  const anchorToolActive = anchorPlacementMode !== "inactive";
+  const anchorToolPinned = anchorPlacementMode === "pinned";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
   const completeAnchor = useCallback((placement: AnchorPlacement) => {
     onAddAnchor(placement.surfacePosition, placement.surfaceNormal, placement.lift);
   }, [onAddAnchor]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target;
+      const editing = target instanceof HTMLElement
+        && (target.isContentEditable || target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+      if (event.key === "Shift" && !event.repeat && !editing) {
+        setAnchorPlacementShiftHeld(true);
+      }
+    }
+
+    function handleKeyUp(event: KeyboardEvent) {
+      if (event.key === "Shift") setAnchorPlacementShiftHeld(false);
+    }
+
+    function handleBlur() {
+      setAnchorPlacementShiftHeld(false);
+    }
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [setAnchorPlacementShiftHeld]);
+
   const instruction = !anchorToolActive
-    ? "Select the anchor tool to place a point"
+    ? "Select Anchor or hold Shift to place a point"
     : anchorToolPhase === "surface"
       ? "Click a surface to set the anchor base"
       : "Move vertically and click to set height · Esc to cancel";
@@ -81,6 +114,7 @@ export function SceneCanvas({
         {anchors.map((anchor) => (
           <AnchorMarker
             anchor={anchor}
+            interactive={!anchorToolActive}
             key={anchor.id}
             onContextMenu={(selectedAnchor, position) => setAnchorMenu({ ...position, anchor: selectedAnchor })}
           />
@@ -88,6 +122,7 @@ export function SceneCanvas({
         {trajectory && (
           <TrajectoryLine
             dark={dark}
+            interactive={!anchorToolActive}
             onSelect={onSelectTrajectory}
             selected={selected}
             trajectory={trajectory}
@@ -104,34 +139,33 @@ export function SceneCanvas({
           target={[0, 0.7, 0]}
         />
       </Canvas>
-      <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
-        <Button
-          aria-label="Place anchor"
-          aria-pressed={anchorToolActive}
-          disabled={busy}
-          onClick={() => {
-            setAnchorToolActive((active) => !active);
-            setAnchorToolPhase("surface");
-          }}
-          size="sm"
-          title="Place anchor"
-          variant={anchorToolActive ? "default" : "ghost"}
-        >
-          <MapPinPlus className="size-3.5" />
-          Anchor
-        </Button>
-      </div>
-      <div className="pointer-events-none absolute left-3 top-3 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
-        {instruction}
+      <div className="absolute left-3 top-3 z-10 flex items-start gap-2">
+        <div className="rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
+          <Button
+            aria-label="Place anchor"
+            aria-pressed={anchorToolPinned}
+            disabled={busy}
+            onClick={toggleAnchorPlacementPinned}
+            size="sm"
+            title="Place anchor (hold Shift)"
+            variant={anchorToolActive ? "default" : "ghost"}
+          >
+            <MapPinPlus className="size-3.5" />
+            Anchor
+          </Button>
+        </div>
+        <div className="pointer-events-none rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
+          {instruction}
+        </div>
       </div>
       <ContextMenu
-        items={anchorMenu ? [{
+        items={anchorMenu && !anchorToolActive ? [{
           destructive: true,
           label: `Delete anchor ${anchorMenu.anchor.label}`,
           onSelect: () => onDeleteAnchor(anchorMenu.anchor),
         }] : []}
         onClose={() => setAnchorMenu(null)}
-        position={anchorMenu}
+        position={anchorToolActive ? null : anchorMenu}
       />
     </div>
   );

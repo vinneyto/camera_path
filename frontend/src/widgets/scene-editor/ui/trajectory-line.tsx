@@ -1,18 +1,25 @@
 import { Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { sampleTrajectory, type CompiledTrajectory } from "@/entities/trajectory";
 
 interface TrajectoryLineProps {
   dark: boolean;
+  interactive: boolean;
   selected: boolean;
   trajectory: CompiledTrajectory;
   onSelect: () => void;
 }
 
-export function TrajectoryLine({ dark, selected, trajectory, onSelect }: TrajectoryLineProps) {
+export function TrajectoryLine({ dark, interactive, selected, trajectory, onSelect }: TrajectoryLineProps) {
   const points = useMemo(() => sampleTrajectory(trajectory), [trajectory]);
+
+  useEffect(() => {
+    if (!interactive) document.body.style.cursor = "";
+    return () => { document.body.style.cursor = ""; };
+  }, [interactive]);
+
   if (points.length < 2) return null;
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
@@ -27,17 +34,19 @@ export function TrajectoryLine({ dark, selected, trajectory, onSelect }: Traject
         lineWidth={selected ? 4 : 3}
         points={points}
       />
-      <Line
-        color="#000000"
-        depthWrite={false}
-        lineWidth={16}
-        onClick={handleClick}
-        onPointerOut={() => { document.body.style.cursor = ""; }}
-        onPointerOver={() => { document.body.style.cursor = "pointer"; }}
-        opacity={0}
-        points={points}
-        transparent
-      />
+      {interactive && (
+        <Line
+          color="#000000"
+          depthWrite={false}
+          lineWidth={16}
+          onClick={handleClick}
+          onPointerOut={() => { document.body.style.cursor = ""; }}
+          onPointerOver={() => { document.body.style.cursor = "pointer"; }}
+          opacity={0}
+          points={points}
+          transparent
+        />
+      )}
     </group>
   );
 }

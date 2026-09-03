@@ -76,8 +76,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
     }
   }
 
-  function deleteAnchor(anchorId: string, anchorLabel: string) {
-    if (!window.confirm(`Delete anchor “${anchorLabel}”?`)) return;
+  function deleteAnchor(anchorId: string) {
     deleteAnchorMutation.mutate(anchorId);
   }
 
@@ -116,7 +115,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
             anchors={anchors}
             busy={mutating}
             onAddAnchor={(position, normal, lift) => void addAnchor(position, normal, lift)}
-            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id, anchor.label)}
+            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id)}
             onSelectTrajectory={selectTrajectory}
             pathPosition={playback.pathPosition}
             selected={trajectorySelected}
