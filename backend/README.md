@@ -38,6 +38,23 @@ uv run pytest
 uv run ruff check .
 ```
 
+## Populate development data
+
+Create two ready-to-use projects for frontend development: one random spline and one random
+spiral. Both include anchors, a scene target, speed keys and a camera key. The default seed is
+deterministic, and rerunning the command with the same seed does not create duplicates.
+
+```bash
+cd backend
+uv run db:populate
+```
+
+Use another seed to create another pair of demo projects:
+
+```bash
+uv run db:populate --seed 17
+```
+
 ## Trajectory controls
 
 Both control graphs use `path_position` in normalized arc length: `0` is the beginning of the
