@@ -3,7 +3,7 @@
 import { Html, Line } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Group, Matrix3, Raycaster, Vector2, Vector3 } from "three";
+import { Matrix3, Object3D, Raycaster, Vector2, Vector3 } from "three";
 
 import type { Vec3 } from "@/entities/project";
 
@@ -23,7 +23,7 @@ interface SurfaceHit {
 interface AnchorPlacementToolProps {
   color: string;
   disabled: boolean;
-  surfaceRoot: RefObject<Group | null>;
+  surfaceRoot: RefObject<Object3D | null>;
   onCancel: () => void;
   onComplete: (placement: AnchorPlacement) => void;
   onPhaseChange: (phase: AnchorPlacementPhase) => void;
@@ -92,10 +92,12 @@ export function AnchorPlacementTool({
         return;
       }
 
-      const normal = intersection.face?.normal
-        .clone()
-        .applyMatrix3(new Matrix3().getNormalMatrix(intersection.object.matrixWorld))
-        .normalize() ?? WORLD_UP.clone();
+      const normal = intersection.face
+        ? intersection.face.normal
+          .clone()
+          .applyMatrix3(new Matrix3().getNormalMatrix(intersection.object.matrixWorld))
+          .normalize()
+        : raycaster.ray.direction.clone().negate();
       const hit = {
         normal: normal.toArray() as Vec3,
         position: intersection.point.toArray() as Vec3,
