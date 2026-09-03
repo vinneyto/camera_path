@@ -16,13 +16,14 @@ another file. Projects therefore survive backend restarts during development.
 
 ```bash
 cd backend
+cp .env.example .env
 uv sync
 uv run uvicorn camera_path.api:app --reload
 ```
 
-Open <http://127.0.0.1:8000/docs> for the interactive API. Geometry and REST endpoints work
-without an API key. Set `OPENAI_API_KEY` only for
-`POST /projects/{project_id}/chat/messages`.
+Open <http://127.0.0.1:8000/docs> for the interactive API. The backend loads configuration from
+`backend/.env`. Geometry and REST endpoints work without an API key. Set `OPENAI_API_KEY` in that
+file only for `POST /projects/{project_id}/chat/messages`.
 
 ## Test
 

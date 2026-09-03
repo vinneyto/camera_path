@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 *.py[cod]
 .env
+.env.local
 node_modules/
 .next/
 out/

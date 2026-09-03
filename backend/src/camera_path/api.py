@@ -35,7 +35,11 @@ from camera_path.service import TrajectoryService
 
 repository = SQLiteProjectRepository(settings.database_path)
 service = TrajectoryService(repository)
-agent = TrajectoryAgent(repository, settings.openai_model)
+agent = TrajectoryAgent(
+    repository,
+    settings.openai_model,
+    settings.openai_api_key.get_secret_value() if settings.openai_api_key else None,
+)
 
 app = FastAPI(title="Camera Path API", version="0.2.0")
 app.add_middleware(
