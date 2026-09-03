@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Boxes, MapPin } from "lucide-react";
 
 import type { Project } from "@/entities/project";
+import { ThemeToggle } from "@/features/theme-switcher";
 import { Badge, Button } from "@/shared/ui";
 
 interface ProjectHeaderProps {
@@ -20,6 +21,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
         <h1 className="truncate text-xs font-semibold">{project.name}</h1>
         <p className="text-[9px] text-muted-foreground">Revision {project.revision}</p>
       </div>
+      <ThemeToggle />
       <Badge className="gap-1"><MapPin className="size-2.5" />{Object.keys(project.anchors).length}</Badge>
       <Badge className="gap-1"><Boxes className="size-2.5" />{project.segments.length}</Badge>
     </header>

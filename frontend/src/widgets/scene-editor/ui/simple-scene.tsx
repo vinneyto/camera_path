@@ -4,10 +4,11 @@ import { Vector3 } from "three";
 import type { Vec3 } from "@/entities/project";
 
 interface SimpleSceneProps {
+  dark: boolean;
   onSurfaceClick: (position: Vec3, normal: Vec3) => void;
 }
 
-export function SimpleScene({ onSurfaceClick }: SimpleSceneProps) {
+export function SimpleScene({ dark, onSurfaceClick }: SimpleSceneProps) {
   function handleClick(event: ThreeEvent<MouseEvent>) {
     event.stopPropagation();
     const localNormal = event.face?.normal.clone() ?? new Vector3(0, 1, 0);
@@ -19,9 +20,12 @@ export function SimpleScene({ onSurfaceClick }: SimpleSceneProps) {
     <>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[16, 16]} />
-        <meshStandardMaterial color="#d9d6d0" roughness={0.92} />
+        <meshStandardMaterial color={dark ? "#171c24" : "#d9d6d0"} roughness={0.92} />
       </mesh>
-      <gridHelper args={[16, 32, "#b7b2aa", "#cbc6bd"]} position={[0, 0.002, 0]} />
+      <gridHelper
+        args={[16, 32, dark ? "#39414e" : "#aaa59d", dark ? "#252c36" : "#c5c0b8"]}
+        position={[0, 0.002, 0]}
+      />
       <mesh castShadow onClick={handleClick} position={[-2.2, 0.65, 0.5]}>
         <boxGeometry args={[1.3, 1.3, 1.3]} />
         <meshStandardMaterial color="#7699c9" roughness={0.55} />
