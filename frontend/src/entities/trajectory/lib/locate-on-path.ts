@@ -1,7 +1,6 @@
 import { Vector3 } from "three";
 
 import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
-import { getArcLengthTable } from "@/entities/trajectory/lib/create-arc-length-table";
 import { evaluateBezier } from "@/entities/trajectory/lib/evaluate-bezier";
 import { evaluateBezierTangent } from "@/entities/trajectory/lib/evaluate-bezier-tangent";
 
@@ -16,7 +15,7 @@ export function locateOnPath(trajectory: CompiledTrajectory, pathPosition: numbe
     return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
   }
 
-  const table = getArcLengthTable(trajectory);
+  const table = trajectory.arc_length_table;
   if (table.length === 0) {
     return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
   }
@@ -36,8 +35,8 @@ export function locateOnPath(trajectory: CompiledTrajectory, pathPosition: numbe
   const right = table[rightIndex];
   const distanceWidth = right.distance - left.distance;
   const weight = distanceWidth > 0 ? (targetDistance - left.distance) / distanceWidth : 0;
-  const segmentIndex = right.segmentIndex;
-  const leftT = left.segmentIndex === segmentIndex ? left.t : 0;
+  const segmentIndex = right.segment_index;
+  const leftT = left.segment_index === segmentIndex ? left.t : 0;
   const t = leftT + (right.t - leftT) * Math.min(1, Math.max(0, weight));
   const segment = segments[segmentIndex];
 

@@ -1,7 +1,6 @@
 export { createPlaybackTable } from "./lib/create-playback-table";
 export { evaluateAim } from "./lib/evaluate-aim";
 export { evaluateSpeed } from "./lib/evaluate-speed";
-export { createArcLengthTable, getArcLengthTable } from "./lib/create-arc-length-table";
 export { getAimLabel } from "./lib/get-aim-label";
 export { locateOnPath } from "./lib/locate-on-path";
 export { pathPositionAtTime } from "./lib/path-position-at-time";

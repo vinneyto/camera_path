@@ -5,6 +5,7 @@ import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Protocol
 
 from camera_path.models import Project
 
@@ -15,6 +16,22 @@ class ProjectNotFoundError(KeyError):
 
 class RevisionConflictError(RuntimeError):
     pass
+
+
+class ProjectRepository(Protocol):
+    async def create(self, project: Project) -> Project: ...
+
+    async def get(self, project_id: str) -> Project: ...
+
+    async def list(self) -> list[Project]: ...
+
+    async def commit(self, draft: Project, expected_revision: int) -> Project: ...
+
+    async def delete(self, project_id: str) -> None: ...
+
+    async def undo(self, project_id: str) -> Project: ...
+
+    async def redo(self, project_id: str) -> Project: ...
 
 
 class SQLiteProjectRepository:
@@ -62,6 +79,13 @@ class SQLiteProjectRepository:
                     """
                 ).fetchall()
                 return [Project.model_validate_json(row["payload"]) for row in rows]
+
+    async def delete(self, project_id: str) -> None:
+        async with self._lock:
+            with self._connection() as connection:
+                cursor = connection.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+                if cursor.rowcount == 0:
+                    raise ProjectNotFoundError(project_id)
 
     async def commit(self, draft: Project, expected_revision: int) -> Project:
         async with self._lock:
@@ -177,9 +201,7 @@ class SQLiteProjectRepository:
         return self._snapshot(connection, project_id, cursor), cursor
 
     @staticmethod
-    def _snapshot(
-        connection: sqlite3.Connection, project_id: str, position: int
-    ) -> Project:
+    def _snapshot(connection: sqlite3.Connection, project_id: str, position: int) -> Project:
         row = connection.execute(
             """
             SELECT payload FROM project_snapshots

@@ -8,6 +8,7 @@ import { timeAtPathPosition } from "@/entities/trajectory/lib/time-at-path-posit
 
 const trajectory = {
   total_length: 10,
+  duration_seconds: 7,
   motion_profile: {
     default_speed: 2,
     keyframes: [
@@ -25,6 +26,7 @@ describe("speed profile", () => {
 
   it("builds an invertible time table", () => {
     const table = createPlaybackTable(trajectory, 256);
+    expect(table.at(-1)?.time).toBe(trajectory.duration_seconds);
     const halfTime = (table.at(-1)?.time ?? 0) / 2;
     const midpoint = pathPositionAtTime(table, halfTime);
     expect(midpoint).toBeGreaterThan(0.4);

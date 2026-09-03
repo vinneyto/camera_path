@@ -21,9 +21,10 @@ Each FSD slice exposes a public API through its root `index.ts`. Cross-slice imp
 APIs, while files inside a slice use relative imports. Route composition therefore reads as
 `app -> widgets -> features -> entities -> shared`; lower layers do not depend on interface widgets.
 
-Trajectory geometry stays in pure functions under `entities/trajectory`. Camera lookup builds and
-caches a sampled arc-length table, then maps normalized path distance back to Bezier `t`. This keeps
-camera speed uniform along curved segments instead of treating Bezier `t` as physical distance.
+Trajectory geometry stays in pure functions under `entities/trajectory`. Camera lookup uses the
+backend's adaptive arc-length table to map normalized path distance back to Bezier `t`. This keeps
+camera speed uniform along curved segments, avoids treating Bezier `t` as physical distance, and
+keeps the backend compiler as the single source of geometry sampling truth.
 
 ## Run
 

@@ -1,6 +1,6 @@
 [project]
 name = "camera-path"
-version = "0.2.0"
+version = "0.3.0"
 description = "Async backend for AI-assisted 3D camera path authoring"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,7 @@ dev = [
 
 [project.scripts]
 camera-path = "camera_path.main:run"
+"db:populate" = "camera_path.seed:run"
 
 [build-system]
 requires = ["hatchling"]
