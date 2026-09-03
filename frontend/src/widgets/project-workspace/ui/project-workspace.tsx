@@ -7,6 +7,11 @@ import { useCompiledTrajectoryQuery, useProjectQuery, type Vec3 } from "@/entiti
 import { getAnchorLabel, useAddAnchor } from "@/features/anchor-creation";
 import { ChatPanel, useSendChatMessage } from "@/features/chat-agent";
 import { useEditorStore, useTrajectoryPlayback } from "@/features/project-editor";
+import {
+  useDeleteAnchor,
+  useDeleteCameraKeyframe,
+  useDeleteSpeedKeyframe,
+} from "@/features/object-deletion";
 import { SceneCanvas } from "@/widgets/scene-editor";
 import { PlaybackControls, TrajectoryInspector } from "@/widgets/trajectory-panels";
 
@@ -20,6 +25,9 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const addAnchorMutation = useAddAnchor(projectId);
+  const deleteAnchorMutation = useDeleteAnchor(projectId);
+  const deleteSpeedKeyframeMutation = useDeleteSpeedKeyframe(projectId);
+  const deleteCameraKeyframeMutation = useDeleteCameraKeyframe(projectId);
   const chatMutation = useSendChatMessage(projectId);
   const project = projectQuery.data;
   const trajectory = trajectoryQuery.data ?? null;
@@ -29,10 +37,17 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
   const selectTrajectory = useEditorStore((state) => state.selectTrajectory);
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = useMemo(() => project ? Object.values(project.anchors) : [], [project]);
-  const mutating = addAnchorMutation.isPending || chatMutation.isPending;
+  const mutating = addAnchorMutation.isPending
+    || deleteAnchorMutation.isPending
+    || deleteSpeedKeyframeMutation.isPending
+    || deleteCameraKeyframeMutation.isPending
+    || chatMutation.isPending;
   const requestError = projectQuery.error
     ?? trajectoryQuery.error
     ?? addAnchorMutation.error
+    ?? deleteAnchorMutation.error
+    ?? deleteSpeedKeyframeMutation.error
+    ?? deleteCameraKeyframeMutation.error
     ?? chatMutation.error;
   const error = requestError instanceof Error ? requestError.message : null;
 
@@ -59,6 +74,21 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
     }
   }
 
+  function deleteAnchor(anchorId: string, anchorLabel: string) {
+    if (!window.confirm(`Delete anchor “${anchorLabel}”?`)) return;
+    deleteAnchorMutation.mutate(anchorId);
+  }
+
+  function deleteSpeedKeyframe(keyframeId: string) {
+    if (!window.confirm("Delete this speed keyframe?")) return;
+    deleteSpeedKeyframeMutation.mutate(keyframeId);
+  }
+
+  function deleteCameraKeyframe(keyframeId: string) {
+    if (!window.confirm("Delete this camera aim keyframe?")) return;
+    deleteCameraKeyframeMutation.mutate(keyframeId);
+  }
+
   if (projectQuery.isPending || trajectoryQuery.isPending) {
     return (
       <main className="flex h-screen items-center justify-center">
@@ -83,6 +113,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
           <SceneCanvas
             anchors={anchors}
             onAddAnchor={(position, normal) => void addAnchor(position, normal)}
+            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id, anchor.label)}
             onSelectTrajectory={selectTrajectory}
             pathPosition={playback.pathPosition}
             selected={trajectorySelected}
@@ -107,7 +138,11 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
         )}
         {trajectorySelected && trajectory && trajectory.position_segments.length > 0 && (
           <TrajectoryInspector
+            deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
+            deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
             onClose={closeTrajectory}
+            onDeleteAimKeyframe={deleteCameraKeyframe}
+            onDeleteSpeedKeyframe={deleteSpeedKeyframe}
             pathPosition={playback.pathPosition}
             project={project}
             trajectory={trajectory}

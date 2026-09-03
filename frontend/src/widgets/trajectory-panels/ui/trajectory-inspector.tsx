@@ -8,13 +8,26 @@ import { AimGraph } from "./aim-graph";
 import { SpeedGraph } from "./speed-graph";
 
 interface TrajectoryInspectorProps {
+  deletingAimKeyframeId?: string;
+  deletingSpeedKeyframeId?: string;
+  onDeleteAimKeyframe: (keyframeId: string) => void;
+  onDeleteSpeedKeyframe: (keyframeId: string) => void;
   pathPosition: number;
   project: Project;
   trajectory: CompiledTrajectory;
   onClose: () => void;
 }
 
-export function TrajectoryInspector({ pathPosition, project, trajectory, onClose }: TrajectoryInspectorProps) {
+export function TrajectoryInspector({
+  deletingAimKeyframeId,
+  deletingSpeedKeyframeId,
+  onClose,
+  onDeleteAimKeyframe,
+  onDeleteSpeedKeyframe,
+  pathPosition,
+  project,
+  trajectory,
+}: TrajectoryInspectorProps) {
   return (
     <section className="border-t bg-muted/35 p-2">
       <div className="mb-1.5 flex items-center justify-between px-0.5">
@@ -26,9 +39,20 @@ export function TrajectoryInspector({ pathPosition, project, trajectory, onClose
           <X className="size-3.5" />
         </Button>
       </div>
-      <div className="grid grid-rows-2 gap-2">
-        <SpeedGraph pathPosition={pathPosition} trajectory={trajectory} />
-        <AimGraph pathPosition={pathPosition} project={project} trajectory={trajectory} />
+      <div className="overflow-hidden rounded-md border bg-card">
+        <SpeedGraph
+          deletingKeyframeId={deletingSpeedKeyframeId}
+          onDeleteKeyframe={onDeleteSpeedKeyframe}
+          pathPosition={pathPosition}
+          trajectory={trajectory}
+        />
+        <AimGraph
+          deletingKeyframeId={deletingAimKeyframeId}
+          onDeleteKeyframe={onDeleteAimKeyframe}
+          pathPosition={pathPosition}
+          project={project}
+          trajectory={trajectory}
+        />
       </div>
     </section>
   );
