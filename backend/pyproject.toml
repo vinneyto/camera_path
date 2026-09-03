@@ -1,6 +1,6 @@
 [project]
 name = "camera-path"
-version = "0.2.0"
+version = "0.3.0"
 description = "Async backend for AI-assisted 3D camera path authoring"
 readme = "README.md"
 requires-python = ">=3.11"

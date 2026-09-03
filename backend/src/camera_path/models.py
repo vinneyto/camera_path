@@ -175,6 +175,10 @@ class ProjectCreate(BaseModel):
     name: str = Field(default="Untitled camera path", min_length=1, max_length=128)
 
 
+class ProjectUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=128)
+
+
 class CubicBezier3D(BaseModel):
     source_segment_id: str
     p0: Vec3
@@ -194,9 +198,7 @@ class ResolvedLookAtPointAim(LookAtPointAim):
     position: Vec3
 
 
-ResolvedCameraAim = Annotated[
-    FollowPathAim | ResolvedLookAtPointAim, Field(discriminator="kind")
-]
+ResolvedCameraAim = Annotated[FollowPathAim | ResolvedLookAtPointAim, Field(discriminator="kind")]
 
 
 class CompiledCameraKeyframe(BaseModel):

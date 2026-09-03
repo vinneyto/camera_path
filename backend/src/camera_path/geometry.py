@@ -49,26 +49,64 @@ def anchor_position(anchor: Anchor) -> Vector:
     return _v(anchor.surface_position) + anchor.lift * axis
 
 
-def _bezier_length(points: tuple[Vector, Vector, Vector, Vector], samples: int = 24) -> float:
-    ts = np.linspace(0.0, 1.0, samples + 1)
+def _split_bezier(
+    points: tuple[Vector, Vector, Vector, Vector],
+) -> tuple[tuple[Vector, Vector, Vector, Vector], tuple[Vector, Vector, Vector, Vector]]:
     p0, p1, p2, p3 = points
-    curve = (
-        ((1 - ts) ** 3)[:, None] * p0
-        + (3 * (1 - ts) ** 2 * ts)[:, None] * p1
-        + (3 * (1 - ts) * ts**2)[:, None] * p2
-        + (ts**3)[:, None] * p3
-    )
-    return float(np.linalg.norm(np.diff(curve, axis=0), axis=1).sum())
+    p01 = (p0 + p1) * 0.5
+    p12 = (p1 + p2) * 0.5
+    p23 = (p2 + p3) * 0.5
+    p012 = (p01 + p12) * 0.5
+    p123 = (p12 + p23) * 0.5
+    midpoint = (p012 + p123) * 0.5
+    return (p0, p01, p012, midpoint), (midpoint, p123, p23, p3)
 
 
-def _make_bezier(source_id: str, points: tuple[Vector, Vector, Vector, Vector]) -> CubicBezier3D:
+def _bezier_arc_samples(
+    points: tuple[Vector, Vector, Vector, Vector], tolerance: float
+) -> list[tuple[float, float]]:
+    """Return adaptive ``(t, cumulative_length)`` samples for one cubic Bézier."""
+    samples: list[tuple[float, float]] = [(0.0, 0.0)]
+    distance = 0.0
+
+    def visit(
+        control_points: tuple[Vector, Vector, Vector, Vector],
+        t0: float,
+        t1: float,
+        depth: int,
+    ) -> None:
+        nonlocal distance
+        chord = float(np.linalg.norm(control_points[3] - control_points[0]))
+        polygon = sum(
+            float(np.linalg.norm(control_points[index + 1] - control_points[index]))
+            for index in range(3)
+        )
+        if polygon - chord <= 2.0 * tolerance or depth >= 20:
+            distance += (polygon + chord) * 0.5
+            samples.append((t1, distance))
+            return
+        left, right = _split_bezier(control_points)
+        midpoint = (t0 + t1) * 0.5
+        visit(left, t0, midpoint, depth + 1)
+        visit(right, midpoint, t1, depth + 1)
+
+    visit(points, 0.0, 1.0, 0)
+    return samples
+
+
+def _make_bezier(
+    source_id: str,
+    points: tuple[Vector, Vector, Vector, Vector],
+    tolerance: float,
+) -> CubicBezier3D:
+    length = _bezier_arc_samples(points, tolerance)[-1][1]
     return CubicBezier3D(
         source_segment_id=source_id,
         p0=_tuple(points[0]),
         p1=_tuple(points[1]),
         p2=_tuple(points[2]),
         p3=_tuple(points[3]),
-        length=_bezier_length(points),
+        length=length,
     )
 
 
@@ -78,7 +116,9 @@ def _centripetal_tangent(previous: Vector, point: Vector, following: Vector) -> 
     return (following - previous) / (before + after)
 
 
-def compile_spline(project: Project, segment: SplineSegment) -> list[CubicBezier3D]:
+def compile_spline(
+    project: Project, segment: SplineSegment, tolerance: float = 1e-3
+) -> list[CubicBezier3D]:
     points = [anchor_position(project.anchors[item]) for item in segment.anchor_ids]
     scale = 1.0 - segment.tension
     result: list[CubicBezier3D] = []
@@ -90,7 +130,7 @@ def compile_spline(project: Project, segment: SplineSegment) -> list[CubicBezier
         m1 = _centripetal_tangent(p0, p3, following) * scale
         chord_scale = max(float(np.linalg.norm(p3 - p0)) ** 0.5, 1e-9)
         bezier = (p0, p0 + m0 * chord_scale / 3.0, p3 - m1 * chord_scale / 3.0, p3)
-        result.append(_make_bezier(segment.id, bezier))
+        result.append(_make_bezier(segment.id, bezier, tolerance))
     return result
 
 
@@ -100,7 +140,9 @@ def _law(name: str, t: float) -> tuple[float, float]:
     return t * t * (3.0 - 2.0 * t), 6.0 * t * (1.0 - t)
 
 
-def compile_spiral(project: Project, segment: SpiralSegment) -> list[CubicBezier3D]:
+def compile_spiral(
+    project: Project, segment: SpiralSegment, tolerance: float = 1e-3
+) -> list[CubicBezier3D]:
     start = anchor_position(project.anchors[segment.start_anchor_id])
     center = anchor_position(project.anchors[segment.center_anchor_id])
     end = anchor_position(project.anchors[segment.end_anchor_id])
@@ -115,14 +157,18 @@ def compile_spiral(project: Project, segment: SpiralSegment) -> list[CubicBezier
 
     e1 = start_flat / start_radius
     e2 = np.cross(up, e1)
-    end_angle = (
-        0.0 if end_radius < 1e-8 else float(np.arctan2(np.dot(end_flat, e2), np.dot(end_flat, e1)))
-    )
     direction = 1.0 if segment.direction == "ccw" else -1.0
     nominal_angle = direction * (2.0 * pi * segment.turns)
-    # Choose the representation of the end phase nearest to the requested turn count.
-    revolutions = round((nominal_angle - end_angle) / (2.0 * pi))
-    total_angle = end_angle + 2.0 * pi * revolutions
+    if end_radius < 1e-8:
+        # The phase is undefined on the axis, so preserve the requested turn count exactly.
+        total_angle = nominal_angle
+    else:
+        end_angle = float(np.arctan2(np.dot(end_flat, e2), np.dot(end_flat, e1)))
+        # Choose the matching end phase nearest to the requested turn count, but never reverse.
+        revolutions = round((nominal_angle - end_angle) / (2.0 * pi))
+        total_angle = end_angle + 2.0 * pi * revolutions
+        if direction * total_angle <= 0.0:
+            total_angle += direction * 2.0 * pi
     start_height = float(np.dot(start - center, up))
     end_height = float(np.dot(end - center, up))
 
@@ -147,7 +193,13 @@ def compile_spiral(project: Project, segment: SpiralSegment) -> list[CubicBezier
         p0, d0 = evaluate(t0)
         p3, d1 = evaluate(t1)
         dt = t1 - t0
-        result.append(_make_bezier(segment.id, (p0, p0 + d0 * dt / 3, p3 - d1 * dt / 3, p3)))
+        result.append(
+            _make_bezier(
+                segment.id,
+                (p0, p0 + d0 * dt / 3, p3 - d1 * dt / 3, p3),
+                tolerance,
+            )
+        )
     return result
 
 
@@ -234,21 +286,34 @@ def _resolve_aim(project: Project, aim: CameraAim) -> ResolvedCameraAim:
     return ResolvedLookAtPointAim(scene_point_id=point.id, position=point.position)
 
 
-def compile_project(project: Project) -> CompiledTrajectory:
+def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajectory:
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive")
     warnings = validate_project(project)
     curves: list[CubicBezier3D] = []
-    compilers: dict[type, Callable[[Project, object], list[CubicBezier3D]]] = {
+    compilers: dict[type, Callable[[Project, object, float], list[CubicBezier3D]]] = {
         SplineSegment: compile_spline,
         SpiralSegment: compile_spiral,
     }
     for segment in project.segments:
-        curves.extend(compilers[type(segment)](project, segment))
+        curves.extend(compilers[type(segment)](project, segment, tolerance))
 
-    table = [ArcLengthSample(segment_index=0, t=0.0, distance=0.0)] if curves else []
+    table: list[ArcLengthSample] = []
     distance = 0.0
     for index, curve in enumerate(curves):
+        points = tuple(_v(point) for point in (curve.p0, curve.p1, curve.p2, curve.p3))
+        local_samples = _bezier_arc_samples(points, tolerance)  # type: ignore[arg-type]
+        for t, local_distance in local_samples:
+            if table and t == 0.0:
+                continue
+            table.append(
+                ArcLengthSample(
+                    segment_index=index,
+                    t=t,
+                    distance=distance + local_distance,
+                )
+            )
         distance += curve.length
-        table.append(ArcLengthSample(segment_index=index, t=1.0, distance=distance))
     speed_keys: list[SpeedKeyframe] = sorted(
         project.motion_profile.keyframes.values(), key=lambda item: item.path_position
     )
