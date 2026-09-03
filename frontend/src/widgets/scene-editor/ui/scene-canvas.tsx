@@ -46,7 +46,7 @@ export function SceneCanvas({
   const dark = theme === "dark";
   const surfaceRoot = useRef<Group>(null);
   const anchorPlacementMode = useEditorStore((state) => state.anchorPlacementMode);
-  const anchorToolPhase = useEditorStore((state) => state.anchorPlacementPhase);
+  const finishAnchorPlacement = useEditorStore((state) => state.finishAnchorPlacement);
   const setAnchorToolPhase = useEditorStore((state) => state.setAnchorPlacementPhase);
   const setAnchorPlacementShiftHeld = useEditorStore((state) => state.setAnchorPlacementShiftHeld);
   const toggleAnchorPlacementPinned = useEditorStore((state) => state.toggleAnchorPlacementPinned);
@@ -55,7 +55,8 @@ export function SceneCanvas({
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
   const completeAnchor = useCallback((placement: AnchorPlacement) => {
     onAddAnchor(placement.surfacePosition, placement.surfaceNormal, placement.lift);
-  }, [onAddAnchor]);
+    finishAnchorPlacement();
+  }, [finishAnchorPlacement, onAddAnchor]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -85,12 +86,6 @@ export function SceneCanvas({
     };
   }, [setAnchorPlacementShiftHeld]);
 
-  const instruction = !anchorToolActive
-    ? "Select Anchor or hold Shift to place a point"
-    : anchorToolPhase === "surface"
-      ? "Click a surface to set the anchor base"
-      : "Move vertically and click to set height · Esc to cancel";
-
   return (
     <div className="relative h-full w-full">
       <Canvas
@@ -106,6 +101,7 @@ export function SceneCanvas({
           <AnchorPlacementTool
             color={dark ? "#f8fafc" : "#111827"}
             disabled={busy}
+            onCancel={finishAnchorPlacement}
             onComplete={completeAnchor}
             onPhaseChange={setAnchorToolPhase}
             surfaceRoot={surfaceRoot}
@@ -139,7 +135,7 @@ export function SceneCanvas({
           target={[0, 0.7, 0]}
         />
       </Canvas>
-      <div className="absolute left-3 top-3 z-10 flex items-start gap-2">
+      <div className="absolute left-3 top-3 z-10">
         <div className="rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
           <Button
             aria-label="Place anchor"
@@ -153,9 +149,6 @@ export function SceneCanvas({
             <MapPinPlus className="size-3.5" />
             Anchor
           </Button>
-        </div>
-        <div className="pointer-events-none rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
-          {instruction}
         </div>
       </div>
       <ContextMenu

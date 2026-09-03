@@ -24,6 +24,7 @@ interface AnchorPlacementToolProps {
   color: string;
   disabled: boolean;
   surfaceRoot: RefObject<Group | null>;
+  onCancel: () => void;
   onComplete: (placement: AnchorPlacement) => void;
   onPhaseChange: (phase: AnchorPlacementPhase) => void;
 }
@@ -36,6 +37,7 @@ export function AnchorPlacementTool({
   color,
   disabled,
   surfaceRoot,
+  onCancel,
   onComplete,
   onPhaseChange,
 }: AnchorPlacementToolProps) {
@@ -143,6 +145,7 @@ export function AnchorPlacementTool({
       surfaceHitRef.current = null;
       setBase(null);
       setPreviewPosition(null);
+      onCancel();
       onPhaseChange("surface");
     }
 
@@ -177,7 +180,7 @@ export function AnchorPlacementTool({
       element.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [camera, disabled, gl, onComplete, onPhaseChange, raycaster, surfaceRoot]);
+  }, [camera, disabled, gl, onCancel, onComplete, onPhaseChange, raycaster, surfaceRoot]);
 
   if (!previewPosition) return null;
 

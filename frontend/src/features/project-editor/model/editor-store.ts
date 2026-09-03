@@ -8,11 +8,13 @@ export type AnchorPlacementPhase = "surface" | "height";
 interface EditorState {
   anchorPlacementMode: AnchorPlacementMode;
   anchorPlacementPhase: AnchorPlacementPhase;
+  anchorPlacementShiftHeld: boolean;
   elapsed: number;
   pathPosition: number;
   playing: boolean;
   trajectorySelected: boolean;
   closeTrajectory: () => void;
+  finishAnchorPlacement: () => void;
   resetEditor: () => void;
   resetPlayback: () => void;
   selectTrajectory: () => void;
@@ -26,14 +28,22 @@ interface EditorState {
 export const useEditorStore = create<EditorState>((set) => ({
   anchorPlacementMode: "inactive",
   anchorPlacementPhase: "surface",
+  anchorPlacementShiftHeld: false,
   elapsed: 0,
   pathPosition: 0,
   playing: false,
   trajectorySelected: false,
   closeTrajectory: () => set({ trajectorySelected: false }),
+  finishAnchorPlacement: () => set((state) => ({
+    anchorPlacementMode: state.anchorPlacementMode === "held" && !state.anchorPlacementShiftHeld
+      ? "inactive"
+      : state.anchorPlacementMode,
+    anchorPlacementPhase: "surface",
+  })),
   resetEditor: () => set({
     anchorPlacementMode: "inactive",
     anchorPlacementPhase: "surface",
+    anchorPlacementShiftHeld: false,
     elapsed: 0,
     pathPosition: 0,
     playing: false,
@@ -46,9 +56,13 @@ export const useEditorStore = create<EditorState>((set) => ({
   setAnchorPlacementPhase: (anchorPlacementPhase) => set({ anchorPlacementPhase }),
   setAnchorPlacementShiftHeld: (held) => set((state) => {
     if (state.anchorPlacementMode === "pinned") return state;
+    if (!held && state.anchorPlacementPhase === "height") {
+      return { anchorPlacementShiftHeld: false };
+    }
     return {
       anchorPlacementMode: held ? "held" : "inactive",
       anchorPlacementPhase: "surface",
+      anchorPlacementShiftHeld: held,
       trajectorySelected: held ? false : state.trajectorySelected,
     };
   }),
@@ -59,6 +73,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     anchorPlacementPhase: state.anchorPlacementMode === "held"
       ? state.anchorPlacementPhase
       : "surface",
+    anchorPlacementShiftHeld: false,
     trajectorySelected: false,
   })),
 }));
