@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5.6-luna"
     compile_tolerance: float = 1e-3
     database_path: Path = Path.home() / ".camera-path" / "camera_path.sqlite3"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 settings = Settings()

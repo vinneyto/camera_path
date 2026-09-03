@@ -4,8 +4,16 @@ Monorepo for an AI-assisted 3D camera-path editor.
 
 ```text
 camera_path/
-└── backend/    # FastAPI application, geometry compiler, agent and tests
+├── backend/     # FastAPI application, geometry compiler, agent and tests
+└── frontend/    # Next.js camera-path editor
 ```
 
-The frontend will be added as a sibling directory later. See
-[`backend/README.md`](backend/README.md) for the current API and development commands.
+Run both applications in separate terminals:
+
+```bash
+cd backend && uv sync && uv run uvicorn camera_path.api:app --reload
+cd frontend && npm install && npm run dev
+```
+
+See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)
+for configuration and development commands.

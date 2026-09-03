@@ -3,6 +3,20 @@ from httpx import ASGITransport, AsyncClient
 from camera_path.api import app
 
 
+async def test_frontend_origin_is_allowed() -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.options(
+            "/projects",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
 async def test_project_edit_compile_and_undo() -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/projects", json={"name": "Demo"})
