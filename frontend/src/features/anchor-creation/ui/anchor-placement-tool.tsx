@@ -1,11 +1,12 @@
 "use client";
 
-import { Html, Line } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Matrix3, Object3D, Raycaster, Vector2, Vector3 } from "three";
 
 import type { Vec3 } from "@/entities/project";
+import { WebGpuLine } from "@/shared/three/webgpu-line";
 
 export type AnchorPlacementPhase = "surface" | "height";
 
@@ -192,9 +193,10 @@ export function AnchorPlacementTool({
     <>
       {base && (
         <>
-          <Line
+          <WebGpuLine
             color={color}
             depthTest={false}
+            depthWrite={false}
             lineWidth={1.5}
             points={[base.position, previewPosition]}
             renderOrder={100}
