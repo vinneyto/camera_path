@@ -28,6 +28,9 @@ keeps the backend compiler as the single source of geometry sampling truth.
 
 ## Run
 
+Place a canonical 3DGS file at `public/mug.ply`. The same frontend-only cloud is loaded for every
+project; the backend does not store or configure it yet.
+
 Start the backend first, then:
 
 ```bash
@@ -48,6 +51,8 @@ npm run lint
 npm run build
 ```
 
-Click a primitive to create a labeled path anchor. Insert the resulting anchor token into chat,
-ask the agent to build a spline or spiral, then click the rendered trajectory to open its speed
-and camera-aim panels. Playback uses the compiled speed profile and camera direction track.
+Select the anchor tool (or hold Shift), click the Gaussian cloud to set its base, then click again to
+place the anchor above or below that surface along the world Y axis. Insert the resulting anchor
+token into chat, ask the agent to build a spline or spiral, then click the rendered trajectory to
+open its speed and camera-aim panels. Playback uses the compiled speed profile and camera direction
+track.

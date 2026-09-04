@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { LoaderCircle, MousePointerClick } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { useCompiledTrajectoryQuery, useProjectQuery, type Vec3 } from "@/entities/project";
 import { getAnchorLabel, useAddAnchor } from "@/features/anchor-creation";
@@ -55,12 +55,14 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
     resetEditor();
   }, [projectId, resetEditor]);
 
-  async function addAnchor(position: Vec3, normal: Vec3) {
+  async function addAnchor(position: Vec3, normal: Vec3, lift: number) {
     if (!project || mutating) return;
     await addAnchorMutation.mutateAsync({
       label: getAnchorLabel(Object.values(project.anchors)),
       surface_position: position.map((value) => Number(value.toFixed(4))) as Vec3,
       surface_normal: normal.map((value) => Number(value.toFixed(4))) as Vec3,
+      lift: Number(lift.toFixed(4)),
+      lift_axis: "world_up",
     }).catch(() => undefined);
   }
 
@@ -74,8 +76,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
     }
   }
 
-  function deleteAnchor(anchorId: string, anchorLabel: string) {
-    if (!window.confirm(`Delete anchor “${anchorLabel}”?`)) return;
+  function deleteAnchor(anchorId: string) {
     deleteAnchorMutation.mutate(anchorId);
   }
 
@@ -112,19 +113,14 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
         <div className="relative min-h-[260px] flex-1">
           <SceneCanvas
             anchors={anchors}
-            onAddAnchor={(position, normal) => void addAnchor(position, normal)}
-            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id, anchor.label)}
+            busy={mutating}
+            onAddAnchor={(position, normal, lift) => void addAnchor(position, normal, lift)}
+            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id)}
             onSelectTrajectory={selectTrajectory}
             pathPosition={playback.pathPosition}
             selected={trajectorySelected}
             trajectory={trajectory}
           />
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
-            {mutating
-              ? <LoaderCircle className="size-3 animate-spin" />
-              : <MousePointerClick className="size-3" />}
-            Click a primitive surface to place an anchor
-          </div>
         </div>
         {trajectory && trajectory.position_segments.length > 0 && (
           <PlaybackControls
