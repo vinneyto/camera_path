@@ -8,23 +8,27 @@ import {
   gaussianPass,
   rasterPixelCoordinate,
 } from "3dgs-tile-webgpu";
-import { PerspectiveCamera } from "three/webgpu";
+import { PerspectiveCamera, type Node } from "three/webgpu";
 
 import type { SceneRenderPipeline } from "@/shared/three";
 
 import type {
   GaussianCloudInstance,
   GaussianCloudOptions,
+  GaussianHighlightVolume,
+  GaussianHighlightVolumeOptions,
   GaussianRenderingBackend,
 } from "../../model/gaussian-rendering-backend";
 import type { GaussianCloudSource } from "../../model/scene-surface-types";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { TileGaussianCloudInstance } from "./tile-gaussian-cloud-instance";
+import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 
 export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   readonly container = null;
   private readonly clouds = new Set<TileGaussianCloudInstance>();
   private disposed = false;
+  private highlightVolume: TileGaussianHighlightVolume | null = null;
   private pass: GaussianPass | null = null;
   private readonly store = new GaussianStore();
   private unregisterPass: (() => void) | null = null;
@@ -74,15 +78,37 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     return instance;
   }
 
+  createHighlightVolume(
+    options: GaussianHighlightVolumeOptions,
+  ): GaussianHighlightVolume {
+    if (this.disposed) throw new Error("TileGaussianRenderingBackend is disposed");
+    if (this.pass === null) throw new Error("A Gaussian cloud must be loaded before highlighting");
+    if (this.highlightVolume !== null) {
+      throw new Error("TileGaussianRenderingBackend supports one highlight volume at a time");
+    }
+    const volume = new TileGaussianHighlightVolume(
+      this.pass,
+      this.pass.gaussianColorNode as Node<"vec3">,
+      options,
+      () => {
+        if (this.highlightVolume === volume) this.highlightVolume = null;
+      },
+    );
+    this.highlightVolume = volume;
+    return volume;
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.highlightVolume?.dispose();
     for (const cloud of [...this.clouds]) cloud.dispose();
     this.disposePass();
     this.store.dispose();
   }
 
   private disposePass(): void {
+    this.highlightVolume?.dispose();
     this.unregisterPass?.();
     this.unregisterPass = null;
     this.pass?.dispose();

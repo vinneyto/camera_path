@@ -1,4 +1,5 @@
 import type { ThreeElement } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
 import type { Object3D } from "three";
 
 export type SceneSurfacePoint = [number, number, number];
@@ -18,6 +19,11 @@ export interface SceneSurfaceReady {
   bounds: SceneSurfaceBounds;
 }
 
+export type SceneSurfacePointerHandler = (
+  hit: SceneSurfaceHit,
+  event: ThreeEvent<PointerEvent>,
+) => void;
+
 export interface SceneSurfaceProps extends Omit<
   ThreeElement<typeof Object3D>,
   "args" | "dispose"
@@ -26,6 +32,9 @@ export interface SceneSurfaceProps extends Omit<
   onLoading?: () => void;
   onReady?: (surface: SceneSurfaceReady) => void;
   onSurfaceClick?: (hit: SceneSurfaceHit) => void;
+  onSurfacePointerDown?: SceneSurfacePointerHandler;
+  onSurfacePointerMove?: SceneSurfacePointerHandler;
+  onSurfacePointerUp?: SceneSurfacePointerHandler;
   raycastable?: boolean;
   source: GaussianCloudSource;
 }

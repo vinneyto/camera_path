@@ -6,16 +6,25 @@ import { RENDER_PIPELINE_OVERLAY_LAYER, ScreenSpaceLine } from "@/shared/three";
 
 interface TrajectoryLineProps {
   dark: boolean;
+  interactive: boolean;
   selected: boolean;
   trajectory: CompiledTrajectory;
   onSelect: () => void;
 }
 
-export function TrajectoryLine({ dark, selected, trajectory, onSelect }: TrajectoryLineProps) {
+export function TrajectoryLine({
+  dark,
+  interactive,
+  selected,
+  trajectory,
+  onSelect,
+}: TrajectoryLineProps) {
   const points = useMemo(() => sampleTrajectory(trajectory), [trajectory]);
   if (points.length < 2) return null;
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
+    const pointerEvent = event.nativeEvent as PointerEvent;
+    if (!interactive || pointerEvent.ctrlKey || pointerEvent.pointerType === "touch") return;
     event.stopPropagation();
     onSelect();
   }
@@ -28,7 +37,9 @@ export function TrajectoryLine({ dark, selected, trajectory, onSelect }: Traject
       hitSlop={0.025}
       onClick={handleClick}
       onPointerOut={() => { document.body.style.cursor = ""; }}
-      onPointerOver={() => { document.body.style.cursor = "pointer"; }}
+      onPointerOver={() => {
+        if (interactive) document.body.style.cursor = "pointer";
+      }}
       layer={RENDER_PIPELINE_OVERLAY_LAYER}
       points={points}
       radius={selected ? 0.018 : 0.014}

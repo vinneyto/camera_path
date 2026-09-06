@@ -6,7 +6,11 @@ import { LoaderCircle, MousePointerClick } from "lucide-react";
 import { useCompiledTrajectoryQuery, useProjectQuery, type Vec3 } from "@/entities/project";
 import { getAnchorLabel, useAddAnchor } from "@/features/anchor-creation";
 import { ChatPanel, useSendChatMessage } from "@/features/chat-agent";
-import { useEditorStore, useTrajectoryPlayback } from "@/features/project-editor";
+import {
+  useAnchorToolShortcut,
+  useEditorStore,
+  useTrajectoryPlayback,
+} from "@/features/project-editor";
 import {
   useDeleteAnchor,
   useDeleteCameraKeyframe,
@@ -33,6 +37,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const project = projectQuery.data;
   const trajectory = trajectoryQuery.data ?? null;
   const trajectorySelected = useEditorStore((state) => state.trajectorySelected);
+  const activeTool = useEditorStore((state) => state.activeTool);
   const closeTrajectory = useEditorStore((state) => state.closeTrajectory);
   const resetEditor = useEditorStore((state) => state.resetEditor);
   const selectTrajectory = useEditorStore((state) => state.selectTrajectory);
@@ -52,6 +57,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
     ?? chatMutation.error;
   const error = requestError instanceof Error ? requestError.message : null;
   const Viewport = rendererBackend === "webgpu" ? SceneWebGpuViewport : SceneViewport;
+  useAnchorToolShortcut();
 
   useEffect(() => {
     resetEditor();
@@ -63,6 +69,8 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
       label: getAnchorLabel(Object.values(project.anchors)),
       surface_position: position.map((value) => Number(value.toFixed(4))) as Vec3,
       surface_normal: normal.map((value) => Number(value.toFixed(4))) as Vec3,
+      lift: 0.5,
+      lift_axis: "world_up",
     }).catch(() => undefined);
   }
 
@@ -125,7 +133,9 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
             {mutating
               ? <LoaderCircle className="size-3 animate-spin" />
               : <MousePointerClick className="size-3" />}
-            Click a primitive surface to place an anchor
+            {activeTool === "anchor"
+              ? "Anchor tool active — release Ctrl to exit"
+              : "Hold Ctrl or tap the surface to place an anchor"}
           </div>
         </div>
         {trajectory && trajectory.position_segments.length > 0 && (
