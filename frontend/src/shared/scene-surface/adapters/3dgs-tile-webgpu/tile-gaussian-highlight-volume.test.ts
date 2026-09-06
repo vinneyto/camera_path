@@ -16,11 +16,11 @@ it("restores the Gaussian pass color node when the volume is disposed", () => {
     pass,
     {
       bottomOffset: 0.02,
-      color: [1, 1, 1],
+      color: [1, 0.98, 0.92],
       height: 0.5,
       position: [1, 2, 3],
       radius: 0.18,
-      strength: 0.42,
+      strength: 1.1,
       type: "color",
     },
     onDispose,
@@ -31,11 +31,11 @@ it("restores the Gaussian pass color node when the volume is disposed", () => {
   expect(JSON.stringify(highlightNode.toJSON())).toContain('"type":"ConditionalNode"');
   volume.update({
     bottomOffset: 0.01,
-    color: [1, 0.8, 0.6],
+    color: [1, 0.98, 0.92],
     height: 0.75,
     position: [4, 5, 6],
     radius: 0.25,
-    strength: 0.5,
+    strength: 1.1,
     type: "color",
   });
   expect(pass.gaussianColorNode).toBe(highlightNode);
