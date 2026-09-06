@@ -23,7 +23,10 @@ export function SceneSurface({
   onError,
   onLoading,
   onReady,
+  onSurfaceClick,
+  raycastable = true,
   source,
+  ...objectProps
 }: SceneSurfaceProps) {
   const backend = useSceneSurfaceBackend();
   const [loaded, setLoaded] = useState<LoadedCloud | null>(null);
@@ -40,7 +43,7 @@ export function SceneSurface({
 
     // Avoid loading twice during React Strict Mode's development-only effect probe.
     const loadTimer = window.setTimeout(() => {
-      void backend.createCloud(source, { name, raycastable: true }).then((result) => {
+      void backend.createCloud(source, { name, raycastable }).then((result) => {
         if (!active) {
           result.dispose();
           return;
@@ -59,15 +62,23 @@ export function SceneSurface({
       window.clearTimeout(loadTimer);
       loadedCloud?.dispose();
     };
-  }, [backend, name, onError, onLoading, onReady, source]);
+  }, [backend, name, onError, onLoading, onReady, raycastable, source]);
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     if (cloud === null) return;
     event.stopPropagation();
-    onClick?.(cloud.getHit(event, event.ray));
+    onSurfaceClick?.(cloud.getHit(event, event.ray));
+    if (typeof onClick === "function") onClick(event);
   }
 
   return cloud
-    ? <primitive dispose={null} object={cloud.object} onClick={handleClick} />
+    ? (
+        <primitive
+          {...objectProps}
+          dispose={null}
+          object={cloud.object}
+          onClick={handleClick}
+        />
+      )
     : null;
 }

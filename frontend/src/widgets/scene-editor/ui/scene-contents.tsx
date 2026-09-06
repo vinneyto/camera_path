@@ -60,10 +60,10 @@ export function SceneContents({
     <>
       <SceneSurface
         name="Mug Gaussian cloud"
-        onClick={handleSurfaceClick}
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
         onLoading={onSurfaceLoading}
+        onSurfaceClick={handleSurfaceClick}
         source={SCENE_SURFACE_SOURCE}
       />
       <ambientLight intensity={dark ? 0.8 : 1.25} />
