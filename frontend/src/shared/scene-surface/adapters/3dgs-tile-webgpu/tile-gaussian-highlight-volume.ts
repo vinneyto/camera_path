@@ -2,7 +2,7 @@ import {
   gaussianPositionWorld,
   type GaussianPass,
 } from "3dgs-tile-webgpu";
-import { mix, uniform, vec3 } from "three/tsl";
+import { smoothstep, uniform, vec3 } from "three/tsl";
 import { Vector3, type Node } from "three/webgpu";
 
 import type {
@@ -27,11 +27,18 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolume {
     private readonly onDispose: () => void,
   ) {
     const delta = gaussianPositionWorld.xz.sub(this.position.xz);
-    const insideRadius = delta.dot(delta).lessThanEqual(this.radius.mul(this.radius));
+    const normalizedRadius = delta.dot(delta).sqrt().div(this.radius);
+    const insideRadius = normalizedRadius.lessThanEqual(1);
     const insideHeight = gaussianPositionWorld.y.greaterThanEqual(this.bottom)
       .and(gaussianPositionWorld.y.lessThanEqual(this.bottom.add(this.height)));
     const baseColor = vec3(this.baseColorNode);
-    const highlightedColor = mix(baseColor, this.color, this.strength);
+    const spot = smoothstep(0, 1, normalizedRadius).oneMinus();
+    const core = smoothstep(0, 0.28, normalizedRadius).oneMinus();
+    const ring = smoothstep(0, 0.055, normalizedRadius.sub(0.82).abs()).oneMinus();
+    const lightGain = vec3(1).add(this.color.mul(this.strength).mul(spot));
+    const coreGlow = this.color.mul(this.strength).mul(core).mul(0.08);
+    const ringGlow = vec3(1, 0.32, 0.02).mul(this.strength).mul(ring).mul(0.12);
+    const highlightedColor = baseColor.mul(lightGain).add(coreGlow).add(ringGlow);
     this.node = insideRadius.and(insideHeight).select(highlightedColor, baseColor);
     this.update(options);
     this.pass.gaussianColorNode = this.node;
