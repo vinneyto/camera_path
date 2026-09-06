@@ -1,18 +1,24 @@
 "use client";
 
-import { OrbitControls } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { useTheme } from "@/features/theme-switcher";
+import { GaussianTile, RenderPipelineCanvas } from "@/shared/three";
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
-import { AnchorMarker } from "./anchor-marker";
-import { PlaybackCamera } from "./playback-camera";
-import { SimpleScene } from "./simple-scene";
-import { TrajectoryLine } from "./trajectory-line";
+import { SceneContents } from "./scene-contents";
+import { SceneMessage } from "./scene-message";
+import { useWebGpuAvailability } from "./use-webgpu-availability";
+
+const DARK_BACKGROUND = [12 / 255, 16 / 255, 23 / 255, 1] as const;
+const LIGHT_BACKGROUND = [235 / 255, 233 / 255, 229 / 255, 1] as const;
+
+type CloudState =
+  | { status: "loading" }
+  | { status: "ready" }
+  | { status: "error"; message: string };
 
 interface SceneCanvasProps {
   anchors: Anchor[];
@@ -36,38 +42,48 @@ export function SceneCanvas({
   const { theme } = useTheme();
   const dark = theme === "dark";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
+  const [cloudState, setCloudState] = useState<CloudState>({ status: "loading" });
+  const webGpuAvailable = useWebGpuAvailability();
+  const handleCloudLoading = useCallback(() => setCloudState({ status: "loading" }), []);
+  const handleCloudReady = useCallback(() => setCloudState({ status: "ready" }), []);
+  const handleCloudError = useCallback((error: Error) => {
+    setCloudState({ status: "error", message: error.message });
+  }, []);
 
   return (
-    <div className="h-full w-full">
-      <Canvas
-        camera={{ far: 100, fov: 42, near: 0.05, position: [7, 6, 8] }}
-        dpr={[1, 2]}
-        shadows
-      >
-        <color args={[dark ? "#0c1017" : "#ebe9e5"]} attach="background" />
-        <ambientLight intensity={dark ? 0.8 : 1.25} />
-        <directionalLight castShadow intensity={dark ? 1.7 : 2.1} position={[5, 8, 4]} shadow-mapSize={[1024, 1024]} />
-        <SimpleScene dark={dark} onSurfaceClick={onAddAnchor} />
-        {anchors.map((anchor) => (
-          <AnchorMarker
-            anchor={anchor}
-            key={anchor.id}
-            onContextMenu={(selectedAnchor, position) => setAnchorMenu({ ...position, anchor: selectedAnchor })}
-          />
-        ))}
-        {trajectory && (
-          <TrajectoryLine
-            dark={dark}
-            onSelect={onSelectTrajectory}
-            selected={selected}
-            trajectory={trajectory}
-          />
-        )}
-        {trajectory && trajectory.position_segments.length > 0 && (
-          <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
-        )}
-        <OrbitControls makeDefault maxDistance={18} minDistance={2.5} target={[0, 0.7, 0]} />
-      </Canvas>
+    <div className="relative h-full w-full">
+      {webGpuAvailable && (
+        <RenderPipelineCanvas
+          camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
+          dpr={[1, 2]}
+          shadows
+        >
+          <GaussianTile background={dark ? DARK_BACKGROUND : LIGHT_BACKGROUND}>
+            <SceneContents
+              anchors={anchors}
+              dark={dark}
+              onAddAnchor={onAddAnchor}
+              onCloudError={handleCloudError}
+              onCloudLoading={handleCloudLoading}
+              onCloudReady={handleCloudReady}
+              onOpenAnchorMenu={(anchor, position) => setAnchorMenu({ ...position, anchor })}
+              onSelectTrajectory={onSelectTrajectory}
+              pathPosition={pathPosition}
+              selected={selected}
+              trajectory={trajectory}
+            />
+          </GaussianTile>
+        </RenderPipelineCanvas>
+      )}
+      {webGpuAvailable === false && (
+        <SceneMessage message="WebGPU is unavailable in this browser" />
+      )}
+      {webGpuAvailable !== false && cloudState.status === "loading" && (
+        <SceneMessage message="Loading mug.ply…" />
+      )}
+      {webGpuAvailable !== false && cloudState.status === "error" && (
+        <SceneMessage message={`Could not load mug.ply: ${cloudState.message}`} />
+      )}
       <ContextMenu
         items={anchorMenu ? [{
           destructive: true,
