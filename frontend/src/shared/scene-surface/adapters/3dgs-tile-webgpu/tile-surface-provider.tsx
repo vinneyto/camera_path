@@ -46,13 +46,13 @@ export function TileSurfaceProvider({ children }: SceneSurfaceAdapterProviderPro
     }
 
     const pass = gaussianPass(renderer, camera, store, { background: [0, 0, 0, 0] });
-    Object.assign(
-      pass,
-      createTileRasterDepthNodes(
-        getOpaqueViewDepth(rasterPixelCoordinate),
-        pass.depthSortMode,
-      ),
+    const depthNodes = createTileRasterDepthNodes(
+      getOpaqueViewDepth(rasterPixelCoordinate),
+      pass.depthSortMode,
     );
+    pass.rasterPixelValueNode = depthNodes.rasterPixelValueNode;
+    pass.rasterBreakNode = depthNodes.rasterBreakNode;
+    pass.rasterDiscardNode = depthNodes.rasterDiscardNode;
     const unregister = registerLayer(pass, { order: -100 });
 
     return () => {
