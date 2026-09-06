@@ -8,6 +8,7 @@ test("renders children through a renderer-agnostic backend", () => {
   const backend: GaussianRenderingBackend = {
     container: null,
     createCloud: vi.fn(),
+    createHighlightVolume: vi.fn(),
     dispose: vi.fn(),
   };
 

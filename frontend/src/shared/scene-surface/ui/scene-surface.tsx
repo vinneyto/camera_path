@@ -11,8 +11,14 @@ export function SceneSurface({
   onClick,
   onError,
   onLoading,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
   onReady,
   onSurfaceClick,
+  onSurfacePointerDown,
+  onSurfacePointerMove,
+  onSurfacePointerUp,
   raycastable = true,
   source,
   ...objectProps
@@ -35,6 +41,24 @@ export function SceneSurface({
     if (typeof onClick === "function") onClick(event);
   }
 
+  function handlePointerDown(event: ThreeEvent<PointerEvent>) {
+    if (cloud === null) return;
+    onSurfacePointerDown?.(cloud.getHit(event, event.ray), event);
+    if (typeof onPointerDown === "function") onPointerDown(event);
+  }
+
+  function handlePointerMove(event: ThreeEvent<PointerEvent>) {
+    if (cloud === null) return;
+    onSurfacePointerMove?.(cloud.getHit(event, event.ray), event);
+    if (typeof onPointerMove === "function") onPointerMove(event);
+  }
+
+  function handlePointerUp(event: ThreeEvent<PointerEvent>) {
+    if (cloud === null) return;
+    onSurfacePointerUp?.(cloud.getHit(event, event.ray), event);
+    if (typeof onPointerUp === "function") onPointerUp(event);
+  }
+
   return cloud
     ? (
         <primitive
@@ -42,6 +66,9 @@ export function SceneSurface({
           dispose={null}
           object={cloud.object}
           onClick={handleClick}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
         />
       )
     : null;

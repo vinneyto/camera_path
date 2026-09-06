@@ -4,11 +4,47 @@ import type {
   GaussianCloudSource,
   SceneSurfaceBounds,
   SceneSurfaceHit,
+  SceneSurfacePoint,
 } from "./scene-surface-types";
 
 export interface GaussianCloudOptions {
   name?: string;
   raycastable?: boolean;
+}
+
+interface GaussianHighlightVolumeBaseOptions {
+  position: SceneSurfacePoint;
+  radius: number;
+}
+
+export interface GaussianColorHighlightVolumeOptions
+  extends GaussianHighlightVolumeBaseOptions {
+  bottomOffset: number;
+  color: SceneSurfacePoint;
+  height: number;
+  strength: number;
+  type: "color";
+}
+
+export interface GaussianRippleHighlightVolumeOptions
+  extends GaussianHighlightVolumeBaseOptions {
+  amplitude: number;
+  speed: number;
+  tintColor: SceneSurfacePoint;
+  tintStrength: number;
+  type: "ripple";
+  verticalCoreRadius: number;
+  verticalFalloffRadius: number;
+  wavelength: number;
+}
+
+export type GaussianHighlightVolumeOptions =
+  | GaussianColorHighlightVolumeOptions
+  | GaussianRippleHighlightVolumeOptions;
+
+export interface GaussianHighlightVolumeInstance {
+  dispose(): void;
+  update(options: GaussianHighlightVolumeOptions): void;
 }
 
 export interface GaussianCloudInstance {
@@ -25,5 +61,8 @@ export interface GaussianRenderingBackend {
     source: GaussianCloudSource,
     options?: GaussianCloudOptions,
   ): Promise<GaussianCloudInstance>;
+  createHighlightVolume(
+    options: GaussianHighlightVolumeOptions,
+  ): GaussianHighlightVolumeInstance;
   dispose(): void;
 }

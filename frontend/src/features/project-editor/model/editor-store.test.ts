@@ -9,9 +9,11 @@ describe("editor store", () => {
     useEditorStore.getState().setPlaybackFrame(0.4, 2.5);
     useEditorStore.getState().setPlaying(true);
     useEditorStore.getState().selectTrajectory();
+    useEditorStore.getState().setActiveTool("anchor");
 
     expect(useEditorStore.getState()).toMatchObject({
       elapsed: 2.5,
+      activeTool: "anchor",
       pathPosition: 0.4,
       playing: true,
       trajectorySelected: true,
@@ -22,10 +24,12 @@ describe("editor store", () => {
     useEditorStore.getState().setPlaybackFrame(0.8, 7);
     useEditorStore.getState().setPlaying(true);
     useEditorStore.getState().selectTrajectory();
+    useEditorStore.getState().setActiveTool("anchor");
     useEditorStore.getState().resetEditor();
 
     expect(useEditorStore.getState()).toMatchObject({
       elapsed: 0,
+      activeTool: null,
       pathPosition: 0,
       playing: false,
       trajectorySelected: false,
