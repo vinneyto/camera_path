@@ -2,6 +2,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useMemo } from "react";
 
 import { sampleTrajectory, type CompiledTrajectory } from "@/entities/trajectory";
+import { getAnchorToolModifier } from "@/features/project-editor";
 import { RENDER_PIPELINE_OVERLAY_LAYER, ScreenSpaceLine } from "@/shared/three";
 
 interface TrajectoryLineProps {
@@ -24,7 +25,11 @@ export function TrajectoryLine({
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     const pointerEvent = event.nativeEvent as PointerEvent;
-    if (!interactive || pointerEvent.ctrlKey || pointerEvent.pointerType === "touch") return;
+    if (
+      !interactive
+      || getAnchorToolModifier(pointerEvent).pressed
+      || pointerEvent.pointerType === "touch"
+    ) return;
     event.stopPropagation();
     onSelect();
   }

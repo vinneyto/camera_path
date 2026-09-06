@@ -4,7 +4,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Vec3 } from "@/entities/project";
-import { useEditorStore } from "@/features/project-editor";
+import { getAnchorToolModifier, useEditorStore } from "@/features/project-editor";
 import type { SceneSurfaceHit } from "@/shared/scene-surface";
 
 import { AnchorPlacementGesture } from "../lib/anchor-placement-gesture";
@@ -30,7 +30,9 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     event: ThreeEvent<PointerEvent>,
   ) => {
     const pointerType = event.nativeEvent.pointerType;
-    const enabled = activeTool === "anchor" || event.nativeEvent.ctrlKey || pointerType === "touch";
+    const enabled = activeTool === "anchor"
+      || getAnchorToolModifier(event.nativeEvent).pressed
+      || pointerType === "touch";
     if (!enabled) return;
     if (pointerType === "touch") setActiveTool("anchor");
     gestureRef.current.begin(
@@ -48,7 +50,9 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     hit: SceneSurfaceHit,
     event: ThreeEvent<PointerEvent>,
   ) => {
-    if (activeTool === "anchor" || event.nativeEvent.ctrlKey) setPreviewHit(hit);
+    if (activeTool === "anchor" || getAnchorToolModifier(event.nativeEvent).pressed) {
+      setPreviewHit(hit);
+    }
     const moved = gestureRef.current.move(hit, event.pointerId, event.clientX, event.clientY);
     if (moved) setPreviewHit(null);
   }, [activeTool]);
@@ -61,7 +65,7 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     if (result === null) return;
     (event.target as Element | null)?.releasePointerCapture?.(event.pointerId);
     const enabled = activeTool === "anchor"
-      || event.nativeEvent.ctrlKey
+      || getAnchorToolModifier(event.nativeEvent).pressed
       || result.pointerType === "touch";
     if (enabled && result.hit !== null) onPlace(result.hit.position, result.hit.normal);
     if (result.pointerType === "touch") {

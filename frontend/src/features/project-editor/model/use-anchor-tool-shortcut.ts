@@ -3,18 +3,19 @@
 import { useEffect } from "react";
 
 import { useEditorStore } from "./editor-store";
+import { getAnchorToolModifier } from "./get-anchor-tool-modifier";
 
 export function useAnchorToolShortcut() {
   const setActiveTool = useEditorStore((state) => state.setActiveTool);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Control") setActiveTool("anchor");
+      if (event.key === getAnchorToolModifier(event).key) setActiveTool("anchor");
       if (event.key === "Escape") setActiveTool(null);
     }
 
     function handleKeyUp(event: KeyboardEvent) {
-      if (event.key === "Control") setActiveTool(null);
+      if (event.key === getAnchorToolModifier(event).key) setActiveTool(null);
     }
 
     function handleBlur() {

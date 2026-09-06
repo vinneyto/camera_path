@@ -134,8 +134,8 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
               ? <LoaderCircle className="size-3 animate-spin" />
               : <MousePointerClick className="size-3" />}
             {activeTool === "anchor"
-              ? "Anchor tool active — release Ctrl to exit"
-              : "Hold Ctrl or tap the surface to place an anchor"}
+              ? "Anchor tool active — release the modifier key to exit"
+              : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
           </div>
         </div>
         {trajectory && trajectory.position_segments.length > 0 && (
