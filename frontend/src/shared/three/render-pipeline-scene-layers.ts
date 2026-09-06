@@ -1,0 +1,2 @@
+export const RENDER_PIPELINE_SCENE_LAYER = 0;
+export const RENDER_PIPELINE_OVERLAY_LAYER = 1;

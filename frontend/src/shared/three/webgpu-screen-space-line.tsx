@@ -17,8 +17,10 @@ export function WebGpuScreenSpaceLine({
   depthTest = true,
   depthWrite = true,
   hitSlop = 0,
+  layer = 0,
   points,
   renderOrder = 0,
+  transparent = false,
   width = 1,
   ...eventHandlers
 }: WebGpuScreenSpaceLineProps) {
@@ -34,9 +36,11 @@ export function WebGpuScreenSpaceLine({
       depthWrite,
       linewidth: width,
       toneMapped: false,
+      transparent,
       worldUnits: false,
     });
     const object = new Line2(geometry, material);
+    object.layers.set(layer);
     object.renderOrder = renderOrder;
 
     const raycastThreshold = Math.max(0, hitSlop) * 2;
@@ -54,7 +58,7 @@ export function WebGpuScreenSpaceLine({
     }
 
     return object;
-  }, [color, depthTest, depthWrite, hitSlop, points, renderOrder, width]);
+  }, [color, depthTest, depthWrite, hitSlop, layer, points, renderOrder, transparent, width]);
 
   useEffect(() => () => {
     line.geometry.dispose();

@@ -16,9 +16,11 @@ export interface ScreenSpaceLineProps extends Pick<
   depthTest?: boolean;
   depthWrite?: boolean;
   hitSlop?: number;
+  layer?: number;
   points: readonly ScreenSpaceLinePoint[];
   radius?: number;
   renderOrder?: number;
+  transparent?: boolean;
   webGpuHitSlop?: number;
   width?: number;
 }

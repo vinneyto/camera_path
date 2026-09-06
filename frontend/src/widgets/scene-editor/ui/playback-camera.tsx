@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 import { CameraHelper, PerspectiveCamera, Vector3 } from "three";
 
 import { evaluateAim, locateOnPath, type CompiledTrajectory } from "@/entities/trajectory";
+import { RENDER_PIPELINE_OVERLAY_LAYER } from "@/shared/three";
 
 interface PlaybackCameraProps {
   pathPosition: number;
@@ -11,7 +12,17 @@ interface PlaybackCameraProps {
 
 export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps) {
   const camera = useMemo(() => new PerspectiveCamera(50, 1.4, 0.12, 0.7), []);
-  const helper = useMemo(() => new CameraHelper(camera), [camera]);
+  const helper = useMemo(() => {
+    const value = new CameraHelper(camera);
+    value.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+    const materials = Array.isArray(value.material) ? value.material : [value.material];
+    for (const material of materials) {
+      material.depthTest = false;
+      material.depthWrite = false;
+      material.transparent = true;
+    }
+    return value;
+  }, [camera]);
 
   useEffect(() => () => helper.dispose(), [helper]);
 

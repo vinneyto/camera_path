@@ -6,14 +6,20 @@ import {
   type PropsWithChildren,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
+import { Layers } from "three";
 import { RenderPipeline, WebGPURenderer, type Node } from "three/webgpu";
-import { pass as scenePass } from "three/tsl";
+import { pass as scenePass, perspectiveDepthToViewZ, uniform } from "three/tsl";
 
+import { compositeDepthTestedPremultipliedOver } from "./composite-depth-tested-premultiplied-over";
 import { compositePremultipliedOver } from "./composite-premultiplied-over";
+import {
+  RENDER_PIPELINE_OVERLAY_LAYER,
+  RENDER_PIPELINE_SCENE_LAYER,
+} from "./render-pipeline-scene-layers";
 import type {
   RenderPipelineContextValue,
   RenderPipelineLayer,
@@ -21,8 +27,10 @@ import type {
 } from "./render-pipeline-types";
 
 interface PipelineResources {
+  opaque: ReturnType<typeof scenePass>;
+  overlay: ReturnType<typeof scenePass>;
   pipeline: RenderPipeline;
-  scene: ReturnType<typeof scenePass>;
+  transparent: ReturnType<typeof scenePass>;
 }
 
 const RenderPipelineContext = createContext<RenderPipelineContextValue | null>(null);
@@ -45,17 +53,35 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     const layers = [...layersRef.current.values()].sort(
       (left, right) => left.order - right.order || left.sequence - right.sequence,
     );
-    let output: Node<"vec4"> | null = null;
+    let output: Node<"vec4"> = resources.opaque;
     for (const layer of layers) {
-      output = output === null
-        ? layer.node
-        : compositePremultipliedOver(output, layer.node);
+      output = compositePremultipliedOver(output, layer.node);
     }
-    resources.pipeline.outputNode = output === null
-      ? resources.scene
-      : compositePremultipliedOver(output, resources.scene);
+    const withTransparentScene = compositeDepthTestedPremultipliedOver(
+      output,
+      resources.transparent,
+      resources.opaque.getViewZNode(),
+      resources.transparent.getViewZNode(),
+    );
+    resources.pipeline.outputNode = compositePremultipliedOver(
+      withTransparentScene,
+      resources.overlay,
+    );
     resources.pipeline.needsUpdate = true;
   }, []);
+
+  const getOpaqueViewDepth = useCallback((pixelCoordinate: Node): Node<"float"> => {
+    const resources = resourcesRef.current;
+    if (resources === null) {
+      throw new Error("Render pipeline depth is unavailable before pipeline initialization");
+    }
+    const perspectiveDepth = resources.opaque.getTextureNode("depth").load(pixelCoordinate);
+    return perspectiveDepthToViewZ(
+      perspectiveDepth,
+      uniform(camera.near),
+      uniform(camera.far),
+    ).negate();
+  }, [camera]);
 
   const registerLayer = useCallback((
     node: Node<"vec4">,
@@ -76,19 +102,41 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<RenderPipelineContextValue>(() => ({
     camera,
+    getOpaqueViewDepth,
     registerLayer,
     renderer,
-  }), [camera, registerLayer, renderer]);
+  }), [camera, getOpaqueViewDepth, registerLayer, renderer]);
 
-  useEffect(() => {
-    const applicationScene = scenePass(scene, camera);
-    const pipeline = new RenderPipeline(renderer, applicationScene);
-    resourcesRef.current = { pipeline, scene: applicationScene };
+  useLayoutEffect(() => {
+    const sceneLayers = new Layers();
+    sceneLayers.set(RENDER_PIPELINE_SCENE_LAYER);
+    const overlayLayers = new Layers();
+    overlayLayers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+
+    const opaque = scenePass(scene, camera);
+    opaque.opaque = true;
+    opaque.transparent = false;
+    opaque.setLayers(sceneLayers);
+
+    const transparent = scenePass(scene, camera);
+    transparent.opaque = false;
+    transparent.transparent = true;
+    transparent.setLayers(sceneLayers);
+
+    const overlay = scenePass(scene, camera);
+    overlay.opaque = false;
+    overlay.transparent = true;
+    overlay.setLayers(overlayLayers);
+
+    const pipeline = new RenderPipeline(renderer, opaque);
+    resourcesRef.current = { opaque, overlay, pipeline, transparent };
     rebuildOutput();
     return () => {
       resourcesRef.current = null;
       pipeline.dispose();
-      applicationScene.dispose();
+      opaque.dispose();
+      transparent.dispose();
+      overlay.dispose();
     };
   }, [camera, rebuildOutput, renderer, scene]);
 

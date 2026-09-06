@@ -8,12 +8,13 @@ import {
   useMemo,
   useState,
 } from "react";
-import { GaussianStore, gaussianPass } from "3dgs-tile-webgpu";
+import { GaussianStore, gaussianPass, rasterPixelCoordinate } from "3dgs-tile-webgpu";
 import { PerspectiveCamera } from "three/webgpu";
 
 import { useRenderPipeline } from "@/shared/three";
 
 import type { SceneSurfaceAdapterProviderProps } from "../../model/scene-surface-types";
+import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 
 interface TileSurfaceContextValue {
   registerSurface: () => () => void;
@@ -22,8 +23,8 @@ interface TileSurfaceContextValue {
 
 const TileSurfaceContext = createContext<TileSurfaceContextValue | null>(null);
 
-export function TileSurfaceProvider({ background, children }: SceneSurfaceAdapterProviderProps) {
-  const { camera, registerLayer, renderer } = useRenderPipeline();
+export function TileSurfaceProvider({ children }: SceneSurfaceAdapterProviderProps) {
+  const { camera, getOpaqueViewDepth, registerLayer, renderer } = useRenderPipeline();
   const [store] = useState(() => new GaussianStore());
   const [surfaceCount, setSurfaceCount] = useState(0);
 
@@ -38,24 +39,27 @@ export function TileSurfaceProvider({ background, children }: SceneSurfaceAdapte
   }, []);
 
   const value = useMemo(() => ({ registerSurface, store }), [registerSurface, store]);
-  const backgroundKey = background.join(",");
-
   useEffect(() => {
     if (surfaceCount === 0) return;
     if (!(camera instanceof PerspectiveCamera)) {
       throw new TypeError("3dgs-tile-webgpu requires a PerspectiveCamera");
     }
 
-    const pass = gaussianPass(renderer, camera, store, { background });
+    const pass = gaussianPass(renderer, camera, store, { background: [0, 0, 0, 0] });
+    const depthNodes = createTileRasterDepthNodes(
+      getOpaqueViewDepth(rasterPixelCoordinate),
+      pass.depthSortMode,
+    );
+    pass.rasterPixelValueNode = depthNodes.rasterPixelValueNode;
+    pass.rasterBreakNode = depthNodes.rasterBreakNode;
+    pass.rasterDiscardNode = depthNodes.rasterDiscardNode;
     const unregister = registerLayer(pass, { order: -100 });
 
     return () => {
       unregister();
       pass.dispose();
     };
-  // backgroundKey deliberately tracks tuple values instead of tuple identity.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backgroundKey, camera, registerLayer, renderer, store, surfaceCount]);
+  }, [camera, getOpaqueViewDepth, registerLayer, renderer, store, surfaceCount]);
 
   useEffect(() => () => store.dispose(), [store]);
 

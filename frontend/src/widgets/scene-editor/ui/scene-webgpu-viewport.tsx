@@ -21,6 +21,10 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
           dpr={[1, 2]}
           flat
           shadows
+          style={{
+            backgroundColor: `rgb(${context.background.slice(0, 3)
+              .map((channel) => Math.round(channel * 255)).join(" ")})`,
+          }}
         >
           <SceneSurfaceProvider adapter={tileSceneSurfaceAdapter} background={context.background}>
             <SceneContents
