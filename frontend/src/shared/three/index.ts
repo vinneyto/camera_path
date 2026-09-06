@@ -1,7 +1,10 @@
 export {
   RenderPipelineCanvas,
 } from "./render-pipeline-canvas";
-export { useRenderPipeline } from "./render-pipeline-provider";
+export {
+  useOptionalRenderPipeline,
+  useRenderPipeline,
+} from "./render-pipeline-provider";
 export type {
   RenderPipelineContextValue,
   RenderPipelineLayerOptions,

@@ -6,8 +6,11 @@ import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import {
   SceneSurface,
+  SceneSurfaceProvider,
   type SceneSurfaceHit,
   type SceneSurfaceReady,
+  type SceneSurfaceBackground,
+  useGaussianRenderingBackend,
 } from "@/shared/scene-surface";
 import type { ContextMenuPosition } from "@/shared/ui";
 
@@ -20,6 +23,7 @@ const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
 
 interface SceneContentsProps {
   anchors: Anchor[];
+  background: SceneSurfaceBackground;
   dark: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
   onSurfaceError: (error: Error) => void;
@@ -34,6 +38,7 @@ interface SceneContentsProps {
 
 export function SceneContents({
   anchors,
+  background,
   dark,
   onAddAnchor,
   onSurfaceError,
@@ -46,6 +51,7 @@ export function SceneContents({
   trajectory,
 }: SceneContentsProps) {
   const camera = useThree((state) => state.camera);
+  const renderingBackend = useGaussianRenderingBackend(background);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   const handleSurfaceReady = useCallback((surface: SceneSurfaceReady) => {
     frameSurface(camera, surface.bounds, setOrbitTarget);
@@ -57,7 +63,7 @@ export function SceneContents({
   }
 
   return (
-    <>
+    <SceneSurfaceProvider backend={renderingBackend}>
       <SceneSurface
         name="Mug Gaussian cloud"
         onError={onSurfaceError}
@@ -88,6 +94,6 @@ export function SceneContents({
         <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
       )}
       <OrbitControls makeDefault maxDistance={Infinity} minDistance={0.001} target={orbitTarget} />
-    </>
+    </SceneSurfaceProvider>
   );
 }

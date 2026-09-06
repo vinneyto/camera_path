@@ -2,8 +2,8 @@
 
 import { RenderPipelineCanvas } from "@/shared/three";
 
+import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
-import { SceneWebGpuContents } from "./scene-webgpu-contents";
 import type { SceneViewportProps } from "./scene-viewport-types";
 import { useWebGpuAvailability } from "./use-webgpu-availability";
 
@@ -25,7 +25,20 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
               .map((channel) => Math.round(channel * 255)).join(" ")})`,
           }}
         >
-          <SceneWebGpuContents context={context} {...props} />
+          <SceneContents
+            anchors={props.anchors}
+            background={context.background}
+            dark={context.dark}
+            onAddAnchor={props.onAddAnchor}
+            onOpenAnchorMenu={context.onOpenAnchorMenu}
+            onSelectTrajectory={props.onSelectTrajectory}
+            onSurfaceError={context.onSurfaceError}
+            onSurfaceLoading={context.onSurfaceLoading}
+            onSurfaceReady={context.onSurfaceReady}
+            pathPosition={props.pathPosition}
+            selected={props.selected}
+            trajectory={props.trajectory}
+          />
         </RenderPipelineCanvas>
       )}
       unavailableMessage="WebGPU is unavailable in this browser"

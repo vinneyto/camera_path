@@ -152,9 +152,13 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
 }
 
 export function useRenderPipeline(): RenderPipelineContextValue {
-  const value = useContext(RenderPipelineContext);
+  const value = useOptionalRenderPipeline();
   if (value === null) {
     throw new Error("useRenderPipeline must be used inside RenderPipelineCanvas");
   }
   return value;
+}
+
+export function useOptionalRenderPipeline(): RenderPipelineContextValue | null {
+  return useContext(RenderPipelineContext);
 }
