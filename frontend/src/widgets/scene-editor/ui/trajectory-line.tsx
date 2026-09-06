@@ -1,8 +1,8 @@
-import { Line } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useMemo } from "react";
 
 import { sampleTrajectory, type CompiledTrajectory } from "@/entities/trajectory";
+import { WebGpuLine } from "@/shared/three/webgpu-line";
 
 interface TrajectoryLineProps {
   dark: boolean;
@@ -21,23 +21,14 @@ export function TrajectoryLine({ dark, selected, trajectory, onSelect }: Traject
   }
 
   return (
-    <group>
-      <Line
-        color={selected ? "#f97316" : dark ? "#e5e7eb" : "#171717"}
-        lineWidth={selected ? 4 : 3}
-        points={points}
-      />
-      <Line
-        color="#000000"
-        depthWrite={false}
-        lineWidth={16}
-        onClick={handleClick}
-        onPointerOut={() => { document.body.style.cursor = ""; }}
-        onPointerOver={() => { document.body.style.cursor = "pointer"; }}
-        opacity={0}
-        points={points}
-        transparent
-      />
-    </group>
+    <WebGpuLine
+      color={selected ? "#f97316" : dark ? "#e5e7eb" : "#171717"}
+      lineWidth={selected ? 4 : 3}
+      onClick={handleClick}
+      onPointerOut={() => { document.body.style.cursor = ""; }}
+      onPointerOver={() => { document.body.style.cursor = "pointer"; }}
+      points={points}
+      raycastWidth={16}
+    />
   );
 }
