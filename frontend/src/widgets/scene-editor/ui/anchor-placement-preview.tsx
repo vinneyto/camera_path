@@ -16,6 +16,7 @@ import {
   ANCHOR_PLACEMENT_FLOAT_AMPLITUDE,
   ANCHOR_PLACEMENT_FLOAT_FREQUENCY,
   ANCHOR_PLACEMENT_HEIGHT,
+  ANCHOR_PLACEMENT_HIGHLIGHT_BOTTOM_OFFSET,
   ANCHOR_PLACEMENT_HIGHLIGHT_RADIUS,
   ANCHOR_PLACEMENT_HIGHLIGHT_STRENGTH,
 } from "./anchor-placement-constants";
@@ -32,7 +33,7 @@ export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementP
   const highlight = useMemo<GaussianHighlightVolumeOptions | null>(() => hit === null
     ? null
     : ({
-        bottomOffset: 0.02,
+        bottomOffset: ANCHOR_PLACEMENT_HIGHLIGHT_BOTTOM_OFFSET,
         color: [1, 0.95, 0.78],
         height: ANCHOR_PLACEMENT_HEIGHT,
         position: hit.position,
