@@ -6,4 +6,7 @@
 - Local callbacks that are implementation details of a single component may stay inside that component.
 - Move sibling components and reusable helpers into dedicated files instead of accumulating them in a page, widget, or feature module.
 - Keep scene features renderer-agnostic. Renderer-specific imports belong only in the matching scene-surface adapter.
-- Support both the default WebGPU viewport and the opt-in WebGL comparison viewport. Prefer shared Three.js primitives; when custom shader logic is necessary, prefer TSL only after verifying it works with both active renderer paths.
+- Treat the WebGPU viewport backed by `3dgs-tile-webgpu` as the only supported product rendering path.
+- Keep the Spark/WebGL adapter only as a renderer-integration example. It does not need feature parity or production completeness; unsupported operations may use explicit stubs that throw clear errors.
+- Do not spend effort extending or tuning the Spark path unless a task explicitly requests it.
+- Prefer TSL when custom shader logic is required for the supported WebGPU path.
