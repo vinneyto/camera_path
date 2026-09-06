@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
+import { getAnchorLabel } from "@/features/anchor-creation";
 import { useEditorStore } from "@/features/project-editor";
 import {
   SceneSurface,
@@ -76,7 +77,11 @@ export function SceneContents({
         onSurfacePointerUp={placement.handlePointerUp}
         source={SCENE_SURFACE_SOURCE}
       />
-      <AnchorPlacementPreview backend={renderingBackend} hit={placement.previewHit} />
+      <AnchorPlacementPreview
+        backend={renderingBackend}
+        hit={placement.previewHit}
+        label={getAnchorLabel(anchors)}
+      />
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight
         castShadow

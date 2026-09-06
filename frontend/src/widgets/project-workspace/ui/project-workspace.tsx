@@ -69,7 +69,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
       label: getAnchorLabel(Object.values(project.anchors)),
       surface_position: position.map((value) => Number(value.toFixed(4))) as Vec3,
       surface_normal: normal.map((value) => Number(value.toFixed(4))) as Vec3,
-      lift: 0.5,
+      lift: 0.2,
       lift_axis: "world_up",
     }).catch(() => undefined);
   }

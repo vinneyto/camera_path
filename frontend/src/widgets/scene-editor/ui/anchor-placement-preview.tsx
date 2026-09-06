@@ -1,9 +1,10 @@
 "use client";
 
-import { Html } from "@react-three/drei";
-import { MapPin } from "lucide-react";
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import type { Group } from "three";
 
+import type { Anchor } from "@/entities/project";
 import {
   type GaussianHighlightVolumeOptions,
   type GaussianRenderingBackend,
@@ -12,16 +13,22 @@ import {
 } from "@/shared/scene-surface";
 
 import {
+  ANCHOR_PLACEMENT_FLOAT_AMPLITUDE,
+  ANCHOR_PLACEMENT_FLOAT_FREQUENCY,
   ANCHOR_PLACEMENT_HEIGHT,
   ANCHOR_PLACEMENT_HIGHLIGHT_RADIUS,
+  ANCHOR_PLACEMENT_HIGHLIGHT_STRENGTH,
 } from "./anchor-placement-constants";
+import { AnchorMarker } from "./anchor-marker";
 
 interface AnchorPlacementPreviewProps {
   backend: GaussianRenderingBackend;
   hit: SceneSurfaceHit | null;
+  label: string;
 }
 
-export function AnchorPlacementPreview({ backend, hit }: AnchorPlacementPreviewProps) {
+export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementPreviewProps) {
+  const animationRef = useRef<Group>(null);
   const highlight = useMemo<GaussianHighlightVolumeOptions | null>(() => hit === null
     ? null
     : ({
@@ -30,24 +37,29 @@ export function AnchorPlacementPreview({ backend, hit }: AnchorPlacementPreviewP
         height: ANCHOR_PLACEMENT_HEIGHT,
         position: hit.position,
         radius: ANCHOR_PLACEMENT_HIGHLIGHT_RADIUS,
-        strength: 0.42,
+        strength: ANCHOR_PLACEMENT_HIGHLIGHT_STRENGTH,
       }), [hit]);
+  const anchor = useMemo<Anchor | null>(() => hit === null
+    ? null
+    : ({
+        id: "anchor-placement-preview",
+        label,
+        lift: ANCHOR_PLACEMENT_HEIGHT,
+        lift_axis: "world_up",
+        surface_normal: hit.normal,
+        surface_position: hit.position,
+      }), [hit, label]);
   useGaussianHighlightVolume(backend, highlight);
+  useFrame(({ clock }) => {
+    if (animationRef.current === null) return;
+    animationRef.current.position.y = Math.sin(
+      clock.elapsedTime * Math.PI * 2 * ANCHOR_PLACEMENT_FLOAT_FREQUENCY,
+    ) * ANCHOR_PLACEMENT_FLOAT_AMPLITUDE;
+  });
 
-  if (hit === null) return null;
-  return (
-    <Html
-      center
-      position={[
-        hit.position[0],
-        hit.position[1] + ANCHOR_PLACEMENT_HEIGHT,
-        hit.position[2],
-      ]}
-      style={{ pointerEvents: "none" }}
-    >
-      <div className="rounded-full border border-orange-300/70 bg-background/90 p-1.5 shadow-lg backdrop-blur">
-        <MapPin className="size-4 text-orange-500" />
-      </div>
-    </Html>
+  return anchor === null ? null : (
+    <group ref={animationRef}>
+      <AnchorMarker anchor={anchor} />
+    </group>
   );
 }
