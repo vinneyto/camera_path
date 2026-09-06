@@ -1,6 +1,5 @@
 "use client";
 
-import { SceneSurfaceProvider, tileSceneSurfaceAdapter } from "@/shared/scene-surface";
 import { RenderPipelineCanvas } from "@/shared/three";
 
 import { SceneContents } from "./scene-contents";
@@ -26,21 +25,20 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
               .map((channel) => Math.round(channel * 255)).join(" ")})`,
           }}
         >
-          <SceneSurfaceProvider adapter={tileSceneSurfaceAdapter} background={context.background}>
-            <SceneContents
-              anchors={props.anchors}
-              dark={context.dark}
-              onAddAnchor={props.onAddAnchor}
-              onOpenAnchorMenu={context.onOpenAnchorMenu}
-              onSelectTrajectory={props.onSelectTrajectory}
-              onSurfaceError={context.onSurfaceError}
-              onSurfaceLoading={context.onSurfaceLoading}
-              onSurfaceReady={context.onSurfaceReady}
-              pathPosition={props.pathPosition}
-              selected={props.selected}
-              trajectory={props.trajectory}
-            />
-          </SceneSurfaceProvider>
+          <SceneContents
+            anchors={props.anchors}
+            background={context.background}
+            dark={context.dark}
+            onAddAnchor={props.onAddAnchor}
+            onOpenAnchorMenu={context.onOpenAnchorMenu}
+            onSelectTrajectory={props.onSelectTrajectory}
+            onSurfaceError={context.onSurfaceError}
+            onSurfaceLoading={context.onSurfaceLoading}
+            onSurfaceReady={context.onSurfaceReady}
+            pathPosition={props.pathPosition}
+            selected={props.selected}
+            trajectory={props.trajectory}
+          />
         </RenderPipelineCanvas>
       )}
       unavailableMessage="WebGPU is unavailable in this browser"

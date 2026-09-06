@@ -5,7 +5,7 @@ export interface RenderPipelineLayerOptions {
   order?: number;
 }
 
-export interface RenderPipelineContextValue {
+export interface SceneRenderPipeline {
   camera: Camera;
   getOpaqueViewDepth: (pixelCoordinate: Node) => Node<"float">;
   registerLayer: (
@@ -14,6 +14,8 @@ export interface RenderPipelineContextValue {
   ) => () => void;
   renderer: WebGPURenderer;
 }
+
+export type RenderPipelineContextValue = SceneRenderPipeline;
 
 export interface RenderPipelineLayer {
   node: Node<"vec4">;

@@ -11,11 +11,17 @@ import {
   useRef,
 } from "react";
 import { Layers } from "three";
-import { RenderPipeline, WebGPURenderer, type Node } from "three/webgpu";
-import { pass as scenePass, perspectiveDepthToViewZ, uniform } from "three/tsl";
+import {
+  PerspectiveCamera,
+  RenderPipeline,
+  WebGPURenderer,
+  type Node,
+} from "three/webgpu";
+import { pass as scenePass } from "three/tsl";
 
 import { compositeDepthTestedPremultipliedOver } from "./composite-depth-tested-premultiplied-over";
 import { compositePremultipliedOver } from "./composite-premultiplied-over";
+import { createPerspectiveViewDepthNode } from "./create-perspective-view-depth-node";
 import {
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
@@ -75,12 +81,11 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     if (resources === null) {
       throw new Error("Render pipeline depth is unavailable before pipeline initialization");
     }
+    if (!(camera instanceof PerspectiveCamera)) {
+      throw new TypeError("Render pipeline depth requires a PerspectiveCamera");
+    }
     const perspectiveDepth = resources.opaque.getTextureNode("depth").load(pixelCoordinate);
-    return perspectiveDepthToViewZ(
-      perspectiveDepth,
-      uniform(camera.near),
-      uniform(camera.far),
-    ).negate();
+    return createPerspectiveViewDepthNode(perspectiveDepth, camera);
   }, [camera]);
 
   const registerLayer = useCallback((
@@ -152,9 +157,13 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
 }
 
 export function useRenderPipeline(): RenderPipelineContextValue {
-  const value = useContext(RenderPipelineContext);
+  const value = useOptionalRenderPipeline();
   if (value === null) {
     throw new Error("useRenderPipeline must be used inside RenderPipelineCanvas");
   }
   return value;
+}
+
+export function useOptionalRenderPipeline(): RenderPipelineContextValue | null {
+  return useContext(RenderPipelineContext);
 }
