@@ -7,6 +7,10 @@ export type {
   RenderPipelineLayerOptions,
 } from "./render-pipeline-types";
 export {
+  RENDER_PIPELINE_OVERLAY_LAYER,
+  RENDER_PIPELINE_SCENE_LAYER,
+} from "./render-pipeline-scene-layers";
+export {
   ScreenSpaceLine,
   type ScreenSpaceLinePoint,
   type ScreenSpaceLineProps,

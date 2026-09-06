@@ -16,14 +16,23 @@ export function WebGlScreenSpaceLine({
   depthTest = true,
   depthWrite = true,
   hitSlop = 0,
+  layer = 0,
   points,
   radius = 0.01,
   renderOrder = 0,
+  transparent = false,
   ...eventHandlers
 }: WebGlScreenSpaceLineProps) {
   const line = useMemo(() => {
-    const material = new MeshBasicMaterial({ color, depthTest, depthWrite, toneMapped: false });
+    const material = new MeshBasicMaterial({
+      color,
+      depthTest,
+      depthWrite,
+      toneMapped: false,
+      transparent,
+    });
     const object = new Mesh(createScreenSpaceLineGeometry(points, radius), material);
+    object.layers.set(layer);
     object.renderOrder = renderOrder;
 
     if (hitSlop > 0) {
@@ -40,7 +49,7 @@ export function WebGlScreenSpaceLine({
     }
 
     return object;
-  }, [color, depthTest, depthWrite, hitSlop, points, radius, renderOrder]);
+  }, [color, depthTest, depthWrite, hitSlop, layer, points, radius, renderOrder, transparent]);
 
   useEffect(() => () => {
     line.geometry.dispose();

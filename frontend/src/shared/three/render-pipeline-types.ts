@@ -7,6 +7,7 @@ export interface RenderPipelineLayerOptions {
 
 export interface RenderPipelineContextValue {
   camera: Camera;
+  getOpaqueViewDepth: (pixelCoordinate: Node) => Node<"float">;
   registerLayer: (
     node: Node<"vec4">,
     options?: RenderPipelineLayerOptions,
