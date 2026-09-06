@@ -3,7 +3,7 @@ from httpx import ASGITransport, AsyncClient
 
 from camera_path.api import create_app
 from camera_path.config import Settings
-from camera_path.models import ChatHistoryMessage, ChatResult, ProjectCreate
+from camera_path.models import CameraOrientation, ChatHistoryMessage, ChatResult, ProjectCreate
 from camera_path.repository import SQLiteProjectRepository
 
 
@@ -174,6 +174,71 @@ async def test_duplicate_graph_positions_are_rejected(app) -> None:
         assert (await client.post(url, json=payload)).status_code == 422
 
 
+async def test_client_can_crud_camera_orientation_track(app) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        project = (await client.post("/projects", json={})).json()
+        project_id = project["id"]
+
+        default_response = await client.patch(
+            f"/projects/{project_id}/camera/orientation",
+            json={"yaw_deg": 10, "pitch_deg": -5, "roll_deg": 360},
+        )
+        assert default_response.status_code == 200
+        assert default_response.json()["camera_track"]["default_orientation"] == {
+            "yaw_deg": 10.0,
+            "pitch_deg": -5.0,
+            "roll_deg": 360.0,
+        }
+
+        created = await client.post(
+            f"/projects/{project_id}/camera/orientation/keyframes",
+            json={
+                "path_position": 0.75,
+                "orientation": {"yaw_deg": 45, "pitch_deg": 2, "roll_deg": 3},
+                "interpolation_to_next": "linear",
+            },
+        )
+        assert created.status_code == 200
+        keyframe_id = next(iter(created.json()["camera_track"]["orientation_keyframes"]))
+
+        updated = await client.patch(
+            f"/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
+            json={
+                "path_position": 0.25,
+                "orientation": {"yaw_deg": 360, "pitch_deg": 4, "roll_deg": -8},
+                "interpolation_to_next": "hold",
+            },
+        )
+        item = updated.json()["camera_track"]["orientation_keyframes"][keyframe_id]
+        assert item["path_position"] == 0.25
+        assert item["orientation"]["yaw_deg"] == 360.0
+        assert item["interpolation_to_next"] == "hold"
+
+        compiled = (await client.get(f"/projects/{project_id}/trajectory/compiled")).json()
+        assert compiled["camera_track"]["orientation_keyframes"][0] == item
+
+        deleted = await client.delete(
+            f"/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}"
+        )
+        assert deleted.status_code == 200
+        assert deleted.json()["camera_track"]["orientation_keyframes"] == {}
+
+
+async def test_camera_orientation_validation(app) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        project = (await client.post("/projects", json={})).json()
+        url = f"/projects/{project['id']}/camera/orientation/keyframes"
+        valid = {
+            "path_position": 0.5,
+            "orientation": {"yaw_deg": 0, "pitch_deg": 0, "roll_deg": 0},
+        }
+        assert (await client.post(url, json=valid)).status_code == 200
+        assert (await client.post(url, json=valid)).status_code == 422
+        assert (await client.post(url, json={**valid, "path_position": 1.1})).status_code == 422
+        with pytest.raises(ValueError, match="finite number"):
+            CameraOrientation(yaw_deg=float("inf"))
+
+
 async def test_client_can_change_default_speed_and_aim(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={})).json()
@@ -247,6 +312,17 @@ async def test_clear_trajectory_preserves_scene_setup(app) -> None:
             f"/projects/{project_id}/segments/spline",
             json={"anchor_ids": anchor_ids},
         )
+        await client.patch(
+            f"/projects/{project_id}/camera/orientation",
+            json={"yaw_deg": 10, "pitch_deg": 20, "roll_deg": 30},
+        )
+        await client.post(
+            f"/projects/{project_id}/camera/orientation/keyframes",
+            json={
+                "path_position": 0.5,
+                "orientation": {"yaw_deg": 45, "pitch_deg": 0, "roll_deg": 0},
+            },
+        )
 
         cleared = await client.delete(f"/projects/{project_id}/trajectory")
 
@@ -255,6 +331,12 @@ async def test_clear_trajectory_preserves_scene_setup(app) -> None:
         assert cleared.json()["segments"] == []
         assert cleared.json()["motion_profile"]["keyframes"] == {}
         assert cleared.json()["camera_track"]["keyframes"] == {}
+        assert cleared.json()["camera_track"]["default_orientation"] == {
+            "yaw_deg": 0.0,
+            "pitch_deg": 0.0,
+            "roll_deg": 0.0,
+        }
+        assert cleared.json()["camera_track"]["orientation_keyframes"] == {}
 
 
 async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:

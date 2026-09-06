@@ -1,6 +1,13 @@
 from pathlib import Path
 
-from camera_path.models import Anchor, ChatHistoryMessage, Project, ScenePoint
+from camera_path.models import (
+    Anchor,
+    CameraOrientation,
+    CameraOrientationKeyframe,
+    ChatHistoryMessage,
+    Project,
+    ScenePoint,
+)
 from camera_path.repository import SQLiteProjectRepository
 
 
@@ -20,6 +27,13 @@ async def test_projects_and_chat_survive_repository_restart(tmp_path: Path) -> N
             ChatHistoryMessage(role="assistant", content="Added the target"),
         ]
     )
+    orientation = CameraOrientationKeyframe(
+        path_position=0.4,
+        orientation=CameraOrientation(yaw_deg=25, pitch_deg=-5, roll_deg=180),
+        interpolation_to_next="linear",
+    )
+    first.camera_track.default_orientation = CameraOrientation(roll_deg=3)
+    first.camera_track.orientation_keyframes[orientation.id] = orientation
     saved = await repository.commit(first, first.revision)
 
     restarted = SQLiteProjectRepository(database_path)
@@ -27,6 +41,17 @@ async def test_projects_and_chat_survive_repository_restart(tmp_path: Path) -> N
     assert await restarted.get(first.id) == saved
     assert (await restarted.get(second.id)).name == "Second"
     assert [item.id for item in await restarted.list()] == [first.id, second.id]
+
+
+def test_old_project_snapshot_gets_zero_orientation_defaults() -> None:
+    payload = Project().model_dump()
+    del payload["camera_track"]["default_orientation"]
+    del payload["camera_track"]["orientation_keyframes"]
+
+    restored = Project.model_validate(payload)
+
+    assert restored.camera_track.default_orientation == CameraOrientation()
+    assert restored.camera_track.orientation_keyframes == {}
 
 
 async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:

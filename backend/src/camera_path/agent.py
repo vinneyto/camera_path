@@ -9,6 +9,8 @@ from openai import AsyncOpenAI
 from camera_path.geometry import validate_project
 from camera_path.models import (
     CameraKeyframe,
+    CameraOrientation,
+    CameraOrientationKeyframe,
     ChatHistoryMessage,
     ChatResult,
     FollowPathAim,
@@ -29,7 +31,10 @@ Speed keyframes contain metres-per-second values. smoothstep and linear interpol
 key; hold keeps the current value and jumps at the next key.
 Camera keyframes either follow the path tangent or look at a scene point. The runtime blends the
 two resulting view directions between neighboring keys. Scene points are independent of path
-anchors. Prefer incremental create/update/delete operations; do not clear unrelated user work.
+anchors. Camera orientation adds local yaw (around local up), pitch (around local right), then
+roll (around the view axis) on top of that base aim frame. Angles are unwrapped degrees, so a
+0-to-360 transition is a full turn. Prefer incremental create/update/delete operations; do not
+clear unrelated user work.
 Explain every resulting change briefly after the tools finish."""
 
 
@@ -49,7 +54,9 @@ TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "name": "get_project_state",
-        "description": "Read anchors, segments, scene points, speed keys and camera keys.",
+        "description": (
+            "Read anchors, segments, scene points, speed keys, camera aim and orientation keys."
+        ),
         "parameters": _object({}, []),
         "strict": True,
     },
@@ -74,6 +81,20 @@ TOOLS: list[dict[str, Any]] = [
                 },
             },
             ["aim_kind", "scene_point_id", "direction"],
+        ),
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "set_default_camera_orientation",
+        "description": "Set baseline local yaw, pitch and roll offsets in unwrapped degrees.",
+        "parameters": _object(
+            {
+                "yaw_deg": {"type": "number"},
+                "pitch_deg": {"type": "number"},
+                "roll_deg": {"type": "number"},
+            },
+            ["yaw_deg", "pitch_deg", "roll_deg"],
         ),
         "strict": True,
     },
@@ -267,6 +288,62 @@ TOOLS: list[dict[str, Any]] = [
         "parameters": ID_PARAMETERS,
         "strict": True,
     },
+    {
+        "type": "function",
+        "name": "create_camera_orientation_keyframe",
+        "description": "Add local yaw, pitch and roll offsets to the orientation track.",
+        "parameters": _object(
+            {
+                "path_position": {"type": "number", "minimum": 0, "maximum": 1},
+                "yaw_deg": {"type": "number"},
+                "pitch_deg": {"type": "number"},
+                "roll_deg": {"type": "number"},
+                "interpolation_to_next": INTERPOLATION,
+            },
+            [
+                "path_position",
+                "yaw_deg",
+                "pitch_deg",
+                "roll_deg",
+                "interpolation_to_next",
+            ],
+        ),
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "update_camera_orientation_keyframe",
+        "description": "Move or change one local camera orientation keyframe.",
+        "parameters": _object(
+            {
+                "id": {"type": "string"},
+                "path_position": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+                "yaw_deg": {"type": ["number", "null"]},
+                "pitch_deg": {"type": ["number", "null"]},
+                "roll_deg": {"type": ["number", "null"]},
+                "interpolation_to_next": {
+                    "type": ["string", "null"],
+                    "enum": ["smoothstep", "linear", "hold", None],
+                },
+            },
+            [
+                "id",
+                "path_position",
+                "yaw_deg",
+                "pitch_deg",
+                "roll_deg",
+                "interpolation_to_next",
+            ],
+        ),
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "delete_camera_orientation_keyframe",
+        "description": "Delete one local camera orientation keyframe.",
+        "parameters": ID_PARAMETERS,
+        "strict": True,
+    },
 ]
 
 
@@ -420,6 +497,9 @@ class TrajectoryAgent:
         elif name == "set_default_camera_aim":
             draft.camera_track.default_aim = cls._aim(arguments)
             item = draft.camera_track
+        elif name == "set_default_camera_orientation":
+            draft.camera_track.default_orientation = CameraOrientation(**arguments)
+            item = draft.camera_track.default_orientation
         elif name == "create_spline":
             item = SplineSegment(**arguments)
             draft.segments.append(item)
@@ -469,6 +549,47 @@ class TrajectoryAgent:
         elif name == "delete_camera_keyframe":
             item = cls._delete_dict_item(
                 draft.camera_track.keyframes, arguments["id"], "camera keyframe"
+            )
+        elif name == "create_camera_orientation_keyframe":
+            item = CameraOrientationKeyframe(
+                path_position=arguments["path_position"],
+                orientation=CameraOrientation(
+                    yaw_deg=arguments["yaw_deg"],
+                    pitch_deg=arguments["pitch_deg"],
+                    roll_deg=arguments["roll_deg"],
+                ),
+                interpolation_to_next=arguments["interpolation_to_next"],
+            )
+            draft.camera_track.orientation_keyframes[item.id] = item
+        elif name == "update_camera_orientation_keyframe":
+            item_id = arguments["id"]
+            if item_id not in draft.camera_track.orientation_keyframes:
+                raise KeyError(f"camera orientation keyframe {item_id} not found")
+            old = draft.camera_track.orientation_keyframes[item_id]
+            orientation_patch = {
+                key: value
+                for key, value in arguments.items()
+                if key in {"yaw_deg", "pitch_deg", "roll_deg"} and value is not None
+            }
+            patch = {
+                key: value
+                for key, value in arguments.items()
+                if key in {"path_position", "interpolation_to_next"} and value is not None
+            }
+            if orientation_patch:
+                patch["orientation"] = CameraOrientation.model_validate(
+                    {**old.orientation.model_dump(), **orientation_patch}
+                )
+            item = cls._update_dict_item(
+                draft.camera_track.orientation_keyframes,
+                {"id": item_id, **patch},
+                "camera orientation keyframe",
+            )
+        elif name == "delete_camera_orientation_keyframe":
+            item = cls._delete_dict_item(
+                draft.camera_track.orientation_keyframes,
+                arguments["id"],
+                "camera orientation keyframe",
             )
         else:
             raise ValueError(f"unknown tool: {name}")

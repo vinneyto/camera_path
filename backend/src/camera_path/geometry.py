@@ -230,6 +230,11 @@ def validate_project(project: Project) -> list[str]:
     camera_positions = [item.path_position for item in project.camera_track.keyframes.values()]
     if len(camera_positions) != len(set(camera_positions)):
         raise GeometryError("camera keyframes must have unique path positions")
+    orientation_positions = [
+        item.path_position for item in project.camera_track.orientation_keyframes.values()
+    ]
+    if len(orientation_positions) != len(set(orientation_positions)):
+        raise GeometryError("camera orientation keyframes must have unique path positions")
 
     aims = [project.camera_track.default_aim]
     aims.extend(item.aim for item in project.camera_track.keyframes.values())
@@ -342,6 +347,11 @@ def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajec
         camera_track=CompiledCameraTrack(
             default_aim=_resolve_aim(project, project.camera_track.default_aim),
             keyframes=camera_keys,
+            default_orientation=project.camera_track.default_orientation,
+            orientation_keyframes=sorted(
+                project.camera_track.orientation_keyframes.values(),
+                key=lambda item: item.path_position,
+            ),
             world_up=project.camera_track.world_up,
         ),
         warnings=warnings,

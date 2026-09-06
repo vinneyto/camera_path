@@ -1,8 +1,9 @@
 # Camera Path backend
 
 Async Python backend for authoring semantic 3D camera trajectories. It stores path anchors,
-Catmull–Rom and spiral segments, world-space camera targets, a speed graph and a camera-direction
-graph. Every path is compiled to a client-neutral sequence of cubic Bézier curves.
+Catmull–Rom and spiral segments, world-space camera targets, a speed graph, a camera-direction
+graph and a local orientation track. Every path is compiled to a client-neutral sequence of cubic
+Bézier curves.
 
 MCP is intentionally not part of this version. The model calls narrow in-process tools through
 the OpenAI Responses API. The agent receives saved conversation history and current project state,
@@ -78,6 +79,14 @@ point ids to positions. At runtime, the client computes each endpoint view direc
 them with the key transition weight, normalizes the result, and constructs orientation using
 `world_up`. This allows a smooth blend from following the trajectory to looking at an object.
 
+The aim track chooses that base view direction. The separate orientation track applies local
+offsets on top of its frame in this fixed order: `yaw_deg` around local up, `pitch_deg` around local
+right, then `roll_deg` around the view axis. API and storage values are degrees and remain
+unwrapped: interpolating yaw from `0` to `360` means one full turn. `linear` and `smoothstep`
+interpolate each of the three scalar angles; `hold` keeps the left key's angles until the next key.
+The backend validates and sorts these semantic controls; the frontend/runtime constructs the final
+quaternion.
+
 ## REST workflow
 
 1. Create a project with `POST /projects`.
@@ -89,12 +98,23 @@ them with the key transition weight, normalizes the result, and constructs orien
    `/projects/{id}/motion/keyframes`.
 6. Set the baseline aim with `PATCH /projects/{id}/camera` and manage direction keys under
    `/projects/{id}/camera/keyframes`.
-7. Fetch `/projects/{id}/trajectory/compiled` for Bézier geometry, duration and sorted control keys.
-8. Rename a project with `PATCH /projects/{id}` or delete it with `DELETE /projects/{id}`.
-9. Start a new chat with `DELETE /projects/{id}/chat`. This preserves scene and trajectory data.
-10. Clear only generated trajectory segments and control graphs with `DELETE
+7. Set baseline yaw, pitch and roll with `PATCH /projects/{id}/camera/orientation`, and manage
+   orientation keys under `/projects/{id}/camera/orientation/keyframes`:
+
+   ```json
+   {
+     "path_position": 0.5,
+     "orientation": {"yaw_deg": 360, "pitch_deg": -10, "roll_deg": 5},
+     "interpolation_to_next": "smoothstep"
+   }
+   ```
+
+8. Fetch `/projects/{id}/trajectory/compiled` for Bézier geometry, duration and sorted control keys.
+9. Rename a project with `PATCH /projects/{id}` or delete it with `DELETE /projects/{id}`.
+10. Start a new chat with `DELETE /projects/{id}/chat`. This preserves scene and trajectory data.
+11. Clear only generated trajectory segments and control graphs with `DELETE
     /projects/{id}/trajectory`; anchors and scene points remain available.
-11. Reset all scene, trajectory, and chat state while preserving the project id and name with
+12. Reset all scene, trajectory, and chat state while preserving the project id and name with
     `POST /projects/{id}/reset`.
 
 Deleting a referenced scene point returns `409` unless `?cascade=true` is supplied; cascade also

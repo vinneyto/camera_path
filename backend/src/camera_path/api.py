@@ -17,6 +17,9 @@ from camera_path.models import (
     AnchorUpdate,
     CameraKeyframeCreate,
     CameraKeyframeUpdate,
+    CameraOrientation,
+    CameraOrientationKeyframeCreate,
+    CameraOrientationKeyframeUpdate,
     CameraTrackUpdate,
     ChatMessage,
     ChatResult,
@@ -215,6 +218,49 @@ async def update_camera_track(
     project_id: str, data: CameraTrackUpdate, service: Service
 ) -> Project:
     return await service.update_camera_track(project_id, data)
+
+
+@router.patch("/projects/{project_id}/camera/orientation", response_model=Project)
+async def update_default_camera_orientation(
+    project_id: str, data: CameraOrientation, service: Service
+) -> Project:
+    return await service.update_default_camera_orientation(project_id, data)
+
+
+@router.post("/projects/{project_id}/camera/orientation/keyframes", response_model=Project)
+async def add_camera_orientation_keyframe(
+    project_id: str, data: CameraOrientationKeyframeCreate, service: Service
+) -> Project:
+    return await service.add_camera_orientation_keyframe(project_id, data)
+
+
+@router.patch(
+    "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
+    response_model=Project,
+)
+async def update_camera_orientation_keyframe(
+    project_id: str,
+    keyframe_id: str,
+    data: CameraOrientationKeyframeUpdate,
+    service: Service,
+) -> Project:
+    try:
+        return await service.update_camera_orientation_keyframe(project_id, keyframe_id, data)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@router.delete(
+    "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
+    response_model=Project,
+)
+async def delete_camera_orientation_keyframe(
+    project_id: str, keyframe_id: str, service: Service
+) -> Project:
+    try:
+        return await service.delete_camera_orientation_keyframe(project_id, keyframe_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
 
 
 @router.patch("/projects/{project_id}/camera/keyframes/{keyframe_id}", response_model=Project)

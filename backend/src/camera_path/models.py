@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, FiniteFloat, field_validator
 
 Vec3 = tuple[float, float, float]
 Interpolation = Literal["smoothstep", "linear", "hold"]
@@ -118,9 +118,33 @@ class CameraKeyframeUpdate(BaseModel):
     interpolation_to_next: Interpolation | None = None
 
 
+class CameraOrientation(BaseModel):
+    yaw_deg: FiniteFloat = 0.0
+    pitch_deg: FiniteFloat = 0.0
+    roll_deg: FiniteFloat = 0.0
+
+
+class CameraOrientationKeyframeCreate(BaseModel):
+    path_position: float = Field(ge=0.0, le=1.0)
+    orientation: CameraOrientation
+    interpolation_to_next: Interpolation = "smoothstep"
+
+
+class CameraOrientationKeyframe(CameraOrientationKeyframeCreate):
+    id: str = Field(default_factory=new_id)
+
+
+class CameraOrientationKeyframeUpdate(BaseModel):
+    path_position: float | None = Field(default=None, ge=0.0, le=1.0)
+    orientation: CameraOrientation | None = None
+    interpolation_to_next: Interpolation | None = None
+
+
 class CameraTrack(BaseModel):
     default_aim: CameraAim = Field(default_factory=FollowPathAim)
     keyframes: dict[str, CameraKeyframe] = Field(default_factory=dict)
+    default_orientation: CameraOrientation = Field(default_factory=CameraOrientation)
+    orientation_keyframes: dict[str, CameraOrientationKeyframe] = Field(default_factory=dict)
     world_up: Vec3 = (0.0, 1.0, 0.0)
 
 
@@ -211,6 +235,8 @@ class CompiledCameraKeyframe(BaseModel):
 class CompiledCameraTrack(BaseModel):
     default_aim: ResolvedCameraAim
     keyframes: list[CompiledCameraKeyframe]
+    default_orientation: CameraOrientation
+    orientation_keyframes: list[CameraOrientationKeyframe]
     world_up: Vec3
 
 
