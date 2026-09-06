@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, type CanvasProps, useFrame, useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   createContext,
   type PropsWithChildren,
@@ -10,36 +10,15 @@ import {
   useMemo,
   useRef,
 } from "react";
-import {
-  RenderPipeline,
-  WebGPURenderer,
-  type Camera,
-  type Node,
-} from "three/webgpu";
-import { pass as scenePass, vec4 } from "three/tsl";
+import { RenderPipeline, WebGPURenderer, type Node } from "three/webgpu";
+import { pass as scenePass } from "three/tsl";
 
-type FunctionParameter<T> = T extends (props: infer P) => unknown ? P : never;
-type CanvasGlProps = FunctionParameter<NonNullable<CanvasProps["gl"]>>;
-
-export interface RenderPipelineLayerOptions {
-  /** Layers with lower order values are composited first. */
-  order?: number;
-}
-
-export interface RenderPipelineContextValue {
-  camera: Camera;
-  registerLayer: (
-    node: Node<"vec4">,
-    options?: RenderPipelineLayerOptions,
-  ) => () => void;
-  renderer: WebGPURenderer;
-}
-
-interface RenderPipelineLayer {
-  node: Node<"vec4">;
-  order: number;
-  sequence: number;
-}
+import { compositePremultipliedOver } from "./composite-premultiplied-over";
+import type {
+  RenderPipelineContextValue,
+  RenderPipelineLayer,
+  RenderPipelineLayerOptions,
+} from "./render-pipeline-types";
 
 interface PipelineResources {
   pipeline: RenderPipeline;
@@ -48,17 +27,7 @@ interface PipelineResources {
 
 const RenderPipelineContext = createContext<RenderPipelineContextValue | null>(null);
 
-/** A WebGPU R3F Canvas whose frame output is owned by Three.js RenderPipeline. */
-export function RenderPipelineCanvas({ children, ...props }: Omit<CanvasProps, "gl">) {
-  return (
-    <Canvas {...props} gl={createWebGpuRenderer}>
-      <RenderPipelineProvider>{children}</RenderPipelineProvider>
-    </Canvas>
-  );
-}
-
-/** Owns the application pipeline, the regular scene pass, and R3F render-loop takeover. */
-function RenderPipelineProvider({ children }: PropsWithChildren) {
+export function RenderPipelineProvider({ children }: PropsWithChildren) {
   const camera = useThree((state) => state.camera);
   const renderer = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
@@ -123,7 +92,6 @@ function RenderPipelineProvider({ children }: PropsWithChildren) {
     };
   }, [camera, rebuildOutput, renderer, scene]);
 
-  // A positive priority disables R3F's renderer.render(scene, camera) call.
   useFrame(() => {
     resourcesRef.current?.pipeline.render();
   }, 1);
@@ -141,27 +109,4 @@ export function useRenderPipeline(): RenderPipelineContextValue {
     throw new Error("useRenderPipeline must be used inside RenderPipelineCanvas");
   }
   return value;
-}
-
-async function createWebGpuRenderer({ canvas }: CanvasGlProps) {
-  const renderer = new WebGPURenderer({
-    antialias: false,
-    canvas: canvas as HTMLCanvasElement,
-  });
-  await renderer.init();
-  renderer.setClearColor(0x000000, 0);
-  return renderer;
-}
-
-function compositePremultipliedOver(
-  base: Node<"vec4">,
-  overlay: Node<"vec4">,
-): Node<"vec4"> {
-  const baseColor = vec4(base);
-  const overlayColor = vec4(overlay);
-  const inverseOverlayAlpha = overlayColor.a.oneMinus();
-  return vec4(
-    overlayColor.rgb.add(baseColor.rgb.mul(inverseOverlayAlpha)),
-    overlayColor.a.add(baseColor.a.mul(inverseOverlayAlpha)),
-  );
 }

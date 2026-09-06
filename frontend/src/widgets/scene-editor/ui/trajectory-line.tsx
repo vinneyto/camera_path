@@ -23,12 +23,12 @@ export function TrajectoryLine({ dark, selected, trajectory, onSelect }: Traject
   return (
     <ScreenSpaceLine
       color={selected ? "#f97316" : dark ? "#e5e7eb" : "#171717"}
-      hitSlop={selected ? 6 : 6.5}
+      hitSlop={0.025}
       onClick={handleClick}
       onPointerOut={() => { document.body.style.cursor = ""; }}
       onPointerOver={() => { document.body.style.cursor = "pointer"; }}
       points={points}
-      width={selected ? 4 : 3}
+      radius={selected ? 0.018 : 0.014}
     />
   );
 }

@@ -12,16 +12,17 @@ import {
   useDeleteCameraKeyframe,
   useDeleteSpeedKeyframe,
 } from "@/features/object-deletion";
-import { SceneViewport } from "@/widgets/scene-editor";
+import { SceneViewport, SceneWebGpuViewport } from "@/widgets/scene-editor";
 import { PlaybackControls, TrajectoryInspector } from "@/widgets/trajectory-panels";
 
 import { ProjectHeader } from "./project-header";
 
 interface ProjectWorkspaceProps {
   projectId: string;
+  rendererBackend?: "webgl" | "webgpu";
 }
 
-export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
+export function ProjectWorkspace({ projectId, rendererBackend = "webgl" }: ProjectWorkspaceProps) {
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const addAnchorMutation = useAddAnchor(projectId);
@@ -50,6 +51,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
     ?? deleteCameraKeyframeMutation.error
     ?? chatMutation.error;
   const error = requestError instanceof Error ? requestError.message : null;
+  const Viewport = rendererBackend === "webgpu" ? SceneWebGpuViewport : SceneViewport;
 
   useEffect(() => {
     resetEditor();
@@ -110,7 +112,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
       <div className="flex min-h-0 min-w-0 flex-col">
         <ProjectHeader project={project} />
         <div className="relative min-h-[260px] flex-1">
-          <SceneViewport
+          <Viewport
             anchors={anchors}
             onAddAnchor={(position, normal) => void addAnchor(position, normal)}
             onDeleteAnchor={(anchor) => deleteAnchor(anchor.id, anchor.label)}

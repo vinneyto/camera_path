@@ -31,6 +31,11 @@ keeps the backend compiler as the single source of geometry sampling truth.
 Place a canonical 3DGS file at `public/mug.ply`. The same frontend-only cloud is loaded for every
 project; the backend does not store or configure it yet.
 
+The default scene viewport uses Three.js WebGL and Spark for Gaussian splats. Add
+`?renderer=webgpu` to a project URL to opt into the research viewport backed by Three.js WebGPU and
+`3dgs-tile-webgpu`. Shared scene content talks to both implementations through the scene-surface
+adapter; renderer-specific imports stay inside their adapter directories.
+
 Start the backend first, then:
 
 ```bash

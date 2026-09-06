@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-import { tileSceneSurfaceAdapter } from "../adapters/3dgs-tile-webgpu/tile-scene-surface-adapter";
+import { sparkSceneSurfaceAdapter } from "../adapters/spark/spark-scene-surface-adapter";
 import type {
   SceneSurfaceAdapter,
   SceneSurfaceAdapterProviderProps,
@@ -12,10 +12,10 @@ interface SceneSurfaceProviderProps extends SceneSurfaceAdapterProviderProps {
   adapter?: SceneSurfaceAdapter;
 }
 
-const SceneSurfaceAdapterContext = createContext<SceneSurfaceAdapter>(tileSceneSurfaceAdapter);
+const SceneSurfaceAdapterContext = createContext<SceneSurfaceAdapter>(sparkSceneSurfaceAdapter);
 
 export function SceneSurfaceProvider({
-  adapter = tileSceneSurfaceAdapter,
+  adapter = sparkSceneSurfaceAdapter,
   background,
   children,
 }: SceneSurfaceProviderProps) {
