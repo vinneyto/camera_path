@@ -19,6 +19,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
         <RenderPipelineCanvas
           camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
           dpr={[1, 2]}
+          flat
           shadows
         >
           <SceneSurfaceProvider adapter={tileSceneSurfaceAdapter} background={context.background}>
