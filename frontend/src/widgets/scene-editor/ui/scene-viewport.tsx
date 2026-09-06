@@ -2,41 +2,28 @@
 
 import { Canvas } from "@react-three/fiber";
 
-import { SceneSurfaceProvider, sparkSceneSurfaceAdapter } from "@/shared/scene-surface";
+import { sparkSceneSurfaceAdapter } from "@/shared/scene-surface";
 
-import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
+import { SceneViewportScene } from "./scene-viewport-scene";
 import type { SceneViewportProps } from "./scene-viewport-types";
 
 export function SceneViewport(props: SceneViewportProps) {
+  const { onDeleteAnchor, ...sceneProps } = props;
+
   return (
     <SceneViewportFrame
       available
-      onDeleteAnchor={props.onDeleteAnchor}
-      renderScene={(context) => (
-        <Canvas
-          camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
-          dpr={[1, 2]}
-          gl={{ antialias: false }}
-          shadows
-        >
-          <SceneSurfaceProvider adapter={sparkSceneSurfaceAdapter} background={context.background}>
-            <SceneContents
-              anchors={props.anchors}
-              dark={context.dark}
-              onAddAnchor={props.onAddAnchor}
-              onOpenAnchorMenu={context.onOpenAnchorMenu}
-              onSelectTrajectory={props.onSelectTrajectory}
-              onSurfaceError={context.onSurfaceError}
-              onSurfaceLoading={context.onSurfaceLoading}
-              onSurfaceReady={context.onSurfaceReady}
-              pathPosition={props.pathPosition}
-              selected={props.selected}
-              trajectory={props.trajectory}
-            />
-          </SceneSurfaceProvider>
-        </Canvas>
-      )}
-    />
+      onDeleteAnchor={onDeleteAnchor}
+    >
+      <Canvas
+        camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
+        dpr={[1, 2]}
+        gl={{ antialias: false }}
+        shadows
+      >
+        <SceneViewportScene {...sceneProps} adapter={sparkSceneSurfaceAdapter} />
+      </Canvas>
+    </SceneViewportFrame>
   );
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
 
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
@@ -15,7 +15,7 @@ export interface SceneViewportProps {
   onSelectTrajectory: () => void;
 }
 
-export interface SceneViewportRenderContext {
+export interface SceneViewportFrameContextValue {
   background: SceneSurfaceBackground;
   dark: boolean;
   onOpenAnchorMenu: (anchor: Anchor, position: ContextMenuPosition) => void;
@@ -24,9 +24,8 @@ export interface SceneViewportRenderContext {
   onSurfaceReady: () => void;
 }
 
-export interface SceneViewportFrameProps {
+export interface SceneViewportFrameProps extends PropsWithChildren {
   available: boolean | null | undefined;
   onDeleteAnchor: (anchor: Anchor) => void;
   unavailableMessage?: string;
-  renderScene: (context: SceneViewportRenderContext) => ReactNode;
 }
