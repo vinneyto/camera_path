@@ -31,10 +31,11 @@ keeps the backend compiler as the single source of geometry sampling truth.
 Place a canonical 3DGS file at `public/mug.ply`. The same frontend-only cloud is loaded for every
 project; the backend does not store or configure it yet.
 
-The default scene viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats. Add
-`?renderer=webgl` to a project URL to use the comparison viewport backed by Three.js WebGL and
-Spark. Shared scene content talks to both implementations through the scene-surface adapter;
-renderer-specific imports stay inside their adapter directories.
+The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
+The Spark/WebGL adapter remains in the repository only as an example of an alternative renderer
+integration. It is not a supported product path, does not need feature parity, and may throw explicit
+errors for unsupported operations. `?renderer=webgl` can still be used when working specifically
+with that reference implementation.
 
 Start the backend first, then:
 
