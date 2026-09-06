@@ -1,58 +1,45 @@
 "use client";
 
-import type { EventHandlers } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
-import type { ColorRepresentation, Vector3 } from "three";
 import { Line2NodeMaterial } from "three/webgpu";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 
-type LinePoint = Vector3 | readonly [number, number, number];
+import type { ScreenSpaceLineProps } from "./screen-space-line";
 
-interface WebGpuLineProps extends Pick<EventHandlers, "onClick" | "onPointerOut" | "onPointerOver"> {
-  color: ColorRepresentation;
-  depthTest?: boolean;
-  depthWrite?: boolean;
-  lineWidth?: number;
-  points: readonly LinePoint[];
-  raycastWidth?: number;
-  renderOrder?: number;
-}
-
-function flattenPoints(points: readonly LinePoint[]) {
-  return points.flatMap((point) => "toArray" in point ? point.toArray() : [...point]);
-}
-
-export function WebGpuLine({
+export function WebGpuScreenSpaceLine({
   color,
   depthTest = true,
   depthWrite = true,
-  lineWidth = 1,
+  hitSlop = 0,
   points,
-  raycastWidth = lineWidth,
   renderOrder = 0,
+  width = 1,
   ...eventHandlers
-}: WebGpuLineProps) {
+}: ScreenSpaceLineProps) {
   const line = useMemo(() => {
     const geometry = new LineGeometry();
-    geometry.setPositions(flattenPoints(points));
+    geometry.setPositions(
+      points.flatMap((point) => "toArray" in point ? point.toArray() : [...point]),
+    );
 
     const material = new Line2NodeMaterial({
       color,
       depthTest,
       depthWrite,
-      linewidth: lineWidth,
+      linewidth: width,
       toneMapped: false,
       worldUnits: false,
     });
     const object = new Line2(geometry, material);
     object.renderOrder = renderOrder;
 
-    if (raycastWidth > lineWidth) {
+    const raycastThreshold = Math.max(0, hitSlop) * 2;
+    if (raycastThreshold > 0) {
       const raycast = object.raycast.bind(object);
       object.raycast = (raycaster, intersections) => {
         const previous = raycaster.params.Line2;
-        raycaster.params.Line2 = { threshold: raycastWidth - lineWidth };
+        raycaster.params.Line2 = { threshold: raycastThreshold };
         try {
           raycast(raycaster, intersections);
         } finally {
@@ -62,7 +49,7 @@ export function WebGpuLine({
     }
 
     return object;
-  }, [color, depthTest, depthWrite, lineWidth, points, raycastWidth, renderOrder]);
+  }, [color, depthTest, depthWrite, hitSlop, points, renderOrder, width]);
 
   useEffect(() => () => {
     line.geometry.dispose();

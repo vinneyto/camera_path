@@ -2,7 +2,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useMemo } from "react";
 
 import { sampleTrajectory, type CompiledTrajectory } from "@/entities/trajectory";
-import { WebGpuLine } from "@/shared/three/webgpu-line";
+import { ScreenSpaceLine } from "@/shared/three";
 
 interface TrajectoryLineProps {
   dark: boolean;
@@ -21,14 +21,14 @@ export function TrajectoryLine({ dark, selected, trajectory, onSelect }: Traject
   }
 
   return (
-    <WebGpuLine
+    <ScreenSpaceLine
       color={selected ? "#f97316" : dark ? "#e5e7eb" : "#171717"}
-      lineWidth={selected ? 4 : 3}
+      hitSlop={selected ? 6 : 6.5}
       onClick={handleClick}
       onPointerOut={() => { document.body.style.cursor = ""; }}
       onPointerOver={() => { document.body.style.cursor = "pointer"; }}
       points={points}
-      raycastWidth={16}
+      width={selected ? 4 : 3}
     />
   );
 }
