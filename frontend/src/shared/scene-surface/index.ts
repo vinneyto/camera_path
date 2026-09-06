@@ -11,8 +11,10 @@ export {
 export type {
   GaussianCloudInstance,
   GaussianCloudOptions,
+  GaussianColorHighlightVolumeOptions,
   GaussianHighlightVolume,
   GaussianHighlightVolumeOptions,
+  GaussianRippleHighlightVolumeOptions,
   GaussianRenderingBackend,
 } from "./model/gaussian-rendering-backend";
 export { SceneSurfaceProvider } from "./ui/scene-surface-provider";

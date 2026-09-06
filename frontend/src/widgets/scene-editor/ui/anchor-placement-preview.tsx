@@ -12,9 +12,12 @@ import {
 
 import {
   ANCHOR_PLACEMENT_HEIGHT,
-  ANCHOR_PLACEMENT_HIGHLIGHT_BOTTOM_OFFSET,
-  ANCHOR_PLACEMENT_HIGHLIGHT_RADIUS,
-  ANCHOR_PLACEMENT_HIGHLIGHT_STRENGTH,
+  ANCHOR_PLACEMENT_RIPPLE_AMPLITUDE,
+  ANCHOR_PLACEMENT_RIPPLE_RADIUS,
+  ANCHOR_PLACEMENT_RIPPLE_SPEED,
+  ANCHOR_PLACEMENT_RIPPLE_VERTICAL_CORE_RADIUS,
+  ANCHOR_PLACEMENT_RIPPLE_VERTICAL_FALLOFF_RADIUS,
+  ANCHOR_PLACEMENT_RIPPLE_WAVELENGTH,
 } from "./anchor-placement-constants";
 import { AnchorMarker } from "./anchor-marker";
 
@@ -28,12 +31,14 @@ export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementP
   const highlight = useMemo<GaussianHighlightVolumeOptions | null>(() => hit === null
     ? null
     : ({
-        bottomOffset: ANCHOR_PLACEMENT_HIGHLIGHT_BOTTOM_OFFSET,
-        color: [1, 0.95, 0.78],
-        height: ANCHOR_PLACEMENT_HEIGHT,
+        amplitude: ANCHOR_PLACEMENT_RIPPLE_AMPLITUDE,
         position: hit.position,
-        radius: ANCHOR_PLACEMENT_HIGHLIGHT_RADIUS,
-        strength: ANCHOR_PLACEMENT_HIGHLIGHT_STRENGTH,
+        radius: ANCHOR_PLACEMENT_RIPPLE_RADIUS,
+        speed: ANCHOR_PLACEMENT_RIPPLE_SPEED,
+        type: "ripple",
+        verticalCoreRadius: ANCHOR_PLACEMENT_RIPPLE_VERTICAL_CORE_RADIUS,
+        verticalFalloffRadius: ANCHOR_PLACEMENT_RIPPLE_VERTICAL_FALLOFF_RADIUS,
+        wavelength: ANCHOR_PLACEMENT_RIPPLE_WAVELENGTH,
       }), [hit]);
   const anchor = useMemo<Anchor | null>(() => hit === null
     ? null

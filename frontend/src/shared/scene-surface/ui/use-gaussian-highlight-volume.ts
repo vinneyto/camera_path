@@ -14,11 +14,15 @@ export function useGaussianHighlightVolume(
 ) {
   const volumeRef = useRef<{
     backend: GaussianRenderingBackend;
+    type: GaussianHighlightVolumeOptions["type"];
     volume: GaussianHighlightVolume;
   } | null>(null);
 
   useEffect(() => {
-    if (volumeRef.current !== null && volumeRef.current.backend !== backend) {
+    if (
+      volumeRef.current !== null
+      && (volumeRef.current.backend !== backend || volumeRef.current.type !== options?.type)
+    ) {
       volumeRef.current.volume.dispose();
       volumeRef.current = null;
     }
@@ -30,6 +34,7 @@ export function useGaussianHighlightVolume(
     if (volumeRef.current === null) {
       volumeRef.current = {
         backend,
+        type: options.type,
         volume: backend.createHighlightVolume(options),
       };
       return;

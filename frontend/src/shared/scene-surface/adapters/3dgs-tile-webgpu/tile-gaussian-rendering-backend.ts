@@ -8,7 +8,7 @@ import {
   gaussianPass,
   rasterPixelCoordinate,
 } from "3dgs-tile-webgpu";
-import { PerspectiveCamera, type Node } from "three/webgpu";
+import { PerspectiveCamera } from "three/webgpu";
 
 import type { SceneRenderPipeline } from "@/shared/three";
 
@@ -88,7 +88,6 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
     const volume = new TileGaussianHighlightVolume(
       this.pass,
-      this.pass.gaussianColorNode as Node<"vec3">,
       options,
       () => {
         if (this.highlightVolume === volume) this.highlightVolume = null;
