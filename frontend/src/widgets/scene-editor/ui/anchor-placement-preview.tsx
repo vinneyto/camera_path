@@ -1,8 +1,6 @@
 "use client";
 
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
-import type { Group } from "three";
+import { useMemo } from "react";
 
 import type { Anchor } from "@/entities/project";
 import {
@@ -13,8 +11,6 @@ import {
 } from "@/shared/scene-surface";
 
 import {
-  ANCHOR_PLACEMENT_FLOAT_AMPLITUDE,
-  ANCHOR_PLACEMENT_FLOAT_FREQUENCY,
   ANCHOR_PLACEMENT_HEIGHT,
   ANCHOR_PLACEMENT_HIGHLIGHT_BOTTOM_OFFSET,
   ANCHOR_PLACEMENT_HIGHLIGHT_RADIUS,
@@ -29,7 +25,6 @@ interface AnchorPlacementPreviewProps {
 }
 
 export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementPreviewProps) {
-  const animationRef = useRef<Group>(null);
   const highlight = useMemo<GaussianHighlightVolumeOptions | null>(() => hit === null
     ? null
     : ({
@@ -51,16 +46,6 @@ export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementP
         surface_position: hit.position,
       }), [hit, label]);
   useGaussianHighlightVolume(backend, highlight);
-  useFrame(({ clock }) => {
-    if (animationRef.current === null) return;
-    animationRef.current.position.y = Math.sin(
-      clock.elapsedTime * Math.PI * 2 * ANCHOR_PLACEMENT_FLOAT_FREQUENCY,
-    ) * ANCHOR_PLACEMENT_FLOAT_AMPLITUDE;
-  });
 
-  return anchor === null ? null : (
-    <group ref={animationRef}>
-      <AnchorMarker anchor={anchor} />
-    </group>
-  );
+  return anchor === null ? null : <AnchorMarker anchor={anchor} />;
 }

@@ -1,6 +1,7 @@
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
@@ -21,6 +22,7 @@ import { frameSurface } from "./frame-surface";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryLine } from "./trajectory-line";
 import { useAnchorPlacement } from "./use-anchor-placement";
+import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 
 const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
 
@@ -57,7 +59,9 @@ export function SceneContents({
   const activeTool = useEditorStore((state) => state.activeTool);
   const renderingBackend = useGaussianRenderingBackend(background);
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
+  const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
+  useStopOrbitControlsInertia(orbitControlsRef, activeTool !== null);
   const handleSurfaceReady = useCallback((surface: SceneSurfaceReady) => {
     frameSurface(camera, surface.bounds, setOrbitTarget);
     onSurfaceReady();
@@ -105,10 +109,12 @@ export function SceneContents({
         <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
       )}
       <OrbitControls
+        enabled={activeTool === null}
         makeDefault
         maxDistance={Infinity}
         minDistance={0.001}
         onChange={placement.handleControlsChange}
+        ref={orbitControlsRef}
         target={orbitTarget}
       />
     </SceneSurfaceProvider>
