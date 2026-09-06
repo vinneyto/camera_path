@@ -7,13 +7,22 @@ export default defineConfig([
   ...nextTypeScript,
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/shared/scene-surface/adapters/3dgs-tile-webgpu/**"],
+    ignores: [
+      "src/shared/scene-surface/adapters/3dgs-tile-webgpu/**",
+      "src/shared/scene-surface/adapters/spark/**",
+    ],
     rules: {
       "no-restricted-imports": ["error", {
-        paths: [{
-          name: "3dgs-tile-webgpu",
-          message: "Import 3dgs-tile-webgpu only inside its scene-surface adapter.",
-        }],
+        paths: [
+          {
+            name: "3dgs-tile-webgpu",
+            message: "Import 3dgs-tile-webgpu only inside its scene-surface adapter.",
+          },
+          {
+            name: "@sparkjsdev/spark",
+            message: "Import Spark only inside its scene-surface adapter.",
+          },
+        ],
       }],
     },
   },

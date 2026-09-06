@@ -1,9 +1,11 @@
 export {
   RenderPipelineCanvas,
-  useRenderPipeline,
-  type RenderPipelineContextValue,
-  type RenderPipelineLayerOptions,
-} from "./render-pipeline";
+} from "./render-pipeline-canvas";
+export { useRenderPipeline } from "./render-pipeline-provider";
+export type {
+  RenderPipelineContextValue,
+  RenderPipelineLayerOptions,
+} from "./render-pipeline-types";
 export {
   ScreenSpaceLine,
   type ScreenSpaceLinePoint,

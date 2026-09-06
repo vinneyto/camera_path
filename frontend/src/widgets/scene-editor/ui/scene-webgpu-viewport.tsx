@@ -1,26 +1,27 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
-
-import { SceneSurfaceProvider, sparkSceneSurfaceAdapter } from "@/shared/scene-surface";
+import { SceneSurfaceProvider, tileSceneSurfaceAdapter } from "@/shared/scene-surface";
+import { RenderPipelineCanvas } from "@/shared/three";
 
 import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
 import type { SceneViewportProps } from "./scene-viewport-types";
+import { useWebGpuAvailability } from "./use-webgpu-availability";
 
-export function SceneViewport(props: SceneViewportProps) {
+export function SceneWebGpuViewport(props: SceneViewportProps) {
+  const webGpuAvailable = useWebGpuAvailability();
+
   return (
     <SceneViewportFrame
-      available
+      available={webGpuAvailable}
       onDeleteAnchor={props.onDeleteAnchor}
       renderScene={(context) => (
-        <Canvas
+        <RenderPipelineCanvas
           camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
           dpr={[1, 2]}
-          gl={{ antialias: false }}
           shadows
         >
-          <SceneSurfaceProvider adapter={sparkSceneSurfaceAdapter} background={context.background}>
+          <SceneSurfaceProvider adapter={tileSceneSurfaceAdapter} background={context.background}>
             <SceneContents
               anchors={props.anchors}
               dark={context.dark}
@@ -35,8 +36,9 @@ export function SceneViewport(props: SceneViewportProps) {
               trajectory={props.trajectory}
             />
           </SceneSurfaceProvider>
-        </Canvas>
+        </RenderPipelineCanvas>
       )}
+      unavailableMessage="WebGPU is unavailable in this browser"
     />
   );
 }

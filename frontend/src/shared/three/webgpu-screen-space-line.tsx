@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { Line2NodeMaterial } from "three/webgpu";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
+import { Line2NodeMaterial } from "three/webgpu";
 
 import type { ScreenSpaceLineProps } from "./screen-space-line";
+
+type WebGpuScreenSpaceLineProps = Omit<
+  ScreenSpaceLineProps,
+  "radius" | "webGpuHitSlop"
+>;
 
 export function WebGpuScreenSpaceLine({
   color,
@@ -16,7 +21,7 @@ export function WebGpuScreenSpaceLine({
   renderOrder = 0,
   width = 1,
   ...eventHandlers
-}: ScreenSpaceLineProps) {
+}: WebGpuScreenSpaceLineProps) {
   const line = useMemo(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(
