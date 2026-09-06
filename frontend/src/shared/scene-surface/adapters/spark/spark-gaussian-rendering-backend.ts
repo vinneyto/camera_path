@@ -4,7 +4,7 @@ import { Color, WebGLRenderer } from "three";
 import type {
   GaussianCloudInstance,
   GaussianCloudOptions,
-  GaussianHighlightVolume,
+  GaussianHighlightVolumeInstance,
   GaussianRenderingBackend,
 } from "../../model/gaussian-rendering-backend";
 import type {
@@ -71,7 +71,7 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     return instance;
   }
 
-  createHighlightVolume(): GaussianHighlightVolume {
+  createHighlightVolume(): GaussianHighlightVolumeInstance {
     throw new Error("Gaussian highlight volumes are not implemented by the Spark example backend");
   }
 

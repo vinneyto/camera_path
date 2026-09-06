@@ -12,7 +12,7 @@ export type {
   GaussianCloudInstance,
   GaussianCloudOptions,
   GaussianColorHighlightVolumeOptions,
-  GaussianHighlightVolume,
+  GaussianHighlightVolumeInstance,
   GaussianHighlightVolumeOptions,
   GaussianRippleHighlightVolumeOptions,
   GaussianRenderingBackend,
@@ -20,4 +20,4 @@ export type {
 export { SceneSurfaceProvider } from "./ui/scene-surface-provider";
 export { SceneSurface } from "./ui/scene-surface";
 export { useGaussianRenderingBackend } from "./ui/use-gaussian-rendering-backend";
-export { useGaussianHighlightVolume } from "./ui/use-gaussian-highlight-volume";
+export { GaussianHighlightVolume } from "./ui/gaussian-highlight-volume";

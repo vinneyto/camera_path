@@ -15,7 +15,7 @@ import type { SceneRenderPipeline } from "@/shared/three";
 import type {
   GaussianCloudInstance,
   GaussianCloudOptions,
-  GaussianHighlightVolume,
+  GaussianHighlightVolumeInstance,
   GaussianHighlightVolumeOptions,
   GaussianRenderingBackend,
 } from "../../model/gaussian-rendering-backend";
@@ -80,7 +80,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
   createHighlightVolume(
     options: GaussianHighlightVolumeOptions,
-  ): GaussianHighlightVolume {
+  ): GaussianHighlightVolumeInstance {
     if (this.disposed) throw new Error("TileGaussianRenderingBackend is disposed");
     if (this.pass === null) throw new Error("A Gaussian cloud must be loaded before highlighting");
     if (this.highlightVolume !== null) {

@@ -42,7 +42,7 @@ export type GaussianHighlightVolumeOptions =
   | GaussianColorHighlightVolumeOptions
   | GaussianRippleHighlightVolumeOptions;
 
-export interface GaussianHighlightVolume {
+export interface GaussianHighlightVolumeInstance {
   dispose(): void;
   update(options: GaussianHighlightVolumeOptions): void;
 }
@@ -63,6 +63,6 @@ export interface GaussianRenderingBackend {
   ): Promise<GaussianCloudInstance>;
   createHighlightVolume(
     options: GaussianHighlightVolumeOptions,
-  ): GaussianHighlightVolume;
+  ): GaussianHighlightVolumeInstance;
   dispose(): void;
 }

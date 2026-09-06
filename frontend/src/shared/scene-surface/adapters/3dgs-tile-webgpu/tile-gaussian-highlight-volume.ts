@@ -6,11 +6,11 @@ import { smoothstep, time, TWO_PI, uniform, vec3 } from "three/tsl";
 import { Vector3, type Node } from "three/webgpu";
 
 import type {
-  GaussianHighlightVolume,
+  GaussianHighlightVolumeInstance,
   GaussianHighlightVolumeOptions,
 } from "../../model/gaussian-rendering-backend";
 
-export class TileGaussianHighlightVolume implements GaussianHighlightVolume {
+export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInstance {
   private readonly amplitude = uniform(0);
   private readonly baseColorNode: Node<"vec3">;
   private readonly basePositionWorldNode: Node<"vec3">;

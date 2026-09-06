@@ -4,10 +4,10 @@ import { useMemo } from "react";
 
 import type { Anchor } from "@/entities/project";
 import {
+  GaussianHighlightVolume,
   type GaussianHighlightVolumeOptions,
   type GaussianRenderingBackend,
   type SceneSurfaceHit,
-  useGaussianHighlightVolume,
 } from "@/shared/scene-surface";
 
 import {
@@ -47,7 +47,12 @@ export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementP
         surface_normal: hit.normal,
         surface_position: hit.position,
       }), [hit, label]);
-  useGaussianHighlightVolume(backend, highlight);
-
-  return anchor === null ? null : <AnchorMarker anchor={anchor} />;
+  return (
+    <>
+      {highlight !== null && (
+        <GaussianHighlightVolume backend={backend} options={highlight} />
+      )}
+      {anchor !== null && <AnchorMarker anchor={anchor} />}
+    </>
+  );
 }
