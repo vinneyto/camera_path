@@ -16,6 +16,8 @@ import { frameSurface } from "./frame-surface";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryLine } from "./trajectory-line";
 
+const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
+
 interface SceneContentsProps {
   anchors: Anchor[];
   dark: boolean;
@@ -62,7 +64,7 @@ export function SceneContents({
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
         onLoading={onSurfaceLoading}
-        source="/mug.ply"
+        source={SCENE_SURFACE_SOURCE}
       />
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight

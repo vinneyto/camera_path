@@ -1,5 +1,5 @@
 export {
-  type SceneSurfaceAdapter,
+  type GaussianCloudSource,
   type SceneSurfaceBackground,
   type SceneSurfaceBounds,
   type SceneSurfaceHit,
@@ -7,7 +7,12 @@ export {
   type SceneSurfaceProps,
   type SceneSurfaceReady,
 } from "./model/scene-surface-types";
-export { sparkSceneSurfaceAdapter } from "./adapters/spark/spark-scene-surface-adapter";
-export { tileSceneSurfaceAdapter } from "./adapters/3dgs-tile-webgpu/tile-scene-surface-adapter";
+export type {
+  GaussianCloudInstance,
+  GaussianCloudOptions,
+  GaussianRenderingBackend,
+} from "./model/gaussian-rendering-backend";
+export { SparkGaussianRenderingBackend } from "./adapters/spark/spark-gaussian-rendering-backend";
+export { TileGaussianRenderingBackend } from "./adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend";
 export { SceneSurfaceProvider } from "./ui/scene-surface-provider";
 export { SceneSurface } from "./ui/scene-surface";

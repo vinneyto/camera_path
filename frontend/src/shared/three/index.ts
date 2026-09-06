@@ -5,6 +5,7 @@ export { useRenderPipeline } from "./render-pipeline-provider";
 export type {
   RenderPipelineContextValue,
   RenderPipelineLayerOptions,
+  SceneRenderPipeline,
 } from "./render-pipeline-types";
 export {
   RENDER_PIPELINE_OVERLAY_LAYER,

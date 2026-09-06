@@ -1,5 +1,3 @@
-import type { ComponentType, PropsWithChildren } from "react";
-
 export type SceneSurfacePoint = [number, number, number];
 export type SceneSurfaceBackground = readonly [number, number, number, number];
 
@@ -23,14 +21,9 @@ export interface SceneSurfaceProps {
   onError?: (error: Error) => void;
   onLoading?: () => void;
   onReady?: (surface: SceneSurfaceReady) => void;
-  source: string;
+  source: GaussianCloudSource;
 }
 
-export interface SceneSurfaceAdapterProviderProps extends PropsWithChildren {
-  background: SceneSurfaceBackground;
-}
-
-export interface SceneSurfaceAdapter {
-  Provider: ComponentType<SceneSurfaceAdapterProviderProps>;
-  Surface: ComponentType<SceneSurfaceProps>;
-}
+export type GaussianCloudSource =
+  | { kind: "url"; url: string }
+  | { buffer: ArrayBuffer; kind: "buffer"; name?: string };

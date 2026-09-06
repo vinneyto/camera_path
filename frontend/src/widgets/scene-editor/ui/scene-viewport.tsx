@@ -2,9 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 
-import { SceneSurfaceProvider, sparkSceneSurfaceAdapter } from "@/shared/scene-surface";
-
-import { SceneContents } from "./scene-contents";
+import { SceneSparkContents } from "./scene-spark-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
 import type { SceneViewportProps } from "./scene-viewport-types";
 
@@ -20,21 +18,7 @@ export function SceneViewport(props: SceneViewportProps) {
           gl={{ antialias: false }}
           shadows
         >
-          <SceneSurfaceProvider adapter={sparkSceneSurfaceAdapter} background={context.background}>
-            <SceneContents
-              anchors={props.anchors}
-              dark={context.dark}
-              onAddAnchor={props.onAddAnchor}
-              onOpenAnchorMenu={context.onOpenAnchorMenu}
-              onSelectTrajectory={props.onSelectTrajectory}
-              onSurfaceError={context.onSurfaceError}
-              onSurfaceLoading={context.onSurfaceLoading}
-              onSurfaceReady={context.onSurfaceReady}
-              pathPosition={props.pathPosition}
-              selected={props.selected}
-              trajectory={props.trajectory}
-            />
-          </SceneSurfaceProvider>
+          <SceneSparkContents context={context} {...props} />
         </Canvas>
       )}
     />
