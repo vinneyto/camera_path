@@ -63,6 +63,8 @@ it("restores the Gaussian pass position node when a ripple volume is disposed", 
       position: [1, 2, 3],
       radius: 0.1,
       speed: 1.2,
+      tintColor: [1, 0.98, 0.92],
+      tintStrength: 0.22,
       type: "ripple",
       verticalCoreRadius: 0.05,
       verticalFalloffRadius: 0.2,
@@ -73,11 +75,12 @@ it("restores the Gaussian pass position node when a ripple volume is disposed", 
   const rippleNode = pass.gaussianPositionWorldNode;
 
   expect(rippleNode).not.toBe(basePositionWorldNode);
-  expect(pass.gaussianColorNode).toBe(baseColorNode);
+  expect(pass.gaussianColorNode).not.toBe(baseColorNode);
   expect(JSON.stringify(rippleNode.toJSON())).toContain('"type":"ConditionalNode"');
 
   volume.dispose();
 
   expect(pass.gaussianPositionWorldNode).toBe(basePositionWorldNode);
+  expect(pass.gaussianColorNode).toBe(baseColorNode);
   expect(onDispose).toHaveBeenCalledOnce();
 });

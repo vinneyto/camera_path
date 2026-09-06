@@ -30,6 +30,8 @@ export interface GaussianRippleHighlightVolumeOptions
   extends GaussianHighlightVolumeBaseOptions {
   amplitude: number;
   speed: number;
+  tintColor: SceneSurfacePoint;
+  tintStrength: number;
   type: "ripple";
   verticalCoreRadius: number;
   verticalFalloffRadius: number;

@@ -37,7 +37,9 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolume {
     this.baseColorNode = pass.gaussianColorNode as Node<"vec3">;
     this.basePositionWorldNode = pass.gaussianPositionWorldNode as Node<"vec3">;
     this.type = options.type;
-    this.colorNode = options.type === "color" ? this.createColorNode() : null;
+    this.colorNode = options.type === "color"
+      ? this.createColorNode()
+      : this.createRippleTintNode();
     this.positionWorldNode = options.type === "ripple" ? this.createRippleNode() : null;
     this.update(options);
     if (this.colorNode !== null) this.pass.gaussianColorNode = this.colorNode;
@@ -76,7 +78,9 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolume {
       return;
     }
     this.amplitude.value = options.amplitude;
+    this.color.value.set(...options.tintColor);
     this.speed.value = options.speed;
+    this.strength.value = options.tintStrength;
     this.verticalCoreRadius.value = options.verticalCoreRadius;
     this.verticalFalloffRadius.value = options.verticalFalloffRadius;
     this.wavelength.value = options.wavelength;
@@ -121,5 +125,23 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolume {
     const insideVolume = radialDistance.lessThanEqual(this.radius)
       .and(verticalDistance.lessThanEqual(this.verticalFalloffRadius));
     return insideVolume.select(displacedPosition, basePosition);
+  }
+
+  private createRippleTintNode(): Node<"vec3"> {
+    const delta = gaussianPositionWorld.xz.sub(this.position.xz);
+    const radialDistance = delta.dot(delta).sqrt();
+    const verticalDistance = gaussianPositionWorld.y.sub(this.position.y).abs();
+    const radialFalloff = smoothstep(0, this.radius, radialDistance).oneMinus();
+    const verticalFalloff = smoothstep(
+      this.verticalCoreRadius,
+      this.verticalFalloffRadius,
+      verticalDistance,
+    ).oneMinus();
+    const tintStrength = radialFalloff.mul(verticalFalloff).mul(this.strength);
+    const baseColor = vec3(this.baseColorNode);
+    const tintedColor = baseColor.mul(vec3(1).add(this.color.mul(tintStrength)));
+    const insideVolume = radialDistance.lessThanEqual(this.radius)
+      .and(verticalDistance.lessThanEqual(this.verticalFalloffRadius));
+    return insideVolume.select(tintedColor, baseColor);
   }
 }
