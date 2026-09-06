@@ -1,1 +1,1 @@
-export { SceneCanvas } from "./ui/scene-canvas";
+export { SceneViewport } from "./ui/scene-viewport";

@@ -12,7 +12,7 @@ import {
   useDeleteCameraKeyframe,
   useDeleteSpeedKeyframe,
 } from "@/features/object-deletion";
-import { SceneCanvas } from "@/widgets/scene-editor";
+import { SceneViewport } from "@/widgets/scene-editor";
 import { PlaybackControls, TrajectoryInspector } from "@/widgets/trajectory-panels";
 
 import { ProjectHeader } from "./project-header";
@@ -110,7 +110,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
       <div className="flex min-h-0 min-w-0 flex-col">
         <ProjectHeader project={project} />
         <div className="relative min-h-[260px] flex-1">
-          <SceneCanvas
+          <SceneViewport
             anchors={anchors}
             onAddAnchor={(position, normal) => void addAnchor(position, normal)}
             onDeleteAnchor={(anchor) => deleteAnchor(anchor.id, anchor.label)}

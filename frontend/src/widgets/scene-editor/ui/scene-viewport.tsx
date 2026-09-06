@@ -5,8 +5,7 @@ import { useCallback, useState } from "react";
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { useTheme } from "@/features/theme-switcher";
-import { SceneSurfaceProvider } from "@/shared/scene-surface";
-import { RenderPipelineCanvas } from "@/shared/three";
+import { SceneCanvas } from "@/shared/scene-surface";
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
 import { SceneContents } from "./scene-contents";
@@ -21,7 +20,7 @@ type SurfaceState =
   | { status: "ready" }
   | { status: "error"; message: string };
 
-interface SceneCanvasProps {
+interface SceneViewportProps {
   anchors: Anchor[];
   pathPosition: number;
   selected: boolean;
@@ -31,7 +30,7 @@ interface SceneCanvasProps {
   onSelectTrajectory: () => void;
 }
 
-export function SceneCanvas({
+export function SceneViewport({
   anchors,
   pathPosition,
   selected,
@@ -39,7 +38,7 @@ export function SceneCanvas({
   onAddAnchor,
   onDeleteAnchor,
   onSelectTrajectory,
-}: SceneCanvasProps) {
+}: SceneViewportProps) {
   const { theme } = useTheme();
   const dark = theme === "dark";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
@@ -54,27 +53,26 @@ export function SceneCanvas({
   return (
     <div className="relative h-full w-full">
       {webGpuAvailable && (
-        <RenderPipelineCanvas
+        <SceneCanvas
+          background={dark ? DARK_BACKGROUND : LIGHT_BACKGROUND}
           camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
           dpr={[1, 2]}
           shadows
         >
-          <SceneSurfaceProvider background={dark ? DARK_BACKGROUND : LIGHT_BACKGROUND}>
-            <SceneContents
-              anchors={anchors}
-              dark={dark}
-              onAddAnchor={onAddAnchor}
-              onSurfaceError={handleSurfaceError}
-              onSurfaceLoading={handleSurfaceLoading}
-              onSurfaceReady={handleSurfaceReady}
-              onOpenAnchorMenu={(anchor, position) => setAnchorMenu({ ...position, anchor })}
-              onSelectTrajectory={onSelectTrajectory}
-              pathPosition={pathPosition}
-              selected={selected}
-              trajectory={trajectory}
-            />
-          </SceneSurfaceProvider>
-        </RenderPipelineCanvas>
+          <SceneContents
+            anchors={anchors}
+            dark={dark}
+            onAddAnchor={onAddAnchor}
+            onSurfaceError={handleSurfaceError}
+            onSurfaceLoading={handleSurfaceLoading}
+            onSurfaceReady={handleSurfaceReady}
+            onOpenAnchorMenu={(anchor, position) => setAnchorMenu({ ...position, anchor })}
+            onSelectTrajectory={onSelectTrajectory}
+            pathPosition={pathPosition}
+            selected={selected}
+            trajectory={trajectory}
+          />
+        </SceneCanvas>
       )}
       {webGpuAvailable === false && (
         <SceneMessage message="WebGPU is unavailable in this browser" />
