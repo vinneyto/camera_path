@@ -6,7 +6,7 @@ type CanvasGlProps = FunctionParameter<NonNullable<CanvasProps["gl"]>>;
 
 export async function createWebGpuRenderer({ canvas }: CanvasGlProps) {
   const renderer = new WebGPURenderer({
-    antialias: false,
+    antialias: true,
     canvas: canvas as HTMLCanvasElement,
   });
   await renderer.init();

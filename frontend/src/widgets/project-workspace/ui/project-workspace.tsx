@@ -22,7 +22,7 @@ interface ProjectWorkspaceProps {
   rendererBackend?: "webgl" | "webgpu";
 }
 
-export function ProjectWorkspace({ projectId, rendererBackend = "webgl" }: ProjectWorkspaceProps) {
+export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: ProjectWorkspaceProps) {
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const addAnchorMutation = useAddAnchor(projectId);

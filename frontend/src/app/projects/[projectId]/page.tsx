@@ -11,7 +11,7 @@ export default async function ProjectPage({ params, searchParams }: ProjectPageP
   return (
     <ProjectWorkspace
       projectId={projectId}
-      rendererBackend={renderer === "webgpu" ? "webgpu" : "webgl"}
+      rendererBackend={renderer === "webgl" ? "webgl" : "webgpu"}
     />
   );
 }

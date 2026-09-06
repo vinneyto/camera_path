@@ -29,6 +29,8 @@ export function TrajectoryLine({ dark, selected, trajectory, onSelect }: Traject
       onPointerOver={() => { document.body.style.cursor = "pointer"; }}
       points={points}
       radius={selected ? 0.018 : 0.014}
+      webGpuHitSlop={selected ? 6 : 6.5}
+      width={selected ? 4 : 3}
     />
   );
 }
