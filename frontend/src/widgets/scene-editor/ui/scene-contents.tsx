@@ -1,15 +1,18 @@
 import { OrbitControls } from "@react-three/drei";
-import { type ThreeEvent, useThree } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import { useCallback, useState } from "react";
-import type { GaussianCloud as GaussianCloudObject } from "3dgs-tile-webgpu";
 
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
-import { GaussianCloud } from "@/shared/three";
+import {
+  SceneSurface,
+  type SceneSurfaceHit,
+  type SceneSurfaceReady,
+} from "@/shared/scene-surface";
 import type { ContextMenuPosition } from "@/shared/ui";
 
 import { AnchorMarker } from "./anchor-marker";
-import { frameCloud } from "./frame-cloud";
+import { frameSurface } from "./frame-surface";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryLine } from "./trajectory-line";
 
@@ -17,9 +20,9 @@ interface SceneContentsProps {
   anchors: Anchor[];
   dark: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
-  onCloudError: (error: Error) => void;
-  onCloudLoading: () => void;
-  onCloudReady: () => void;
+  onSurfaceError: (error: Error) => void;
+  onSurfaceLoading: () => void;
+  onSurfaceReady: () => void;
   onOpenAnchorMenu: (anchor: Anchor, position: ContextMenuPosition) => void;
   onSelectTrajectory: () => void;
   pathPosition: number;
@@ -31,9 +34,9 @@ export function SceneContents({
   anchors,
   dark,
   onAddAnchor,
-  onCloudError,
-  onCloudLoading,
-  onCloudReady,
+  onSurfaceError,
+  onSurfaceLoading,
+  onSurfaceReady,
   onOpenAnchorMenu,
   onSelectTrajectory,
   pathPosition,
@@ -42,27 +45,24 @@ export function SceneContents({
 }: SceneContentsProps) {
   const camera = useThree((state) => state.camera);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
-  const handleCloudLoad = useCallback((cloud: GaussianCloudObject) => {
-    frameCloud(camera, cloud, setOrbitTarget);
-    onCloudReady();
-  }, [camera, onCloudReady]);
+  const handleSurfaceReady = useCallback((surface: SceneSurfaceReady) => {
+    frameSurface(camera, surface.bounds, setOrbitTarget);
+    onSurfaceReady();
+  }, [camera, onSurfaceReady]);
 
-  function handleCloudClick(event: ThreeEvent<MouseEvent>) {
-    event.stopPropagation();
-    const normal = event.face?.normal.clone().transformDirection(event.object.matrixWorld).normalize()
-      ?? event.ray.direction.clone().negate().normalize();
-    onAddAnchor(event.point.toArray() as Vec3, normal.toArray() as Vec3);
+  function handleSurfaceClick(hit: SceneSurfaceHit) {
+    onAddAnchor(hit.position, hit.normal);
   }
 
   return (
     <>
-      <GaussianCloud
+      <SceneSurface
         name="Mug Gaussian cloud"
-        onClick={handleCloudClick}
-        onError={onCloudError}
-        onLoad={handleCloudLoad}
-        onLoading={onCloudLoading}
-        src="/mug.ply"
+        onClick={handleSurfaceClick}
+        onError={onSurfaceError}
+        onReady={handleSurfaceReady}
+        onLoading={onSurfaceLoading}
+        source="/mug.ply"
       />
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight

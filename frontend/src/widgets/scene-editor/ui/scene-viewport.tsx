@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { useTheme } from "@/features/theme-switcher";
-import { GaussianTile, RenderPipelineCanvas } from "@/shared/three";
+import { SceneCanvas } from "@/shared/scene-surface";
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
 import { SceneContents } from "./scene-contents";
@@ -15,12 +15,12 @@ import { useWebGpuAvailability } from "./use-webgpu-availability";
 const DARK_BACKGROUND = [12 / 255, 16 / 255, 23 / 255, 1] as const;
 const LIGHT_BACKGROUND = [235 / 255, 233 / 255, 229 / 255, 1] as const;
 
-type CloudState =
+type SurfaceState =
   | { status: "loading" }
   | { status: "ready" }
   | { status: "error"; message: string };
 
-interface SceneCanvasProps {
+interface SceneViewportProps {
   anchors: Anchor[];
   pathPosition: number;
   selected: boolean;
@@ -30,7 +30,7 @@ interface SceneCanvasProps {
   onSelectTrajectory: () => void;
 }
 
-export function SceneCanvas({
+export function SceneViewport({
   anchors,
   pathPosition,
   selected,
@@ -38,51 +38,50 @@ export function SceneCanvas({
   onAddAnchor,
   onDeleteAnchor,
   onSelectTrajectory,
-}: SceneCanvasProps) {
+}: SceneViewportProps) {
   const { theme } = useTheme();
   const dark = theme === "dark";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
-  const [cloudState, setCloudState] = useState<CloudState>({ status: "loading" });
+  const [surfaceState, setSurfaceState] = useState<SurfaceState>({ status: "loading" });
   const webGpuAvailable = useWebGpuAvailability();
-  const handleCloudLoading = useCallback(() => setCloudState({ status: "loading" }), []);
-  const handleCloudReady = useCallback(() => setCloudState({ status: "ready" }), []);
-  const handleCloudError = useCallback((error: Error) => {
-    setCloudState({ status: "error", message: error.message });
+  const handleSurfaceLoading = useCallback(() => setSurfaceState({ status: "loading" }), []);
+  const handleSurfaceReady = useCallback(() => setSurfaceState({ status: "ready" }), []);
+  const handleSurfaceError = useCallback((error: Error) => {
+    setSurfaceState({ status: "error", message: error.message });
   }, []);
 
   return (
     <div className="relative h-full w-full">
       {webGpuAvailable && (
-        <RenderPipelineCanvas
+        <SceneCanvas
+          background={dark ? DARK_BACKGROUND : LIGHT_BACKGROUND}
           camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
           dpr={[1, 2]}
           shadows
         >
-          <GaussianTile background={dark ? DARK_BACKGROUND : LIGHT_BACKGROUND}>
-            <SceneContents
-              anchors={anchors}
-              dark={dark}
-              onAddAnchor={onAddAnchor}
-              onCloudError={handleCloudError}
-              onCloudLoading={handleCloudLoading}
-              onCloudReady={handleCloudReady}
-              onOpenAnchorMenu={(anchor, position) => setAnchorMenu({ ...position, anchor })}
-              onSelectTrajectory={onSelectTrajectory}
-              pathPosition={pathPosition}
-              selected={selected}
-              trajectory={trajectory}
-            />
-          </GaussianTile>
-        </RenderPipelineCanvas>
+          <SceneContents
+            anchors={anchors}
+            dark={dark}
+            onAddAnchor={onAddAnchor}
+            onSurfaceError={handleSurfaceError}
+            onSurfaceLoading={handleSurfaceLoading}
+            onSurfaceReady={handleSurfaceReady}
+            onOpenAnchorMenu={(anchor, position) => setAnchorMenu({ ...position, anchor })}
+            onSelectTrajectory={onSelectTrajectory}
+            pathPosition={pathPosition}
+            selected={selected}
+            trajectory={trajectory}
+          />
+        </SceneCanvas>
       )}
       {webGpuAvailable === false && (
         <SceneMessage message="WebGPU is unavailable in this browser" />
       )}
-      {webGpuAvailable !== false && cloudState.status === "loading" && (
+      {webGpuAvailable !== false && surfaceState.status === "loading" && (
         <SceneMessage message="Loading mug.ply…" />
       )}
-      {webGpuAvailable !== false && cloudState.status === "error" && (
-        <SceneMessage message={`Could not load mug.ply: ${cloudState.message}`} />
+      {webGpuAvailable !== false && surfaceState.status === "error" && (
+        <SceneMessage message={`Could not load mug.ply: ${surfaceState.message}`} />
       )}
       <ContextMenu
         items={anchorMenu ? [{
