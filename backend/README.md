@@ -41,9 +41,10 @@ uv run ruff check .
 
 ## Populate development data
 
-Create two ready-to-use projects for frontend development: one random spline and one random
-spiral. Both include anchors, a scene target, speed keys and a camera key. The default seed is
-deterministic, and rerunning the command with the same seed does not create duplicates.
+Create three ready-to-use projects for frontend development: one random spline, one random spiral,
+and a mixed spline → spiral → spline path that exercises smooth semantic junctions. All include
+anchors, a scene target, speed keys and a camera key. The default seed is deterministic, and
+rerunning the command with the same seed does not create duplicates.
 
 ```bash
 cd backend
@@ -62,6 +63,13 @@ Both control graphs use `path_position` in normalized arc length: `0` is the beg
 compiled trajectory and `1` is its end. This keeps keyframes stable if the path is resampled.
 The compiled arc-length table adaptively samples every cubic Bézier according to
 `CAMERA_PATH_COMPILE_TOLERANCE`, allowing the client to map distance to each curve's parameter.
+
+Spline and spiral primitives remain separate authoring objects, but compilation performs a global
+smoothing pass over their connected boundaries. Each shared junction keeps its exact anchor while
+the incoming and outgoing Bézier handles receive one common world-space tangent and magnitude.
+Only a small subdivided neighborhood is deformed, with its displacement bounded by
+`CAMERA_PATH_COMPILE_TOLERANCE`; the untouched interior retains the semantic spline or spiral
+shape. Bézier lengths and the adaptive arc-length table are computed after this final smoothing.
 
 The motion profile has a positive `default_speed` in metres per second. With no keys the camera
 moves at that constant speed. A speed key stores a speed and one transition to the following key:

@@ -4,22 +4,39 @@ from camera_path.seed import populate_demo_projects
 from camera_path.service import TrajectoryService
 
 
-async def test_populate_creates_spline_and_spiral_projects(tmp_path) -> None:
+async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> None:
     service = TrajectoryService(SQLiteProjectRepository(tmp_path / "seed.sqlite3"))
 
     results = await populate_demo_projects(service, seed=7)
 
-    assert len(results) == 2
+    assert len(results) == 3
     assert all(result.created for result in results)
-    spline, spiral = [result.project for result in results]
+    spline, spiral, mixed = [result.project for result in results]
     assert len(spline.anchors) == 6
     assert len(spline.scene_points) == 1
     assert isinstance(spline.segments[0], SplineSegment)
     assert len(spiral.anchors) == 3
     assert len(spiral.scene_points) == 1
     assert isinstance(spiral.segments[0], SpiralSegment)
+    assert [type(segment) for segment in mixed.segments] == [
+        SplineSegment,
+        SpiralSegment,
+        SplineSegment,
+    ]
     assert service.compile_draft(spline).position_segments
     assert service.compile_draft(spiral).position_segments
+    mixed_curves = service.compile_draft(mixed).position_segments
+    junctions = [
+        (left, right)
+        for left, right in zip(mixed_curves, mixed_curves[1:], strict=False)
+        if left.source_segment_id != right.source_segment_id
+    ]
+    assert len(junctions) == 2
+    for left, right in junctions:
+        assert left.p3 == right.p0
+        incoming = tuple(end - control for end, control in zip(left.p3, left.p2, strict=True))
+        outgoing = tuple(control - start for control, start in zip(right.p1, right.p0, strict=True))
+        assert incoming == outgoing
 
 
 async def test_populate_is_idempotent_for_the_same_seed(tmp_path) -> None:
@@ -31,4 +48,4 @@ async def test_populate_is_idempotent_for_the_same_seed(tmp_path) -> None:
     assert all(result.created for result in first)
     assert not any(result.created for result in second)
     assert [result.project.id for result in first] == [result.project.id for result in second]
-    assert len(await service.list_projects()) == 2
+    assert len(await service.list_projects()) == 3
