@@ -1,3 +1,4 @@
+import { EditorStoreProvider } from "@/features/project-editor";
 import { ProjectWorkspace } from "@/widgets/project-workspace";
 
 interface ProjectPageProps {
@@ -9,9 +10,11 @@ export default async function ProjectPage({ params, searchParams }: ProjectPageP
   const { projectId } = await params;
   const { renderer } = await searchParams;
   return (
-    <ProjectWorkspace
-      projectId={projectId}
-      rendererBackend={renderer === "webgl" ? "webgl" : "webgpu"}
-    />
+    <EditorStoreProvider key={projectId}>
+      <ProjectWorkspace
+        projectId={projectId}
+        rendererBackend={renderer === "webgl" ? "webgl" : "webgpu"}
+      />
+    </EditorStoreProvider>
   );
 }

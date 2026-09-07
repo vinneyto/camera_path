@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 
 import type { Anchor } from "@/entities/project";
-import { CameraModeToggle, useEditorStore } from "@/features/project-editor";
+import { CameraModeToggle, useCameraMode } from "@/features/project-editor";
 import { useTheme } from "@/features/theme-switcher";
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
@@ -26,7 +26,7 @@ export function SceneViewportFrame({
   unavailableMessage = "This renderer is unavailable in this browser",
 }: SceneViewportFrameProps) {
   const { theme } = useTheme();
-  const cameraMode = useEditorStore((state) => state.cameraMode);
+  const { cameraMode } = useCameraMode();
   const dark = theme === "dark";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
   const [surfaceState, setSurfaceState] = useState<SurfaceState>({ status: "loading" });

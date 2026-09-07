@@ -4,7 +4,11 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Anchor } from "@/entities/project";
-import { useEditorStore } from "@/features/project-editor";
+import {
+  useActiveEditorTool,
+  useHoveredAnchor,
+  useSetActiveEditorTool,
+} from "@/features/project-editor";
 
 import { getWorldYAxisLift } from "../lib/get-world-y-axis-lift";
 
@@ -27,11 +31,9 @@ interface AnchorHeightDrag {
 }
 
 export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEditingOptions) {
-  const activeTool = useEditorStore((state) => state.activeTool);
-  const clearHoveredAnchor = useEditorStore((state) => state.clearHoveredAnchor);
-  const hoverAnchor = useEditorStore((state) => state.hoverAnchor);
-  const hoveredAnchorId = useEditorStore((state) => state.hoveredAnchorId);
-  const setActiveTool = useEditorStore((state) => state.setActiveTool);
+  const activeTool = useActiveEditorTool();
+  const { clearHoveredAnchor, hoveredAnchorId, hoverAnchor } = useHoveredAnchor();
+  const setActiveTool = useSetActiveEditorTool();
   const dragRef = useRef<AnchorHeightDrag | null>(null);
   const [preview, setPreview] = useState<AnchorHeightPreview | null>(null);
 

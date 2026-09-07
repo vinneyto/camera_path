@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 
 import { useCompiledTrajectoryQuery, useProjectQuery, type Vec3 } from "@/entities/project";
@@ -9,7 +9,9 @@ import { useUpdateAnchor } from "@/features/anchor-editing";
 import { ChatPanel, useSendChatMessage } from "@/features/chat-agent";
 import {
   useAnchorToolShortcut,
-  useEditorStore,
+  useActiveEditorTool,
+  useCameraMode,
+  useTrajectorySelection,
   useTrajectoryPlayback,
 } from "@/features/project-editor";
 import {
@@ -38,12 +40,9 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const chatMutation = useSendChatMessage(projectId);
   const project = projectQuery.data;
   const trajectory = trajectoryQuery.data ?? null;
-  const trajectorySelected = useEditorStore((state) => state.trajectorySelected);
-  const activeTool = useEditorStore((state) => state.activeTool);
-  const cameraMode = useEditorStore((state) => state.cameraMode);
-  const closeTrajectory = useEditorStore((state) => state.closeTrajectory);
-  const resetEditor = useEditorStore((state) => state.resetEditor);
-  const selectTrajectory = useEditorStore((state) => state.selectTrajectory);
+  const activeTool = useActiveEditorTool();
+  const { cameraMode } = useCameraMode();
+  const { closeTrajectory, selectTrajectory, trajectorySelected } = useTrajectorySelection();
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = useMemo(() => project ? Object.values(project.anchors) : [], [project]);
   const mutating = addAnchorMutation.isPending
@@ -63,10 +62,6 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const error = requestError instanceof Error ? requestError.message : null;
   const Viewport = rendererBackend === "webgpu" ? SceneWebGpuViewport : SceneViewport;
   useAnchorToolShortcut();
-
-  useEffect(() => {
-    resetEditor();
-  }, [projectId, resetEditor]);
 
   async function addAnchor(position: Vec3, normal: Vec3) {
     if (!project || mutating) return;
