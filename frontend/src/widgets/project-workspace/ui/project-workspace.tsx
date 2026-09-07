@@ -40,6 +40,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const trajectory = trajectoryQuery.data ?? null;
   const trajectorySelected = useEditorStore((state) => state.trajectorySelected);
   const activeTool = useEditorStore((state) => state.activeTool);
+  const cameraMode = useEditorStore((state) => state.cameraMode);
   const closeTrajectory = useEditorStore((state) => state.closeTrajectory);
   const resetEditor = useEditorStore((state) => state.resetEditor);
   const selectTrajectory = useEditorStore((state) => state.selectTrajectory);
@@ -137,16 +138,18 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
             selected={trajectorySelected}
             trajectory={trajectory}
           />
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
-            {mutating
-              ? <LoaderCircle className="size-3 animate-spin" />
-              : <MousePointerClick className="size-3" />}
-            {activeTool === "anchor"
-              ? "Anchor tool active — release the modifier key to exit"
-              : activeTool === "anchor-height"
-                ? "Drag vertically to set anchor height; press Escape to cancel"
-                : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
-          </div>
+          {cameraMode === "orbit" && (
+            <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
+              {mutating
+                ? <LoaderCircle className="size-3 animate-spin" />
+                : <MousePointerClick className="size-3" />}
+              {activeTool === "anchor"
+                ? "Anchor tool active — release the modifier key to exit"
+                : activeTool === "anchor-height"
+                  ? "Drag vertically to set anchor height; press Escape to cancel"
+                  : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
+            </div>
+          )}
         </div>
         {trajectory && trajectory.position_segments.length > 0 && (
           <PlaybackControls

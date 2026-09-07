@@ -1,5 +1,7 @@
 export { createPlaybackTable } from "./lib/create-playback-table";
 export { evaluateAim } from "./lib/evaluate-aim";
+export { evaluateTrajectoryCameraPose } from "./lib/evaluate-trajectory-camera-pose";
+export type { TrajectoryCameraPose } from "./lib/evaluate-trajectory-camera-pose";
 export { evaluateSpeed } from "./lib/evaluate-speed";
 export { getAimLabel } from "./lib/get-aim-label";
 export { locateOnPath } from "./lib/locate-on-path";

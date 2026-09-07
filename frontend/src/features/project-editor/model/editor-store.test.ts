@@ -14,10 +14,37 @@ describe("editor store", () => {
     expect(useEditorStore.getState()).toMatchObject({
       elapsed: 2.5,
       activeTool: "anchor",
+      cameraMode: "orbit",
       hoveredAnchorId: null,
       pathPosition: 0.4,
       playing: true,
       trajectorySelected: true,
+    });
+  });
+
+  it("switches camera mode without changing playback", () => {
+    useEditorStore.getState().setPlaybackFrame(0.4, 2.5);
+    useEditorStore.getState().setPlaying(true);
+    useEditorStore.getState().hoverAnchor("anchor-a");
+    useEditorStore.getState().setActiveTool("anchor");
+    useEditorStore.getState().setCameraMode("trajectory");
+
+    expect(useEditorStore.getState()).toMatchObject({
+      activeTool: null,
+      cameraMode: "trajectory",
+      elapsed: 2.5,
+      hoveredAnchorId: null,
+      pathPosition: 0.4,
+      playing: true,
+    });
+
+    useEditorStore.getState().setPlaying(false);
+    useEditorStore.getState().setCameraMode("orbit");
+    expect(useEditorStore.getState()).toMatchObject({
+      cameraMode: "orbit",
+      elapsed: 2.5,
+      pathPosition: 0.4,
+      playing: false,
     });
   });
 
@@ -43,6 +70,7 @@ describe("editor store", () => {
     expect(useEditorStore.getState()).toMatchObject({
       elapsed: 0,
       activeTool: null,
+      cameraMode: "orbit",
       hoveredAnchorId: null,
       pathPosition: 0,
       playing: false,

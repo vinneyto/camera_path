@@ -28,6 +28,7 @@ export interface SceneViewportRenderContext {
 export interface SceneViewportFrameProps {
   available: boolean | null | undefined;
   onDeleteAnchor: (anchor: Anchor) => void;
+  trajectoryAvailable: boolean;
   unavailableMessage?: string;
   renderScene: (context: SceneViewportRenderContext) => ReactNode;
 }

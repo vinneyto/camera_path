@@ -14,6 +14,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
     <SceneViewportFrame
       available={webGpuAvailable}
       onDeleteAnchor={props.onDeleteAnchor}
+      trajectoryAvailable={Boolean(props.trajectory?.position_segments.length)}
       renderScene={(context) => (
         <RenderPipelineCanvas
           camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
