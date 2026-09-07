@@ -1,39 +1,40 @@
 import { Html } from "@react-three/drei";
-import type { ThreeEvent } from "@react-three/fiber";
+import type { ThreeElements } from "@react-three/fiber";
 import { MapPin } from "lucide-react";
 
 import type { Anchor } from "@/entities/project";
 
-interface AnchorMarkerProps {
+interface AnchorMarkerProps extends Omit<ThreeElements["group"], "children" | "position"> {
   anchor: Anchor;
-  onContextMenu?: (anchor: Anchor, position: { x: number; y: number }) => void;
+  hovered?: boolean;
 }
 
-export function AnchorMarker({ anchor, onContextMenu }: AnchorMarkerProps) {
+export function AnchorMarker({
+  anchor,
+  hovered = false,
+  ...groupProps
+}: AnchorMarkerProps) {
   const axis = anchor.lift_axis === "surface_normal" ? anchor.surface_normal : [0, 1, 0];
   const position = anchor.surface_position.map(
     (component, index) => component + axis[index] * anchor.lift,
   ) as [number, number, number];
 
-  function handleContextMenu(event: ThreeEvent<MouseEvent>) {
-    if (onContextMenu === undefined) return;
-    event.stopPropagation();
-    event.nativeEvent.preventDefault();
-    onContextMenu(anchor, {
-      x: event.nativeEvent.clientX,
-      y: event.nativeEvent.clientY,
-    });
-  }
+  const interactive = groupProps.onContextMenu !== undefined
+    || groupProps.onPointerDown !== undefined;
 
   return (
-    <group position={position}>
+    <group {...groupProps} position={position}>
       <mesh>
-        <sphereGeometry args={[0.055, 16, 16]} />
-        <meshStandardMaterial color="#f97316" emissive="#7c2d12" emissiveIntensity={0.35} />
+        <sphereGeometry args={[0.045, 16, 16]} />
+        <meshStandardMaterial
+          color={hovered ? "#fb923c" : "#f97316"}
+          emissive="#7c2d12"
+          emissiveIntensity={hovered ? 0.45 : 0.35}
+        />
       </mesh>
-      {onContextMenu !== undefined && (
-        <mesh onContextMenu={handleContextMenu}>
-          <sphereGeometry args={[0.14, 12, 12]} />
+      {interactive && (
+        <mesh position={[0, 0.1, 0]}>
+          <sphereGeometry args={[0.2, 12, 12]} />
           <meshBasicMaterial depthWrite={false} opacity={0} transparent />
         </mesh>
       )}

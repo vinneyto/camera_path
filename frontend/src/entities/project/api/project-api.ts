@@ -1,4 +1,4 @@
-import type { AnchorCreate, Project } from "@/entities/project/model/types";
+import type { AnchorCreate, AnchorUpdate, Project } from "@/entities/project/model/types";
 import type { ChatResult, CompiledTrajectory } from "@/entities/trajectory/model/types";
 import { apiRequest } from "@/shared/api/http";
 
@@ -12,6 +12,11 @@ export const projectApi = {
   addAnchor: (projectId: string, anchor: AnchorCreate) =>
     apiRequest<Project>(`/projects/${projectId}/anchors`, {
       method: "POST",
+      body: JSON.stringify(anchor),
+    }),
+  updateAnchor: (projectId: string, anchorId: string, anchor: AnchorUpdate) =>
+    apiRequest<Project>(`/projects/${projectId}/anchors/${anchorId}`, {
+      method: "PATCH",
       body: JSON.stringify(anchor),
     }),
   deleteAnchor: (projectId: string, anchorId: string) =>

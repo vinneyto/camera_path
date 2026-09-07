@@ -28,6 +28,7 @@ export function SceneViewport(props: SceneViewportProps) {
             onSurfaceError={context.onSurfaceError}
             onSurfaceLoading={context.onSurfaceLoading}
             onSurfaceReady={context.onSurfaceReady}
+            onUpdateAnchorLift={props.onUpdateAnchorLift}
             pathPosition={props.pathPosition}
             selected={props.selected}
             trajectory={props.trajectory}

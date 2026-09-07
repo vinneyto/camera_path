@@ -8,6 +8,7 @@ export {
 export type {
   Anchor,
   AnchorCreate,
+  AnchorUpdate,
   ChatHistoryMessage,
   Project,
   Vec3,

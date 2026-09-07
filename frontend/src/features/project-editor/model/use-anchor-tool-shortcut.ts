@@ -10,12 +10,18 @@ export function useAnchorToolShortcut() {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === getAnchorToolModifier(event).key) setActiveTool("anchor");
+      if (
+        event.key === getAnchorToolModifier(event).key
+        && useEditorStore.getState().activeTool !== "anchor-height"
+      ) setActiveTool("anchor");
       if (event.key === "Escape") setActiveTool(null);
     }
 
     function handleKeyUp(event: KeyboardEvent) {
-      if (event.key === getAnchorToolModifier(event).key) setActiveTool(null);
+      if (
+        event.key === getAnchorToolModifier(event).key
+        && useEditorStore.getState().activeTool === "anchor"
+      ) setActiveTool(null);
     }
 
     function handleBlur() {

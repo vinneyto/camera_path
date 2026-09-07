@@ -17,11 +17,13 @@ import {
 import type { ContextMenuPosition } from "@/shared/ui";
 
 import { AnchorMarker } from "./anchor-marker";
+import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
 import { frameSurface } from "./frame-surface";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryLine } from "./trajectory-line";
 import { useAnchorPlacement } from "./use-anchor-placement";
+import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 
 const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
@@ -34,6 +36,7 @@ interface SceneContentsProps {
   onSurfaceError: (error: Error) => void;
   onSurfaceLoading: () => void;
   onSurfaceReady: () => void;
+  onUpdateAnchorLift: (anchorId: string, lift: number) => Promise<void>;
   onOpenAnchorMenu: (anchor: Anchor, position: ContextMenuPosition) => void;
   onSelectTrajectory: () => void;
   pathPosition: number;
@@ -49,6 +52,7 @@ export function SceneContents({
   onSurfaceError,
   onSurfaceLoading,
   onSurfaceReady,
+  onUpdateAnchorLift,
   onOpenAnchorMenu,
   onSelectTrajectory,
   pathPosition,
@@ -59,6 +63,7 @@ export function SceneContents({
   const activeTool = useEditorStore((state) => state.activeTool);
   const renderingBackend = useGaussianRenderingBackend(background);
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
+  const heightEditing = useAnchorHeightEditing({ anchors, onCommit: onUpdateAnchorLift });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   useStopOrbitControlsInertia(orbitControlsRef, activeTool !== null);
@@ -93,9 +98,40 @@ export function SceneContents({
         position={[5, 8, 4]}
         shadow-mapSize={[1024, 1024]}
       />
-      {anchors.map((anchor) => (
-        <AnchorMarker anchor={anchor} key={anchor.id} onContextMenu={onOpenAnchorMenu} />
-      ))}
+      {anchors.map((anchor) => {
+        const markerAnchor = heightEditing.preview?.anchorId === anchor.id
+          ? { ...anchor, lift: heightEditing.preview.lift, lift_axis: "world_up" as const }
+          : anchor;
+        return (
+          <AnchorMarker
+            anchor={markerAnchor}
+            hovered={heightEditing.hoveredAnchorId === anchor.id}
+            key={anchor.id}
+            onContextMenu={(event) => {
+              event.stopPropagation();
+              event.nativeEvent.preventDefault();
+              onOpenAnchorMenu(anchor, {
+                x: event.nativeEvent.clientX,
+                y: event.nativeEvent.clientY,
+              });
+            }}
+            onPointerCancel={(event) => heightEditing.handlePointerCancel(anchor, event)}
+            onPointerDown={(event) => heightEditing.handlePointerDown(anchor, event)}
+            onPointerMove={(event) => heightEditing.handlePointerMove(anchor, event)}
+            onPointerOut={(event) => heightEditing.handlePointerOut(anchor, event)}
+            onPointerOver={(event) => heightEditing.handlePointerOver(anchor, event)}
+            onPointerUp={(event) => heightEditing.handlePointerUp(anchor, event)}
+          />
+        );
+      })}
+      {heightEditing.activeAnchor !== null && (
+        <AnchorHeightEditingOverlay
+          anchor={heightEditing.activeAnchor}
+          backend={renderingBackend}
+          dragging={heightEditing.preview?.dragging ?? false}
+          lift={heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift}
+        />
+      )}
       {trajectory && (
         <TrajectoryLine
           dark={dark}
