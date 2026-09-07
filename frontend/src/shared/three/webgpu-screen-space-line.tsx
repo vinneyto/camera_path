@@ -1,10 +1,13 @@
 "use client";
 
+import { useThree } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
 
+import { getLine2RaycastThreshold } from "./get-line2-raycast-threshold";
+import { normalizeScreenSpaceLinePoints } from "./normalize-screen-space-line-points";
 import type { ScreenSpaceLineProps } from "./screen-space-line";
 
 type WebGpuScreenSpaceLineProps = Omit<
@@ -22,12 +25,14 @@ export function WebGpuScreenSpaceLine({
   renderOrder = 0,
   transparent = false,
   width = 1,
-  ...eventHandlers
+  ...objectProps
 }: WebGpuScreenSpaceLineProps) {
+  const pixelRatio = useThree((state) => state.viewport.dpr);
+  const normalizedPoints = useMemo(() => normalizeScreenSpaceLinePoints(points), [points]);
   const line = useMemo(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(
-      points.flatMap((point) => "toArray" in point ? point.toArray() : [...point]),
+      normalizedPoints.flatMap((point) => point.toArray()),
     );
 
     const material = new Line2NodeMaterial({
@@ -43,7 +48,7 @@ export function WebGpuScreenSpaceLine({
     object.layers.set(layer);
     object.renderOrder = renderOrder;
 
-    const raycastThreshold = Math.max(0, hitSlop) * 2;
+    const raycastThreshold = getLine2RaycastThreshold(width, hitSlop, pixelRatio);
     if (raycastThreshold > 0) {
       const raycast = object.raycast.bind(object);
       object.raycast = (raycaster, intersections) => {
@@ -58,12 +63,13 @@ export function WebGpuScreenSpaceLine({
     }
 
     return object;
-  }, [color, depthTest, depthWrite, hitSlop, layer, points, renderOrder, transparent, width]);
+  }, [color, depthTest, depthWrite, hitSlop, layer, normalizedPoints, pixelRatio, renderOrder, transparent, width]);
 
   useEffect(() => () => {
     line.geometry.dispose();
     line.material.dispose();
   }, [line]);
 
-  return <primitive dispose={null} object={line} {...eventHandlers} />;
+  if (normalizedPoints.length < 2) return null;
+  return <primitive dispose={null} object={line} {...objectProps} />;
 }

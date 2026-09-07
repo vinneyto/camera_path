@@ -2,6 +2,9 @@ import { createStore, type StoreApi } from "zustand/vanilla";
 
 export type EditorTool = "anchor" | "anchor-height";
 export type CameraMode = "orbit" | "trajectory";
+export type EditorHoveredObject =
+  | { id: string; type: "anchor" }
+  | { type: "trajectory" };
 
 export interface EditorCameraState {
   cameraMode: CameraMode;
@@ -9,7 +12,7 @@ export interface EditorCameraState {
 
 export interface EditorToolState {
   activeTool: EditorTool | null;
-  hoveredAnchorId: string | null;
+  hoveredObject: EditorHoveredObject | null;
 }
 
 export interface TrajectorySelectionState {
@@ -28,7 +31,9 @@ interface EditorCameraActions {
 
 interface EditorToolActions {
   clearHoveredAnchor: (anchorId: string) => void;
+  clearHoveredTrajectory: () => void;
   hoverAnchor: (anchorId: string) => void;
+  hoverTrajectory: () => void;
   setActiveTool: (tool: EditorTool | null) => void;
 }
 
@@ -63,7 +68,7 @@ export function createEditorStore(): EditorStoreApi {
       setCameraMode: (cameraMode) => set(cameraMode === "trajectory"
         ? {
             camera: { cameraMode },
-            tool: { activeTool: null, hoveredAnchorId: null },
+            tool: { activeTool: null, hoveredObject: null },
           }
         : { camera: { cameraMode } }),
     },
@@ -90,16 +95,25 @@ export function createEditorStore(): EditorStoreApi {
     },
     tool: {
       activeTool: null,
-      hoveredAnchorId: null,
+      hoveredObject: null,
     },
     toolActions: {
       clearHoveredAnchor: (anchorId) => set((state) => (
-        state.tool.hoveredAnchorId === anchorId
-          ? { tool: { ...state.tool, hoveredAnchorId: null } }
+        state.tool.hoveredObject?.type === "anchor"
+          && state.tool.hoveredObject.id === anchorId
+          ? { tool: { ...state.tool, hoveredObject: null } }
           : state
       )),
-      hoverAnchor: (hoveredAnchorId) => set((state) => ({
-        tool: { ...state.tool, hoveredAnchorId },
+      clearHoveredTrajectory: () => set((state) => (
+        state.tool.hoveredObject?.type === "trajectory"
+          ? { tool: { ...state.tool, hoveredObject: null } }
+          : state
+      )),
+      hoverAnchor: (id) => set((state) => ({
+        tool: { ...state.tool, hoveredObject: { id, type: "anchor" } },
+      })),
+      hoverTrajectory: () => set((state) => ({
+        tool: { ...state.tool, hoveredObject: { type: "trajectory" } },
       })),
       setActiveTool: (activeTool) => set((state) => ({
         tool: { ...state.tool, activeTool },
