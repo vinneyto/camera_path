@@ -7,9 +7,24 @@ import type { Anchor } from "@/entities/project";
 interface AnchorMarkerProps {
   anchor: Anchor;
   onContextMenu?: (anchor: Anchor, position: { x: number; y: number }) => void;
+  onPointerCancel?: (anchor: Anchor, event: ThreeEvent<PointerEvent>) => void;
+  onPointerDown?: (anchor: Anchor, event: ThreeEvent<PointerEvent>) => void;
+  onPointerMove?: (anchor: Anchor, event: ThreeEvent<PointerEvent>) => void;
+  onPointerOut?: (anchor: Anchor, event: ThreeEvent<PointerEvent>) => void;
+  onPointerOver?: (anchor: Anchor, event: ThreeEvent<PointerEvent>) => void;
+  onPointerUp?: (anchor: Anchor, event: ThreeEvent<PointerEvent>) => void;
 }
 
-export function AnchorMarker({ anchor, onContextMenu }: AnchorMarkerProps) {
+export function AnchorMarker({
+  anchor,
+  onContextMenu,
+  onPointerCancel,
+  onPointerDown,
+  onPointerMove,
+  onPointerOut,
+  onPointerOver,
+  onPointerUp,
+}: AnchorMarkerProps) {
   const axis = anchor.lift_axis === "surface_normal" ? anchor.surface_normal : [0, 1, 0];
   const position = anchor.surface_position.map(
     (component, index) => component + axis[index] * anchor.lift,
@@ -31,9 +46,18 @@ export function AnchorMarker({ anchor, onContextMenu }: AnchorMarkerProps) {
         <sphereGeometry args={[0.055, 16, 16]} />
         <meshStandardMaterial color="#f97316" emissive="#7c2d12" emissiveIntensity={0.35} />
       </mesh>
-      {onContextMenu !== undefined && (
-        <mesh onContextMenu={handleContextMenu}>
-          <sphereGeometry args={[0.14, 12, 12]} />
+      {(onContextMenu !== undefined || onPointerDown !== undefined) && (
+        <mesh
+          onContextMenu={handleContextMenu}
+          onPointerCancel={(event) => onPointerCancel?.(anchor, event)}
+          onPointerDown={(event) => onPointerDown?.(anchor, event)}
+          onPointerMove={(event) => onPointerMove?.(anchor, event)}
+          onPointerOut={(event) => onPointerOut?.(anchor, event)}
+          onPointerOver={(event) => onPointerOver?.(anchor, event)}
+          onPointerUp={(event) => onPointerUp?.(anchor, event)}
+          position={[0, 0.1, 0]}
+        >
+          <sphereGeometry args={[0.2, 12, 12]} />
           <meshBasicMaterial depthWrite={false} opacity={0} transparent />
         </mesh>
       )}

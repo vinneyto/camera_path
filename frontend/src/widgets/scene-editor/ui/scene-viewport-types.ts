@@ -13,6 +13,7 @@ export interface SceneViewportProps {
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
   onDeleteAnchor: (anchor: Anchor) => void;
   onSelectTrajectory: () => void;
+  onUpdateAnchorLift: (anchorId: string, lift: number) => Promise<void>;
 }
 
 export interface SceneViewportRenderContext {

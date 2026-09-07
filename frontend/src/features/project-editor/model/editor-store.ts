@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type EditorTool = "anchor";
+export type EditorTool = "anchor" | "anchor-height";
 
 interface EditorState {
   activeTool: EditorTool | null;

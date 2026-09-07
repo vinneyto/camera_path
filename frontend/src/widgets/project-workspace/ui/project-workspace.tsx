@@ -5,6 +5,7 @@ import { LoaderCircle, MousePointerClick } from "lucide-react";
 
 import { useCompiledTrajectoryQuery, useProjectQuery, type Vec3 } from "@/entities/project";
 import { getAnchorLabel, useAddAnchor } from "@/features/anchor-creation";
+import { useUpdateAnchor } from "@/features/anchor-editing";
 import { ChatPanel, useSendChatMessage } from "@/features/chat-agent";
 import {
   useAnchorToolShortcut,
@@ -30,6 +31,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const addAnchorMutation = useAddAnchor(projectId);
+  const updateAnchorMutation = useUpdateAnchor(projectId);
   const deleteAnchorMutation = useDeleteAnchor(projectId);
   const deleteSpeedKeyframeMutation = useDeleteSpeedKeyframe(projectId);
   const deleteCameraKeyframeMutation = useDeleteCameraKeyframe(projectId);
@@ -44,6 +46,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = useMemo(() => project ? Object.values(project.anchors) : [], [project]);
   const mutating = addAnchorMutation.isPending
+    || updateAnchorMutation.isPending
     || deleteAnchorMutation.isPending
     || deleteSpeedKeyframeMutation.isPending
     || deleteCameraKeyframeMutation.isPending
@@ -51,6 +54,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const requestError = projectQuery.error
     ?? trajectoryQuery.error
     ?? addAnchorMutation.error
+    ?? updateAnchorMutation.error
     ?? deleteAnchorMutation.error
     ?? deleteSpeedKeyframeMutation.error
     ?? deleteCameraKeyframeMutation.error
@@ -84,9 +88,12 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
     }
   }
 
-  function deleteAnchor(anchorId: string, anchorLabel: string) {
-    if (!window.confirm(`Delete anchor “${anchorLabel}”?`)) return;
+  function deleteAnchor(anchorId: string) {
     deleteAnchorMutation.mutate(anchorId);
+  }
+
+  async function updateAnchorLift(anchorId: string, lift: number) {
+    await updateAnchorMutation.mutateAsync({ anchorId, lift }).catch(() => undefined);
   }
 
   function deleteSpeedKeyframe(keyframeId: string) {
@@ -123,8 +130,9 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
           <Viewport
             anchors={anchors}
             onAddAnchor={(position, normal) => void addAnchor(position, normal)}
-            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id, anchor.label)}
+            onDeleteAnchor={(anchor) => deleteAnchor(anchor.id)}
             onSelectTrajectory={selectTrajectory}
+            onUpdateAnchorLift={updateAnchorLift}
             pathPosition={playback.pathPosition}
             selected={trajectorySelected}
             trajectory={trajectory}
@@ -135,7 +143,9 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
               : <MousePointerClick className="size-3" />}
             {activeTool === "anchor"
               ? "Anchor tool active — release the modifier key to exit"
-              : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
+              : activeTool === "anchor-height"
+                ? "Drag vertically to set anchor height; press Escape to cancel"
+                : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
           </div>
         </div>
         {trajectory && trajectory.position_segments.length > 0 && (

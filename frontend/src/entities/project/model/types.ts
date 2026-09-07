@@ -73,3 +73,7 @@ export interface AnchorCreate {
   lift?: number;
   lift_axis?: "world_up" | "surface_normal";
 }
+
+export interface AnchorUpdate {
+  lift?: number;
+}
