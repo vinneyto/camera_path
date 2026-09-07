@@ -8,7 +8,7 @@ import type { CompiledTrajectory } from "@/entities/trajectory";
 import { Button } from "@/shared/ui";
 
 import { createAimTrack } from "../lib/create-aim-track";
-import { createSpeedTrack } from "../lib/create-speed-track";
+import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
 
 interface TrajectoryInspectorProps {
@@ -34,13 +34,7 @@ export function TrajectoryInspector({
   project,
   trajectory,
 }: TrajectoryInspectorProps) {
-  const tracks = useMemo(() => [
-    createSpeedTrack({
-      deletingKeyframeId: deletingSpeedKeyframeId,
-      onDeleteKeyframe: onDeleteSpeedKeyframe,
-      pathPosition,
-      trajectory,
-    }),
+  const keyframeTracks = useMemo(() => [
     createAimTrack({
       deletingKeyframeId: deletingAimKeyframeId,
       onDeleteKeyframe: onDeleteAimKeyframe,
@@ -49,10 +43,7 @@ export function TrajectoryInspector({
     }),
   ], [
     deletingAimKeyframeId,
-    deletingSpeedKeyframeId,
     onDeleteAimKeyframe,
-    onDeleteSpeedKeyframe,
-    pathPosition,
     project,
     trajectory,
   ]);
@@ -68,7 +59,19 @@ export function TrajectoryInspector({
           <X className="size-3.5" />
         </Button>
       </div>
-      <TimelineStack onScrub={onScrub} pathPosition={pathPosition} tracks={tracks} />
+      <div className="overflow-hidden rounded-md border bg-card">
+        <SpeedGraph
+          deletingKeyframeId={deletingSpeedKeyframeId}
+          onDeleteKeyframe={onDeleteSpeedKeyframe}
+          pathPosition={pathPosition}
+          trajectory={trajectory}
+        />
+        <TimelineStack
+          onScrub={onScrub}
+          pathPosition={pathPosition}
+          tracks={keyframeTracks}
+        />
+      </div>
     </section>
   );
 }

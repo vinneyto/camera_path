@@ -1,10 +1,10 @@
 import { GRAPH_WIDTH, PLOT_LEFT, PLOT_RIGHT } from "../lib/graph-layout";
-import type { KeyLaneTrackDescriptor } from "../model/timeline-track";
+import type { KeyframeTrackDescriptor } from "../model/timeline-track";
 import { KeyframeTimeline } from "./keyframe-timeline";
 import { TimelineTrackHeader } from "./timeline-track-header";
 
 interface KeyLaneTrackProps {
-  track: KeyLaneTrackDescriptor;
+  track: KeyframeTrackDescriptor;
 }
 
 export function KeyLaneTrack({ track }: KeyLaneTrackProps) {

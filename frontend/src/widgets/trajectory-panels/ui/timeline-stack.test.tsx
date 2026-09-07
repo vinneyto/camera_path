@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import type { TimelineTrackDescriptor } from "../model/timeline-track";
+import type { KeyframeTrackDescriptor } from "../model/timeline-track";
 import { TimelineStack } from "./timeline-stack";
 
 describe("TimelineStack", () => {
@@ -13,17 +13,15 @@ describe("TimelineStack", () => {
       renderMarker: () => <span data-marker />,
       summary: "1 key",
     };
-    const tracks: TimelineTrackDescriptor[] = [
+    const tracks: KeyframeTrackDescriptor[] = [
       {
         ...common,
         color: "red",
-        domain: [0, 1],
-        id: "scalar",
-        keyframes: [{ ariaLabel: "First", id: "first", pathPosition: 0.25, tooltip: "First tooltip", value: 0.5 }],
-        kind: "scalar",
-        samples: [{ pathPosition: 0, value: 0 }, { pathPosition: 1, value: 1 }],
-        title: "Scalar",
-        yAxisLabel: "Value",
+        emptyState: null,
+        id: "first-lane",
+        keyframes: [{ ariaLabel: "First", id: "first", pathPosition: 0.25, tooltip: "First tooltip" }],
+        lineY: 20,
+        title: "First lane",
       },
       {
         ...common,
@@ -31,7 +29,6 @@ describe("TimelineStack", () => {
         emptyState: null,
         id: "lane",
         keyframes: [{ ariaLabel: "Second", id: "second", pathPosition: 0.75, tooltip: "Second tooltip" }],
-        kind: "key-lane",
         lineY: 20,
         title: "Lane",
       },
@@ -41,7 +38,6 @@ describe("TimelineStack", () => {
         emptyState: "No events",
         id: "third-track",
         keyframes: [],
-        kind: "key-lane",
         lineY: 20,
         title: "Third descriptor-only track",
       },

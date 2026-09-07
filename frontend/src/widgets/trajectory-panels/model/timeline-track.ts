@@ -7,36 +7,17 @@ export interface TimelineKeyframe {
   tooltip: string;
 }
 
-interface TimelineTrackBase {
+export interface KeyframeTrackDescriptor {
+  color: string;
   deleteLabel: string;
   deletingKeyframeId?: string;
+  emptyState: string | null;
   height: number;
   id: string;
+  keyframes: TimelineKeyframe[];
+  lineY: number;
   onDeleteKeyframe: (keyframeId: string) => void;
   renderMarker: () => ReactNode;
   summary: string;
   title: string;
 }
-
-export interface ScalarTimelineKeyframe extends TimelineKeyframe {
-  value: number;
-}
-
-export interface ScalarTrackDescriptor extends TimelineTrackBase {
-  color: string;
-  domain: readonly [number, number];
-  keyframes: ScalarTimelineKeyframe[];
-  kind: "scalar";
-  samples: Array<{ pathPosition: number; value: number }>;
-  yAxisLabel: string;
-}
-
-export interface KeyLaneTrackDescriptor extends TimelineTrackBase {
-  color: string;
-  emptyState: string | null;
-  keyframes: TimelineKeyframe[];
-  kind: "key-lane";
-  lineY: number;
-}
-
-export type TimelineTrackDescriptor = ScalarTrackDescriptor | KeyLaneTrackDescriptor;

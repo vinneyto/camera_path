@@ -4,14 +4,13 @@ import type { PointerEvent } from "react";
 
 import { graphLeft, TRACK_HORIZONTAL_PADDING } from "../lib/graph-layout";
 import { pathPositionFromClientX } from "../lib/path-position-from-client-x";
-import type { TimelineTrackDescriptor } from "../model/timeline-track";
+import type { KeyframeTrackDescriptor } from "../model/timeline-track";
 import { KeyLaneTrack } from "./key-lane-track";
-import { ScalarCurveTrack } from "./scalar-curve-track";
 
 interface TimelineStackProps {
   onScrub: (pathPosition: number) => void;
   pathPosition: number;
-  tracks: TimelineTrackDescriptor[];
+  tracks: KeyframeTrackDescriptor[];
 }
 
 export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackProps) {
@@ -26,8 +25,8 @@ export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackPr
 
   return (
     <div
-      aria-label="Trajectory timelines"
-      className="relative overflow-hidden rounded-md border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label="Trajectory keyframe timelines"
+      className="relative outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onKeyDown={(event) => {
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
         event.preventDefault();
@@ -48,9 +47,11 @@ export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackPr
       }}
       tabIndex={0}
     >
-      {tracks.map((track) => track.kind === "scalar"
-        ? <ScalarCurveTrack key={track.id} track={track} />
-        : <KeyLaneTrack key={track.id} track={track} />)}
+      {tracks.map((track, index) => (
+        <div className={index < tracks.length - 1 ? "border-b" : undefined} key={track.id}>
+          <KeyLaneTrack track={track} />
+        </div>
+      ))}
       <span className="pointer-events-none absolute bottom-2 left-2 right-2 top-6 z-20">
         <span
           className="absolute inset-y-0 w-px bg-foreground/55"

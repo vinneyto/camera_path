@@ -1,7 +1,7 @@
 import type { Project } from "@/entities/project";
 import { getAimLabel, type CompiledTrajectory } from "@/entities/trajectory";
 
-import type { KeyLaneTrackDescriptor } from "../model/timeline-track";
+import type { KeyframeTrackDescriptor } from "../model/timeline-track";
 import { AimKeyframeMarker } from "../ui/aim-keyframe-marker";
 
 interface CreateAimTrackOptions {
@@ -16,7 +16,7 @@ export function createAimTrack({
   onDeleteKeyframe,
   project,
   trajectory,
-}: CreateAimTrackOptions): KeyLaneTrackDescriptor {
+}: CreateAimTrackOptions): KeyframeTrackDescriptor {
   const keyframes = trajectory.camera_track.keyframes.map((keyframe) => {
     const label = getAimLabel(keyframe.aim, project);
     return {
@@ -37,7 +37,6 @@ export function createAimTrack({
     height: 72,
     id: "camera-aim",
     keyframes,
-    kind: "key-lane",
     lineY: 30,
     onDeleteKeyframe,
     renderMarker: () => <AimKeyframeMarker />,
