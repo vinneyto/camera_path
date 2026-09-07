@@ -4,7 +4,8 @@ import { Camera, Orbit } from "lucide-react";
 
 import { Button } from "@/shared/ui";
 
-import { type CameraMode, useEditorStore } from "../model/editor-store";
+import type { CameraMode } from "../model/editor-store";
+import { useCameraMode } from "../model/use-camera-mode";
 
 interface CameraModeToggleProps {
   onModeChange: (mode: CameraMode) => void;
@@ -15,8 +16,7 @@ export function CameraModeToggle({
   onModeChange,
   trajectoryAvailable,
 }: CameraModeToggleProps) {
-  const cameraMode = useEditorStore((state) => state.cameraMode);
-  const setCameraMode = useEditorStore((state) => state.setCameraMode);
+  const { cameraMode, setCameraMode } = useCameraMode();
   const trajectoryMode = cameraMode === "trajectory";
   const label = trajectoryMode ? "Return to orbit camera" : "View from trajectory camera";
   const nextMode = trajectoryMode ? "orbit" : "trajectory";

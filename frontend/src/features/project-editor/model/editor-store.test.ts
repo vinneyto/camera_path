@@ -1,80 +1,71 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { useEditorStore } from "./editor-store";
+import { createEditorStore, type EditorStoreApi } from "./editor-store";
 
 describe("editor store", () => {
-  beforeEach(() => useEditorStore.getState().resetEditor());
+  let store: EditorStoreApi;
 
-  it("keeps shared playback and selection state together", () => {
-    useEditorStore.getState().setPlaybackFrame(0.4, 2.5);
-    useEditorStore.getState().setPlaying(true);
-    useEditorStore.getState().selectTrajectory();
-    useEditorStore.getState().setActiveTool("anchor");
+  beforeEach(() => {
+    store = createEditorStore();
+  });
 
-    expect(useEditorStore.getState()).toMatchObject({
-      elapsed: 2.5,
-      activeTool: "anchor",
-      cameraMode: "orbit",
-      hoveredAnchorId: null,
-      pathPosition: 0.4,
-      playing: true,
-      trajectorySelected: true,
+  it("keeps camera, tool, selection, and playback in explicit slices", () => {
+    store.getState().playbackActions.setPlaybackFrame(0.4, 2.5);
+    store.getState().playbackActions.setPlaying(true);
+    store.getState().selectionActions.selectTrajectory();
+    store.getState().toolActions.setActiveTool("anchor");
+
+    expect(store.getState()).toMatchObject({
+      camera: { cameraMode: "orbit" },
+      playback: { elapsed: 2.5, pathPosition: 0.4, playing: true },
+      selection: { trajectorySelected: true },
+      tool: { activeTool: "anchor", hoveredAnchorId: null },
     });
   });
 
   it("switches camera mode without changing playback", () => {
-    useEditorStore.getState().setPlaybackFrame(0.4, 2.5);
-    useEditorStore.getState().setPlaying(true);
-    useEditorStore.getState().hoverAnchor("anchor-a");
-    useEditorStore.getState().setActiveTool("anchor");
-    useEditorStore.getState().setCameraMode("trajectory");
+    store.getState().playbackActions.setPlaybackFrame(0.4, 2.5);
+    store.getState().playbackActions.setPlaying(true);
+    store.getState().toolActions.hoverAnchor("anchor-a");
+    store.getState().toolActions.setActiveTool("anchor");
+    store.getState().cameraActions.setCameraMode("trajectory");
 
-    expect(useEditorStore.getState()).toMatchObject({
-      activeTool: null,
-      cameraMode: "trajectory",
-      elapsed: 2.5,
-      hoveredAnchorId: null,
-      pathPosition: 0.4,
-      playing: true,
+    expect(store.getState()).toMatchObject({
+      camera: { cameraMode: "trajectory" },
+      playback: { elapsed: 2.5, pathPosition: 0.4, playing: true },
+      tool: { activeTool: null, hoveredAnchorId: null },
     });
 
-    useEditorStore.getState().setPlaying(false);
-    useEditorStore.getState().setCameraMode("orbit");
-    expect(useEditorStore.getState()).toMatchObject({
-      cameraMode: "orbit",
-      elapsed: 2.5,
-      pathPosition: 0.4,
-      playing: false,
+    store.getState().playbackActions.setPlaying(false);
+    store.getState().cameraActions.setCameraMode("orbit");
+    expect(store.getState()).toMatchObject({
+      camera: { cameraMode: "orbit" },
+      playback: { elapsed: 2.5, pathPosition: 0.4, playing: false },
     });
   });
 
   it("keeps one hovered anchor and ignores stale pointer-out events", () => {
-    useEditorStore.getState().hoverAnchor("anchor-a");
-    useEditorStore.getState().hoverAnchor("anchor-b");
-    useEditorStore.getState().clearHoveredAnchor("anchor-a");
+    store.getState().toolActions.hoverAnchor("anchor-a");
+    store.getState().toolActions.hoverAnchor("anchor-b");
+    store.getState().toolActions.clearHoveredAnchor("anchor-a");
 
-    expect(useEditorStore.getState().hoveredAnchorId).toBe("anchor-b");
+    expect(store.getState().tool.hoveredAnchorId).toBe("anchor-b");
 
-    useEditorStore.getState().clearHoveredAnchor("anchor-b");
-    expect(useEditorStore.getState().hoveredAnchorId).toBeNull();
+    store.getState().toolActions.clearHoveredAnchor("anchor-b");
+    expect(store.getState().tool.hoveredAnchorId).toBeNull();
   });
 
-  it("resets project-scoped editor state", () => {
-    useEditorStore.getState().setPlaybackFrame(0.8, 7);
-    useEditorStore.getState().setPlaying(true);
-    useEditorStore.getState().selectTrajectory();
-    useEditorStore.getState().hoverAnchor("anchor-a");
-    useEditorStore.getState().setActiveTool("anchor");
-    useEditorStore.getState().resetEditor();
+  it("creates isolated editor sessions", () => {
+    const otherStore = createEditorStore();
+    store.getState().cameraActions.setCameraMode("trajectory");
+    store.getState().toolActions.setActiveTool("anchor");
+    store.getState().selectionActions.selectTrajectory();
 
-    expect(useEditorStore.getState()).toMatchObject({
-      elapsed: 0,
-      activeTool: null,
-      cameraMode: "orbit",
-      hoveredAnchorId: null,
-      pathPosition: 0,
-      playing: false,
-      trajectorySelected: false,
+    expect(otherStore.getState()).toMatchObject({
+      camera: { cameraMode: "orbit" },
+      playback: { elapsed: 0, pathPosition: 0, playing: false },
+      selection: { trajectorySelected: false },
+      tool: { activeTool: null, hoveredAnchorId: null },
     });
   });
 });

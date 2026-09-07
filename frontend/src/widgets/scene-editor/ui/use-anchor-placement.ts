@@ -4,7 +4,11 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Vec3 } from "@/entities/project";
-import { getAnchorToolModifier, useEditorStore } from "@/features/project-editor";
+import {
+  getAnchorToolModifier,
+  useActiveEditorTool,
+  useSetActiveEditorTool,
+} from "@/features/project-editor";
 import type { SceneSurfaceHit } from "@/shared/scene-surface";
 
 import { AnchorPlacementGesture } from "../lib/anchor-placement-gesture";
@@ -16,8 +20,8 @@ interface UseAnchorPlacementOptions {
 }
 
 export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
-  const activeTool = useEditorStore((state) => state.activeTool);
-  const setActiveTool = useEditorStore((state) => state.setActiveTool);
+  const activeTool = useActiveEditorTool();
+  const setActiveTool = useSetActiveEditorTool();
   const gestureRef = useRef(new AnchorPlacementGesture(CLICK_THRESHOLD_PX));
   const [previewHit, setPreviewHit] = useState<SceneSurfaceHit | null>(null);
 

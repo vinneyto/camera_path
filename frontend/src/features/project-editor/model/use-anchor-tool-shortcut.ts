@@ -2,17 +2,19 @@
 
 import { useEffect } from "react";
 
-import { useEditorStore } from "./editor-store";
+import { useEditorStoreApi } from "./editor-store-provider";
 import { getAnchorToolModifier } from "./get-anchor-tool-modifier";
+import { useSetActiveEditorTool } from "./use-set-active-editor-tool";
 
 export function useAnchorToolShortcut() {
-  const setActiveTool = useEditorStore((state) => state.setActiveTool);
+  const store = useEditorStoreApi();
+  const setActiveTool = useSetActiveEditorTool();
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (
         event.key === getAnchorToolModifier(event).key
-        && useEditorStore.getState().activeTool !== "anchor-height"
+        && store.getState().tool.activeTool !== "anchor-height"
       ) setActiveTool("anchor");
       if (event.key === "Escape") setActiveTool(null);
     }
@@ -20,7 +22,7 @@ export function useAnchorToolShortcut() {
     function handleKeyUp(event: KeyboardEvent) {
       if (
         event.key === getAnchorToolModifier(event).key
-        && useEditorStore.getState().activeTool === "anchor"
+        && store.getState().tool.activeTool === "anchor"
       ) setActiveTool(null);
     }
 
@@ -37,5 +39,5 @@ export function useAnchorToolShortcut() {
       window.removeEventListener("blur", handleBlur);
       setActiveTool(null);
     };
-  }, [setActiveTool]);
+  }, [setActiveTool, store]);
 }
