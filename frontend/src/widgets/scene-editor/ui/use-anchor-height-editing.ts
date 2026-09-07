@@ -28,9 +28,11 @@ interface AnchorHeightDrag {
 
 export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEditingOptions) {
   const activeTool = useEditorStore((state) => state.activeTool);
+  const clearHoveredAnchor = useEditorStore((state) => state.clearHoveredAnchor);
+  const hoverAnchor = useEditorStore((state) => state.hoverAnchor);
+  const hoveredAnchorId = useEditorStore((state) => state.hoveredAnchorId);
   const setActiveTool = useEditorStore((state) => state.setActiveTool);
   const dragRef = useRef<AnchorHeightDrag | null>(null);
-  const [hoveredAnchorId, setHoveredAnchorId] = useState<string | null>(null);
   const [preview, setPreview] = useState<AnchorHeightPreview | null>(null);
 
   const cancelDrag = useCallback(() => {
@@ -47,6 +49,12 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
   }, [activeTool, cancelDrag]);
 
   useEffect(() => {
+    if (hoveredAnchorId !== null && !anchors.some((anchor) => anchor.id === hoveredAnchorId)) {
+      clearHoveredAnchor(hoveredAnchorId);
+    }
+  }, [anchors, clearHoveredAnchor, hoveredAnchorId]);
+
+  useEffect(() => {
     if (preview === null && hoveredAnchorId === null) return;
     const previousCursor = document.body.style.cursor;
     document.body.style.cursor = "ns-resize";
@@ -58,15 +66,15 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
   const handlePointerOver = useCallback((anchor: Anchor, event: ThreeEvent<PointerEvent>) => {
     if (activeTool !== null || event.nativeEvent.pointerType === "touch") return;
     event.stopPropagation();
-    setHoveredAnchorId(anchor.id);
-  }, [activeTool]);
+    hoverAnchor(anchor.id);
+  }, [activeTool, hoverAnchor]);
 
   const handlePointerOut = useCallback((anchor: Anchor, event: ThreeEvent<PointerEvent>) => {
     if (event.nativeEvent.pointerType === "touch") return;
     if (dragRef.current?.anchorId === anchor.id) return;
     event.stopPropagation();
-    setHoveredAnchorId((current) => current === anchor.id ? null : current);
-  }, []);
+    clearHoveredAnchor(anchor.id);
+  }, [clearHoveredAnchor]);
 
   const handlePointerDown = useCallback((anchor: Anchor, event: ThreeEvent<PointerEvent>) => {
     if (activeTool !== null || event.button !== 0) return;
@@ -80,10 +88,10 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
       pointerId: event.pointerId,
       target,
     };
-    setHoveredAnchorId(anchor.id);
+    hoverAnchor(anchor.id);
     setPreview({ anchorId: anchor.id, dragging: true, lift: anchor.lift });
     setActiveTool("anchor-height");
-  }, [activeTool, setActiveTool]);
+  }, [activeTool, hoverAnchor, setActiveTool]);
 
   const handlePointerMove = useCallback((anchor: Anchor, event: ThreeEvent<PointerEvent>) => {
     const drag = dragRef.current;
@@ -106,7 +114,6 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
     setActiveTool(null);
     void onCommit(anchor.id, lift).finally(() => {
       setPreview((current) => current?.anchorId === anchor.id && !current.dragging ? null : current);
-      setHoveredAnchorId((current) => current === anchor.id ? null : current);
     });
   }, [onCommit, setActiveTool]);
 
