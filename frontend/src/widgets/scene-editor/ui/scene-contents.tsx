@@ -6,6 +6,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
+import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
 import { useEditorStore } from "@/features/project-editor";
 import {
   SceneSurface,
@@ -61,7 +62,13 @@ export function SceneContents({
 }: SceneContentsProps) {
   const camera = useThree((state) => state.camera);
   const activeTool = useEditorStore((state) => state.activeTool);
-  const renderingBackend = useGaussianRenderingBackend(background);
+  const gaussianDprMode = useGaussianRenderingSettingsStore(
+    (state) => state.dprMode,
+  );
+  const renderingBackend = useGaussianRenderingBackend(
+    background,
+    gaussianDprMode,
+  );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
   const heightEditing = useAnchorHeightEditing({ anchors, onCommit: onUpdateAnchorLift });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
