@@ -7,6 +7,8 @@ from camera_path.geometry import anchor_position, compile_project
 from camera_path.models import (
     Anchor,
     CameraKeyframe,
+    CameraOrientation,
+    CameraOrientationKeyframe,
     LookAtPointAim,
     Project,
     ScenePoint,
@@ -127,3 +129,29 @@ def test_camera_track_resolves_scene_point_position() -> None:
     resolved = compiled.camera_track.keyframes[0].aim
     assert resolved.kind == "look_at_point"
     assert resolved.position == point.position
+
+
+def test_camera_orientation_track_compiles_sorted_and_unwrapped() -> None:
+    project = Project()
+    last = CameraOrientationKeyframe(
+        path_position=0.8,
+        orientation=CameraOrientation(yaw_deg=360, pitch_deg=-20, roll_deg=15),
+        interpolation_to_next="hold",
+    )
+    first = CameraOrientationKeyframe(
+        path_position=0.2,
+        orientation=CameraOrientation(yaw_deg=0, pitch_deg=5, roll_deg=-10),
+        interpolation_to_next="linear",
+    )
+    project.camera_track.default_orientation = CameraOrientation(roll_deg=7)
+    project.camera_track.orientation_keyframes = {last.id: last, first.id: first}
+
+    compiled = compile_project(project)
+
+    assert compiled.camera_track.default_orientation.roll_deg == 7
+    assert [item.id for item in compiled.camera_track.orientation_keyframes] == [
+        first.id,
+        last.id,
+    ]
+    assert compiled.camera_track.orientation_keyframes[0].interpolation_to_next == "linear"
+    assert compiled.camera_track.orientation_keyframes[1].orientation.yaw_deg == 360

@@ -102,3 +102,48 @@ async def test_agent_streams_text_and_persists_result(monkeypatch, tmp_path) -> 
     assert events[1] == {"type": "delta", "text": "lo"}
     assert events[2]["type"] == "result"
     assert events[2]["result"].answer == "hello"
+
+
+def test_agent_executes_camera_orientation_tools() -> None:
+    project = Project()
+
+    default_result = TrajectoryAgent._execute(
+        project,
+        "set_default_camera_orientation",
+        {"yaw_deg": 15, "pitch_deg": -10, "roll_deg": 360},
+    )
+    created = TrajectoryAgent._execute(
+        project,
+        "create_camera_orientation_keyframe",
+        {
+            "path_position": 0.6,
+            "yaw_deg": 30,
+            "pitch_deg": 5,
+            "roll_deg": -2,
+            "interpolation_to_next": "linear",
+        },
+    )
+    keyframe_id = created["id"]
+    TrajectoryAgent._execute(
+        project,
+        "update_camera_orientation_keyframe",
+        {
+            "id": keyframe_id,
+            "path_position": 0.4,
+            "yaw_deg": None,
+            "pitch_deg": 12,
+            "roll_deg": None,
+            "interpolation_to_next": "hold",
+        },
+    )
+
+    state = TrajectoryAgent._execute(project, "get_project_state", {})
+    item = state["camera_track"]["orientation_keyframes"][keyframe_id]
+    assert default_result["status"] == "ok"
+    assert state["camera_track"]["default_orientation"]["roll_deg"] == 360
+    assert item["path_position"] == 0.4
+    assert item["orientation"] == {"yaw_deg": 30.0, "pitch_deg": 12.0, "roll_deg": -2.0}
+    assert item["interpolation_to_next"] == "hold"
+
+    TrajectoryAgent._execute(project, "delete_camera_orientation_keyframe", {"id": keyframe_id})
+    assert project.camera_track.orientation_keyframes == {}
