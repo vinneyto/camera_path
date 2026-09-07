@@ -105,14 +105,22 @@ export function SceneContents({
         return (
           <AnchorMarker
             anchor={markerAnchor}
+            hovered={heightEditing.hoveredAnchorId === anchor.id}
             key={anchor.id}
-            onContextMenu={onOpenAnchorMenu}
-            onPointerCancel={heightEditing.handlePointerCancel}
-            onPointerDown={heightEditing.handlePointerDown}
-            onPointerMove={heightEditing.handlePointerMove}
-            onPointerOut={heightEditing.handlePointerOut}
-            onPointerOver={heightEditing.handlePointerOver}
-            onPointerUp={heightEditing.handlePointerUp}
+            onContextMenu={(event) => {
+              event.stopPropagation();
+              event.nativeEvent.preventDefault();
+              onOpenAnchorMenu(anchor, {
+                x: event.nativeEvent.clientX,
+                y: event.nativeEvent.clientY,
+              });
+            }}
+            onPointerCancel={(event) => heightEditing.handlePointerCancel(anchor, event)}
+            onPointerDown={(event) => heightEditing.handlePointerDown(anchor, event)}
+            onPointerMove={(event) => heightEditing.handlePointerMove(anchor, event)}
+            onPointerOut={(event) => heightEditing.handlePointerOut(anchor, event)}
+            onPointerOver={(event) => heightEditing.handlePointerOver(anchor, event)}
+            onPointerUp={(event) => heightEditing.handlePointerUp(anchor, event)}
           />
         );
       })}
@@ -120,7 +128,6 @@ export function SceneContents({
         <AnchorHeightEditingOverlay
           anchor={heightEditing.activeAnchor}
           backend={renderingBackend}
-          dark={dark}
           dragging={heightEditing.preview?.dragging ?? false}
           lift={heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift}
         />

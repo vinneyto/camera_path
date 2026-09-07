@@ -20,7 +20,6 @@ import { AnchorHeightRuler } from "./anchor-height-ruler";
 interface AnchorHeightEditingOverlayProps {
   anchor: Anchor;
   backend: GaussianRenderingBackend;
-  dark: boolean;
   dragging: boolean;
   lift: number;
 }
@@ -28,7 +27,6 @@ interface AnchorHeightEditingOverlayProps {
 export function AnchorHeightEditingOverlay({
   anchor,
   backend,
-  dark,
   dragging,
   lift,
 }: AnchorHeightEditingOverlayProps) {
@@ -47,7 +45,6 @@ export function AnchorHeightEditingOverlay({
       <GaussianHighlightVolume backend={backend} options={highlight} />
       {dragging && (
         <AnchorHeightRuler
-          dark={dark}
           lift={lift}
           surfacePosition={anchor.surface_position}
         />

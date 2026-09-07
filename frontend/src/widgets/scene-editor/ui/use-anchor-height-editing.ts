@@ -130,6 +130,7 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
     handlePointerOut,
     handlePointerOver,
     handlePointerUp,
+    hoveredAnchorId,
     preview,
   };
 }
