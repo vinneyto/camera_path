@@ -76,7 +76,7 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     resources.pipeline.needsUpdate = true;
   }, []);
 
-  const getOpaqueViewDepth = useCallback((pixelCoordinate: Node): Node<"float"> => {
+  const getOpaqueViewDepth = useCallback((screenUv: Node): Node<"float"> => {
     const resources = resourcesRef.current;
     if (resources === null) {
       throw new Error("Render pipeline depth is unavailable before pipeline initialization");
@@ -84,7 +84,7 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     if (!(camera instanceof PerspectiveCamera)) {
       throw new TypeError("Render pipeline depth requires a PerspectiveCamera");
     }
-    const perspectiveDepth = resources.opaque.getTextureNode("depth").load(pixelCoordinate);
+    const perspectiveDepth = resources.opaque.getTextureNode("depth").sample(screenUv);
     return createPerspectiveViewDepthNode(perspectiveDepth, camera);
   }, [camera]);
 

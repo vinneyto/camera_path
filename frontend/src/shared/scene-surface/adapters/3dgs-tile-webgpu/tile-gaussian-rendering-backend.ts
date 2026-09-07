@@ -6,11 +6,12 @@ import {
   type GaussianPass,
   GaussianStore,
   gaussianPass,
-  rasterPixelCoordinate,
+  rasterScreenUV,
 } from "3dgs-tile-webgpu";
 import { PerspectiveCamera } from "three/webgpu";
 
 import type { SceneRenderPipeline } from "@/shared/three";
+import type { GaussianDprMode } from "../../model/gaussian-dpr-mode";
 
 import type {
   GaussianCloudInstance,
@@ -21,6 +22,7 @@ import type {
 } from "../../model/gaussian-rendering-backend";
 import type { GaussianCloudSource } from "../../model/scene-surface-types";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
+import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
 import { TileGaussianCloudInstance } from "./tile-gaussian-cloud-instance";
 import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 
@@ -32,6 +34,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private pass: GaussianPass | null = null;
   private readonly store = new GaussianStore();
   private unregisterPass: (() => void) | null = null;
+  private dprMode: GaussianDprMode = "1x";
 
   constructor(private readonly pipeline: SceneRenderPipeline) {
     if (!(pipeline.camera instanceof PerspectiveCamera)) {
@@ -106,6 +109,19 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     this.store.dispose();
   }
 
+  syncResolutionScale(dprMode: GaussianDprMode): void {
+    if (this.disposed) return;
+    this.dprMode = dprMode;
+    if (this.pass === null) return;
+    const resolutionScale = getGaussianResolutionScale(
+      dprMode,
+      this.pipeline.renderer.getPixelRatio(),
+    );
+    if (this.pass.getResolutionScale() !== resolutionScale) {
+      this.pass.setResolutionScale(resolutionScale);
+    }
+  }
+
   private disposePass(): void {
     this.highlightVolume?.dispose();
     this.unregisterPass?.();
@@ -122,13 +138,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
     const pass = gaussianPass(renderer, camera, this.store, { background: [0, 0, 0, 0] });
     const depthNodes = createTileRasterDepthNodes(
-      getOpaqueViewDepth(rasterPixelCoordinate),
+      getOpaqueViewDepth(rasterScreenUV),
       pass.depthSortMode,
     );
     pass.rasterPixelValueNode = depthNodes.rasterPixelValueNode;
     pass.rasterBreakNode = depthNodes.rasterBreakNode;
     pass.rasterDiscardNode = depthNodes.rasterDiscardNode;
     this.pass = pass;
+    this.syncResolutionScale(this.dprMode);
     this.unregisterPass = registerLayer(pass, { order: -100 });
   }
 }

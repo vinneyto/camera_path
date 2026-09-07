@@ -8,6 +8,7 @@ export {
   type SceneSurfaceProps,
   type SceneSurfaceReady,
 } from "./model/scene-surface-types";
+export type { GaussianDprMode } from "./model/gaussian-dpr-mode";
 export type {
   GaussianCloudInstance,
   GaussianCloudOptions,
