@@ -52,13 +52,19 @@ def anchor_position(anchor: Anchor) -> Vector:
 def _split_bezier(
     points: tuple[Vector, Vector, Vector, Vector],
 ) -> tuple[tuple[Vector, Vector, Vector, Vector], tuple[Vector, Vector, Vector, Vector]]:
+    return _split_bezier_at(points, 0.5)
+
+
+def _split_bezier_at(
+    points: tuple[Vector, Vector, Vector, Vector], t: float
+) -> tuple[tuple[Vector, Vector, Vector, Vector], tuple[Vector, Vector, Vector, Vector]]:
     p0, p1, p2, p3 = points
-    p01 = (p0 + p1) * 0.5
-    p12 = (p1 + p2) * 0.5
-    p23 = (p2 + p3) * 0.5
-    p012 = (p01 + p12) * 0.5
-    p123 = (p12 + p23) * 0.5
-    midpoint = (p012 + p123) * 0.5
+    p01 = p0 + (p1 - p0) * t
+    p12 = p1 + (p2 - p1) * t
+    p23 = p2 + (p3 - p2) * t
+    p012 = p01 + (p12 - p01) * t
+    p123 = p12 + (p23 - p12) * t
+    midpoint = p012 + (p123 - p012) * t
     return (p0, p01, p012, midpoint), (midpoint, p123, p23, p3)
 
 
@@ -192,6 +198,10 @@ def compile_spiral(
         t0, t1 = index / pieces, (index + 1) / pieces
         p0, d0 = evaluate(t0)
         p3, d1 = evaluate(t1)
+        if index == 0:
+            p0 = start
+        if index == pieces - 1:
+            p3 = end
         dt = t1 - t0
         result.append(
             _make_bezier(
@@ -201,6 +211,124 @@ def compile_spiral(
             )
         )
     return result
+
+
+def _curve_points(curve: CubicBezier3D) -> tuple[Vector, Vector, Vector, Vector]:
+    return tuple(_v(point) for point in (curve.p0, curve.p1, curve.p2, curve.p3))  # type: ignore[return-value]
+
+
+def _unit(vector: Vector, fallback: Vector) -> Vector:
+    length = float(np.linalg.norm(vector))
+    if length < 1e-12:
+        vector = fallback
+        length = float(np.linalg.norm(vector))
+    if length < 1e-12:
+        raise GeometryError("cannot smooth a junction between zero-length curve pieces")
+    return vector / length
+
+
+def _junction_direction(
+    left: tuple[Vector, Vector, Vector, Vector],
+    right: tuple[Vector, Vector, Vector, Vector],
+) -> Vector:
+    point = left[3]
+    incoming = _unit(point - left[2], point - left[0])
+    outgoing = _unit(right[1] - point, right[3] - point)
+    combined = incoming + outgoing
+    if float(np.linalg.norm(combined)) < 1e-8:
+        combined = right[3] - left[0]
+    if float(np.linalg.norm(combined)) < 1e-8:
+        combined = incoming
+    direction = _unit(combined, incoming)
+    if np.dot(direction, incoming + outgoing) < 0.0:
+        direction = -direction
+    return direction
+
+
+def _smooth_junction(
+    left_curve: CubicBezier3D,
+    right_curve: CubicBezier3D,
+    tolerance: float,
+) -> tuple[list[CubicBezier3D], list[CubicBezier3D]]:
+    left = _curve_points(left_curve)
+    right = _curve_points(right_curve)
+    if not np.allclose(left[3], right[0], rtol=0.0, atol=1e-10):
+        return [left_curve], [right_curve]
+
+    direction = _junction_direction(left, right)
+    blend_fraction = 0.25
+    while True:
+        left_prefix, left_tail = _split_bezier_at(left, 1.0 - blend_fraction)
+        right_head, right_suffix = _split_bezier_at(right, blend_fraction)
+        point = left_tail[3]
+        incoming_length = float(np.linalg.norm(point - left_tail[2]))
+        outgoing_length = float(np.linalg.norm(right_head[1] - point))
+        local_scale = min(
+            float(np.linalg.norm(point - left_tail[0])),
+            float(np.linalg.norm(right_head[3] - point)),
+        )
+        if local_scale < 1e-12:
+            raise GeometryError("cannot smooth a junction next to a zero-length curve piece")
+        handle_length = min(
+            max((incoming_length + outgoing_length) * 0.5, local_scale * 1e-6),
+            local_scale / 3.0,
+        )
+        smoothed_left_tail = (*left_tail[:2], point - direction * handle_length, point)
+        smoothed_right_head = (
+            point,
+            point + direction * handle_length,
+            *right_head[2:],
+        )
+
+        # Only one control point changes on either side. Its Bernstein weight never
+        # exceeds 4/9, so this is a conservative bound on geometric deformation.
+        deviation_bound = (4.0 / 9.0) * max(
+            float(np.linalg.norm(smoothed_left_tail[2] - left_tail[2])),
+            float(np.linalg.norm(smoothed_right_head[1] - right_head[1])),
+        )
+        if deviation_bound <= tolerance or blend_fraction <= 2.0**-20:
+            return (
+                [
+                    _make_bezier(left_curve.source_segment_id, left_prefix, tolerance),
+                    _make_bezier(left_curve.source_segment_id, smoothed_left_tail, tolerance),
+                ],
+                [
+                    _make_bezier(right_curve.source_segment_id, smoothed_right_head, tolerance),
+                    _make_bezier(right_curve.source_segment_id, right_suffix, tolerance),
+                ],
+            )
+        blend_fraction *= 0.5
+
+
+def _smooth_curve_groups(
+    groups: list[list[CubicBezier3D]], tolerance: float
+) -> list[CubicBezier3D]:
+    for index in range(len(groups) - 1):
+        left_group, right_group = groups[index], groups[index + 1]
+        left_replacement, right_replacement = _smooth_junction(
+            left_group[-1], right_group[0], tolerance
+        )
+        left_group[-1:] = left_replacement
+        right_group[:1] = right_replacement
+    return [curve for group in groups for curve in group]
+
+
+def _validate_smoothed_junctions(curves: list[CubicBezier3D]) -> None:
+    for left, right in zip(curves, curves[1:], strict=False):
+        if left.source_segment_id == right.source_segment_id:
+            continue
+        left_points, right_points = _curve_points(left), _curve_points(right)
+        if not np.allclose(left_points[3], right_points[0], rtol=0.0, atol=1e-10):
+            continue
+        incoming = left_points[3] - left_points[2]
+        outgoing = right_points[1] - right_points[0]
+        incoming_length = float(np.linalg.norm(incoming))
+        outgoing_length = float(np.linalg.norm(outgoing))
+        if incoming_length < 1e-12 or outgoing_length < 1e-12:
+            raise GeometryError("smoothed junction has a zero-length handle")
+        cosine = float(np.dot(incoming, outgoing) / (incoming_length * outgoing_length))
+        if cosine < 1.0 - 1e-10:
+            raise GeometryError("compiled trajectory has a tangent discontinuity")
 
 
 def validate_project(project: Project) -> list[str]:
@@ -295,13 +423,13 @@ def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajec
     if tolerance <= 0.0:
         raise ValueError("tolerance must be positive")
     warnings = validate_project(project)
-    curves: list[CubicBezier3D] = []
     compilers: dict[type, Callable[[Project, object, float], list[CubicBezier3D]]] = {
         SplineSegment: compile_spline,
         SpiralSegment: compile_spiral,
     }
-    for segment in project.segments:
-        curves.extend(compilers[type(segment)](project, segment, tolerance))
+    groups = [compilers[type(segment)](project, segment, tolerance) for segment in project.segments]
+    curves = _smooth_curve_groups(groups, tolerance)
+    _validate_smoothed_junctions(curves)
 
     table: list[ArcLengthSample] = []
     distance = 0.0
