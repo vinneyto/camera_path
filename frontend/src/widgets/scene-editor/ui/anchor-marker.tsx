@@ -25,7 +25,7 @@ export function AnchorMarker({
   return (
     <group {...groupProps} position={position}>
       <mesh>
-        <sphereGeometry args={[0.055, 16, 16]} />
+        <sphereGeometry args={[0.045, 16, 16]} />
         <meshStandardMaterial
           color={hovered ? "#fb923c" : "#f97316"}
           emissive="#7c2d12"

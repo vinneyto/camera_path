@@ -29,7 +29,7 @@ export function AnchorHeightRuler({ lift, surfacePosition }: AnchorHeightRulerPr
       )}
       <Html
         center
-        position={[x + 0.1, y + lift, z]}
+        position={[x + 0.1, y + lift / 2, z]}
         style={{ pointerEvents: "none" }}
       >
         <div className="whitespace-nowrap rounded-md border border-orange-400/60 bg-background/95 px-1.5 py-1 font-mono text-[10px] font-semibold text-foreground shadow-sm backdrop-blur">
