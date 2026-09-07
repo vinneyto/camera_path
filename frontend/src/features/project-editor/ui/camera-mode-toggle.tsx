@@ -25,7 +25,9 @@ export function CameraModeToggle({
     <Button
       aria-label={label}
       aria-pressed={trajectoryMode}
-      className="border bg-background/85 shadow-sm backdrop-blur"
+      className={trajectoryMode
+        ? "shadow-sm"
+        : "bg-background/85 text-foreground shadow-sm backdrop-blur"}
       disabled={!trajectoryAvailable && !trajectoryMode}
       onClick={() => {
         onModeChange(nextMode);
