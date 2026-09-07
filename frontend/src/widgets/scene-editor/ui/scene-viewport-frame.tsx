@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 
 import type { Anchor } from "@/entities/project";
+import { CameraModeToggle, useEditorStore } from "@/features/project-editor";
 import { useTheme } from "@/features/theme-switcher";
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
 
@@ -21,9 +22,11 @@ export function SceneViewportFrame({
   available,
   onDeleteAnchor,
   renderScene,
+  trajectoryAvailable,
   unavailableMessage = "This renderer is unavailable in this browser",
 }: SceneViewportFrameProps) {
   const { theme } = useTheme();
+  const cameraMode = useEditorStore((state) => state.cameraMode);
   const dark = theme === "dark";
   const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
   const [surfaceState, setSurfaceState] = useState<SurfaceState>({ status: "loading" });
@@ -50,15 +53,27 @@ export function SceneViewportFrame({
       {available !== false && surfaceState.status === "error" && (
         <SceneMessage message={`Could not load mug.ply: ${surfaceState.message}`} />
       )}
-      <ContextMenu
-        items={anchorMenu ? [{
-          destructive: true,
-          label: `Delete anchor ${anchorMenu.anchor.label}`,
-          onSelect: () => onDeleteAnchor(anchorMenu.anchor),
-        }] : []}
-        onClose={() => setAnchorMenu(null)}
-        position={anchorMenu}
-      />
+      {available && (
+        <div className="absolute right-3 top-3 z-20">
+          <CameraModeToggle
+            onModeChange={(mode) => {
+              if (mode === "trajectory") setAnchorMenu(null);
+            }}
+            trajectoryAvailable={trajectoryAvailable && surfaceState.status === "ready"}
+          />
+        </div>
+      )}
+      {cameraMode === "orbit" && (
+        <ContextMenu
+          items={anchorMenu ? [{
+            destructive: true,
+            label: `Delete anchor ${anchorMenu.anchor.label}`,
+            onSelect: () => onDeleteAnchor(anchorMenu.anchor),
+          }] : []}
+          onClose={() => setAnchorMenu(null)}
+          position={anchorMenu}
+        />
+      )}
     </div>
   );
 }

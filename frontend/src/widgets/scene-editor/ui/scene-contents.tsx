@@ -1,6 +1,6 @@
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
@@ -23,6 +23,7 @@ import { AnchorPlacementPreview } from "./anchor-placement-preview";
 import { frameSurface } from "./frame-surface";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryLine } from "./trajectory-line";
+import { TrajectoryCameraControl } from "./trajectory-camera-control";
 import { useAnchorPlacement } from "./use-anchor-placement";
 import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
@@ -62,6 +63,8 @@ export function SceneContents({
 }: SceneContentsProps) {
   const camera = useThree((state) => state.camera);
   const activeTool = useEditorStore((state) => state.activeTool);
+  const cameraMode = useEditorStore((state) => state.cameraMode);
+  const setCameraMode = useEditorStore((state) => state.setCameraMode);
   const gaussianDprMode = useGaussianRenderingSettingsStore(
     (state) => state.dprMode,
   );
@@ -70,14 +73,27 @@ export function SceneContents({
     gaussianDprMode,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
+  const handlePlacementControlsChange = placement.handleControlsChange;
   const heightEditing = useAnchorHeightEditing({ anchors, onCommit: onUpdateAnchorLift });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
-  useStopOrbitControlsInertia(orbitControlsRef, activeTool !== null);
+  const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
+  useStopOrbitControlsInertia(orbitControlsRef, cameraMode === "orbit" && activeTool !== null);
+
+  useEffect(() => {
+    if (cameraMode === "trajectory" && !trajectoryAvailable) setCameraMode("orbit");
+  }, [cameraMode, setCameraMode, trajectoryAvailable]);
+
   const handleSurfaceReady = useCallback((surface: SceneSurfaceReady) => {
     frameSurface(camera, surface.bounds, setOrbitTarget);
     onSurfaceReady();
   }, [camera, onSurfaceReady]);
+  const handleOrbitChange = useCallback(() => {
+    handlePlacementControlsChange();
+    const controls = orbitControlsRef.current;
+    if (controls !== null) setOrbitTarget(controls.target.toArray() as Vec3);
+  }, [handlePlacementControlsChange]);
+  const editorVisible = cameraMode === "orbit";
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
@@ -86,17 +102,12 @@ export function SceneContents({
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
         onLoading={onSurfaceLoading}
-        onPointerOut={placement.handlePointerOut}
-        onPointerCancel={placement.handlePointerCancel}
-        onSurfacePointerDown={placement.handlePointerDown}
-        onSurfacePointerMove={placement.handlePointerMove}
-        onSurfacePointerUp={placement.handlePointerUp}
+        onPointerOut={editorVisible ? placement.handlePointerOut : undefined}
+        onPointerCancel={editorVisible ? placement.handlePointerCancel : undefined}
+        onSurfacePointerDown={editorVisible ? placement.handlePointerDown : undefined}
+        onSurfacePointerMove={editorVisible ? placement.handlePointerMove : undefined}
+        onSurfacePointerUp={editorVisible ? placement.handlePointerUp : undefined}
         source={SCENE_SURFACE_SOURCE}
-      />
-      <AnchorPlacementPreview
-        backend={renderingBackend}
-        hit={placement.previewHit}
-        label={getAnchorLabel(anchors)}
       />
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight
@@ -105,7 +116,14 @@ export function SceneContents({
         position={[5, 8, 4]}
         shadow-mapSize={[1024, 1024]}
       />
-      {anchors.map((anchor) => {
+      {editorVisible && (
+        <AnchorPlacementPreview
+          backend={renderingBackend}
+          hit={placement.previewHit}
+          label={getAnchorLabel(anchors)}
+        />
+      )}
+      {editorVisible && anchors.map((anchor) => {
         const markerAnchor = heightEditing.preview?.anchorId === anchor.id
           ? { ...anchor, lift: heightEditing.preview.lift, lift_axis: "world_up" as const }
           : anchor;
@@ -131,7 +149,7 @@ export function SceneContents({
           />
         );
       })}
-      {heightEditing.activeAnchor !== null && (
+      {editorVisible && heightEditing.activeAnchor !== null && (
         <AnchorHeightEditingOverlay
           anchor={heightEditing.activeAnchor}
           backend={renderingBackend}
@@ -139,7 +157,7 @@ export function SceneContents({
           lift={heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift}
         />
       )}
-      {trajectory && (
+      {editorVisible && trajectory && (
         <TrajectoryLine
           dark={dark}
           interactive={activeTool === null}
@@ -148,18 +166,22 @@ export function SceneContents({
           trajectory={trajectory}
         />
       )}
-      {trajectory && trajectory.position_segments.length > 0 && (
+      {editorVisible && trajectoryAvailable && trajectory && (
         <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
       )}
-      <OrbitControls
-        enabled={activeTool === null}
-        makeDefault
-        maxDistance={Infinity}
-        minDistance={0.001}
-        onChange={placement.handleControlsChange}
-        ref={orbitControlsRef}
-        target={orbitTarget}
-      />
+      {cameraMode === "orbit" ? (
+        <OrbitControls
+          enabled={activeTool === null}
+          makeDefault
+          maxDistance={Infinity}
+          minDistance={0.001}
+          onChange={handleOrbitChange}
+          ref={orbitControlsRef}
+          target={orbitTarget}
+        />
+      ) : trajectoryAvailable && trajectory ? (
+        <TrajectoryCameraControl pathPosition={pathPosition} trajectory={trajectory} />
+      ) : null}
     </SceneSurfaceProvider>
   );
 }

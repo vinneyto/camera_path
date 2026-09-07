@@ -1,8 +1,8 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
-import { CameraHelper, PerspectiveCamera, Vector3 } from "three";
+import { CameraHelper, PerspectiveCamera } from "three";
 
-import { evaluateAim, locateOnPath, type CompiledTrajectory } from "@/entities/trajectory";
+import { evaluateTrajectoryCameraPose, type CompiledTrajectory } from "@/entities/trajectory";
 import { RENDER_PIPELINE_OVERLAY_LAYER } from "@/shared/three";
 
 interface PlaybackCameraProps {
@@ -27,11 +27,10 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
   useEffect(() => () => helper.dispose(), [helper]);
 
   useFrame(() => {
-    const sample = locateOnPath(trajectory, pathPosition);
-    const direction = evaluateAim(trajectory, pathPosition);
-    camera.position.copy(sample.position);
-    camera.up.set(...trajectory.camera_track.world_up);
-    camera.lookAt(sample.position.clone().add(direction.lengthSq() ? direction : new Vector3(0, 0, -1)));
+    const pose = evaluateTrajectoryCameraPose(trajectory, pathPosition);
+    camera.position.copy(pose.position);
+    camera.quaternion.copy(pose.quaternion);
+    camera.up.copy(pose.up);
     camera.updateMatrixWorld();
     helper.update();
   });
