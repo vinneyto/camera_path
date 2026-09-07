@@ -56,15 +56,6 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
     }
   }, [anchors, clearHoveredAnchor, hoveredAnchorId]);
 
-  useEffect(() => {
-    if (preview === null && hoveredAnchorId === null) return;
-    const previousCursor = document.body.style.cursor;
-    document.body.style.cursor = "ns-resize";
-    return () => {
-      document.body.style.cursor = previousCursor;
-    };
-  }, [hoveredAnchorId, preview]);
-
   const handlePointerOver = useCallback((anchor: Anchor, event: ThreeEvent<PointerEvent>) => {
     if (activeTool !== null || event.nativeEvent.pointerType === "touch") return;
     event.stopPropagation();

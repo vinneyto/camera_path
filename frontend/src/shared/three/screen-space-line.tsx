@@ -1,17 +1,28 @@
 "use client";
 
-import { useThree, type EventHandlers } from "@react-three/fiber";
-import type { ColorRepresentation, Vector3 } from "three";
+import { useThree, type ThreeElement } from "@react-three/fiber";
+import type { ColorRepresentation, Object3D, Vector3 } from "three";
 
 import { WebGlScreenSpaceLine } from "./webgl-screen-space-line";
 import { WebGpuScreenSpaceLine } from "./webgpu-screen-space-line";
 
 export type ScreenSpaceLinePoint = Vector3 | readonly [number, number, number];
 
-export interface ScreenSpaceLineProps extends Pick<
-  EventHandlers,
-  "onClick" | "onPointerOut" | "onPointerOver"
-> {
+type ScreenSpaceLineObjectProps = Omit<
+  ThreeElement<typeof Object3D>,
+  | "args"
+  | "attach"
+  | "children"
+  | "dispose"
+  | "geometry"
+  | "layers"
+  | "material"
+  | "object"
+  | "raycast"
+  | "ref"
+>;
+
+export type ScreenSpaceLineProps = ScreenSpaceLineObjectProps & {
   color: ColorRepresentation;
   depthTest?: boolean;
   depthWrite?: boolean;
@@ -19,11 +30,10 @@ export interface ScreenSpaceLineProps extends Pick<
   layer?: number;
   points: readonly ScreenSpaceLinePoint[];
   radius?: number;
-  renderOrder?: number;
   transparent?: boolean;
   webGpuHitSlop?: number;
   width?: number;
-}
+};
 
 export function ScreenSpaceLine(props: ScreenSpaceLineProps) {
   const renderer = useThree((state) => state.gl);

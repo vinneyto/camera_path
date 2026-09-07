@@ -19,7 +19,7 @@ describe("editor store", () => {
       camera: { cameraMode: "orbit" },
       playback: { elapsed: 2.5, pathPosition: 0.4, playing: true },
       selection: { trajectorySelected: true },
-      tool: { activeTool: "anchor", hoveredAnchorId: null },
+      tool: { activeTool: "anchor", hoveredObject: null },
     });
   });
 
@@ -33,7 +33,7 @@ describe("editor store", () => {
     expect(store.getState()).toMatchObject({
       camera: { cameraMode: "trajectory" },
       playback: { elapsed: 2.5, pathPosition: 0.4, playing: true },
-      tool: { activeTool: null, hoveredAnchorId: null },
+      tool: { activeTool: null, hoveredObject: null },
     });
 
     store.getState().playbackActions.setPlaying(false);
@@ -49,10 +49,21 @@ describe("editor store", () => {
     store.getState().toolActions.hoverAnchor("anchor-b");
     store.getState().toolActions.clearHoveredAnchor("anchor-a");
 
-    expect(store.getState().tool.hoveredAnchorId).toBe("anchor-b");
+    expect(store.getState().tool.hoveredObject).toEqual({ id: "anchor-b", type: "anchor" });
 
     store.getState().toolActions.clearHoveredAnchor("anchor-b");
-    expect(store.getState().tool.hoveredAnchorId).toBeNull();
+    expect(store.getState().tool.hoveredObject).toBeNull();
+  });
+
+  it("keeps one hovered editor object across anchors and the trajectory", () => {
+    store.getState().toolActions.hoverAnchor("anchor-a");
+    store.getState().toolActions.hoverTrajectory();
+    store.getState().toolActions.clearHoveredAnchor("anchor-a");
+
+    expect(store.getState().tool.hoveredObject).toEqual({ type: "trajectory" });
+
+    store.getState().toolActions.clearHoveredTrajectory();
+    expect(store.getState().tool.hoveredObject).toBeNull();
   });
 
   it("creates isolated editor sessions", () => {
@@ -65,7 +76,7 @@ describe("editor store", () => {
       camera: { cameraMode: "orbit" },
       playback: { elapsed: 0, pathPosition: 0, playing: false },
       selection: { trajectorySelected: false },
-      tool: { activeTool: null, hoveredAnchorId: null },
+      tool: { activeTool: null, hoveredObject: null },
     });
   });
 });

@@ -1,10 +1,12 @@
-export type { CameraMode, EditorTool } from "./model/editor-store";
+export type { CameraMode, EditorHoveredObject, EditorTool } from "./model/editor-store";
 export { EditorStoreProvider } from "./model/editor-store-provider";
 export { getAnchorToolModifier } from "./model/get-anchor-tool-modifier";
 export { useActiveEditorTool } from "./model/use-active-editor-tool";
 export { useAnchorToolShortcut } from "./model/use-anchor-tool-shortcut";
 export { useCameraMode } from "./model/use-camera-mode";
+export { useEditorHoverCursor } from "./model/use-editor-hover-cursor";
 export { useHoveredAnchor } from "./model/use-hovered-anchor";
+export { useHoveredTrajectory } from "./model/use-hovered-trajectory";
 export { useSetActiveEditorTool } from "./model/use-set-active-editor-tool";
 export { useTrajectorySelection } from "./model/use-trajectory-selection";
 export { useTrajectoryPlayback } from "./model/use-trajectory-playback";

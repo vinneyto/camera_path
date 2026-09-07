@@ -7,7 +7,11 @@ import type { Anchor, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
 import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
-import { useActiveEditorTool, useCameraMode } from "@/features/project-editor";
+import {
+  useActiveEditorTool,
+  useCameraMode,
+  useEditorHoverCursor,
+} from "@/features/project-editor";
 import {
   SceneSurface,
   SceneSurfaceProvider,
@@ -64,6 +68,7 @@ export function SceneContents({
   const camera = useThree((state) => state.camera);
   const activeTool = useActiveEditorTool();
   const { cameraMode, setCameraMode } = useCameraMode();
+  useEditorHoverCursor();
   const gaussianDprMode = useGaussianRenderingSettingsStore(
     (state) => state.dprMode,
   );
