@@ -165,12 +165,81 @@ async def _create_spiral_project(
     )
 
 
+async def _create_mixed_project(
+    service: TrajectoryService, rng: random.Random, name: str
+) -> Project:
+    project = await service.create_project(ProjectCreate(name=name))
+    coordinates = {
+        "Spline entry": (-4.0, 0.8, _rounded(rng.uniform(-0.4, 0.4))),
+        "Spline bend": (-1.0, 1.5, _rounded(rng.uniform(-0.8, 0.8))),
+        "First junction": (2.5, 1.0, 0.0),
+        "Spiral center": (0.0, 1.0, 0.0),
+        "Second junction": (0.0, 3.2, 1.25),
+        "Spline exit bend": (2.0, 3.8, 0.5),
+        "Spline exit": (4.0, 2.4, -1.0),
+    }
+    ids: dict[str, str] = {}
+    for label, position in coordinates.items():
+        project, ids[label] = await _add_anchor(service, project, label, position)
+
+    project = await service.add_spline(
+        project.id,
+        SplineSegmentCreate(
+            anchor_ids=[ids["Spline entry"], ids["Spline bend"], ids["First junction"]],
+            tension=0.1,
+        ),
+    )
+    project = await service.add_spiral(
+        project.id,
+        SpiralSegmentCreate(
+            start_anchor_id=ids["First junction"],
+            center_anchor_id=ids["Spiral center"],
+            end_anchor_id=ids["Second junction"],
+            turns=1.25,
+            direction="ccw",
+            radial_law="smoothstep",
+            axial_law="smoothstep",
+        ),
+    )
+    project = await service.add_spline(
+        project.id,
+        SplineSegmentCreate(
+            anchor_ids=[
+                ids["Second junction"],
+                ids["Spline exit bend"],
+                ids["Spline exit"],
+            ],
+            tension=0.1,
+        ),
+    )
+    project, target_id = await _add_scene_point(
+        service, project, "Mixed path subject", (0.0, 1.8, 0.0)
+    )
+    project = await service.add_speed_keyframe(
+        project.id,
+        SpeedKeyframeCreate(path_position=0.0, speed=1.0, interpolation_to_next="smoothstep"),
+    )
+    project = await service.add_speed_keyframe(
+        project.id,
+        SpeedKeyframeCreate(path_position=0.65, speed=0.4, interpolation_to_next="linear"),
+    )
+    return await service.add_camera_keyframe(
+        project.id,
+        CameraKeyframeCreate(
+            path_position=0.35,
+            aim=LookAtPointAim(scene_point_id=target_id),
+            interpolation_to_next="smoothstep",
+        ),
+    )
+
+
 async def populate_demo_projects(
     service: TrajectoryService, seed: int = 42
 ) -> list[PopulatedProject]:
     names = {
         "spline": f"[Demo {seed}] Random spline",
         "spiral": f"[Demo {seed}] Random spiral",
+        "mixed": f"[Demo {seed}] Smooth spline + spiral",
     }
     existing = {project.name: project for project in await service.list_projects()}
     results: list[PopulatedProject] = []
@@ -192,6 +261,13 @@ async def populate_demo_projects(
         results.append(PopulatedProject(project=spiral, created=True))
     else:
         results.append(PopulatedProject(project=spiral, created=False))
+
+    mixed = existing.get(names["mixed"])
+    if mixed is None:
+        mixed = await _create_mixed_project(service, random.Random(seed ^ 0x5A19), names["mixed"])
+        results.append(PopulatedProject(project=mixed, created=True))
+    else:
+        results.append(PopulatedProject(project=mixed, created=False))
     return results
 
 
