@@ -1,17 +1,22 @@
+"use client";
+
 import { X } from "lucide-react";
+import { useMemo } from "react";
 
 import type { Project } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { Button } from "@/shared/ui";
 
-import { AimGraph } from "./aim-graph";
-import { SpeedGraph } from "./speed-graph";
+import { createAimTrack } from "../lib/create-aim-track";
+import { createSpeedTrack } from "../lib/create-speed-track";
+import { TimelineStack } from "./timeline-stack";
 
 interface TrajectoryInspectorProps {
   deletingAimKeyframeId?: string;
   deletingSpeedKeyframeId?: string;
   onDeleteAimKeyframe: (keyframeId: string) => void;
   onDeleteSpeedKeyframe: (keyframeId: string) => void;
+  onScrub: (pathPosition: number) => void;
   pathPosition: number;
   project: Project;
   trajectory: CompiledTrajectory;
@@ -24,10 +29,34 @@ export function TrajectoryInspector({
   onClose,
   onDeleteAimKeyframe,
   onDeleteSpeedKeyframe,
+  onScrub,
   pathPosition,
   project,
   trajectory,
 }: TrajectoryInspectorProps) {
+  const tracks = useMemo(() => [
+    createSpeedTrack({
+      deletingKeyframeId: deletingSpeedKeyframeId,
+      onDeleteKeyframe: onDeleteSpeedKeyframe,
+      pathPosition,
+      trajectory,
+    }),
+    createAimTrack({
+      deletingKeyframeId: deletingAimKeyframeId,
+      onDeleteKeyframe: onDeleteAimKeyframe,
+      project,
+      trajectory,
+    }),
+  ], [
+    deletingAimKeyframeId,
+    deletingSpeedKeyframeId,
+    onDeleteAimKeyframe,
+    onDeleteSpeedKeyframe,
+    pathPosition,
+    project,
+    trajectory,
+  ]);
+
   return (
     <section className="border-t bg-muted/35 p-2">
       <div className="mb-1.5 flex items-center justify-between px-0.5">
@@ -39,21 +68,7 @@ export function TrajectoryInspector({
           <X className="size-3.5" />
         </Button>
       </div>
-      <div className="overflow-hidden rounded-md border bg-card">
-        <SpeedGraph
-          deletingKeyframeId={deletingSpeedKeyframeId}
-          onDeleteKeyframe={onDeleteSpeedKeyframe}
-          pathPosition={pathPosition}
-          trajectory={trajectory}
-        />
-        <AimGraph
-          deletingKeyframeId={deletingAimKeyframeId}
-          onDeleteKeyframe={onDeleteAimKeyframe}
-          pathPosition={pathPosition}
-          project={project}
-          trajectory={trajectory}
-        />
-      </div>
+      <TimelineStack onScrub={onScrub} pathPosition={pathPosition} tracks={tracks} />
     </section>
   );
 }

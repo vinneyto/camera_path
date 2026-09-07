@@ -5,6 +5,7 @@ export const PLOT_RIGHT = 388;
 export const PLOT_TOP = 8;
 export const PLOT_BOTTOM = 66;
 export const PLOT_WIDTH = PLOT_RIGHT - PLOT_LEFT;
+export const TRACK_HORIZONTAL_PADDING = 8;
 
 export function graphX(pathPosition: number) {
   return PLOT_LEFT + Math.min(1, Math.max(0, pathPosition)) * PLOT_WIDTH;

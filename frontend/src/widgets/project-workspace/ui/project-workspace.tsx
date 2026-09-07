@@ -163,6 +163,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
             onClose={closeTrajectory}
             onDeleteAimKeyframe={deleteCameraKeyframe}
             onDeleteSpeedKeyframe={deleteSpeedKeyframe}
+            onScrub={playback.seek}
             pathPosition={playback.pathPosition}
             project={project}
             trajectory={trajectory}
