@@ -1,7 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
@@ -28,13 +28,37 @@ export function WebGpuScreenSpaceLine({
   ...objectProps
 }: WebGpuScreenSpaceLineProps) {
   const pixelRatio = useThree((state) => state.viewport.dpr);
-  const normalizedPoints = useMemo(() => normalizeScreenSpaceLinePoints(points), [points]);
+  const normalizedPoints = useMemo(
+    () => normalizeScreenSpaceLinePoints(points),
+    [points],
+  );
+  const raycastThresholdRef = useRef(0);
   const line = useMemo(() => {
-    const geometry = new LineGeometry();
-    geometry.setPositions(
-      normalizedPoints.flatMap((point) => point.toArray()),
-    );
+    const object = new Line2();
+    const raycast = object.raycast.bind(object);
+    object.raycast = (raycaster, intersections) => {
+      const previous = raycaster.params.Line2;
+      raycaster.params.Line2 = { threshold: raycastThresholdRef.current };
+      try {
+        raycast(raycaster, intersections);
+      } finally {
+        raycaster.params.Line2 = previous;
+      }
+    };
+    return object;
+  }, []);
 
+  useEffect(() => {
+    const geometry = new LineGeometry();
+    geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
+    line.geometry = geometry;
+
+    return () => {
+      geometry.dispose();
+    };
+  }, [line, normalizedPoints]);
+
+  useEffect(() => {
     const material = new Line2NodeMaterial({
       color,
       depthTest,
@@ -44,31 +68,20 @@ export function WebGpuScreenSpaceLine({
       transparent,
       worldUnits: false,
     });
-    const object = new Line2(geometry, material);
-    object.layers.set(layer);
-    object.renderOrder = renderOrder;
+    line.material = material;
 
-    const raycastThreshold = getLine2RaycastThreshold(width, hitSlop, pixelRatio);
-    if (raycastThreshold > 0) {
-      const raycast = object.raycast.bind(object);
-      object.raycast = (raycaster, intersections) => {
-        const previous = raycaster.params.Line2;
-        raycaster.params.Line2 = { threshold: raycastThreshold };
-        try {
-          raycast(raycaster, intersections);
-        } finally {
-          raycaster.params.Line2 = previous;
-        }
-      };
-    }
+    return () => {
+      material.dispose();
+    };
+  }, [line, color, depthTest, depthWrite, transparent, width]);
 
-    return object;
-  }, [color, depthTest, depthWrite, hitSlop, layer, normalizedPoints, pixelRatio, renderOrder, transparent, width]);
-
-  useEffect(() => () => {
-    line.geometry.dispose();
-    line.material.dispose();
-  }, [line]);
+  line.layers.set(layer);
+  line.renderOrder = renderOrder;
+  raycastThresholdRef.current = getLine2RaycastThreshold(
+    width,
+    hitSlop,
+    pixelRatio,
+  );
 
   if (normalizedPoints.length < 2) return null;
   return <primitive dispose={null} object={line} {...objectProps} />;

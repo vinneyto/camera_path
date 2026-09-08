@@ -11,3 +11,4 @@
 - Keep the Spark/WebGL adapter only as a renderer-integration example. It does not need feature parity or production completeness; unsupported operations may use explicit stubs that throw clear errors.
 - Do not spend effort extending or tuning the Spark path unless a task explicitly requests it.
 - Prefer TSL when custom shader logic is required for the supported WebGPU path.
+- Create disposable Three.js/GPU resources and dispose them in the setup and cleanup of the same `useEffect`. Do not create or memoize such a resource with `useMemo` and dispose it from a separate effect: React Strict Mode may run the effect cleanup and setup again while retaining the memoized resource, causing reuse after `dispose()`.
