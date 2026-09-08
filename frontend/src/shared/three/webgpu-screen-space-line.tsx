@@ -32,13 +32,13 @@ export function WebGpuScreenSpaceLine({
     () => normalizeScreenSpaceLinePoints(points),
     [points],
   );
-  const raycastThresholdRef = useRef(0);
   const line = useMemo(() => {
-    const object = new Line2();
+    const object = new Line2() as Line2 & { raycastThreshold: number };
+    object.raycastThreshold = 0;
     const raycast = object.raycast.bind(object);
     object.raycast = (raycaster, intersections) => {
       const previous = raycaster.params.Line2;
-      raycaster.params.Line2 = { threshold: raycastThresholdRef.current };
+      raycaster.params.Line2 = { threshold: object.raycastThreshold };
       try {
         raycast(raycaster, intersections);
       } finally {
@@ -47,16 +47,17 @@ export function WebGpuScreenSpaceLine({
     };
     return object;
   }, []);
+  const lineRef = useRef(line);
 
   useEffect(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
-    line.geometry = geometry;
+    lineRef.current.geometry = geometry;
 
     return () => {
       geometry.dispose();
     };
-  }, [line, normalizedPoints]);
+  }, [normalizedPoints]);
 
   useEffect(() => {
     const material = new Line2NodeMaterial({
@@ -68,20 +69,22 @@ export function WebGpuScreenSpaceLine({
       transparent,
       worldUnits: false,
     });
-    line.material = material;
+    lineRef.current.material = material;
 
     return () => {
       material.dispose();
     };
-  }, [line, color, depthTest, depthWrite, transparent, width]);
+  }, [color, depthTest, depthWrite, transparent, width]);
 
-  line.layers.set(layer);
-  line.renderOrder = renderOrder;
-  raycastThresholdRef.current = getLine2RaycastThreshold(
-    width,
-    hitSlop,
-    pixelRatio,
-  );
+  useEffect(() => {
+    lineRef.current.layers.set(layer);
+    lineRef.current.renderOrder = renderOrder;
+    lineRef.current.raycastThreshold = getLine2RaycastThreshold(
+      width,
+      hitSlop,
+      pixelRatio,
+    );
+  }, [hitSlop, layer, pixelRatio, renderOrder, width]);
 
   if (normalizedPoints.length < 2) return null;
   return <primitive dispose={null} object={line} {...objectProps} />;

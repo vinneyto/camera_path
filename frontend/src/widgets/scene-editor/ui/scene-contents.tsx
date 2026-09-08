@@ -77,7 +77,6 @@ export function SceneContents({
     gaussianDprMode,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
-  const handlePlacementControlsChange = placement.handleControlsChange;
   const heightEditing = useAnchorHeightEditing({ anchors, onCommit: onUpdateAnchorLift });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
@@ -96,11 +95,10 @@ export function SceneContents({
     frameSurface(camera, surface.bounds, setOrbitTarget);
     onSurfaceReady();
   }, [camera, onSurfaceReady]);
-  const handleOrbitChange = useCallback(() => {
-    handlePlacementControlsChange();
+  const handleOrbitEnd = useCallback(() => {
     const controls = orbitControlsRef.current;
     if (controls !== null) setOrbitTarget(controls.target.toArray() as Vec3);
-  }, [handlePlacementControlsChange]);
+  }, []);
   const editorVisible = cameraMode === "orbit";
 
   return (
@@ -110,11 +108,7 @@ export function SceneContents({
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
         onLoading={onSurfaceLoading}
-        onPointerOut={editorVisible ? placement.handlePointerOut : undefined}
-        onPointerCancel={editorVisible ? placement.handlePointerCancel : undefined}
-        onSurfacePointerDown={editorVisible ? placement.handlePointerDown : undefined}
-        onSurfacePointerMove={editorVisible ? placement.handlePointerMove : undefined}
-        onSurfacePointerUp={editorVisible ? placement.handlePointerUp : undefined}
+        {...(editorVisible ? placement.surfaceEventProps : {})}
         source={SCENE_SURFACE_SOURCE}
       />
       <ambientLight intensity={dark ? 0.8 : 1.25} />
@@ -124,7 +118,7 @@ export function SceneContents({
         position={[5, 8, 4]}
         shadow-mapSize={[1024, 1024]}
       />
-      {editorVisible && (
+      {editorVisible && placement.previewHit !== null && (
         <AnchorPlacementPreview
           backend={renderingBackend}
           hit={placement.previewHit}
@@ -140,6 +134,7 @@ export function SceneContents({
             anchor={markerAnchor}
             hovered={heightEditing.hoveredAnchorId === anchor.id}
             key={anchor.id}
+            {...heightEditing.getAnchorInteractionProps(anchor)}
             onContextMenu={(event) => {
               event.stopPropagation();
               event.nativeEvent.preventDefault();
@@ -148,12 +143,6 @@ export function SceneContents({
                 y: event.nativeEvent.clientY,
               });
             }}
-            onPointerCancel={(event) => heightEditing.handlePointerCancel(anchor, event)}
-            onPointerDown={(event) => heightEditing.handlePointerDown(anchor, event)}
-            onPointerMove={(event) => heightEditing.handlePointerMove(anchor, event)}
-            onPointerOut={(event) => heightEditing.handlePointerOut(anchor, event)}
-            onPointerOver={(event) => heightEditing.handlePointerOver(anchor, event)}
-            onPointerUp={(event) => heightEditing.handlePointerUp(anchor, event)}
           />
         );
       })}
@@ -183,7 +172,8 @@ export function SceneContents({
           makeDefault
           maxDistance={Infinity}
           minDistance={0.001}
-          onChange={handleOrbitChange}
+          onChange={placement.handleControlsChange}
+          onEnd={handleOrbitEnd}
           ref={orbitControlsRef}
           target={orbitTarget}
         />

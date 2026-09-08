@@ -1,7 +1,7 @@
 "use client";
 
 import type { ThreeEvent } from "@react-three/fiber";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { Vec3 } from "@/entities/project";
 import {
@@ -10,8 +10,7 @@ import {
   useSetActiveEditorTool,
 } from "@/features/project-editor";
 import type { SceneSurfaceHit } from "@/shared/scene-surface";
-
-import { AnchorPlacementGesture } from "../lib/anchor-placement-gesture";
+import { usePointerTap } from "@/shared/lib/use-pointer-tap";
 
 const CLICK_THRESHOLD_PX = 5;
 
@@ -22,12 +21,24 @@ interface UseAnchorPlacementOptions {
 export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
   const activeTool = useActiveEditorTool();
   const setActiveTool = useSetActiveEditorTool();
-  const gestureRef = useRef(new AnchorPlacementGesture(CLICK_THRESHOLD_PX));
   const [previewHit, setPreviewHit] = useState<SceneSurfaceHit | null>(null);
 
+  const handleTap = useCallback((hit: SceneSurfaceHit) => {
+    onPlace(hit.position, hit.normal);
+  }, [onPlace]);
+  const {
+    cancel: cancelPointerTap,
+    handlePointerDown: beginPointerTap,
+    handlePointerMove: movePointerTap,
+    handlePointerUp: finishPointerTap,
+  } = usePointerTap({
+    movementThreshold: CLICK_THRESHOLD_PX,
+    onTap: handleTap,
+  });
+
   useEffect(() => {
-    if (activeTool === null) gestureRef.current.cancel();
-  }, [activeTool]);
+    if (activeTool === null) cancelPointerTap();
+  }, [activeTool, cancelPointerTap]);
 
   const handlePointerDown = useCallback((
     hit: SceneSurfaceHit,
@@ -39,16 +50,10 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
       || pointerType === "touch";
     if (!enabled) return;
     if (pointerType === "touch") setActiveTool("anchor");
-    gestureRef.current.begin(
-      hit,
-      event.pointerId,
-      pointerType,
-      event.clientX,
-      event.clientY,
-    );
+    beginPointerTap(hit, event);
     setPreviewHit(hit);
     (event.target as Element | null)?.setPointerCapture?.(event.pointerId);
-  }, [activeTool, setActiveTool]);
+  }, [activeTool, beginPointerTap, setActiveTool]);
 
   const handlePointerMove = useCallback((
     hit: SceneSurfaceHit,
@@ -57,49 +62,50 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     if (activeTool === "anchor" || getAnchorToolModifier(event.nativeEvent).pressed) {
       setPreviewHit(hit);
     }
-    const moved = gestureRef.current.move(hit, event.pointerId, event.clientX, event.clientY);
+    const moved = movePointerTap(hit, event);
     if (moved) setPreviewHit(null);
-  }, [activeTool]);
+  }, [activeTool, movePointerTap]);
 
   const handlePointerUp = useCallback((
     _hit: SceneSurfaceHit,
     event: ThreeEvent<PointerEvent>,
   ) => {
-    const result = gestureRef.current.finish(event.pointerId);
-    if (result === null) return;
     (event.target as Element | null)?.releasePointerCapture?.(event.pointerId);
     const enabled = activeTool === "anchor"
       || getAnchorToolModifier(event.nativeEvent).pressed
-      || result.pointerType === "touch";
-    if (enabled && result.hit !== null) onPlace(result.hit.position, result.hit.normal);
-    if (result.pointerType === "touch") {
+      || event.nativeEvent.pointerType === "touch";
+    if (enabled) finishPointerTap(event);
+    else cancelPointerTap();
+    if (event.nativeEvent.pointerType === "touch") {
       setPreviewHit(null);
       setActiveTool(null);
     }
-  }, [activeTool, onPlace, setActiveTool]);
+  }, [activeTool, cancelPointerTap, finishPointerTap, setActiveTool]);
 
   const handleControlsChange = useCallback(() => {
-    gestureRef.current.markCameraMoved();
+    cancelPointerTap();
     setPreviewHit(null);
-  }, []);
+  }, [cancelPointerTap]);
 
   const handlePointerOut = useCallback(() => {
     setPreviewHit(null);
   }, []);
 
   const handlePointerCancel = useCallback((event: ThreeEvent<PointerEvent>) => {
-    gestureRef.current.cancel();
+    cancelPointerTap();
     setPreviewHit(null);
     if (event.nativeEvent.pointerType === "touch") setActiveTool(null);
-  }, [setActiveTool]);
+  }, [cancelPointerTap, setActiveTool]);
 
   return {
     handleControlsChange,
-    handlePointerCancel,
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerOut,
-    handlePointerUp,
     previewHit: activeTool === "anchor" ? previewHit : null,
+    surfaceEventProps: {
+      onPointerCancel: handlePointerCancel,
+      onPointerOut: handlePointerOut,
+      onSurfacePointerDown: handlePointerDown,
+      onSurfacePointerMove: handlePointerMove,
+      onSurfacePointerUp: handlePointerUp,
+    },
   };
 }
