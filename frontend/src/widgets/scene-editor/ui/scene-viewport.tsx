@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 
+import { CameraViewOffset } from "./camera-view-offset";
 import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
 import type { SceneViewportProps } from "./scene-viewport-types";
@@ -19,6 +20,7 @@ export function SceneViewport(props: SceneViewportProps) {
           gl={{ antialias: false }}
           shadows
         >
+          <CameraViewOffset bottomInset={props.bottomOverlayHeight ?? 0} />
           <SceneContents
             anchors={props.anchors}
             background={context.background}

@@ -7,6 +7,7 @@ import type { ContextMenuPosition } from "@/shared/ui";
 
 export interface SceneViewportProps {
   anchors: Anchor[];
+  bottomOverlayHeight?: number;
   pathPosition: number;
   selected: boolean;
   trajectory: CompiledTrajectory | null;
