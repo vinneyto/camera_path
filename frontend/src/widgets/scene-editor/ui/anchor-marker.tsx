@@ -6,8 +6,9 @@ import { DoubleSide } from "three";
 import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
 
+import { ANCHOR_HIGHLIGHT_ENABLED } from "./anchor-placement-constants";
+
 const ANCHOR_MARKER_Z_INDEX_RANGE = [1000, 0];
-const ANCHOR_MARKER_HOVER_HIGHLIGHT_ENABLED = false;
 
 interface AnchorMarkerProps extends Omit<ThreeElements["group"], "children" | "position"> {
   anchor: Anchor;
@@ -30,7 +31,7 @@ export function AnchorMarker({
 
   const interactive = groupProps.onContextMenu !== undefined
     || groupProps.onPointerDown !== undefined;
-  const highlighted = ANCHOR_MARKER_HOVER_HIGHLIGHT_ENABLED && hovered;
+  const highlighted = ANCHOR_HIGHLIGHT_ENABLED && hovered;
 
   return (
     <group {...groupProps} position={position}>
