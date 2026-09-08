@@ -1,6 +1,6 @@
 "use client";
 
-import type { ThreeEvent } from "@react-three/fiber";
+import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Anchor } from "@/entities/project";
@@ -30,6 +30,16 @@ interface AnchorHeightDrag {
   pointerId: number;
   target: Element | null;
 }
+
+type AnchorInteractionProps = Pick<
+  ThreeElements["group"],
+  | "onPointerCancel"
+  | "onPointerDown"
+  | "onPointerMove"
+  | "onPointerOut"
+  | "onPointerOver"
+  | "onPointerUp"
+>;
 
 export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEditingOptions) {
   const activeTool = useActiveEditorTool();
@@ -126,14 +136,25 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
     [activeAnchorId, anchors],
   );
 
-  return {
-    activeAnchor,
+  const getAnchorInteractionProps = useCallback((anchor: Anchor): AnchorInteractionProps => ({
+    onPointerCancel: (event) => handlePointerCancel(anchor, event),
+    onPointerDown: (event) => handlePointerDown(anchor, event),
+    onPointerMove: (event) => handlePointerMove(anchor, event),
+    onPointerOut: (event) => handlePointerOut(anchor, event),
+    onPointerOver: (event) => handlePointerOver(anchor, event),
+    onPointerUp: (event) => handlePointerUp(anchor, event),
+  }), [
     handlePointerCancel,
     handlePointerDown,
     handlePointerMove,
     handlePointerOut,
     handlePointerOver,
     handlePointerUp,
+  ]);
+
+  return {
+    activeAnchor,
+    getAnchorInteractionProps,
     hoveredAnchorId,
     preview,
   };
