@@ -6,8 +6,7 @@ import { DoubleSide } from "three";
 import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
 
-import { ANCHOR_HIGHLIGHT_ENABLED } from "./anchor-placement-constants";
-
+const ANCHOR_MARKER_HIT_RADIUS = 0.13;
 const ANCHOR_MARKER_Z_INDEX_RANGE = [1000, 0];
 
 interface AnchorMarkerProps extends Omit<ThreeElements["group"], "children" | "position"> {
@@ -31,7 +30,7 @@ export function AnchorMarker({
 
   const interactive = groupProps.onContextMenu !== undefined
     || groupProps.onPointerDown !== undefined;
-  const highlighted = ANCHOR_HIGHLIGHT_ENABLED && hovered;
+  const highlighted = hovered;
 
   return (
     <group {...groupProps} position={position}>
@@ -53,7 +52,7 @@ export function AnchorMarker({
       </mesh>
       {interactive && (
         <mesh position={[0, 0.1, 0]}>
-          <sphereGeometry args={[0.2, 12, 12]} />
+          <sphereGeometry args={[ANCHOR_MARKER_HIT_RADIUS, 12, 12]} />
           <meshBasicMaterial depthWrite={false} opacity={0} transparent />
         </mesh>
       )}

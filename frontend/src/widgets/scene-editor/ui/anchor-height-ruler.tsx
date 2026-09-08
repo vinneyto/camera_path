@@ -3,7 +3,6 @@
 import { Html } from "@react-three/drei";
 
 import type { Vec3 } from "@/entities/project";
-import { RENDER_PIPELINE_SCENE_LAYER, ScreenSpaceLine } from "@/shared/three";
 
 interface AnchorHeightRulerProps {
   lift: number;
@@ -15,18 +14,6 @@ export function AnchorHeightRuler({ lift, surfacePosition }: AnchorHeightRulerPr
 
   return (
     <group>
-      {lift > 0 && (
-        <ScreenSpaceLine
-          color="#ffffff"
-          depthTest
-          depthWrite={false}
-          layer={RENDER_PIPELINE_SCENE_LAYER}
-          points={[[x, y, z], [x, y + lift, z]]}
-          radius={0.006}
-          transparent
-          width={2}
-        />
-      )}
       <Html
         center
         position={[x + 0.1, y + lift / 2, z]}

@@ -10,7 +10,7 @@ import {
 } from "@/shared/scene-surface";
 
 import {
-  ANCHOR_HIGHLIGHT_ENABLED,
+  ANCHOR_GAUSSIAN_HIGHLIGHT_ENABLED,
   ANCHOR_PLACEMENT_FLASHLIGHT_BOTTOM_OFFSET,
   ANCHOR_PLACEMENT_FLASHLIGHT_COLOR,
   ANCHOR_PLACEMENT_FLASHLIGHT_RADIUS,
@@ -43,7 +43,7 @@ export function AnchorHeightEditingOverlay({
 
   return (
     <>
-      {ANCHOR_HIGHLIGHT_ENABLED && (
+      {ANCHOR_GAUSSIAN_HIGHLIGHT_ENABLED && (
         <GaussianHighlightVolume backend={backend} options={highlight} />
       )}
       {dragging && (
