@@ -20,7 +20,7 @@ export function PlaybackControls({
   onToggle,
 }: PlaybackControlsProps) {
   return (
-    <div className="flex h-10 items-center gap-2 border-t bg-background/95 px-3 backdrop-blur">
+    <div className="flex h-10 items-center gap-2 px-3">
       <Button aria-label={playing ? "Pause" : "Play"} onClick={onToggle} size="icon" variant="ghost">
         {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
       </Button>

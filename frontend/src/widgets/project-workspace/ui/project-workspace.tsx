@@ -30,7 +30,7 @@ interface ProjectWorkspaceProps {
   rendererBackend?: "webgl" | "webgpu";
 }
 
-const TRAJECTORY_INSPECTOR_BOTTOM_INSET = 12;
+const TRAJECTORY_CONTROLS_BOTTOM_INSET = 12;
 
 export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: ProjectWorkspaceProps) {
   const projectQuery = useProjectQuery(projectId);
@@ -48,14 +48,13 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const { closeTrajectory, selectTrajectory, trajectorySelected } = useTrajectorySelection();
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = useMemo(() => project ? Object.values(project.anchors) : [], [project]);
-  const trajectoryInspectorOpen = Boolean(
-    trajectorySelected && trajectory && trajectory.position_segments.length > 0,
+  const trajectoryControlsAvailable = Boolean(trajectory && trajectory.position_segments.length > 0);
+  const trajectoryInspectorOpen = trajectorySelected && trajectoryControlsAvailable;
+  const { elementRef: trajectoryControlsRef, height: trajectoryControlsHeight } = useElementHeight(
+    trajectoryControlsAvailable,
   );
-  const { elementRef: trajectoryInspectorRef, height: trajectoryInspectorHeight } = useElementHeight(
-    trajectoryInspectorOpen,
-  );
-  const bottomOverlayHeight = trajectoryInspectorOpen
-    ? trajectoryInspectorHeight + TRAJECTORY_INSPECTOR_BOTTOM_INSET
+  const bottomOverlayHeight = trajectoryControlsAvailable
+    ? trajectoryControlsHeight + TRAJECTORY_CONTROLS_BOTTOM_INSET
     : 0;
   const mutating = addAnchorMutation.isPending
     || updateAnchorMutation.isPending
@@ -162,36 +161,36 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
                   : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
             </div>
           )}
-          {trajectoryInspectorOpen && trajectory && (
+          {trajectoryControlsAvailable && trajectory && (
             <div
-              className="absolute left-3 right-3 z-30"
-              ref={trajectoryInspectorRef}
-              style={{ bottom: TRAJECTORY_INSPECTOR_BOTTOM_INSET }}
+              className="absolute left-3 right-3 z-30 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"
+              ref={trajectoryControlsRef}
+              style={{ bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET }}
             >
-              <TrajectoryInspector
-                deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
-                deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
-                onClose={closeTrajectory}
-                onDeleteAimKeyframe={deleteCameraKeyframe}
-                onDeleteSpeedKeyframe={deleteSpeedKeyframe}
-                onScrub={playback.seek}
+              <PlaybackControls
+                duration={playback.duration}
+                elapsed={playback.elapsed}
+                onSeek={playback.seek}
+                onToggle={playback.toggle}
                 pathPosition={playback.pathPosition}
-                project={project}
-                trajectory={trajectory}
+                playing={playback.playing}
               />
+              {trajectoryInspectorOpen && (
+                <TrajectoryInspector
+                  deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
+                  deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
+                  onClose={closeTrajectory}
+                  onDeleteAimKeyframe={deleteCameraKeyframe}
+                  onDeleteSpeedKeyframe={deleteSpeedKeyframe}
+                  onScrub={playback.seek}
+                  pathPosition={playback.pathPosition}
+                  project={project}
+                  trajectory={trajectory}
+                />
+              )}
             </div>
           )}
         </div>
-        {trajectory && trajectory.position_segments.length > 0 && (
-          <PlaybackControls
-            duration={playback.duration}
-            elapsed={playback.elapsed}
-            onSeek={playback.seek}
-            onToggle={playback.toggle}
-            pathPosition={playback.pathPosition}
-            playing={playback.playing}
-          />
-        )}
       </div>
       <ChatPanel
         anchors={anchors}
