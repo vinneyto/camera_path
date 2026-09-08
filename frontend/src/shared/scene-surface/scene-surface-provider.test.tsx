@@ -9,6 +9,7 @@ test("renders children through a renderer-agnostic backend", () => {
     container: null,
     createCloud: vi.fn(),
     createHighlightVolume: vi.fn(),
+    invalidate: vi.fn(),
     dispose: vi.fn(),
   };
 

@@ -88,6 +88,10 @@ export function SceneContents({
     if (cameraMode === "trajectory" && !trajectoryAvailable) setCameraMode("orbit");
   }, [cameraMode, setCameraMode, trajectoryAvailable]);
 
+  useEffect(() => {
+    renderingBackend.invalidate();
+  }, [anchors, renderingBackend]);
+
   const handleSurfaceReady = useCallback((surface: SceneSurfaceReady) => {
     frameSurface(camera, surface.bounds, setOrbitTarget);
     onSurfaceReady();

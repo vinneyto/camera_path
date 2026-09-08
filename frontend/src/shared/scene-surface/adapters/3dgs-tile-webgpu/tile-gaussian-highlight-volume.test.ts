@@ -7,9 +7,11 @@ import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 it("restores the Gaussian pass color node when the volume is disposed", () => {
   const baseColorNode = vec3(0.2, 0.3, 0.4);
   const basePositionWorldNode = vec3(1, 2, 3);
+  const invalidate = vi.fn();
   const pass = {
     gaussianColorNode: baseColorNode,
     gaussianPositionWorldNode: basePositionWorldNode,
+    invalidate,
   } as unknown as GaussianPass;
   const onDispose = vi.fn();
   const volume = new TileGaussianHighlightVolume(
@@ -40,6 +42,7 @@ it("restores the Gaussian pass color node when the volume is disposed", () => {
   });
   expect(pass.gaussianColorNode).toBe(highlightNode);
   expect(pass.gaussianPositionWorldNode).toBe(basePositionWorldNode);
+  expect(invalidate).toHaveBeenCalledTimes(2);
 
   volume.dispose();
   volume.dispose();
@@ -51,9 +54,11 @@ it("restores the Gaussian pass color node when the volume is disposed", () => {
 it("restores the Gaussian pass position node when a ripple volume is disposed", () => {
   const baseColorNode = vec3(0.2, 0.3, 0.4);
   const basePositionWorldNode = vec3(1, 2, 3);
+  const invalidate = vi.fn();
   const pass = {
     gaussianColorNode: baseColorNode,
     gaussianPositionWorldNode: basePositionWorldNode,
+    invalidate,
   } as unknown as GaussianPass;
   const onDispose = vi.fn();
   const volume = new TileGaussianHighlightVolume(
@@ -77,6 +82,8 @@ it("restores the Gaussian pass position node when a ripple volume is disposed", 
   expect(rippleNode).not.toBe(basePositionWorldNode);
   expect(pass.gaussianColorNode).not.toBe(baseColorNode);
   expect(JSON.stringify(rippleNode.toJSON())).toContain('"type":"ConditionalNode"');
+  volume.prepareFrame();
+  expect(invalidate).toHaveBeenCalledTimes(2);
 
   volume.dispose();
 

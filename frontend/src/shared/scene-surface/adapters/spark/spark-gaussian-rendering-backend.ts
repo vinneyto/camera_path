@@ -75,6 +75,8 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     throw new Error("Gaussian highlight volumes are not implemented by the Spark example backend");
   }
 
+  invalidate(): void {}
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;

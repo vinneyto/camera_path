@@ -100,6 +100,10 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     return volume;
   }
 
+  invalidate(): void {
+    if (!this.disposed) this.pass?.invalidate();
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
@@ -120,6 +124,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (this.pass.getResolutionScale() !== resolutionScale) {
       this.pass.setResolutionScale(resolutionScale);
     }
+    this.highlightVolume?.prepareFrame();
   }
 
   private disposePass(): void {
@@ -136,7 +141,10 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (!(camera instanceof PerspectiveCamera)) {
       throw new TypeError("3dgs-tile-webgpu requires a PerspectiveCamera");
     }
-    const pass = gaussianPass(renderer, camera, this.store, { background: [0, 0, 0, 0] });
+    const pass = gaussianPass(renderer, camera, this.store, {
+      background: [0, 0, 0, 0],
+      redrawStrategy: "auto",
+    });
     const depthNodes = createTileRasterDepthNodes(
       getOpaqueViewDepth(rasterScreenUV),
       pass.depthSortMode,
