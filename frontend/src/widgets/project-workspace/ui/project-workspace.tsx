@@ -74,13 +74,17 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
     }).catch(() => undefined);
   }
 
-  async function sendMessage(message: string) {
+  async function sendMessage(id: string, message: string, onAccepted: () => void) {
     if (!project || mutating) return;
     try {
-      const result = await chatMutation.mutateAsync(message);
+      const result = await chatMutation.mutateAsync({
+        id,
+        message,
+        onAccepted,
+      });
       if (result.compiled.position_segments.length > 0) selectTrajectory();
     } catch {
-      // The mutation exposes the error to the chat panel and rolls back its optimistic message.
+      // The mutation exposes the error while the persisted user message stays in chat history.
     }
   }
 
