@@ -43,6 +43,7 @@ export interface CameraKeyframe {
 }
 
 export interface ChatHistoryMessage {
+  id: string;
   role: "user" | "assistant";
   content: string;
 }
