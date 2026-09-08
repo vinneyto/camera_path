@@ -49,11 +49,13 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = useMemo(() => project ? Object.values(project.anchors) : [], [project]);
   const trajectoryControlsAvailable = Boolean(trajectory && trajectory.position_segments.length > 0);
-  const trajectoryInspectorOpen = trajectorySelected && trajectoryControlsAvailable;
+  const trajectoryControlsExpanded = cameraMode === "orbit"
+    && trajectorySelected
+    && trajectoryControlsAvailable;
   const { elementRef: trajectoryControlsRef, height: trajectoryControlsHeight } = useElementHeight(
-    trajectoryControlsAvailable,
+    trajectoryControlsExpanded,
   );
-  const bottomOverlayHeight = trajectoryControlsAvailable
+  const bottomOverlayHeight = trajectoryControlsExpanded
     ? trajectoryControlsHeight + TRAJECTORY_CONTROLS_BOTTOM_INSET
     : 0;
   const mutating = addAnchorMutation.isPending
@@ -161,7 +163,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
                   : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
             </div>
           )}
-          {trajectoryControlsAvailable && trajectory && (
+          {trajectoryControlsExpanded && trajectory && (
             <div
               className="absolute left-3 right-3 z-30 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"
               ref={trajectoryControlsRef}
@@ -169,28 +171,38 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
             >
               <PlaybackControls
                 duration={playback.duration}
+                embedded
                 elapsed={playback.elapsed}
                 onSeek={playback.seek}
                 onToggle={playback.toggle}
                 pathPosition={playback.pathPosition}
                 playing={playback.playing}
               />
-              {trajectoryInspectorOpen && (
-                <TrajectoryInspector
-                  deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
-                  deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
-                  onClose={closeTrajectory}
-                  onDeleteAimKeyframe={deleteCameraKeyframe}
-                  onDeleteSpeedKeyframe={deleteSpeedKeyframe}
-                  onScrub={playback.seek}
-                  pathPosition={playback.pathPosition}
-                  project={project}
-                  trajectory={trajectory}
-                />
-              )}
+              <TrajectoryInspector
+                deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
+                deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
+                onClose={closeTrajectory}
+                onDeleteAimKeyframe={deleteCameraKeyframe}
+                onDeleteSpeedKeyframe={deleteSpeedKeyframe}
+                onScrub={playback.seek}
+                pathPosition={playback.pathPosition}
+                project={project}
+                trajectory={trajectory}
+              />
             </div>
           )}
         </div>
+        {trajectoryControlsAvailable && !trajectoryControlsExpanded && (
+          <PlaybackControls
+            duration={playback.duration}
+            elapsed={playback.elapsed}
+            onExpand={cameraMode === "orbit" ? selectTrajectory : undefined}
+            onSeek={playback.seek}
+            onToggle={playback.toggle}
+            pathPosition={playback.pathPosition}
+            playing={playback.playing}
+          />
+        )}
       </div>
       <ChatPanel
         anchors={anchors}
