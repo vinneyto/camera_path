@@ -28,7 +28,10 @@ export function WebGpuScreenSpaceLine({
   ...objectProps
 }: WebGpuScreenSpaceLineProps) {
   const pixelRatio = useThree((state) => state.viewport.dpr);
-  const normalizedPoints = useMemo(() => normalizeScreenSpaceLinePoints(points), [points]);
+  const normalizedPoints = useMemo(
+    () => normalizeScreenSpaceLinePoints(points),
+    [points],
+  );
   const raycastThresholdRef = useRef(0);
   const line = useMemo(() => {
     const object = new Line2();
@@ -44,38 +47,55 @@ export function WebGpuScreenSpaceLine({
     };
     return object;
   }, []);
-  const resources = useMemo(() => {
+
+  const geometry = useMemo(() => {
     const geometry = new LineGeometry();
-    geometry.setPositions(
-      normalizedPoints.flatMap((point) => point.toArray()),
-    );
-    const material = new Line2NodeMaterial({
-      color,
-      depthTest,
-      depthWrite,
-      linewidth: width,
-      toneMapped: false,
-      transparent,
-      worldUnits: false,
-    });
-    return { geometry, material };
-  }, [color, depthTest, depthWrite, normalizedPoints, transparent, width]);
+    geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
+    return geometry;
+  }, [normalizedPoints]);
+
+  const material = useMemo(
+    () =>
+      new Line2NodeMaterial({
+        color,
+        depthTest,
+        depthWrite,
+        linewidth: width,
+        toneMapped: false,
+        transparent,
+        worldUnits: false,
+      }),
+    [color, depthTest, depthWrite, transparent, width],
+  );
 
   line.layers.set(layer);
   line.renderOrder = renderOrder;
-  raycastThresholdRef.current = getLine2RaycastThreshold(width, hitSlop, pixelRatio);
+  raycastThresholdRef.current = getLine2RaycastThreshold(
+    width,
+    hitSlop,
+    pixelRatio,
+  );
 
-  useEffect(() => () => {
-    resources.geometry.dispose();
-    resources.material.dispose();
-  }, [resources]);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+    },
+    [geometry],
+  );
+
+  useEffect(
+    () => () => {
+      material.dispose();
+    },
+    [material],
+  );
 
   if (normalizedPoints.length < 2) return null;
   return (
     <primitive
       dispose={null}
-      geometry={resources.geometry}
-      material={resources.material}
+      geometry={geometry}
+      material={material}
       object={line}
       {...objectProps}
     />
