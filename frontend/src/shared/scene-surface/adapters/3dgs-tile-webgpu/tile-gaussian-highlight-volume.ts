@@ -63,6 +63,10 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInsta
     this.onDispose();
   }
 
+  prepareFrame(): void {
+    if (!this.disposed && this.type === "ripple") this.pass.invalidate();
+  }
+
   update(options: GaussianHighlightVolumeOptions): void {
     if (this.disposed) throw new Error("Gaussian highlight volume is disposed");
     if (options.type !== this.type) {
@@ -75,6 +79,7 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInsta
       this.color.value.set(...options.color);
       this.height.value = options.height + options.bottomOffset;
       this.strength.value = options.strength;
+      this.pass.invalidate();
       return;
     }
     this.amplitude.value = options.amplitude;
@@ -84,6 +89,7 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInsta
     this.verticalCoreRadius.value = options.verticalCoreRadius;
     this.verticalFalloffRadius.value = options.verticalFalloffRadius;
     this.wavelength.value = options.wavelength;
+    this.pass.invalidate();
   }
 
   private createColorNode(): Node<"vec3"> {

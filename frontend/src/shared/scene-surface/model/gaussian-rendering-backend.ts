@@ -64,5 +64,6 @@ export interface GaussianRenderingBackend {
   createHighlightVolume(
     options: GaussianHighlightVolumeOptions,
   ): GaussianHighlightVolumeInstance;
+  invalidate(): void;
   dispose(): void;
 }
