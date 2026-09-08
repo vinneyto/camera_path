@@ -177,17 +177,19 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
                 pathPosition={playback.pathPosition}
                 playing={playback.playing}
               />
-              <TrajectoryInspector
-                deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
-                deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
-                onClose={closeTrajectory}
-                onDeleteAimKeyframe={deleteCameraKeyframe}
-                onDeleteSpeedKeyframe={deleteSpeedKeyframe}
-                onScrub={playback.seek}
-                pathPosition={playback.pathPosition}
-                project={project}
-                trajectory={trajectory}
-              />
+              {trajectoryControlsExpanded && (
+                <TrajectoryInspector
+                  deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
+                  deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
+                  onClose={closeTrajectory}
+                  onDeleteAimKeyframe={deleteCameraKeyframe}
+                  onDeleteSpeedKeyframe={deleteSpeedKeyframe}
+                  onScrub={playback.seek}
+                  pathPosition={playback.pathPosition}
+                  project={project}
+                  trajectory={trajectory}
+                />
+              )}
             </div>
           )}
         </div>
