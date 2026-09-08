@@ -2,6 +2,7 @@
 
 import { RenderPipelineCanvas } from "@/shared/three";
 
+import { CameraViewOffset } from "./camera-view-offset";
 import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
 import type { SceneViewportProps } from "./scene-viewport-types";
@@ -26,6 +27,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
               .map((channel) => Math.round(channel * 255)).join(" ")})`,
           }}
         >
+          <CameraViewOffset bottomInset={props.bottomOverlayHeight ?? 0} />
           <SceneContents
             anchors={props.anchors}
             background={context.background}

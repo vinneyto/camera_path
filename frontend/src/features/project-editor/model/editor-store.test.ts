@@ -44,6 +44,16 @@ describe("editor store", () => {
     });
   });
 
+  it("preserves the expanded trajectory panel state across camera modes", () => {
+    store.getState().selectionActions.selectTrajectory();
+
+    store.getState().cameraActions.setCameraMode("trajectory");
+    expect(store.getState().selection.trajectorySelected).toBe(true);
+
+    store.getState().cameraActions.setCameraMode("orbit");
+    expect(store.getState().selection.trajectorySelected).toBe(true);
+  });
+
   it("keeps one hovered anchor and ignores stale pointer-out events", () => {
     store.getState().toolActions.hoverAnchor("anchor-a");
     store.getState().toolActions.hoverAnchor("anchor-b");
