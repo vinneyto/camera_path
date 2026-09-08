@@ -22,8 +22,8 @@ async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> Non
     project = await repository.create(Project())
     agent = TrajectoryAgent(TrajectoryService(repository), "test-model", api_key="test")
 
-    first = await agent.handle(project.id, "first request")
-    second = await agent.handle(project.id, "second request")
+    first = await agent.handle(project.id, "first request", "message-1")
+    second = await agent.handle(project.id, "second request", "message-2")
 
     assert [item.content for item in second.project.chat_history] == [
         "first request",
@@ -35,8 +35,8 @@ async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> Non
         {"role": "user", "content": "first request"},
         {"role": "assistant", "content": "answer 1"},
     ]
-    assert first.project.revision == 1
-    assert second.project.revision == 2
+    assert first.project.revision == 2
+    assert second.project.revision == 4
 
 
 async def test_agent_returns_tool_errors_to_model(monkeypatch, tmp_path) -> None:
@@ -63,7 +63,7 @@ async def test_agent_returns_tool_errors_to_model(monkeypatch, tmp_path) -> None
     project = await repository.create(Project())
     agent = TrajectoryAgent(TrajectoryService(repository), "test-model", api_key="test")
 
-    result = await agent.handle(project.id, "Delete the missing segment")
+    result = await agent.handle(project.id, "Delete the missing segment", "message-1")
 
     tool_output = calls[1]["input"][-1]
     assert '"status": "error"' in tool_output["output"]
@@ -96,7 +96,7 @@ async def test_agent_streams_text_and_persists_result(monkeypatch, tmp_path) -> 
     project = await repository.create(Project())
     agent = TrajectoryAgent(TrajectoryService(repository), "test-model", api_key="test")
 
-    events = [event async for event in agent.handle_stream(project.id, "Say hello")]
+    events = [event async for event in agent.handle_stream(project.id, "Say hello", "message-1")]
 
     assert events[0] == {"type": "delta", "text": "hel"}
     assert events[1] == {"type": "delta", "text": "lo"}
