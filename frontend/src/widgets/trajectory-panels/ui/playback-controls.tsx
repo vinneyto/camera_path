@@ -4,6 +4,7 @@ import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ui";
 
 interface PlaybackControlsProps {
+  collapsed?: boolean;
   duration: number;
   embedded?: boolean;
   elapsed: number;
@@ -15,6 +16,7 @@ interface PlaybackControlsProps {
 }
 
 export function PlaybackControls({
+  collapsed = false,
   duration,
   embedded = false,
   elapsed,
@@ -37,7 +39,10 @@ export function PlaybackControls({
       </Button>
       <input
         aria-label="Playback position"
-        className="h-1 flex-1 cursor-pointer accent-orange-500"
+        className={cn(
+          "h-1 flex-1 cursor-pointer accent-orange-500",
+          collapsed && "-translate-y-px",
+        )}
         max={1}
         min={0}
         onChange={(event) => onSeek(Number(event.target.value))}

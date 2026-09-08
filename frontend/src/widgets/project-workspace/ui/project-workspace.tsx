@@ -168,6 +168,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
               style={{ bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET }}
             >
               <PlaybackControls
+                collapsed={!trajectoryControlsExpanded}
                 duration={playback.duration}
                 embedded
                 elapsed={playback.elapsed}
