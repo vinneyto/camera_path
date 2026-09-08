@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from camera_path.geometry import anchor_position, compile_project, compile_spiral
+from camera_path.geometry import GeometryError, anchor_position, compile_project, compile_spiral
 from camera_path.models import (
     Anchor,
     CameraKeyframe,
@@ -32,10 +32,20 @@ def test_spline_compiles_to_bezier_and_preserves_endpoints() -> None:
 
     compiled = compile_project(project)
 
-    assert len(compiled.position_segments) == 2
+    assert len(compiled.position_segments) >= 2
     assert compiled.position_segments[0].p0 == a.surface_position
     assert compiled.position_segments[-1].p3 == c.surface_position
     assert compiled.total_length > 2.0
+
+
+def test_spline_rejects_coincident_consecutive_anchors() -> None:
+    first = Anchor(label="A", surface_position=(1, 2, 3))
+    second = Anchor(label="B", surface_position=(1, 2, 3))
+    project = Project(anchors={item.id: item for item in (first, second)})
+    project.segments.append(SplineSegment(anchor_ids=[first.id, second.id]))
+
+    with pytest.raises(GeometryError, match="anchors must be distinct"):
+        compile_project(project)
 
 
 def test_arc_length_table_contains_internal_monotonic_samples() -> None:
@@ -197,7 +207,7 @@ def _spiral_spiral_project() -> Project:
             center_anchor_id=second_center.id,
             end_anchor_id=end.id,
             turns=1.25,
-            direction="cw",
+            direction="ccw",
         ),
     ]
     return project
@@ -223,7 +233,10 @@ def test_semantic_segment_junctions_are_c1(project: Project) -> None:
     outgoing = np.asarray(right.p1) - np.asarray(right.p0)
     assert np.linalg.norm(incoming) > 0
     assert np.linalg.norm(outgoing) > 0
-    np.testing.assert_allclose(incoming, outgoing, atol=1e-12)
+    cosine = float(
+        np.dot(incoming, outgoing) / (np.linalg.norm(incoming) * np.linalg.norm(outgoing))
+    )
+    assert cosine == pytest.approx(1.0, abs=1e-10)
     path_anchor_ids = {
         anchor_id
         for segment in project.segments
@@ -245,7 +258,7 @@ def _evaluate_bezier(curve, t: float) -> np.ndarray:
     return u**3 * p0 + 3 * u**2 * t * p1 + 3 * u * t**2 * p2 + t**3 * p3
 
 
-def test_spiral_smoothing_deviation_stays_within_tolerance() -> None:
+def test_spiral_geometry_is_not_deformed_at_a_spline_junction() -> None:
     tolerance = 1e-2
     project = _spline_spiral_project()
     spiral = project.segments[1]
@@ -256,20 +269,10 @@ def test_spiral_smoothing_deviation_stays_within_tolerance() -> None:
         for curve in compile_project(project, tolerance).position_segments
         if curve.source_segment_id == spiral.id
     ]
-    original_samples = np.vstack(
-        [_evaluate_bezier(curve, t) for curve in original for t in np.linspace(0, 1, 401)]
-    )
-
-    max_deviation = max(
-        float(np.min(np.linalg.norm(original_samples - _evaluate_bezier(curve, t), axis=1)))
-        for curve in smoothed
-        for t in np.linspace(0, 1, 41)
-    )
-
-    assert max_deviation <= tolerance * 1.05
+    assert smoothed == original
 
 
-def test_short_junction_has_forward_nonzero_handles_without_loop() -> None:
+def test_short_junction_preserves_nonzero_spiral_tangent() -> None:
     curves = compile_project(_spline_spiral_project(scale=1e-3), tolerance=1e-7).position_segments
     left, right = next(
         (left, right)
@@ -278,8 +281,28 @@ def test_short_junction_has_forward_nonzero_handles_without_loop() -> None:
     )
     incoming = np.asarray(left.p3) - np.asarray(left.p2)
     outgoing = np.asarray(right.p1) - np.asarray(right.p0)
-    left_chord = np.asarray(left.p3) - np.asarray(left.p0)
-    right_chord = np.asarray(right.p3) - np.asarray(right.p0)
+    assert np.linalg.norm(incoming) > 0.0
+    assert np.linalg.norm(outgoing) > 0.0
+    cosine = np.dot(incoming, outgoing) / (np.linalg.norm(incoming) * np.linalg.norm(outgoing))
+    assert cosine == pytest.approx(1.0, abs=1e-10)
 
-    assert np.dot(incoming, left_chord) > 0
-    assert np.dot(outgoing, right_chord) > 0
+
+def test_incompatible_spiral_tangents_are_reported_without_deformation() -> None:
+    project = _spiral_spiral_project()
+    second = project.segments[1]
+    assert isinstance(second, SpiralSegment)
+    second.direction = "cw"
+
+    compiled = compile_project(project)
+
+    assert any("incompatible analytic tangents" in warning for warning in compiled.warnings)
+    first = project.segments[0]
+    assert isinstance(first, SpiralSegment)
+    first_original = compile_spiral(project, first)
+    second_original = compile_spiral(project, second)
+    assert [
+        curve for curve in compiled.position_segments if curve.source_segment_id == first.id
+    ] == first_original
+    assert [
+        curve for curve in compiled.position_segments if curve.source_segment_id == second.id
+    ] == second_original

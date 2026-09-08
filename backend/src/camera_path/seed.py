@@ -233,6 +233,27 @@ async def _create_mixed_project(
     )
 
 
+async def _create_inertial_project(service: TrajectoryService, name: str) -> Project:
+    """Sparse, deterministic path that exposes locally smoothed rail-like motion."""
+    project = await service.create_project(ProjectCreate(name=name))
+    coordinates = [
+        (-6.0, 1.0, -1.0),
+        (-2.0, 1.2, -0.8),
+        (1.0, 3.8, 2.5),
+        (4.5, 2.0, -1.5),
+        (8.0, 2.2, -1.0),
+    ]
+    anchor_ids: list[str] = []
+    for index, position in enumerate(coordinates, start=1):
+        project, anchor_id = await _add_anchor(
+            service, project, f"Inertial {index}", position
+        )
+        anchor_ids.append(anchor_id)
+    return await service.add_spline(
+        project.id, SplineSegmentCreate(anchor_ids=anchor_ids)
+    )
+
+
 async def populate_demo_projects(
     service: TrajectoryService, seed: int = 42
 ) -> list[PopulatedProject]:
@@ -240,6 +261,7 @@ async def populate_demo_projects(
         "spline": f"[Demo {seed}] Random spline",
         "spiral": f"[Demo {seed}] Random spiral",
         "mixed": f"[Demo {seed}] Smooth spline + spiral",
+        "inertial": f"[Demo {seed}] Sparse inertial path",
     }
     existing = {project.name: project for project in await service.list_projects()}
     results: list[PopulatedProject] = []
@@ -268,6 +290,13 @@ async def populate_demo_projects(
         results.append(PopulatedProject(project=mixed, created=True))
     else:
         results.append(PopulatedProject(project=mixed, created=False))
+
+    inertial = existing.get(names["inertial"])
+    if inertial is None:
+        inertial = await _create_inertial_project(service, names["inertial"])
+        results.append(PopulatedProject(project=inertial, created=True))
+    else:
+        results.append(PopulatedProject(project=inertial, created=False))
     return results
 
 

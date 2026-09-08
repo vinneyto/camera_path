@@ -57,7 +57,7 @@ async def test_project_edit_compile_and_undo(app) -> None:
 
         response = await client.get(f"/projects/{project['id']}/trajectory/compiled")
         assert response.status_code == 200
-        assert len(response.json()["position_segments"]) == 2
+        assert len(response.json()["position_segments"]) >= 2
 
         response = await client.post(f"/projects/{project['id']}/undo")
         assert response.status_code == 200

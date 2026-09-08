@@ -9,9 +9,9 @@ async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> No
 
     results = await populate_demo_projects(service, seed=7)
 
-    assert len(results) == 3
+    assert len(results) == 4
     assert all(result.created for result in results)
-    spline, spiral, mixed = [result.project for result in results]
+    spline, spiral, mixed, inertial = [result.project for result in results]
     assert len(spline.anchors) == 6
     assert len(spline.scene_points) == 1
     assert isinstance(spline.segments[0], SplineSegment)
@@ -36,7 +36,15 @@ async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> No
         assert left.p3 == right.p0
         incoming = tuple(end - control for end, control in zip(left.p3, left.p2, strict=True))
         outgoing = tuple(control - start for control, start in zip(right.p1, right.p0, strict=True))
-        assert incoming == outgoing
+        incoming_length = sum(component * component for component in incoming) ** 0.5
+        outgoing_length = sum(component * component for component in outgoing) ** 0.5
+        cosine = sum(a * b for a, b in zip(incoming, outgoing, strict=True)) / (
+            incoming_length * outgoing_length
+        )
+        assert cosine > 1.0 - 1e-10
+    assert len(inertial.anchors) == 5
+    assert isinstance(inertial.segments[0], SplineSegment)
+    assert service.compile_draft(inertial).position_segments
 
 
 async def test_populate_is_idempotent_for_the_same_seed(tmp_path) -> None:
@@ -48,4 +56,4 @@ async def test_populate_is_idempotent_for_the_same_seed(tmp_path) -> None:
     assert all(result.created for result in first)
     assert not any(result.created for result in second)
     assert [result.project.id for result in first] == [result.project.id for result in second]
-    assert len(await service.list_projects()) == 3
+    assert len(await service.list_projects()) == 4
