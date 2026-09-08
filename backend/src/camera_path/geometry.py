@@ -6,6 +6,7 @@ from math import ceil, cos, pi, sin
 import numpy as np
 from numpy.typing import NDArray
 
+from camera_path.bezier_compile import approximate_quintic
 from camera_path.models import (
     Anchor,
     ArcLengthSample,
@@ -25,6 +26,7 @@ from camera_path.models import (
     SplineSegment,
     Vec3,
 )
+from camera_path.trajectory_planner import QuinticPiece, plan_minimum_jerk
 
 Vector = NDArray[np.float64]
 
@@ -116,28 +118,45 @@ def _make_bezier(
     )
 
 
-def _centripetal_tangent(previous: Vector, point: Vector, following: Vector) -> Vector:
-    before = max(float(np.linalg.norm(point - previous)) ** 0.5, 1e-9)
-    after = max(float(np.linalg.norm(following - point)) ** 0.5, 1e-9)
-    return (following - previous) / (before + after)
+def _compile_quintics(
+    pieces: list[QuinticPiece], source_ids: list[str], tolerance: float
+) -> list[CubicBezier3D]:
+    result: list[CubicBezier3D] = []
+    for piece, source_id in zip(pieces, source_ids, strict=True):
+        result.extend(
+            _make_bezier(source_id, approximation.points, tolerance)
+            for approximation in approximate_quintic(piece, tolerance)
+        )
+    return result
+
+
+def _plan_spline(
+    points: NDArray[np.float64],
+    *,
+    start_tangent: Vector | None = None,
+    end_tangent: Vector | None = None,
+) -> list[QuinticPiece]:
+    try:
+        return plan_minimum_jerk(
+            points, start_tangent=start_tangent, end_tangent=end_tangent
+        )
+    except ValueError as error:
+        raise GeometryError(f"cannot compile minimum-jerk spline: {error}") from error
 
 
 def compile_spline(
-    project: Project, segment: SplineSegment, tolerance: float = 1e-3
+    project: Project,
+    segment: SplineSegment,
+    tolerance: float = 1e-3,
+    *,
+    start_tangent: Vector | None = None,
+    end_tangent: Vector | None = None,
 ) -> list[CubicBezier3D]:
-    points = [anchor_position(project.anchors[item]) for item in segment.anchor_ids]
-    scale = 1.0 - segment.tension
-    result: list[CubicBezier3D] = []
-    for index in range(len(points) - 1):
-        p0, p3 = points[index], points[index + 1]
-        previous = points[index - 1] if index else p0
-        following = points[index + 2] if index + 2 < len(points) else p3
-        m0 = _centripetal_tangent(previous, p0, p3) * scale
-        m1 = _centripetal_tangent(p0, p3, following) * scale
-        chord_scale = max(float(np.linalg.norm(p3 - p0)) ** 0.5, 1e-9)
-        bezier = (p0, p0 + m0 * chord_scale / 3.0, p3 - m1 * chord_scale / 3.0, p3)
-        result.append(_make_bezier(segment.id, bezier, tolerance))
-    return result
+    points = np.vstack([anchor_position(project.anchors[item]) for item in segment.anchor_ids])
+    pieces = _plan_spline(
+        points, start_tangent=start_tangent, end_tangent=end_tangent
+    )
+    return _compile_quintics(pieces, [segment.id] * len(pieces), tolerance)
 
 
 def _law(name: str, t: float) -> tuple[float, float]:
@@ -146,9 +165,9 @@ def _law(name: str, t: float) -> tuple[float, float]:
     return t * t * (3.0 - 2.0 * t), 6.0 * t * (1.0 - t)
 
 
-def compile_spiral(
-    project: Project, segment: SpiralSegment, tolerance: float = 1e-3
-) -> list[CubicBezier3D]:
+def _spiral_evaluator(
+    project: Project, segment: SpiralSegment
+) -> tuple[Callable[[float], tuple[Vector, Vector]], float, Vector, Vector]:
     start = anchor_position(project.anchors[segment.start_anchor_id])
     center = anchor_position(project.anchors[segment.center_anchor_id])
     end = anchor_position(project.anchors[segment.end_anchor_id])
@@ -192,6 +211,13 @@ def compile_spiral(
         derivative = height_d * up + radius_d * radial + radius * total_angle * tangent
         return position, derivative
 
+    return evaluate, total_angle, start, end
+
+
+def compile_spiral(
+    project: Project, segment: SpiralSegment, tolerance: float = 1e-3
+) -> list[CubicBezier3D]:
+    evaluate, total_angle, start, end = _spiral_evaluator(project, segment)
     pieces = max(1, ceil(abs(total_angle) / (pi / 4.0)))
     result: list[CubicBezier3D] = []
     for index in range(pieces):
@@ -213,122 +239,9 @@ def compile_spiral(
     return result
 
 
-def _curve_points(curve: CubicBezier3D) -> tuple[Vector, Vector, Vector, Vector]:
-    return tuple(_v(point) for point in (curve.p0, curve.p1, curve.p2, curve.p3))  # type: ignore[return-value]
-
-
-def _unit(vector: Vector, fallback: Vector) -> Vector:
-    length = float(np.linalg.norm(vector))
-    if length < 1e-12:
-        vector = fallback
-        length = float(np.linalg.norm(vector))
-    if length < 1e-12:
-        raise GeometryError("cannot smooth a junction between zero-length curve pieces")
-    return vector / length
-
-
-def _junction_direction(
-    left: tuple[Vector, Vector, Vector, Vector],
-    right: tuple[Vector, Vector, Vector, Vector],
-) -> Vector:
-    point = left[3]
-    incoming = _unit(point - left[2], point - left[0])
-    outgoing = _unit(right[1] - point, right[3] - point)
-    combined = incoming + outgoing
-    if float(np.linalg.norm(combined)) < 1e-8:
-        combined = right[3] - left[0]
-    if float(np.linalg.norm(combined)) < 1e-8:
-        combined = incoming
-    direction = _unit(combined, incoming)
-    if np.dot(direction, incoming + outgoing) < 0.0:
-        direction = -direction
-    return direction
-
-
-def _smooth_junction(
-    left_curve: CubicBezier3D,
-    right_curve: CubicBezier3D,
-    tolerance: float,
-) -> tuple[list[CubicBezier3D], list[CubicBezier3D]]:
-    left = _curve_points(left_curve)
-    right = _curve_points(right_curve)
-    if not np.allclose(left[3], right[0], rtol=0.0, atol=1e-10):
-        return [left_curve], [right_curve]
-
-    direction = _junction_direction(left, right)
-    blend_fraction = 0.25
-    while True:
-        left_prefix, left_tail = _split_bezier_at(left, 1.0 - blend_fraction)
-        right_head, right_suffix = _split_bezier_at(right, blend_fraction)
-        point = left_tail[3]
-        incoming_length = float(np.linalg.norm(point - left_tail[2]))
-        outgoing_length = float(np.linalg.norm(right_head[1] - point))
-        local_scale = min(
-            float(np.linalg.norm(point - left_tail[0])),
-            float(np.linalg.norm(right_head[3] - point)),
-        )
-        if local_scale < 1e-12:
-            raise GeometryError("cannot smooth a junction next to a zero-length curve piece")
-        handle_length = min(
-            max((incoming_length + outgoing_length) * 0.5, local_scale * 1e-6),
-            local_scale / 3.0,
-        )
-        smoothed_left_tail = (*left_tail[:2], point - direction * handle_length, point)
-        smoothed_right_head = (
-            point,
-            point + direction * handle_length,
-            *right_head[2:],
-        )
-
-        # Only one control point changes on either side. Its Bernstein weight never
-        # exceeds 4/9, so this is a conservative bound on geometric deformation.
-        deviation_bound = (4.0 / 9.0) * max(
-            float(np.linalg.norm(smoothed_left_tail[2] - left_tail[2])),
-            float(np.linalg.norm(smoothed_right_head[1] - right_head[1])),
-        )
-        if deviation_bound <= tolerance or blend_fraction <= 2.0**-20:
-            return (
-                [
-                    _make_bezier(left_curve.source_segment_id, left_prefix, tolerance),
-                    _make_bezier(left_curve.source_segment_id, smoothed_left_tail, tolerance),
-                ],
-                [
-                    _make_bezier(right_curve.source_segment_id, smoothed_right_head, tolerance),
-                    _make_bezier(right_curve.source_segment_id, right_suffix, tolerance),
-                ],
-            )
-        blend_fraction *= 0.5
-
-
-def _smooth_curve_groups(
-    groups: list[list[CubicBezier3D]], tolerance: float
-) -> list[CubicBezier3D]:
-    for index in range(len(groups) - 1):
-        left_group, right_group = groups[index], groups[index + 1]
-        left_replacement, right_replacement = _smooth_junction(
-            left_group[-1], right_group[0], tolerance
-        )
-        left_group[-1:] = left_replacement
-        right_group[:1] = right_replacement
-    return [curve for group in groups for curve in group]
-
-
-def _validate_smoothed_junctions(curves: list[CubicBezier3D]) -> None:
-    for left, right in zip(curves, curves[1:], strict=False):
-        if left.source_segment_id == right.source_segment_id:
-            continue
-        left_points, right_points = _curve_points(left), _curve_points(right)
-        if not np.allclose(left_points[3], right_points[0], rtol=0.0, atol=1e-10):
-            continue
-        incoming = left_points[3] - left_points[2]
-        outgoing = right_points[1] - right_points[0]
-        incoming_length = float(np.linalg.norm(incoming))
-        outgoing_length = float(np.linalg.norm(outgoing))
-        if incoming_length < 1e-12 or outgoing_length < 1e-12:
-            raise GeometryError("smoothed junction has a zero-length handle")
-        cosine = float(np.dot(incoming, outgoing) / (incoming_length * outgoing_length))
-        if cosine < 1.0 - 1e-10:
-            raise GeometryError("compiled trajectory has a tangent discontinuity")
+def spiral_tangent(project: Project, segment: SpiralSegment, *, at_start: bool) -> Vector:
+    evaluate, _, _, _ = _spiral_evaluator(project, segment)
+    return evaluate(0.0 if at_start else 1.0)[1]
 
 
 def validate_project(project: Project) -> list[str]:
@@ -342,6 +255,10 @@ def validate_project(project: Project) -> list[str]:
         missing = [item for item in ids if item not in project.anchors]
         if missing:
             raise GeometryError(f"segment {segment.id} references missing anchors: {missing}")
+        if isinstance(segment, SplineSegment) and segment.tension != 0.0:
+            warnings.append(
+                f"spline {segment.id} tension is ignored by the minimum-jerk planner"
+            )
     for first, second in zip(project.segments, project.segments[1:], strict=False):
         first_end = (
             first.anchor_ids[-1] if isinstance(first, SplineSegment) else first.end_anchor_id
@@ -351,6 +268,15 @@ def validate_project(project: Project) -> list[str]:
         )
         if first_end != second_start:
             warnings.append(f"segments {first.id} and {second.id} are not C0-connected")
+        elif isinstance(first, SpiralSegment) and isinstance(second, SpiralSegment):
+            incoming = spiral_tangent(project, first, at_start=False)
+            outgoing = spiral_tangent(project, second, at_start=True)
+            denominator = float(np.linalg.norm(incoming) * np.linalg.norm(outgoing))
+            cosine = float(np.dot(incoming, outgoing) / denominator) if denominator else -1.0
+            if cosine < 1.0 - 1e-10:
+                warnings.append(
+                    f"spirals {first.id} and {second.id} have incompatible analytic tangents"
+                )
 
     speed_positions = [item.path_position for item in project.motion_profile.keyframes.values()]
     if len(speed_positions) != len(set(speed_positions)):
@@ -378,6 +304,68 @@ def validate_project(project: Project) -> list[str]:
     if np.linalg.norm(_v(project.camera_track.world_up)) < 1e-8:
         raise GeometryError("camera world_up must be non-zero")
     return warnings
+
+
+def _segment_start_id(segment: SplineSegment | SpiralSegment) -> str:
+    return segment.anchor_ids[0] if isinstance(segment, SplineSegment) else segment.start_anchor_id
+
+
+def _segment_end_id(segment: SplineSegment | SpiralSegment) -> str:
+    return segment.anchor_ids[-1] if isinstance(segment, SplineSegment) else segment.end_anchor_id
+
+
+def _compile_positions(project: Project, tolerance: float) -> list[CubicBezier3D]:
+    """Compile connected spline runs globally and keep analytic spirals unchanged."""
+    curves: list[CubicBezier3D] = []
+    index = 0
+    while index < len(project.segments):
+        segment = project.segments[index]
+        if isinstance(segment, SpiralSegment):
+            curves.extend(compile_spiral(project, segment, tolerance))
+            index += 1
+            continue
+
+        run = [segment]
+        end = index + 1
+        while end < len(project.segments):
+            candidate = project.segments[end]
+            if not isinstance(candidate, SplineSegment):
+                break
+            if _segment_end_id(run[-1]) != _segment_start_id(candidate):
+                break
+            run.append(candidate)
+            end += 1
+
+        anchor_ids = list(run[0].anchor_ids)
+        source_ids = [run[0].id] * (len(run[0].anchor_ids) - 1)
+        for spline in run[1:]:
+            anchor_ids.extend(spline.anchor_ids[1:])
+            source_ids.extend([spline.id] * (len(spline.anchor_ids) - 1))
+        points = np.vstack([anchor_position(project.anchors[item]) for item in anchor_ids])
+
+        start_tangent = None
+        if index > 0:
+            previous = project.segments[index - 1]
+            if (
+                isinstance(previous, SpiralSegment)
+                and _segment_end_id(previous) == anchor_ids[0]
+            ):
+                start_tangent = spiral_tangent(project, previous, at_start=False)
+        end_tangent = None
+        if end < len(project.segments):
+            following = project.segments[end]
+            if (
+                isinstance(following, SpiralSegment)
+                and anchor_ids[-1] == _segment_start_id(following)
+            ):
+                end_tangent = spiral_tangent(project, following, at_start=True)
+
+        pieces = _plan_spline(
+            points, start_tangent=start_tangent, end_tangent=end_tangent
+        )
+        curves.extend(_compile_quintics(pieces, source_ids, tolerance))
+        index = end
+    return curves
 
 
 def _speed_duration(project: Project, total_length: float) -> float:
@@ -423,13 +411,7 @@ def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajec
     if tolerance <= 0.0:
         raise ValueError("tolerance must be positive")
     warnings = validate_project(project)
-    compilers: dict[type, Callable[[Project, object, float], list[CubicBezier3D]]] = {
-        SplineSegment: compile_spline,
-        SpiralSegment: compile_spiral,
-    }
-    groups = [compilers[type(segment)](project, segment, tolerance) for segment in project.segments]
-    curves = _smooth_curve_groups(groups, tolerance)
-    _validate_smoothed_junctions(curves)
+    curves = _compile_positions(project, tolerance)
 
     table: list[ArcLengthSample] = []
     distance = 0.0

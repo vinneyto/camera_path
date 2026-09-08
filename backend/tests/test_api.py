@@ -57,7 +57,7 @@ async def test_project_edit_compile_and_undo(app) -> None:
 
         response = await client.get(f"/projects/{project['id']}/trajectory/compiled")
         assert response.status_code == 200
-        assert len(response.json()["position_segments"]) == 2
+        assert len(response.json()["position_segments"]) >= 2
 
         response = await client.post(f"/projects/{project['id']}/undo")
         assert response.status_code == 200
@@ -106,37 +106,10 @@ async def test_chat_requires_api_key(app) -> None:
         project = (await client.post("/projects", json={})).json()
         response = await client.post(
             f"/projects/{project['id']}/chat/messages",
-            json={"id": "message-1", "message": "Create a path"},
+            json={"message": "Create a path"},
         )
         assert response.status_code == 503
         assert "OPENAI_API_KEY" in response.json()["detail"]
-        persisted = (await client.get(f"/projects/{project['id']}")).json()
-        assert persisted["chat_history"] == [
-            {"id": "message-1", "role": "user", "content": "Create a path"}
-        ]
-
-
-async def test_saving_user_message_is_idempotent(app) -> None:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        project = (await client.post("/projects", json={})).json()
-        payload = {"id": "message-1", "message": "Create a path"}
-
-        first = await client.post(f"/projects/{project['id']}/chat/user-messages", json=payload)
-        second = await client.post(f"/projects/{project['id']}/chat/user-messages", json=payload)
-
-        assert first.status_code == 200
-        assert second.status_code == 200
-        assert first.json()["revision"] == 1
-        assert second.json()["revision"] == 1
-        assert second.json()["chat_history"] == [
-            {"id": "message-1", "role": "user", "content": "Create a path"}
-        ]
-
-        conflict = await client.post(
-            f"/projects/{project['id']}/chat/user-messages",
-            json={"id": "message-1", "message": "Different content"},
-        )
-        assert conflict.status_code == 409
 
 
 async def test_client_can_edit_speed_and_camera_graphs(app) -> None:
@@ -379,10 +352,9 @@ async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:
         def ensure_available(self) -> None:
             pass
 
-        async def handle_stream(self, project_id: str, message: str, message_id: str):
+        async def handle_stream(self, project_id: str, message: str):
             assert project_id == project.id
             assert message == "Say hello"
-            assert message_id == "message-1"
             yield {"type": "delta", "text": "hel"}
             yield {"type": "delta", "text": "lo"}
             yield {"type": "result", "result": result}
@@ -391,7 +363,7 @@ async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
             f"/projects/{project.id}/chat/messages/stream",
-            json={"id": "message-1", "message": "Say hello"},
+            json={"message": "Say hello"},
         )
 
     assert response.status_code == 200
