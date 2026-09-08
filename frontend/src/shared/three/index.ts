@@ -19,3 +19,4 @@ export {
   type ScreenSpaceLinePoint,
   type ScreenSpaceLineProps,
 } from "./screen-space-line";
+export { useRetainedDisposable } from "./use-retained-disposable";

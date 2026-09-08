@@ -1,9 +1,9 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { CameraHelper, PerspectiveCamera } from "three";
 
 import { evaluateTrajectoryCameraPose, type CompiledTrajectory } from "@/entities/trajectory";
-import { RENDER_PIPELINE_OVERLAY_LAYER } from "@/shared/three";
+import { RENDER_PIPELINE_OVERLAY_LAYER, useRetainedDisposable } from "@/shared/three";
 
 interface PlaybackCameraProps {
   pathPosition: number;
@@ -24,7 +24,7 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
     return value;
   }, [camera]);
 
-  useEffect(() => () => helper.dispose(), [helper]);
+  useRetainedDisposable(helper);
 
   useFrame(() => {
     const pose = evaluateTrajectoryCameraPose(trajectory, pathPosition);

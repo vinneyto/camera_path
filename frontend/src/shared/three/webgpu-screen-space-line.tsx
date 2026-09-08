@@ -1,7 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
@@ -9,6 +9,7 @@ import { Line2NodeMaterial } from "three/webgpu";
 import { getLine2RaycastThreshold } from "./get-line2-raycast-threshold";
 import { normalizeScreenSpaceLinePoints } from "./normalize-screen-space-line-points";
 import type { ScreenSpaceLineProps } from "./screen-space-line";
+import { useRetainedDisposable } from "./use-retained-disposable";
 
 type WebGpuScreenSpaceLineProps = Omit<
   ScreenSpaceLineProps,
@@ -29,7 +30,7 @@ export function WebGpuScreenSpaceLine({
 }: WebGpuScreenSpaceLineProps) {
   const pixelRatio = useThree((state) => state.viewport.dpr);
   const normalizedPoints = useMemo(() => normalizeScreenSpaceLinePoints(points), [points]);
-  const line = useMemo(() => {
+  const resources = useMemo(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(
       normalizedPoints.flatMap((point) => point.toArray()),
@@ -62,14 +63,16 @@ export function WebGpuScreenSpaceLine({
       };
     }
 
-    return object;
+    return {
+      dispose() {
+        geometry.dispose();
+        material.dispose();
+      },
+      line: object,
+    };
   }, [color, depthTest, depthWrite, hitSlop, layer, normalizedPoints, pixelRatio, renderOrder, transparent, width]);
-
-  useEffect(() => () => {
-    line.geometry.dispose();
-    line.material.dispose();
-  }, [line]);
+  useRetainedDisposable(resources);
 
   if (normalizedPoints.length < 2) return null;
-  return <primitive dispose={null} object={line} {...objectProps} />;
+  return <primitive dispose={null} object={resources.line} {...objectProps} />;
 }
