@@ -179,6 +179,7 @@ class MotionProfileUpdate(BaseModel):
 
 
 class ChatHistoryMessage(BaseModel):
+    id: str = Field(default_factory=new_id)
     role: Literal["user", "assistant"]
     content: str
 
@@ -258,6 +259,7 @@ class CompiledTrajectory(BaseModel):
 
 
 class ChatMessage(BaseModel):
+    id: str = Field(default_factory=new_id)
     message: str = Field(min_length=1, max_length=10_000)
 
 
