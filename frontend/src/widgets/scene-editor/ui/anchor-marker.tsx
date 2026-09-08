@@ -1,6 +1,7 @@
-import { Html } from "@react-three/drei";
+import { Html, useTexture } from "@react-three/drei";
 import type { ThreeElements } from "@react-three/fiber";
 import { MapPin } from "lucide-react";
+import { DoubleSide } from "three";
 
 import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
@@ -18,6 +19,7 @@ export function AnchorMarker({
   hovered = false,
   ...groupProps
 }: AnchorMarkerProps) {
+  const supportMarkerTexture = useTexture("/anchor-target.png");
   const axis = anchor.lift_axis === "surface_normal" ? anchor.surface_normal : [0, 1, 0];
   const position = anchor.surface_position.map(
     (component, index) => component + axis[index] * anchor.lift,
@@ -37,13 +39,14 @@ export function AnchorMarker({
         raycast={() => undefined}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <circleGeometry args={[0.06, 32]} />
+        <planeGeometry args={[0.12, 0.12]} />
         <meshBasicMaterial
-          color="#ffffff"
           depthWrite={false}
+          map={supportMarkerTexture}
           opacity={highlighted ? 0.65 : 0.45}
           polygonOffset
           polygonOffsetFactor={-1}
+          side={DoubleSide}
           transparent
         />
       </mesh>
