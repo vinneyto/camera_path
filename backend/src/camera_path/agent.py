@@ -361,15 +361,8 @@ class TrajectoryAgent:
         if not self.api_key:
             raise AgentUnavailableError("OPENAI_API_KEY is not configured")
 
-    async def _finish(
-        self, draft: Project, expected_revision: int, message: str, answer: str
-    ) -> ChatResult:
-        draft.chat_history.extend(
-            [
-                ChatHistoryMessage(role="user", content=message),
-                ChatHistoryMessage(role="assistant", content=answer),
-            ]
-        )
+    async def _finish(self, draft: Project, expected_revision: int, answer: str) -> ChatResult:
+        draft.chat_history.append(ChatHistoryMessage(role="assistant", content=answer))
         draft = await self.service.commit_draft(draft, expected_revision)
         return ChatResult(
             answer=answer,
@@ -389,13 +382,14 @@ class TrajectoryAgent:
             return draft, {"status": "error", "error": str(error)}
         return candidate, output
 
-    async def handle(self, project_id: str, message: str) -> ChatResult:
+    async def handle(self, project_id: str, message: str, message_id: str) -> ChatResult:
+        draft = await self.service.save_user_message(project_id, message_id, message)
         self.ensure_available()
-        draft = await self.service.get_project(project_id)
         expected_revision = draft.revision
         client = AsyncOpenAI(api_key=self.api_key)
-        inputs: list[Any] = [item.model_dump() for item in draft.chat_history]
-        inputs.append({"role": "user", "content": message})
+        inputs: list[Any] = [
+            {"role": item.role, "content": item.content} for item in draft.chat_history
+        ]
 
         for _ in range(12):
             response = await client.responses.create(
@@ -408,7 +402,7 @@ class TrajectoryAgent:
             inputs.extend(response.output)
             calls = [item for item in response.output if item.type == "function_call"]
             if not calls:
-                return await self._finish(draft, expected_revision, message, response.output_text)
+                return await self._finish(draft, expected_revision, response.output_text)
 
             for call in calls:
                 draft, output = self._try_execute(draft, call.name, call.arguments)
@@ -421,13 +415,16 @@ class TrajectoryAgent:
                 )
         raise RuntimeError("agent exceeded the maximum number of tool-call rounds")
 
-    async def handle_stream(self, project_id: str, message: str) -> AsyncIterator[dict[str, Any]]:
+    async def handle_stream(
+        self, project_id: str, message: str, message_id: str
+    ) -> AsyncIterator[dict[str, Any]]:
+        draft = await self.service.save_user_message(project_id, message_id, message)
         self.ensure_available()
-        draft = await self.service.get_project(project_id)
         expected_revision = draft.revision
         client = AsyncOpenAI(api_key=self.api_key)
-        inputs: list[Any] = [item.model_dump() for item in draft.chat_history]
-        inputs.append({"role": "user", "content": message})
+        inputs: list[Any] = [
+            {"role": item.role, "content": item.content} for item in draft.chat_history
+        ]
         answer_parts: list[str] = []
 
         for _ in range(12):
@@ -456,9 +453,7 @@ class TrajectoryAgent:
             inputs.extend(response.output)
             calls = [item for item in response.output if item.type == "function_call"]
             if not calls:
-                result = await self._finish(
-                    draft, expected_revision, message, "".join(answer_parts)
-                )
+                result = await self._finish(draft, expected_revision, "".join(answer_parts))
                 yield {"type": "result", "result": result}
                 return
 

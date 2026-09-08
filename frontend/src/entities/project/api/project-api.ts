@@ -27,9 +27,14 @@ export const projectApi = {
     apiRequest<Project>(`/projects/${projectId}/camera/keyframes/${keyframeId}`, { method: "DELETE" }),
   compile: (projectId: string) =>
     apiRequest<CompiledTrajectory>(`/projects/${projectId}/trajectory/compiled`),
-  chat: (projectId: string, message: string) =>
+  saveUserMessage: (projectId: string, id: string, message: string) =>
+    apiRequest<Project>(`/projects/${projectId}/chat/user-messages`, {
+      method: "POST",
+      body: JSON.stringify({ id, message }),
+    }),
+  chat: (projectId: string, id: string, message: string) =>
     apiRequest<ChatResult>(`/projects/${projectId}/chat/messages`, {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ id, message }),
     }),
 };

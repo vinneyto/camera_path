@@ -41,7 +41,7 @@ from camera_path.repository import (
     RevisionConflictError,
     SQLiteProjectRepository,
 )
-from camera_path.service import TrajectoryService
+from camera_path.service import ChatMessageConflictError, TrajectoryService
 
 router = APIRouter()
 
@@ -299,11 +299,16 @@ async def redo(project_id: str, service: Service) -> Project:
 @router.post("/projects/{project_id}/chat/messages", response_model=ChatResult)
 async def chat(project_id: str, data: ChatMessage, agent: Agent) -> ChatResult:
     try:
-        return await agent.handle(project_id, data.message)
+        return await agent.handle(project_id, data.message, data.id)
     except AgentUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except OpenAIError as error:
         raise HTTPException(status_code=502, detail="OpenAI request failed") from error
+
+
+@router.post("/projects/{project_id}/chat/user-messages", response_model=Project)
+async def save_user_message(project_id: str, data: ChatMessage, service: Service) -> Project:
+    return await service.save_user_message(project_id, data.id, data.message)
 
 
 def _sse(event: str, data: Any) -> str:
@@ -314,15 +319,15 @@ def _sse(event: str, data: Any) -> str:
 async def stream_chat(
     project_id: str, data: ChatMessage, agent: Agent, service: Service
 ) -> StreamingResponse:
+    await service.save_user_message(project_id, data.id, data.message)
     try:
         agent.ensure_available()
     except AgentUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
-    await service.get_project(project_id)
 
     async def events() -> AsyncIterator[str]:
         try:
-            async for event in agent.handle_stream(project_id, data.message):
+            async for event in agent.handle_stream(project_id, data.message, data.id):
                 if event["type"] == "result":
                     payload = event["result"].model_dump(mode="json")
                 else:
@@ -374,6 +379,12 @@ def create_app(
 
     @application.exception_handler(RevisionConflictError)
     async def revision_conflict(_request: Request, error: RevisionConflictError) -> JSONResponse:
+        return JSONResponse(status_code=409, content={"detail": str(error)})
+
+    @application.exception_handler(ChatMessageConflictError)
+    async def chat_message_conflict(
+        _request: Request, error: ChatMessageConflictError
+    ) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(error)})
 
     application.include_router(router)
