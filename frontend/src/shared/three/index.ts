@@ -1,6 +1,7 @@
 export {
   RenderPipelineCanvas,
 } from "./render-pipeline-canvas";
+export { CameraScaledHtml } from "./camera-scaled-html";
 export {
   useOptionalRenderPipeline,
   useRenderPipeline,

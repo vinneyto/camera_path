@@ -1,10 +1,11 @@
-import { Html, useTexture } from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
 import type { ThreeElements } from "@react-three/fiber";
 import { MapPin } from "lucide-react";
 import { DoubleSide } from "three";
 
 import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
+import { CameraScaledHtml } from "@/shared/three";
 
 const ANCHOR_MARKER_HIT_RADIUS = 0.13;
 const ANCHOR_MARKER_Z_INDEX_RANGE = [1000, 0];
@@ -56,7 +57,7 @@ export function AnchorMarker({
           <meshBasicMaterial depthWrite={false} opacity={0} transparent />
         </mesh>
       )}
-      <Html
+      <CameraScaledHtml
         distanceFactor={8}
         style={{ pointerEvents: "none" }}
         zIndexRange={ANCHOR_MARKER_Z_INDEX_RANGE}
@@ -79,7 +80,7 @@ export function AnchorMarker({
             {anchor.label}
           </span>
         </div>
-      </Html>
+      </CameraScaledHtml>
     </group>
   );
 }
