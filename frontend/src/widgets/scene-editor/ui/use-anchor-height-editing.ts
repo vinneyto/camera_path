@@ -25,6 +25,7 @@ interface UseAnchorHeightEditingOptions {
 
 interface AnchorHeightDrag {
   anchorId: string;
+  grabOffset: number;
   lift: number;
   pointerId: number;
   target: Element | null;
@@ -75,8 +76,10 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
     event.nativeEvent.preventDefault();
     const target = event.target as Element | null;
     target?.setPointerCapture?.(event.pointerId);
+    const pointerLift = getWorldYAxisLift(event.ray, anchor.surface_position);
     dragRef.current = {
       anchorId: anchor.id,
+      grabOffset: pointerLift === null ? 0 : pointerLift - anchor.lift,
       lift: anchor.lift,
       pointerId: event.pointerId,
       target,
@@ -90,8 +93,9 @@ export function useAnchorHeightEditing({ anchors, onCommit }: UseAnchorHeightEdi
     const drag = dragRef.current;
     if (drag?.anchorId !== anchor.id || drag.pointerId !== event.pointerId) return;
     event.stopPropagation();
-    const lift = getWorldYAxisLift(event.ray, anchor.surface_position);
-    if (lift === null) return;
+    const pointerLift = getWorldYAxisLift(event.ray, anchor.surface_position);
+    if (pointerLift === null) return;
+    const lift = Math.max(0, pointerLift - drag.grabOffset);
     drag.lift = lift;
     setPreview({ anchorId: anchor.id, dragging: true, lift });
   }, []);

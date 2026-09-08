@@ -11,6 +11,7 @@ import {
 } from "@/shared/scene-surface";
 
 import {
+  ANCHOR_GAUSSIAN_HIGHLIGHT_ENABLED,
   ANCHOR_PLACEMENT_FLASHLIGHT_BOTTOM_OFFSET,
   ANCHOR_PLACEMENT_FLASHLIGHT_COLOR,
   ANCHOR_PLACEMENT_FLASHLIGHT_RADIUS,
@@ -49,7 +50,7 @@ export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementP
       }), [hit, label]);
   return (
     <>
-      {highlight !== null && (
+      {ANCHOR_GAUSSIAN_HIGHLIGHT_ENABLED && highlight !== null && (
         <GaussianHighlightVolume backend={backend} options={highlight} />
       )}
       {anchor !== null && <AnchorMarker anchor={anchor} />}
