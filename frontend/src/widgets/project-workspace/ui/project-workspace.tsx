@@ -49,9 +49,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = useMemo(() => project ? Object.values(project.anchors) : [], [project]);
   const trajectoryControlsAvailable = Boolean(trajectory && trajectory.position_segments.length > 0);
-  const trajectoryControlsExpanded = cameraMode === "orbit"
-    && trajectorySelected
-    && trajectoryControlsAvailable;
+  const trajectoryControlsExpanded = trajectorySelected && trajectoryControlsAvailable;
   const { elementRef: trajectoryControlsRef, height: trajectoryControlsHeight } = useElementHeight(
     trajectoryControlsExpanded,
   );
@@ -196,7 +194,7 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
           <PlaybackControls
             duration={playback.duration}
             elapsed={playback.elapsed}
-            onExpand={cameraMode === "orbit" ? selectTrajectory : undefined}
+            onExpand={selectTrajectory}
             onSeek={playback.seek}
             onToggle={playback.toggle}
             pathPosition={playback.pathPosition}

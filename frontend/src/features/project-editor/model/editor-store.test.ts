@@ -44,7 +44,7 @@ describe("editor store", () => {
     });
   });
 
-  it("preserves the expanded trajectory panel state while camera view overrides its presentation", () => {
+  it("preserves the expanded trajectory panel state across camera modes", () => {
     store.getState().selectionActions.selectTrajectory();
 
     store.getState().cameraActions.setCameraMode("trajectory");
