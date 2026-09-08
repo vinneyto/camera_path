@@ -21,12 +21,30 @@ export function AnchorMarker({
   const position = anchor.surface_position.map(
     (component, index) => component + axis[index] * anchor.lift,
   ) as [number, number, number];
+  const surfaceOffset = axis.map(
+    (component) => -component * anchor.lift,
+  ) as [number, number, number];
 
   const interactive = groupProps.onContextMenu !== undefined
     || groupProps.onPointerDown !== undefined;
 
   return (
     <group {...groupProps} position={position}>
+      <mesh
+        position={surfaceOffset}
+        raycast={() => undefined}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <circleGeometry args={[0.09, 32]} />
+        <meshBasicMaterial
+          color={hovered ? "#fb923c" : "#f97316"}
+          depthWrite={false}
+          opacity={hovered ? 0.35 : 0.2}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          transparent
+        />
+      </mesh>
       {interactive && (
         <mesh position={[0, 0.1, 0]}>
           <sphereGeometry args={[0.2, 12, 12]} />
@@ -36,7 +54,6 @@ export function AnchorMarker({
       <Html
         distanceFactor={8}
         style={{ pointerEvents: "none" }}
-        wrapperClass="will-change-transform"
         zIndexRange={ANCHOR_MARKER_Z_INDEX_RANGE}
       >
         <div className="relative size-0 select-none">
