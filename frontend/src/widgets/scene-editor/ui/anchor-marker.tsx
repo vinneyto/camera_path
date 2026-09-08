@@ -6,6 +6,7 @@ import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
 
 const ANCHOR_MARKER_Z_INDEX_RANGE = [1000, 0];
+const ANCHOR_MARKER_HOVER_HIGHLIGHT_ENABLED = false;
 
 interface AnchorMarkerProps extends Omit<ThreeElements["group"], "children" | "position"> {
   anchor: Anchor;
@@ -27,6 +28,7 @@ export function AnchorMarker({
 
   const interactive = groupProps.onContextMenu !== undefined
     || groupProps.onPointerDown !== undefined;
+  const highlighted = ANCHOR_MARKER_HOVER_HIGHLIGHT_ENABLED && hovered;
 
   return (
     <group {...groupProps} position={position}>
@@ -35,11 +37,11 @@ export function AnchorMarker({
         raycast={() => undefined}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <circleGeometry args={[0.09, 32]} />
+        <circleGeometry args={[0.06, 32]} />
         <meshBasicMaterial
-          color={hovered ? "#fb923c" : "#f97316"}
+          color="#ffffff"
           depthWrite={false}
-          opacity={hovered ? 0.35 : 0.2}
+          opacity={highlighted ? 0.65 : 0.45}
           polygonOffset
           polygonOffsetFactor={-1}
           transparent
@@ -61,14 +63,14 @@ export function AnchorMarker({
             aria-hidden
             className={cn(
               "absolute bottom-0 left-0 size-3.5 -translate-x-1/2 drop-shadow-sm transition-colors",
-              hovered ? "fill-orange-400 text-orange-300" : "fill-orange-500 text-orange-400",
+              highlighted ? "fill-orange-400 text-orange-300" : "fill-orange-500 text-orange-400",
             )}
             strokeWidth={2}
           />
           <span
             className={cn(
               "absolute bottom-3 left-0 -translate-x-1/2 whitespace-nowrap rounded border bg-background/90 px-1 py-0.5 text-[9px] font-semibold leading-none text-foreground shadow-sm",
-              hovered ? "border-orange-300/70" : "border-orange-400/40",
+              highlighted ? "border-orange-300/70" : "border-orange-400/40",
             )}
           >
             {anchor.label}
