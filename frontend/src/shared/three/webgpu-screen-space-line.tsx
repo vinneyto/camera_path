@@ -48,25 +48,32 @@ export function WebGpuScreenSpaceLine({
     return object;
   }, []);
 
-  const geometry = useMemo(() => {
+  useEffect(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
-    return geometry;
-  }, [normalizedPoints]);
+    line.geometry = geometry;
 
-  const material = useMemo(
-    () =>
-      new Line2NodeMaterial({
-        color,
-        depthTest,
-        depthWrite,
-        linewidth: width,
-        toneMapped: false,
-        transparent,
-        worldUnits: false,
-      }),
-    [color, depthTest, depthWrite, transparent, width],
-  );
+    return () => {
+      geometry.dispose();
+    };
+  }, [line, normalizedPoints]);
+
+  useEffect(() => {
+    const material = new Line2NodeMaterial({
+      color,
+      depthTest,
+      depthWrite,
+      linewidth: width,
+      toneMapped: false,
+      transparent,
+      worldUnits: false,
+    });
+    line.material = material;
+
+    return () => {
+      material.dispose();
+    };
+  }, [line, color, depthTest, depthWrite, transparent, width]);
 
   line.layers.set(layer);
   line.renderOrder = renderOrder;
@@ -76,28 +83,6 @@ export function WebGpuScreenSpaceLine({
     pixelRatio,
   );
 
-  useEffect(
-    () => () => {
-      geometry.dispose();
-    },
-    [geometry],
-  );
-
-  useEffect(
-    () => () => {
-      material.dispose();
-    },
-    [material],
-  );
-
   if (normalizedPoints.length < 2) return null;
-  return (
-    <primitive
-      dispose={null}
-      geometry={geometry}
-      material={material}
-      object={line}
-      {...objectProps}
-    />
-  );
+  return <primitive dispose={null} object={line} {...objectProps} />;
 }
