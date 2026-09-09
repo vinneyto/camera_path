@@ -1,9 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
-import { CameraHelper, PerspectiveCamera } from "three";
+import { useLayoutEffect, useRef } from "react";
+import { DoubleSide, type Mesh } from "three";
 
 import { evaluateTrajectoryCameraPose, type CompiledTrajectory } from "@/entities/trajectory";
 import { RENDER_PIPELINE_OVERLAY_LAYER } from "@/shared/three";
+
+import { PLAYBACK_CAMERA_FRUSTUM_POSITIONS } from "../lib/create-playback-camera-frustum-positions";
 
 interface PlaybackCameraProps {
   pathPosition: number;
@@ -11,29 +13,39 @@ interface PlaybackCameraProps {
 }
 
 export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps) {
-  const camera = useMemo(() => new PerspectiveCamera(50, 1.4, 0.12, 0.7), []);
-  const helper = useMemo(() => {
-    const value = new CameraHelper(camera);
-    value.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
-    const materials = Array.isArray(value.material) ? value.material : [value.material];
-    for (const material of materials) {
-      material.depthTest = false;
-      material.depthWrite = false;
-      material.transparent = true;
-    }
-    return value;
-  }, [camera]);
+  const helperRef = useRef<Mesh>(null);
 
-  useEffect(() => () => helper.dispose(), [helper]);
+  useLayoutEffect(() => {
+    helperRef.current?.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+  }, []);
 
   useFrame(() => {
+    const helper = helperRef.current;
+    if (helper === null) return;
+
     const pose = evaluateTrajectoryCameraPose(trajectory, pathPosition);
-    camera.position.copy(pose.position);
-    camera.quaternion.copy(pose.quaternion);
-    camera.up.copy(pose.up);
-    camera.updateMatrixWorld();
-    helper.update();
+    helper.position.copy(pose.position);
+    helper.quaternion.copy(pose.quaternion);
+    helper.updateMatrixWorld();
   });
 
-  return <primitive object={helper} />;
+  return (
+    <mesh ref={helperRef} raycast={() => undefined} renderOrder={1}>
+      <bufferGeometry>
+        <bufferAttribute
+          args={[PLAYBACK_CAMERA_FRUSTUM_POSITIONS, 3]}
+          attach="attributes-position"
+        />
+      </bufferGeometry>
+      <meshBasicMaterial
+        color="#fb923c"
+        depthTest={false}
+        depthWrite={false}
+        opacity={0.16}
+        side={DoubleSide}
+        toneMapped={false}
+        transparent
+      />
+    </mesh>
+  );
 }
