@@ -24,6 +24,14 @@ describe("createPlaybackCameraFrustum", () => {
     );
 
     expect(helper.corners).toHaveLength(8);
+    expect(helper.groups).toHaveLength(5);
+    expect(helper.groups.map(({ color, segments }) => [color, segments.length])).toEqual([
+      ["#ff0000", 4],
+      ["#333333", 5],
+      ["#ffaa00", 12],
+      ["#ffffff", 1],
+      ["#00aaff", 3],
+    ]);
     expect(helper.segments).toHaveLength(25);
     expect(segmentCountByColor).toEqual({
       "#00aaff": 3,
