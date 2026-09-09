@@ -23,11 +23,11 @@ describe("createPlaybackCameraHelperSegments", () => {
         ]),
       ),
     ).toEqual({
-      "#00aaff": 3,
-      "#333333": 5,
-      "#ff0000": 4,
-      "#39ff14": 12,
-      "#ffffff": 1,
+      "#60a5fa": 12,
+      "#64748b": 5,
+      "#a78bfa": 3,
+      "#f87171": 4,
+      "#f8fafc": 1,
     });
     expect(segments.every(({ end, start }) => end[2] <= 0 && start[2] <= 0)).toBe(true);
   });
