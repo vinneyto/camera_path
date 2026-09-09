@@ -26,7 +26,7 @@ describe("createPlaybackCameraHelperSegments", () => {
       "#00aaff": 3,
       "#333333": 5,
       "#ff0000": 4,
-      "#ffaa00": 12,
+      "#39ff14": 12,
       "#ffffff": 1,
     });
     expect(segments.every(({ end, start }) => end[2] <= 0 && start[2] <= 0)).toBe(true);
