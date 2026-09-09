@@ -16,16 +16,16 @@ export interface PlaybackCameraHelperSegment {
 export const PLAYBACK_CAMERA_HELPER_COLORS = {
   cone: "#ff0000",
   cross: "#333333",
-  frustum: "#ffaa00",
+  frustum: "#39ff14",
   target: "#ffffff",
   up: "#00aaff",
 } as const;
 
 export const PLAYBACK_CAMERA_HELPER_OPTIONS: PlaybackCameraHelperOptions = {
   aspect: 1.4,
-  far: 0.7,
+  far: 0.35,
   fovDegrees: 50,
-  near: 0.12,
+  near: 0.06,
 };
 
 export function createPlaybackCameraHelperSegments({
