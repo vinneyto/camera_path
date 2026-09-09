@@ -95,6 +95,7 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
           metalness={0}
           opacity={0.85}
           roughness={0.55}
+          toneMapped={false}
           transparent
           vertexColors
         />
@@ -115,6 +116,7 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
           metalness={0}
           opacity={0.85}
           roughness={0.55}
+          toneMapped={false}
           transparent
           vertexColors
         />
