@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useRef } from "react";
 import {
+  Color,
   Matrix4,
   Quaternion,
   Vector3,
@@ -39,9 +40,9 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
     const scale = new Vector3();
     const matrix = new Matrix4();
 
-    PLAYBACK_CAMERA_FRUSTUM.segments.forEach(([startTuple, endTuple], index) => {
-      start.fromArray(startTuple);
-      end.fromArray(endTuple);
+    PLAYBACK_CAMERA_FRUSTUM.segments.forEach((segment, index) => {
+      start.fromArray(segment.start);
+      end.fromArray(segment.end);
       direction.subVectors(end, start);
       const length = direction.length();
       midpoint.addVectors(start, end).multiplyScalar(0.5);
@@ -49,14 +50,18 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
       scale.set(1, length, 1);
       matrix.compose(midpoint, quaternion, scale);
       edgeInstances.setMatrixAt(index, matrix);
+      edgeInstances.setColorAt(index, new Color(segment.color));
     });
     edgeInstances.instanceMatrix.needsUpdate = true;
+    if (edgeInstances.instanceColor !== null) edgeInstances.instanceColor.needsUpdate = true;
 
-    PLAYBACK_CAMERA_FRUSTUM.corners.forEach((corner, index) => {
-      matrix.makeTranslation(...corner);
+    PLAYBACK_CAMERA_FRUSTUM.joints.forEach((joint, index) => {
+      matrix.makeTranslation(...joint.position);
       cornerInstances.setMatrixAt(index, matrix);
+      cornerInstances.setColorAt(index, new Color(joint.color));
     });
     cornerInstances.instanceMatrix.needsUpdate = true;
+    if (cornerInstances.instanceColor !== null) cornerInstances.instanceColor.needsUpdate = true;
 
     edgeInstances.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
     cornerInstances.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
@@ -82,34 +87,36 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
       >
         <cylinderGeometry args={[EDGE_RADIUS, EDGE_RADIUS, 1, 8]} />
         <meshStandardMaterial
-          color="#fb923c"
+          color="#ffffff"
           depthTest={false}
           depthWrite={false}
-          emissive="#7c2d12"
-          emissiveIntensity={0.45}
+          emissive="#ffffff"
+          emissiveIntensity={0.08}
           metalness={0}
           opacity={0.85}
           roughness={0.55}
           transparent
+          vertexColors
         />
       </instancedMesh>
       <instancedMesh
-        args={[undefined, undefined, PLAYBACK_CAMERA_FRUSTUM.corners.length]}
+        args={[undefined, undefined, PLAYBACK_CAMERA_FRUSTUM.joints.length]}
         raycast={() => undefined}
         ref={cornerInstancesRef}
         renderOrder={1}
       >
         <sphereGeometry args={[EDGE_RADIUS, 8, 6]} />
         <meshStandardMaterial
-          color="#fb923c"
+          color="#ffffff"
           depthTest={false}
           depthWrite={false}
-          emissive="#7c2d12"
-          emissiveIntensity={0.45}
+          emissive="#ffffff"
+          emissiveIntensity={0.08}
           metalness={0}
           opacity={0.85}
           roughness={0.55}
           transparent
+          vertexColors
         />
       </instancedMesh>
     </group>
