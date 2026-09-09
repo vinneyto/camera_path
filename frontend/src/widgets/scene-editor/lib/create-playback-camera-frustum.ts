@@ -23,6 +23,13 @@ export interface PlaybackCameraHelperJoint {
 
 interface PlaybackCameraFrustum {
   corners: FrustumPoint[];
+  groups: PlaybackCameraHelperGroup[];
+  joints: PlaybackCameraHelperJoint[];
+  segments: PlaybackCameraHelperSegment[];
+}
+
+export interface PlaybackCameraHelperGroup {
+  color: PlaybackCameraHelperColor;
   joints: PlaybackCameraHelperJoint[];
   segments: PlaybackCameraHelperSegment[];
 }
@@ -128,26 +135,33 @@ export function createPlaybackCameraFrustum({
     },
   );
 
+  const joints: PlaybackCameraHelperJoint[] = [
+    ...corners.map((position) => ({
+      color: PLAYBACK_CAMERA_HELPER_COLORS.frustum,
+      position,
+    })),
+    { color: PLAYBACK_CAMERA_HELPER_COLORS.cone, position: origin },
+    ...upPoints.map((position) => ({ color: PLAYBACK_CAMERA_HELPER_COLORS.up, position })),
+    { color: PLAYBACK_CAMERA_HELPER_COLORS.target, position: nearCenter },
+    { color: PLAYBACK_CAMERA_HELPER_COLORS.target, position: farCenter },
+    ...nearCrossPoints.map((position) => ({
+      color: PLAYBACK_CAMERA_HELPER_COLORS.cross,
+      position,
+    })),
+    ...farCrossPoints.map((position) => ({
+      color: PLAYBACK_CAMERA_HELPER_COLORS.cross,
+      position,
+    })),
+  ];
+
   return {
     corners,
-    joints: [
-      ...corners.map((position) => ({
-        color: PLAYBACK_CAMERA_HELPER_COLORS.frustum,
-        position,
-      })),
-      { color: PLAYBACK_CAMERA_HELPER_COLORS.cone, position: origin },
-      ...upPoints.map((position) => ({ color: PLAYBACK_CAMERA_HELPER_COLORS.up, position })),
-      { color: PLAYBACK_CAMERA_HELPER_COLORS.target, position: nearCenter },
-      { color: PLAYBACK_CAMERA_HELPER_COLORS.target, position: farCenter },
-      ...nearCrossPoints.map((position) => ({
-        color: PLAYBACK_CAMERA_HELPER_COLORS.cross,
-        position,
-      })),
-      ...farCrossPoints.map((position) => ({
-        color: PLAYBACK_CAMERA_HELPER_COLORS.cross,
-        position,
-      })),
-    ],
+    groups: Object.values(PLAYBACK_CAMERA_HELPER_COLORS).map((color) => ({
+      color,
+      joints: joints.filter((joint) => joint.color === color),
+      segments: segments.filter((segment) => segment.color === color),
+    })),
+    joints,
     segments,
   };
 }
