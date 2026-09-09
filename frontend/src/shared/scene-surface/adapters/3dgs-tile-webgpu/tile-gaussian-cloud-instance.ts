@@ -9,9 +9,16 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
   readonly bounds: SceneSurfaceBounds | null;
   readonly object: GaussianCloud;
   private disposed = false;
+  private readonly raycast: GaussianCloud["raycast"];
 
-  constructor(cloud: GaussianCloud, private readonly onDispose: () => void) {
+  constructor(
+    cloud: GaussianCloud,
+    raycastable: boolean,
+    private readonly onDispose: () => void,
+  ) {
     this.object = cloud;
+    this.raycast = cloud.raycast;
+    this.setRaycastable(raycastable);
     if (cloud.lod === null) {
       this.bounds = null;
     } else {
@@ -39,5 +46,9 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
       normal: normal.toArray(),
       position: intersection.point.toArray(),
     };
+  }
+
+  setRaycastable(raycastable: boolean): void {
+    this.object.raycast = raycastable ? this.raycast : () => {};
   }
 }
