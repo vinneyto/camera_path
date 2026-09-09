@@ -6,6 +6,8 @@ import { Trash2 } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 
+import { CONTEXT_MENU_Z_INDEX } from "./z-order";
+
 export interface ContextMenuPosition {
   x: number;
   y: number;
@@ -56,10 +58,10 @@ export function ContextMenu({ items, onClose, position }: ContextMenuProps) {
   return createPortal(
     <div
       aria-label="Context menu"
-      className="fixed z-50 min-w-44 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-xl"
+      className="fixed min-w-44 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-xl"
       ref={menuRef}
       role="menu"
-      style={{ left: Math.max(8, left), top: Math.max(8, top) }}
+      style={{ left: Math.max(8, left), top: Math.max(8, top), zIndex: CONTEXT_MENU_Z_INDEX }}
     >
       {items.map((item) => (
         <button
