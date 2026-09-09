@@ -19,6 +19,7 @@ import {
   useDeleteCameraKeyframe,
   useDeleteSpeedKeyframe,
 } from "@/features/object-deletion";
+import { FLOATING_PANEL_Z_INDEX } from "@/shared/ui";
 import { SceneViewport, SceneWebGpuViewport } from "@/widgets/scene-editor";
 import { PlaybackControls, TrajectoryInspector } from "@/widgets/trajectory-panels";
 
@@ -163,9 +164,9 @@ export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: Proj
           )}
           {trajectoryControlsAvailable && trajectory && (
             <div
-              className="absolute left-3 right-3 z-30 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"
+              className="absolute left-3 right-3 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"
               ref={trajectoryControlsRef}
-              style={{ bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET }}
+              style={{ bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET, zIndex: FLOATING_PANEL_Z_INDEX }}
             >
               <PlaybackControls
                 collapsed={!trajectoryControlsExpanded}

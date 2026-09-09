@@ -5,9 +5,9 @@ import { DoubleSide } from "three";
 
 import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
+import { ANCHOR_ICON_Z_INDEX_RANGE } from "@/shared/ui";
 
 const ANCHOR_MARKER_HIT_RADIUS = 0.13;
-const ANCHOR_MARKER_Z_INDEX_RANGE = [1000, 0];
 
 interface AnchorMarkerProps extends Omit<ThreeElements["group"], "children" | "position"> {
   anchor: Anchor;
@@ -59,7 +59,7 @@ export function AnchorMarker({
       <Html
         distanceFactor={8}
         style={{ pointerEvents: "none" }}
-        zIndexRange={ANCHOR_MARKER_Z_INDEX_RANGE}
+        zIndexRange={ANCHOR_ICON_Z_INDEX_RANGE}
       >
         <div className="relative size-0 select-none">
           <MapPin

@@ -100,6 +100,8 @@ export function SceneContents({
     if (controls !== null) setOrbitTarget(controls.target.toArray() as Vec3);
   }, []);
   const editorVisible = cameraMode === "orbit";
+  // Equal projected depths share a z-index, so stable DOM order is the tie-breaker.
+  const orderedAnchors = [...anchors].sort((left, right) => left.id.localeCompare(right.id));
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
@@ -125,7 +127,7 @@ export function SceneContents({
           label={getAnchorLabel(anchors)}
         />
       )}
-      {editorVisible && anchors.map((anchor) => {
+      {editorVisible && orderedAnchors.map((anchor) => {
         const markerAnchor = heightEditing.preview?.anchorId === anchor.id
           ? { ...anchor, lift: heightEditing.preview.lift, lift_axis: "world_up" as const }
           : anchor;
