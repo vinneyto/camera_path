@@ -50,9 +50,8 @@ describe("useGaussianCloud", () => {
     expect(backend.createCloud).toHaveBeenCalledOnce();
     expect(backend.createCloud).toHaveBeenCalledWith(source, {
       name: undefined,
-      raycastable: false,
     });
-    expect(instance.setRaycastable).toHaveBeenCalledWith(false);
+    expect(instance.setRaycastable).toHaveBeenNthCalledWith(1, false);
     expect(instance.setRaycastable).toHaveBeenLastCalledWith(true);
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 import type {
   GaussianCloudInstance,
@@ -38,16 +38,11 @@ export function useGaussianCloud({
   source,
 }: UseGaussianCloudOptions): GaussianCloudInstance | null {
   const [loaded, setLoaded] = useState<LoadedGaussianCloud | null>(null);
-  const raycastableRef = useRef(raycastable);
   const cloud = loaded?.backend === backend
     && loaded.source === source
     && loaded.name === name
     ? loaded.instance
     : null;
-
-  useEffect(() => {
-    raycastableRef.current = raycastable;
-  }, [raycastable]);
 
   useEffect(() => {
     let active = true;
@@ -56,16 +51,12 @@ export function useGaussianCloud({
 
     // Avoid loading twice during React Strict Mode's development-only effect probe.
     const loadTimer = window.setTimeout(() => {
-      void backend.createCloud(source, {
-        name,
-        raycastable: raycastableRef.current,
-      }).then((result) => {
+      void backend.createCloud(source, { name }).then((result) => {
         if (!active) {
           result.dispose();
           return;
         }
         loadedCloud = result;
-        result.setRaycastable(raycastableRef.current);
         setLoaded({ backend, instance: result, name, source });
         if (result.bounds !== null) onReady?.({ bounds: result.bounds });
       }).catch((reason: unknown) => {
@@ -81,7 +72,7 @@ export function useGaussianCloud({
     };
   }, [backend, name, onError, onLoading, onReady, source]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     cloud?.setRaycastable(raycastable);
   }, [cloud, raycastable]);
 
