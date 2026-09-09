@@ -1,7 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
@@ -49,7 +49,7 @@ export function WebGpuScreenSpaceLine({
   }, []);
   const lineRef = useRef(line);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
     lineRef.current.geometry = geometry;
@@ -59,7 +59,7 @@ export function WebGpuScreenSpaceLine({
     };
   }, [normalizedPoints]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const material = new Line2NodeMaterial({
       color,
       depthTest,
@@ -76,7 +76,7 @@ export function WebGpuScreenSpaceLine({
     };
   }, [color, depthTest, depthWrite, transparent, width]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     lineRef.current.layers.set(layer);
     lineRef.current.renderOrder = renderOrder;
     lineRef.current.raycastThreshold = getLine2RaycastThreshold(
