@@ -5,7 +5,11 @@ import { useCallback, useState } from "react";
 import type { Anchor } from "@/entities/project";
 import { CameraModeToggle, useCameraMode } from "@/features/project-editor";
 import { useTheme } from "@/features/theme-switcher";
-import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
+import {
+  ContextMenu,
+  FLOATING_UI_Z_INDEX_MIN,
+  type ContextMenuPosition,
+} from "@/shared/ui";
 
 import { SceneMessage } from "./scene-message";
 import type { SceneViewportFrameProps } from "./scene-viewport-types";
@@ -54,7 +58,10 @@ export function SceneViewportFrame({
         <SceneMessage message={`Could not load mug.ply: ${surfaceState.message}`} />
       )}
       {available && (
-        <div className="absolute right-3 top-3 z-20">
+        <div
+          className="absolute right-3 top-3"
+          style={{ zIndex: FLOATING_UI_Z_INDEX_MIN }}
+        >
           <CameraModeToggle
             onModeChange={(mode) => {
               if (mode === "trajectory") setAnchorMenu(null);
