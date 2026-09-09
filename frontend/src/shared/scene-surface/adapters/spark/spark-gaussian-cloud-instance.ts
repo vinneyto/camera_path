@@ -30,4 +30,8 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
       position: intersection.point.toArray(),
     };
   }
+
+  setRaycastable(raycastable: boolean): void {
+    this.object.raycastable = raycastable;
+  }
 }

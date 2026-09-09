@@ -25,6 +25,7 @@ import { AnchorMarker } from "./anchor-marker";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
 import { frameSurface } from "./frame-surface";
+import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryLine } from "./trajectory-line";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
@@ -110,6 +111,7 @@ export function SceneContents({
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
         onLoading={onSurfaceLoading}
+        raycastable={isGaussianSurfacePickActive(activeTool)}
         {...(editorVisible ? placement.surfaceEventProps : {})}
         source={SCENE_SURFACE_SOURCE}
       />
