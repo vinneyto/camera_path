@@ -14,11 +14,11 @@ export interface PlaybackCameraHelperSegment {
 }
 
 export const PLAYBACK_CAMERA_HELPER_COLORS = {
-  cone: "#ff0000",
-  cross: "#333333",
-  frustum: "#39ff14",
-  target: "#ffffff",
-  up: "#00aaff",
+  cone: "#f87171",
+  cross: "#64748b",
+  frustum: "#60a5fa",
+  target: "#f8fafc",
+  up: "#a78bfa",
 } as const;
 
 export const PLAYBACK_CAMERA_HELPER_OPTIONS: PlaybackCameraHelperOptions = {
