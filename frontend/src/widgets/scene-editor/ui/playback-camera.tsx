@@ -61,6 +61,7 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
               metalness={0}
               roughness={0.5}
               toneMapped={false}
+              transparent
             />
           </mesh>
         );
