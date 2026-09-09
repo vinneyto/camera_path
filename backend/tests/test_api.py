@@ -171,11 +171,17 @@ async def test_client_can_edit_speed_and_camera_graphs(app) -> None:
             },
         )
         assert camera_response.status_code == 200
-        camera_id = next(iter(camera_response.json()["camera_track"]["keyframes"]))
+        camera_id = next(
+            keyframe_id
+            for keyframe_id, keyframe in camera_response.json()["camera_track"][
+                "keyframes"
+            ].items()
+            if keyframe["path_position"] == 0.5
+        )
 
         compiled = (await client.get(f"/projects/{project_id}/trajectory/compiled")).json()
         assert compiled["motion_profile"]["keyframes"][0]["speed"] == 0.25
-        assert compiled["camera_track"]["keyframes"][0]["aim"]["position"] == [4.0, 5.0, 6.0]
+        assert compiled["camera_track"]["keyframes"][1]["aim"]["position"] == [4.0, 5.0, 6.0]
 
         assert (
             await client.delete(f"/projects/{project_id}/scene-points/{point_id}")
@@ -297,6 +303,33 @@ async def test_client_can_change_default_speed_and_aim(app) -> None:
         reloaded = (await client.get(f"/projects/{project_id}")).json()
         assert reloaded["camera_track"]["keyframes"] == camera_track["keyframes"]
 
+        start_id = next(iter(camera_track["keyframes"]))
+        reverted = (
+            await client.delete(f"/projects/{project_id}/camera/keyframes/{start_id}")
+        ).json()
+        reverted_keys = list(reverted["camera_track"]["keyframes"].values())
+        assert len(reverted_keys) == 1
+        assert reverted_keys[0]["path_position"] == 0
+        assert reverted_keys[0]["aim"] == {
+            "kind": "follow_path",
+            "direction": "forward",
+        }
+
+        replaced = (
+            await client.post(
+                f"/projects/{project_id}/camera/keyframes",
+                json={
+                    "path_position": 0,
+                    "aim": {"kind": "follow_path", "direction": "backward"},
+                    "interpolation_to_next": "hold",
+                },
+            )
+        ).json()
+        replaced_keys = list(replaced["camera_track"]["keyframes"].values())
+        assert len(replaced_keys) == 1
+        assert replaced_keys[0]["aim"]["direction"] == "backward"
+        assert replaced_keys[0]["interpolation_to_next"] == "hold"
+
 
 async def test_project_lifecycle_endpoints(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -365,7 +398,13 @@ async def test_clear_trajectory_preserves_scene_setup(app) -> None:
         assert set(cleared.json()["anchors"]) == set(anchor_ids)
         assert cleared.json()["segments"] == []
         assert cleared.json()["motion_profile"]["keyframes"] == {}
-        assert cleared.json()["camera_track"]["keyframes"] == {}
+        camera_keyframes = list(cleared.json()["camera_track"]["keyframes"].values())
+        assert len(camera_keyframes) == 1
+        assert camera_keyframes[0]["path_position"] == 0
+        assert camera_keyframes[0]["aim"] == {
+            "kind": "follow_path",
+            "direction": "forward",
+        }
         assert cleared.json()["camera_track"]["default_orientation"] == {
             "yaw_deg": 0.0,
             "pitch_deg": 0.0,

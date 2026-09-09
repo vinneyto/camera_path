@@ -54,8 +54,19 @@ def test_old_project_snapshot_gets_zero_orientation_defaults() -> None:
     assert restored.camera_track.orientation_keyframes == {}
 
 
+def test_camera_track_always_has_a_follow_path_start_keyframe() -> None:
+    project = Project()
+
+    assert len(project.camera_track.keyframes) == 1
+    keyframe = next(iter(project.camera_track.keyframes.values()))
+    assert keyframe.path_position == 0
+    assert keyframe.aim.kind == "follow_path"
+    assert keyframe.aim.direction == "forward"
+
+
 def test_legacy_default_look_at_becomes_stable_start_keyframe_after_round_trip() -> None:
     payload = Project().model_dump()
+    payload["camera_track"]["keyframes"] = {}
     payload["camera_track"]["default_aim"] = {
         "kind": "look_at_point",
         "scene_point_id": "legacy-target",
@@ -72,6 +83,20 @@ def test_legacy_default_look_at_becomes_stable_start_keyframe_after_round_trip()
     assert keyframe.aim.kind == "look_at_point"
     assert keyframe.aim.scene_point_id == "legacy-target"
     assert reloaded_keyframe == keyframe
+
+
+def test_legacy_empty_camera_track_gets_stable_start_keyframe_after_round_trip() -> None:
+    payload = Project().model_dump()
+    payload["camera_track"]["keyframes"] = {}
+
+    restored = Project.model_validate(payload)
+    reloaded = Project.model_validate_json(restored.model_dump_json())
+
+    assert len(restored.camera_track.keyframes) == 1
+    keyframe = next(iter(restored.camera_track.keyframes.values()))
+    assert keyframe.path_position == 0
+    assert keyframe.aim.kind == "follow_path"
+    assert next(iter(reloaded.camera_track.keyframes.values())) == keyframe
 
 
 async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:

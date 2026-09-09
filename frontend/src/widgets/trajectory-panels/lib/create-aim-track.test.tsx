@@ -33,17 +33,27 @@ function createTrajectory(keyframes: CompiledTrajectory["camera_track"]["keyfram
 }
 
 describe("createAimTrack", () => {
-  it("uses a compact follow-path empty state", () => {
+  it("shows the required follow-path keyframe at the start", () => {
     const track = createAimTrack({
       onDeleteKeyframe: () => undefined,
       project,
-      trajectory: createTrajectory([]),
+      trajectory: createTrajectory([{
+        id: "follow-path",
+        path_position: 0,
+        aim: { kind: "follow_path", direction: "forward" },
+        interpolation_to_next: "smoothstep",
+      }]),
     });
 
-    expect(track.summary).toBe("Follow path");
+    expect(track.summary).toBe("1 key");
     expect(track.height).toBe(28);
     expect(track.lineY).toBe(14);
-    expect(track.keyframes).toEqual([]);
+    expect(track.keyframes).toEqual([{
+      ariaLabel: "Along trajectory at 0%",
+      id: "follow-path",
+      pathPosition: 0,
+      tooltip: "Along trajectory",
+    }]);
   });
 
   it("shows the persisted start keyframe and its target", () => {

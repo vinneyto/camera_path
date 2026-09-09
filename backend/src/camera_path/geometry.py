@@ -282,6 +282,8 @@ def validate_project(project: Project) -> list[str]:
     if len(speed_positions) != len(set(speed_positions)):
         raise GeometryError("speed keyframes must have unique path positions")
     camera_positions = [item.path_position for item in project.camera_track.keyframes.values()]
+    if 0.0 not in camera_positions:
+        raise GeometryError("camera aim keyframe at path position 0 is required")
     if len(camera_positions) != len(set(camera_positions)):
         raise GeometryError("camera keyframes must have unique path positions")
     orientation_positions = [

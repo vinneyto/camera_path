@@ -29,12 +29,12 @@ Use only supplied deterministic tools and never invent ids. Inspect project stat
 Path positions are normalized arc length: 0 is the start and 1 is the end.
 Speed keyframes contain metres-per-second values. smoothstep and linear interpolate to the next
 key; hold keeps the current value and jumps at the next key.
-Camera keyframes either follow the path tangent or look at a scene point. The runtime blends the
-two resulting view directions between neighboring keys. Scene points are independent of path
-anchors. Default camera aim is only for follow-path behavior. A look-at target for the whole
-trajectory is represented by exactly one camera keyframe at path position 0; that key remains in
-effect to the end unless a later key replaces it. Camera orientation adds local yaw (around local
-up), pitch (around local right), then
+Camera keyframes either follow the path tangent or look at a scene point. Every trajectory has a
+real camera aim keyframe at path position 0, including the initial follow-path behavior. The
+runtime blends the two resulting view directions between neighboring keys. Scene points are
+independent of path anchors. A look-at target for the whole trajectory updates that start key;
+the key remains in effect to the end unless a later key replaces it. Camera orientation adds local
+yaw (around local up), pitch (around local right), then
 roll (around the view axis) on top of that base aim frame. Angles are unwrapped degrees, so a
 0-to-360 transition is a full turn. Prefer incremental create/update/delete operations; do not
 clear unrelated user work.
@@ -74,8 +74,8 @@ TOOLS: list[dict[str, Any]] = [
         "type": "function",
         "name": "set_default_camera_aim",
         "description": (
-            "Set baseline follow-path aim, or create/update the real camera keyframe at path "
-            "position 0 for a look-at target used across the trajectory."
+            "Update the real camera aim keyframe at path position 0 for behavior used from the "
+            "start of the trajectory."
         ),
         "parameters": _object(
             {
@@ -497,11 +497,7 @@ class TrajectoryAgent:
             item = draft.motion_profile
         elif name == "set_default_camera_aim":
             aim = cls._aim(arguments)
-            if isinstance(aim, LookAtPointAim):
-                item = draft.camera_track.set_start_aim(aim)
-            else:
-                draft.camera_track.default_aim = aim
-                item = draft.camera_track
+            item = draft.camera_track.set_start_aim(aim)
         elif name == "set_default_camera_orientation":
             draft.camera_track.default_orientation = CameraOrientation(**arguments)
             item = draft.camera_track.default_orientation
@@ -532,12 +528,19 @@ class TrajectoryAgent:
                 draft.motion_profile.keyframes, arguments["id"], "speed keyframe"
             )
         elif name == "create_camera_keyframe":
-            item = CameraKeyframe(
-                path_position=arguments["path_position"],
-                aim=cls._aim(arguments),
-                interpolation_to_next=arguments["interpolation_to_next"],
-            )
-            draft.camera_track.keyframes[item.id] = item
+            aim = cls._aim(arguments)
+            if arguments["path_position"] == 0:
+                item = draft.camera_track.set_start_aim(
+                    aim,
+                    arguments["interpolation_to_next"],
+                )
+            else:
+                item = CameraKeyframe(
+                    path_position=arguments["path_position"],
+                    aim=aim,
+                    interpolation_to_next=arguments["interpolation_to_next"],
+                )
+                draft.camera_track.keyframes[item.id] = item
         elif name == "update_camera_keyframe":
             patch = {
                 key: value
@@ -551,10 +554,12 @@ class TrajectoryAgent:
                 {"id": arguments["id"], **patch},
                 "camera keyframe",
             )
+            draft.camera_track.ensure_start_aim()
         elif name == "delete_camera_keyframe":
             item = cls._delete_dict_item(
                 draft.camera_track.keyframes, arguments["id"], "camera keyframe"
             )
+            draft.camera_track.ensure_start_aim()
         elif name == "create_camera_orientation_keyframe":
             item = CameraOrientationKeyframe(
                 path_position=arguments["path_position"],
@@ -644,4 +649,5 @@ class TrajectoryAgent:
             raise ValueError(f"scene point {item_id} is used by camera keyframes {references}")
         for keyframe_id in references:
             del draft.camera_track.keyframes[keyframe_id]
+        draft.camera_track.ensure_start_aim()
         return draft.scene_points.pop(item_id)

@@ -9,14 +9,12 @@ import type {
 import { evaluateTrajectoryCameraPose } from "./evaluate-trajectory-camera-pose";
 
 function createTrajectory(aim: ResolvedCameraAim): CompiledTrajectory {
-  const keyframes = aim.kind === "look_at_point"
-    ? [{
-        id: "aim",
-        path_position: 0,
-        aim,
-        interpolation_to_next: "smoothstep" as const,
-      }]
-    : [];
+  const keyframes = [{
+    id: "aim",
+    path_position: 0,
+    aim,
+    interpolation_to_next: "smoothstep" as const,
+  }];
   return {
     project_id: "project",
     revision: 1,

@@ -3,7 +3,13 @@ import math
 import numpy as np
 import pytest
 
-from camera_path.geometry import GeometryError, anchor_position, compile_project, compile_spiral
+from camera_path.geometry import (
+    GeometryError,
+    anchor_position,
+    compile_project,
+    compile_spiral,
+    validate_project,
+)
 from camera_path.models import (
     Anchor,
     CameraKeyframe,
@@ -136,9 +142,17 @@ def test_camera_track_resolves_scene_point_position() -> None:
 
     compiled = compile_project(project)
 
-    resolved = compiled.camera_track.keyframes[0].aim
+    resolved = compiled.camera_track.keyframes[1].aim
     assert resolved.kind == "look_at_point"
     assert resolved.position == point.position
+
+
+def test_camera_track_requires_a_start_aim_keyframe() -> None:
+    project = Project()
+    project.camera_track.keyframes.clear()
+
+    with pytest.raises(GeometryError, match="camera aim keyframe at path position 0 is required"):
+        validate_project(project)
 
 
 def test_camera_orientation_track_compiles_sorted_and_unwrapped() -> None:

@@ -147,32 +147,50 @@ class CameraTrack(BaseModel):
     orientation_keyframes: dict[str, CameraOrientationKeyframe] = Field(default_factory=dict)
     world_up: Vec3 = (0.0, 1.0, 0.0)
 
-    def set_start_aim(self, aim: CameraAim) -> CameraKeyframe:
+    def set_start_aim(
+        self,
+        aim: CameraAim,
+        interpolation_to_next: Interpolation | None = None,
+    ) -> CameraKeyframe:
         self.default_aim = FollowPathAim()
         item = next(
             (keyframe for keyframe in self.keyframes.values() if keyframe.path_position == 0),
             None,
         )
         if item is None:
-            item = CameraKeyframe(path_position=0, aim=aim)
+            item = CameraKeyframe(
+                path_position=0,
+                aim=aim,
+                interpolation_to_next=interpolation_to_next or "smoothstep",
+            )
         else:
-            item = item.model_copy(update={"aim": aim})
+            update: dict[str, object] = {"aim": aim}
+            if interpolation_to_next is not None:
+                update["interpolation_to_next"] = interpolation_to_next
+            item = item.model_copy(update=update)
         self.keyframes[item.id] = item
         return item
 
+    def ensure_start_aim(self) -> CameraKeyframe:
+        item = next(
+            (keyframe for keyframe in self.keyframes.values() if keyframe.path_position == 0),
+            None,
+        )
+        return item if item is not None else self.set_start_aim(FollowPathAim())
+
     @model_validator(mode="before")
     @classmethod
-    def materialize_legacy_default_look_at(cls, value: object) -> object:
+    def materialize_start_aim(cls, value: object) -> object:
         if not isinstance(value, dict):
             return value
-        raw_default_aim = value.get("default_aim")
+        raw_default_aim = value.get("default_aim", FollowPathAim().model_dump())
         default_aim = (
             raw_default_aim.model_dump()
-            if isinstance(raw_default_aim, LookAtPointAim)
+            if isinstance(raw_default_aim, FollowPathAim | LookAtPointAim)
             else raw_default_aim
         )
-        if not isinstance(default_aim, dict) or default_aim.get("kind") != "look_at_point":
-            return value
+        if not isinstance(default_aim, dict):
+            default_aim = FollowPathAim().model_dump()
 
         normalized = dict(value)
         keyframes = dict(normalized.get("keyframes") or {})
@@ -182,14 +200,19 @@ class CameraTrack(BaseModel):
             for keyframe in keyframes.values()
         )
         if not has_start_keyframe:
-            legacy_id = str(
+            aim_kind = default_aim.get("kind", "follow_path")
+            aim_value = default_aim.get(
+                "scene_point_id" if aim_kind == "look_at_point" else "direction",
+                "forward",
+            )
+            start_id = str(
                 uuid5(
                     NAMESPACE_URL,
-                    f"camera-path:legacy-default-aim:{default_aim.get('scene_point_id', '')}",
+                    f"camera-path:start-aim:{aim_kind}:{aim_value}",
                 )
             )
-            keyframes[legacy_id] = {
-                "id": legacy_id,
+            keyframes[start_id] = {
+                "id": start_id,
                 "path_position": 0.0,
                 "aim": default_aim,
                 "interpolation_to_next": "smoothstep",
