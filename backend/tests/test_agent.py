@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from camera_path.agent import TrajectoryAgent
-from camera_path.models import Project
+from camera_path.models import FollowPathAim, LookAtPointAim, Project, ScenePoint
 from camera_path.repository import SQLiteProjectRepository
 from camera_path.service import TrajectoryService
 
@@ -147,3 +147,41 @@ def test_agent_executes_camera_orientation_tools() -> None:
 
     TrajectoryAgent._execute(project, "delete_camera_orientation_keyframe", {"id": keyframe_id})
     assert project.camera_track.orientation_keyframes == {}
+
+
+def test_agent_materializes_whole_path_look_at_as_one_start_keyframe() -> None:
+    target = ScenePoint(label="Subject", position=(1, 2, 3))
+    project = Project(scene_points={target.id: target})
+    arguments = {
+        "aim_kind": "look_at_point",
+        "scene_point_id": target.id,
+        "direction": None,
+    }
+
+    first = TrajectoryAgent._execute(project, "set_default_camera_aim", arguments)
+    second = TrajectoryAgent._execute(project, "set_default_camera_aim", arguments)
+
+    assert first["id"] == second["id"]
+    assert project.camera_track.default_aim.kind == "follow_path"
+    assert len(project.camera_track.keyframes) == 1
+    keyframe = next(iter(project.camera_track.keyframes.values()))
+    assert keyframe.path_position == 0
+    assert keyframe.aim == LookAtPointAim(scene_point_id=target.id)
+
+
+def test_agent_keeps_a_real_follow_path_keyframe_at_the_start() -> None:
+    project = Project()
+    start = next(iter(project.camera_track.keyframes.values()))
+    arguments = {
+        "aim_kind": "follow_path",
+        "scene_point_id": None,
+        "direction": "backward",
+    }
+
+    item = TrajectoryAgent._execute(project, "set_default_camera_aim", arguments)
+
+    assert item["id"] == start.id
+    assert len(project.camera_track.keyframes) == 1
+    keyframe = next(iter(project.camera_track.keyframes.values()))
+    assert keyframe.path_position == 0
+    assert keyframe.aim == FollowPathAim(direction="backward")

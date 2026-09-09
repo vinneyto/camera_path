@@ -16,6 +16,7 @@ from camera_path.models import (
     CameraTrackUpdate,
     ChatHistoryMessage,
     CompiledTrajectory,
+    FollowPathAim,
     LookAtPointAim,
     MotionProfile,
     MotionProfileUpdate,
@@ -182,6 +183,7 @@ class TrajectoryService:
             raise ValueError(f"scene point {point_id} is used by camera keyframes {references}")
         for keyframe_id in references:
             del draft.camera_track.keyframes[keyframe_id]
+        draft.camera_track.ensure_start_aim()
         del draft.scene_points[point_id]
         return await self._commit(draft, expected)
 
@@ -243,16 +245,22 @@ class TrajectoryService:
     async def add_camera_keyframe(self, project_id: str, data: CameraKeyframeCreate) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
-        item = CameraKeyframe(**data.model_dump())
-        draft.camera_track.keyframes[item.id] = item
+        if data.path_position == 0:
+            draft.camera_track.set_start_aim(data.aim, data.interpolation_to_next)
+        else:
+            item = CameraKeyframe(**data.model_dump())
+            draft.camera_track.keyframes[item.id] = item
         return await self._commit(draft, expected)
 
     async def update_camera_track(self, project_id: str, data: CameraTrackUpdate) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         patch = data.model_dump(exclude_unset=True, exclude_none=True)
+        if data.default_aim is not None:
+            draft.camera_track.set_start_aim(data.default_aim)
+            patch["default_aim"] = FollowPathAim().model_dump()
         merged = {**draft.camera_track.model_dump(), **patch}
-        draft.camera_track = draft.camera_track.__class__.model_validate(merged)
+        draft.camera_track = CameraTrack.model_validate(merged)
         return await self._commit(draft, expected)
 
     async def update_default_camera_orientation(
@@ -311,6 +319,7 @@ class TrajectoryService:
         draft.camera_track.keyframes[keyframe_id] = old.__class__.model_validate(
             {**old.model_dump(), **patch}
         )
+        draft.camera_track.ensure_start_aim()
         return await self._commit(draft, expected)
 
     async def delete_camera_keyframe(self, project_id: str, keyframe_id: str) -> Project:
@@ -319,6 +328,7 @@ class TrajectoryService:
         if keyframe_id not in draft.camera_track.keyframes:
             raise KeyError(f"camera keyframe {keyframe_id} not found")
         del draft.camera_track.keyframes[keyframe_id]
+        draft.camera_track.ensure_start_aim()
         return await self._commit(draft, expected)
 
     async def compile(self, project_id: str) -> CompiledTrajectory:

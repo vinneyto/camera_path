@@ -1,11 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
 
-import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
+import type {
+  CompiledTrajectory,
+  ResolvedCameraAim,
+} from "@/entities/trajectory/model/types";
 
 import { evaluateTrajectoryCameraPose } from "./evaluate-trajectory-camera-pose";
 
-function createTrajectory(aim: CompiledTrajectory["camera_track"]["default_aim"]): CompiledTrajectory {
+function createTrajectory(aim: ResolvedCameraAim): CompiledTrajectory {
+  const keyframes = [{
+    id: "aim",
+    path_position: 0,
+    aim,
+    interpolation_to_next: "smoothstep" as const,
+  }];
   return {
     project_id: "project",
     revision: 1,
@@ -24,7 +33,11 @@ function createTrajectory(aim: CompiledTrajectory["camera_track"]["default_aim"]
     total_length: 1,
     duration_seconds: 1,
     motion_profile: { default_speed: 1, keyframes: [] },
-    camera_track: { default_aim: aim, keyframes: [], world_up: [0, 1, 0] },
+    camera_track: {
+      default_aim: { kind: "follow_path", direction: "forward" },
+      keyframes,
+      world_up: [0, 1, 0],
+    },
     warnings: [],
   };
 }
@@ -48,6 +61,20 @@ describe("evaluateTrajectoryCameraPose", () => {
     );
     const forward = new Vector3(0, 0, -1).applyQuaternion(pose.quaternion);
     const expected = new Vector3(0, 1, -1).normalize();
+
+    expect(forward.distanceTo(expected)).toBeLessThan(1e-8);
+  });
+
+  it("keeps the final explicit aim active through the end of the path", () => {
+    const trajectory = createTrajectory({
+      kind: "look_at_point",
+      scene_point_id: "target",
+      position: [0.5, 1, -1],
+    });
+
+    const pose = evaluateTrajectoryCameraPose(trajectory, 1);
+    const forward = new Vector3(0, 0, -1).applyQuaternion(pose.quaternion);
+    const expected = new Vector3(-0.5, 1, -1).normalize();
 
     expect(forward.distanceTo(expected)).toBeLessThan(1e-8);
   });
