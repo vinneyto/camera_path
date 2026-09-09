@@ -12,7 +12,7 @@ interface PlaybackCameraProps {
   trajectory: CompiledTrajectory;
 }
 
-const EDGE_RADIUS = 0.008;
+const EDGE_RADIUS = 0.006;
 const EDGE_UP = new Vector3(0, 1, 0);
 
 export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps) {
