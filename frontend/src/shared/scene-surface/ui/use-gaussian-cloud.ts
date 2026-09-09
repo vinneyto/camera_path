@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   GaussianCloudInstance,
@@ -15,7 +15,6 @@ interface LoadedGaussianCloud {
   backend: GaussianRenderingBackend;
   instance: GaussianCloudInstance;
   name: string | undefined;
-  raycastable: boolean;
   source: GaussianCloudSource;
 }
 
@@ -39,12 +38,16 @@ export function useGaussianCloud({
   source,
 }: UseGaussianCloudOptions): GaussianCloudInstance | null {
   const [loaded, setLoaded] = useState<LoadedGaussianCloud | null>(null);
+  const raycastableRef = useRef(raycastable);
   const cloud = loaded?.backend === backend
     && loaded.source === source
     && loaded.name === name
-    && loaded.raycastable === raycastable
     ? loaded.instance
     : null;
+
+  useEffect(() => {
+    raycastableRef.current = raycastable;
+  }, [raycastable]);
 
   useEffect(() => {
     let active = true;
@@ -53,13 +56,17 @@ export function useGaussianCloud({
 
     // Avoid loading twice during React Strict Mode's development-only effect probe.
     const loadTimer = window.setTimeout(() => {
-      void backend.createCloud(source, { name, raycastable }).then((result) => {
+      void backend.createCloud(source, {
+        name,
+        raycastable: raycastableRef.current,
+      }).then((result) => {
         if (!active) {
           result.dispose();
           return;
         }
         loadedCloud = result;
-        setLoaded({ backend, instance: result, name, raycastable, source });
+        result.setRaycastable(raycastableRef.current);
+        setLoaded({ backend, instance: result, name, source });
         if (result.bounds !== null) onReady?.({ bounds: result.bounds });
       }).catch((reason: unknown) => {
         if (!active) return;
@@ -72,7 +79,11 @@ export function useGaussianCloud({
       window.clearTimeout(loadTimer);
       loadedCloud?.dispose();
     };
-  }, [backend, name, onError, onLoading, onReady, raycastable, source]);
+  }, [backend, name, onError, onLoading, onReady, source]);
+
+  useEffect(() => {
+    cloud?.setRaycastable(raycastable);
+  }, [cloud, raycastable]);
 
   return cloud;
 }

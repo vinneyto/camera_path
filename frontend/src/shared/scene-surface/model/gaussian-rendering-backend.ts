@@ -52,6 +52,7 @@ export interface GaussianCloudInstance {
   readonly object: Object3D;
   dispose(): void;
   getHit(intersection: Intersection<Object3D>, ray: Ray): SceneSurfaceHit;
+  setRaycastable(raycastable: boolean): void;
 }
 
 export interface GaussianRenderingBackend {

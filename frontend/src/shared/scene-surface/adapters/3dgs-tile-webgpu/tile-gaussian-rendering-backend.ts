@@ -66,17 +66,21 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       throw new Error("TileGaussianRenderingBackend was disposed while loading a cloud");
     }
 
-    cloud.raycastMode = options.raycastable === false ? "rendered" : "full";
+    cloud.raycastMode = "full";
     try {
       this.ensurePass();
     } catch (reason) {
       cloud.dispose();
       throw reason;
     }
-    const instance = new TileGaussianCloudInstance(cloud, () => {
-      this.clouds.delete(instance);
-      if (this.clouds.size === 0) this.disposePass();
-    });
+    const instance = new TileGaussianCloudInstance(
+      cloud,
+      options.raycastable ?? true,
+      () => {
+        this.clouds.delete(instance);
+        if (this.clouds.size === 0) this.disposePass();
+      },
+    );
     this.clouds.add(instance);
     return instance;
   }
