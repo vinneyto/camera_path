@@ -61,6 +61,7 @@ export function PlaybackCameraHelperGroup({ group }: PlaybackCameraHelperGroupPr
     <>
       <instancedMesh
         args={[undefined, undefined, group.segments.length]}
+        frustumCulled={false}
         raycast={() => undefined}
         ref={edgeInstancesRef}
         renderOrder={1}
@@ -79,6 +80,7 @@ export function PlaybackCameraHelperGroup({ group }: PlaybackCameraHelperGroupPr
       </instancedMesh>
       <instancedMesh
         args={[undefined, undefined, group.joints.length]}
+        frustumCulled={false}
         raycast={() => undefined}
         ref={jointInstancesRef}
         renderOrder={1}
