@@ -31,16 +31,15 @@ export function createAimTrack({
     color: "var(--chart-aim)",
     deleteLabel: "Delete camera aim keyframe",
     deletingKeyframeId,
-    emptyState: keyframes.length === 0
-      ? `${getAimLabel(trajectory.camera_track.default_aim, project)} across the whole trajectory`
-      : null,
-    height: 72,
+    height: 28,
     id: "camera-aim",
     keyframes,
-    lineY: 30,
+    lineY: 14,
     onDeleteKeyframe,
     renderMarker: () => <AimKeyframeMarker />,
-    summary: keyframes.length ? `${keyframes.length} keys` : "Default only",
+    summary: keyframes.length
+      ? `${keyframes.length} key${keyframes.length === 1 ? "" : "s"}`
+      : "Follow path",
     title: "Camera aim keys",
   };
 }

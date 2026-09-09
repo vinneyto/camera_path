@@ -56,7 +56,7 @@ export interface Project {
   scene_points: Record<string, ScenePoint>;
   segments: Array<{ id: string; kind: "spline" | "spiral" }>;
   camera_track: {
-    default_aim: CameraAim;
+    default_aim: FollowPathAim;
     keyframes: Record<string, CameraKeyframe>;
     world_up: Vec3;
   };

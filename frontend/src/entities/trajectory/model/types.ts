@@ -36,7 +36,7 @@ export interface CompiledTrajectory {
     keyframes: SpeedKeyframe[];
   };
   camera_track: {
-    default_aim: ResolvedCameraAim;
+    default_aim: FollowPathAim;
     keyframes: CompiledCameraKeyframe[];
     world_up: Vec3;
   };

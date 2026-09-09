@@ -22,10 +22,6 @@ export function evaluateAim(trajectory: CompiledTrajectory, pathPosition: number
   if (controls.length === 0 || controls[0].pathPosition > 0) {
     controls.unshift({ pathPosition: 0, aim: defaultAim, interpolation: "smoothstep" });
   }
-  if (controls.at(-1)?.pathPosition !== 1) {
-    controls.push({ pathPosition: 1, aim: defaultAim, interpolation: "smoothstep" });
-  }
-
   const position = Math.min(1, Math.max(0, pathPosition));
   for (let index = 0; index < controls.length - 1; index += 1) {
     const left = controls[index];
@@ -41,5 +37,5 @@ export function evaluateAim(trajectory: CompiledTrajectory, pathPosition: number
     }
   }
 
-  return aimDirection(trajectory, position, defaultAim);
+  return aimDirection(trajectory, position, controls.at(-1)?.aim ?? defaultAim);
 }

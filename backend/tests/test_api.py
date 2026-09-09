@@ -287,7 +287,15 @@ async def test_client_can_change_default_speed_and_aim(app) -> None:
         assert motion.status_code == 200
         assert motion.json()["motion_profile"]["default_speed"] == 3.0
         assert camera.status_code == 200
-        assert camera.json()["camera_track"]["default_aim"]["scene_point_id"] == point_id
+        camera_track = camera.json()["camera_track"]
+        assert camera_track["default_aim"] == {"kind": "follow_path", "direction": "forward"}
+        assert len(camera_track["keyframes"]) == 1
+        keyframe = next(iter(camera_track["keyframes"].values()))
+        assert keyframe["path_position"] == 0
+        assert keyframe["aim"] == {"kind": "look_at_point", "scene_point_id": point_id}
+
+        reloaded = (await client.get(f"/projects/{project_id}")).json()
+        assert reloaded["camera_track"]["keyframes"] == camera_track["keyframes"]
 
 
 async def test_project_lifecycle_endpoints(app) -> None:

@@ -31,7 +31,10 @@ Speed keyframes contain metres-per-second values. smoothstep and linear interpol
 key; hold keeps the current value and jumps at the next key.
 Camera keyframes either follow the path tangent or look at a scene point. The runtime blends the
 two resulting view directions between neighboring keys. Scene points are independent of path
-anchors. Camera orientation adds local yaw (around local up), pitch (around local right), then
+anchors. Default camera aim is only for follow-path behavior. A look-at target for the whole
+trajectory is represented by exactly one camera keyframe at path position 0; that key remains in
+effect to the end unless a later key replaces it. Camera orientation adds local yaw (around local
+up), pitch (around local right), then
 roll (around the view axis) on top of that base aim frame. Angles are unwrapped degrees, so a
 0-to-360 transition is a full turn. Prefer incremental create/update/delete operations; do not
 clear unrelated user work.
@@ -70,7 +73,10 @@ TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "name": "set_default_camera_aim",
-        "description": "Set the camera aim used where the direction graph has no overriding key.",
+        "description": (
+            "Set baseline follow-path aim, or create/update the real camera keyframe at path "
+            "position 0 for a look-at target used across the trajectory."
+        ),
         "parameters": _object(
             {
                 "aim_kind": {"type": "string", "enum": ["follow_path", "look_at_point"]},
@@ -490,8 +496,12 @@ class TrajectoryAgent:
             draft.motion_profile.default_speed = arguments["speed"]
             item = draft.motion_profile
         elif name == "set_default_camera_aim":
-            draft.camera_track.default_aim = cls._aim(arguments)
-            item = draft.camera_track
+            aim = cls._aim(arguments)
+            if isinstance(aim, LookAtPointAim):
+                item = draft.camera_track.set_start_aim(aim)
+            else:
+                draft.camera_track.default_aim = aim
+                item = draft.camera_track
         elif name == "set_default_camera_orientation":
             draft.camera_track.default_orientation = CameraOrientation(**arguments)
             item = draft.camera_track.default_orientation

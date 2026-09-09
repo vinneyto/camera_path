@@ -17,7 +17,6 @@ describe("TimelineStack", () => {
       {
         ...common,
         color: "red",
-        emptyState: null,
         id: "first-lane",
         keyframes: [{ ariaLabel: "First", id: "first", pathPosition: 0.25, tooltip: "First tooltip" }],
         lineY: 20,
@@ -26,7 +25,6 @@ describe("TimelineStack", () => {
       {
         ...common,
         color: "blue",
-        emptyState: null,
         id: "lane",
         keyframes: [{ ariaLabel: "Second", id: "second", pathPosition: 0.75, tooltip: "Second tooltip" }],
         lineY: 20,
@@ -35,7 +33,6 @@ describe("TimelineStack", () => {
       {
         ...common,
         color: "green",
-        emptyState: "No events",
         id: "third-track",
         keyframes: [],
         lineY: 20,
@@ -53,5 +50,6 @@ describe("TimelineStack", () => {
     expect(markup).toContain("First tooltip");
     expect(markup).toContain("Second tooltip");
     expect(markup).toContain("Third descriptor-only track");
+    expect(markup).not.toMatch(/>0<|>1</);
   });
 });

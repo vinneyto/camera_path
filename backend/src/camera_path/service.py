@@ -16,6 +16,7 @@ from camera_path.models import (
     CameraTrackUpdate,
     ChatHistoryMessage,
     CompiledTrajectory,
+    FollowPathAim,
     LookAtPointAim,
     MotionProfile,
     MotionProfileUpdate,
@@ -251,8 +252,11 @@ class TrajectoryService:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         patch = data.model_dump(exclude_unset=True, exclude_none=True)
+        if isinstance(data.default_aim, LookAtPointAim):
+            draft.camera_track.set_start_aim(data.default_aim)
+            patch["default_aim"] = FollowPathAim().model_dump()
         merged = {**draft.camera_track.model_dump(), **patch}
-        draft.camera_track = draft.camera_track.__class__.model_validate(merged)
+        draft.camera_track = CameraTrack.model_validate(merged)
         return await self._commit(draft, expected)
 
     async def update_default_camera_orientation(
