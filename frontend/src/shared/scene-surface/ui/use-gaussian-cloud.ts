@@ -1,108 +1,71 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
-import type {
-  GaussianCloudInstance,
-  GaussianRenderingBackend,
-} from "../model/gaussian-rendering-backend";
-import type {
-  GaussianCloudSource,
-  SceneSurfaceReady,
-} from "../model/scene-surface-types";
+import type { GaussianCloudInstance } from "../model/gaussian-rendering-backend";
+import type { GaussianCloudSource } from "../model/scene-surface-types";
+import { useGaussianCloudResourceCache } from "./scene-surface-provider";
 
 interface LoadedGaussianCloud {
-  backend: GaussianRenderingBackend;
   instance: GaussianCloudInstance;
   name: string | undefined;
   source: GaussianCloudSource;
 }
 
-interface GaussianCloudLoad {
-  backend: GaussianRenderingBackend;
-  disposed: boolean;
-  name: string | undefined;
-  promise: Promise<GaussianCloudInstance>;
-  source: GaussianCloudSource;
-  users: number;
-}
-
 interface UseGaussianCloudOptions {
-  backend: GaussianRenderingBackend;
   name?: string;
-  onError?: (error: Error) => void;
-  onLoading?: () => void;
-  onReady?: (surface: SceneSurfaceReady) => void;
   raycastable: boolean;
   source: GaussianCloudSource;
 }
 
+type UseGaussianCloudResult = readonly [
+  cloud: GaussianCloudInstance | null,
+  loading: boolean,
+  error: Error | null,
+];
+
 export function useGaussianCloud({
-  backend,
   name,
-  onError,
-  onLoading,
-  onReady,
   raycastable,
   source,
-}: UseGaussianCloudOptions): GaussianCloudInstance | null {
+}: UseGaussianCloudOptions): UseGaussianCloudResult {
+  const cache = useGaussianCloudResourceCache();
   const [loaded, setLoaded] = useState<LoadedGaussianCloud | null>(null);
-  const loadRef = useRef<GaussianCloudLoad | null>(null);
-  const cloud = loaded?.backend === backend
-    && loaded.source === source
+  const [failed, setFailed] = useState<{
+    error: Error;
+    name: string | undefined;
+    source: GaussianCloudSource;
+  } | null>(null);
+  const cloud = loaded?.source === source
     && loaded.name === name
     ? loaded.instance
+    : null;
+  const error = failed?.source === source && failed.name === name
+    ? failed.error
     : null;
 
   useEffect(() => {
     let active = true;
-    onLoading?.();
-
-    let load = loadRef.current;
-    if (
-      load === null
-      || load.backend !== backend
-      || load.source !== source
-      || load.name !== name
-      || load.disposed
-    ) {
-      load = {
-        backend,
-        disposed: false,
-        name,
-        promise: backend.createCloud(source, { name }),
-        source,
-        users: 0,
-      };
-      loadRef.current = load;
-    }
-    load.users += 1;
-
-    void load.promise.then((result) => {
+    const lease = cache.acquire(source, { name });
+    void lease.promise.then((result) => {
       if (!active) return;
-      setLoaded({ backend, instance: result, name, source });
-      if (result.bounds !== null) onReady?.({ bounds: result.bounds });
+      setFailed(null);
+      setLoaded({ instance: result, name, source });
     }).catch((reason: unknown) => {
       if (!active) return;
-      onError?.(reason instanceof Error ? reason : new Error(String(reason)));
+      const error = reason instanceof Error ? reason : new Error(String(reason));
+      setFailed({ error, name, source });
     });
 
     return () => {
       active = false;
-      load.users -= 1;
-      // A Strict Mode probe starts its replacement effect before this microtask runs.
-      queueMicrotask(() => {
-        if (load.users > 0 || load.disposed) return;
-        load.disposed = true;
-        if (loadRef.current === load) loadRef.current = null;
-        void load.promise.then((result) => result.dispose()).catch(() => undefined);
-      });
+      lease.release();
     };
-  }, [backend, name, onError, onLoading, onReady, source]);
+  }, [cache, name, source]);
 
   useLayoutEffect(() => {
     cloud?.setRaycastable(raycastable);
   }, [cloud, raycastable]);
 
-  return cloud;
+  return [cloud, cloud === null && error === null, error];
 }
