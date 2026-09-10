@@ -2,7 +2,10 @@ import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
 import { interpolationWeight } from "@/entities/trajectory/lib/interpolation-weight";
 import { speedControls } from "@/entities/trajectory/lib/speed-controls";
 
-export function evaluateSpeed(trajectory: CompiledTrajectory, pathPosition: number): number {
+export function evaluateSpeed(
+  trajectory: CompiledTrajectory,
+  pathPosition: number,
+): number {
   const controls = speedControls(trajectory);
   const position = Math.min(1, Math.max(0, pathPosition));
 
@@ -12,7 +15,10 @@ export function evaluateSpeed(trajectory: CompiledTrajectory, pathPosition: numb
     if (position <= right.pathPosition) {
       const width = right.pathPosition - left.pathPosition;
       if (width <= 0) return right.speed;
-      const weight = interpolationWeight((position - left.pathPosition) / width, left.interpolation);
+      const weight = interpolationWeight(
+        (position - left.pathPosition) / width,
+        left.interpolation,
+      );
       return left.speed + (right.speed - left.speed) * weight;
     }
   }

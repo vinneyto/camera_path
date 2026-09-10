@@ -9,7 +9,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
@@ -19,8 +22,13 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   });
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new ApiError(payload?.detail ?? `Request failed with status ${response.status}`, response.status);
+    const payload = (await response.json().catch(() => null)) as {
+      detail?: string;
+    } | null;
+    throw new ApiError(
+      payload?.detail ?? `Request failed with status ${response.status}`,
+      response.status,
+    );
   }
 
   if (response.status === 204) {

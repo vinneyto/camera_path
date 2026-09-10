@@ -17,7 +17,9 @@ function applyTheme(theme: Theme) {
   document.documentElement.style.colorScheme = theme;
 }
 
-export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+export function ThemeProvider({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
@@ -28,19 +30,24 @@ export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode
     return () => window.clearTimeout(updateTheme);
   }, []);
 
-  const value = useMemo<ThemeContextValue>(() => ({
-    theme,
-    toggleTheme: () => {
-      setTheme((currentTheme) => {
-        const nextTheme = currentTheme === "dark" ? "light" : "dark";
-        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-        applyTheme(nextTheme);
-        return nextTheme;
-      });
-    },
-  }), [theme]);
+  const value = useMemo<ThemeContextValue>(
+    () => ({
+      theme,
+      toggleTheme: () => {
+        setTheme((currentTheme) => {
+          const nextTheme = currentTheme === "dark" ? "light" : "dark";
+          window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+          applyTheme(nextTheme);
+          return nextTheme;
+        });
+      },
+    }),
+    [theme],
+  );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

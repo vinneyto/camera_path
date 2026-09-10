@@ -2,7 +2,10 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { Quaternion, Vector3, type Group } from "three";
 
-import { evaluateTrajectoryCameraPose, type CompiledTrajectory } from "@/entities/trajectory";
+import {
+  evaluateTrajectoryCameraPose,
+  type CompiledTrajectory,
+} from "@/entities/trajectory";
 import { RENDER_PIPELINE_OVERLAY_LAYER } from "@/shared/three";
 
 import { PLAYBACK_CAMERA_HELPER_SEGMENTS } from "../lib/create-playback-camera-helper-segments";
@@ -15,7 +18,10 @@ interface PlaybackCameraProps {
 const EDGE_RADIUS = 0.006;
 const EDGE_UP = new Vector3(0, 1, 0);
 
-export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps) {
+export function PlaybackCamera({
+  pathPosition,
+  trajectory,
+}: PlaybackCameraProps) {
   const helperRef = useRef<Group>(null);
 
   useFrame(() => {
@@ -36,7 +42,10 @@ export function PlaybackCamera({ pathPosition, trajectory }: PlaybackCameraProps
         const direction = end.clone().sub(start);
         const length = direction.length();
         const position = start.clone().add(end).multiplyScalar(0.5);
-        const quaternion = new Quaternion().setFromUnitVectors(EDGE_UP, direction.normalize());
+        const quaternion = new Quaternion().setFromUnitVectors(
+          EDGE_UP,
+          direction.normalize(),
+        );
 
         return (
           <mesh

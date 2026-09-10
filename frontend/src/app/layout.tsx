@@ -8,10 +8,14 @@ export const metadata: Metadata = {
   description: "AI-assisted 3D camera trajectory editor",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html className="dark" lang="en" suppressHydrationWarning>
-      <body><AppProviders>{children}</AppProviders></body>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

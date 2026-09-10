@@ -2,7 +2,10 @@
 
 import { LoaderCircle } from "lucide-react";
 
-import { useCompiledTrajectoryQuery, useProjectQuery } from "@/entities/project";
+import {
+  useCompiledTrajectoryQuery,
+  useProjectQuery,
+} from "@/entities/project";
 import { TrajectoryPlaybackLoop } from "@/features/project-editor";
 
 import { ChatPanelContainer } from "./chat-panel-container";
@@ -14,7 +17,10 @@ interface ProjectWorkspaceProps {
   rendererBackend?: "webgl" | "webgpu";
 }
 
-export function ProjectWorkspace({ projectId, rendererBackend = "webgpu" }: ProjectWorkspaceProps) {
+export function ProjectWorkspace({
+  projectId,
+  rendererBackend = "webgpu",
+}: ProjectWorkspaceProps) {
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const project = projectQuery.data;

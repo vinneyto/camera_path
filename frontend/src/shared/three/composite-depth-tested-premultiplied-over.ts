@@ -9,7 +9,8 @@ export function compositeDepthTestedPremultipliedOver(
   baseViewZ: Node<"float">,
   overlayViewZ: Node<"float">,
 ): Node<"vec4"> {
-  const visibleOverlay = overlayViewZ.greaterThanEqual(baseViewZ)
+  const visibleOverlay = overlayViewZ
+    .greaterThanEqual(baseViewZ)
     .select(vec4(overlay), vec4(0));
   return compositePremultipliedOver(base, visibleOverlay);
 }

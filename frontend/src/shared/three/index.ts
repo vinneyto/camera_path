@@ -1,6 +1,4 @@
-export {
-  RenderPipelineCanvas,
-} from "./render-pipeline-canvas";
+export { RenderPipelineCanvas } from "./render-pipeline-canvas";
 export {
   useOptionalRenderPipeline,
   useRenderPipeline,

@@ -25,12 +25,17 @@ export function ProjectScene({
   rendererBackend,
   trajectory,
 }: ProjectSceneProps) {
-  const { closeTrajectory, selectTrajectory, trajectorySelected } = useTrajectorySelection();
-  const trajectoryControlsAvailable = Boolean(trajectory && trajectory.position_segments.length > 0);
-  const trajectoryControlsExpanded = trajectorySelected && trajectoryControlsAvailable;
-  const { elementRef: trajectoryControlsRef, height: trajectoryControlsHeight } = useElementHeight(
-    trajectoryControlsAvailable,
+  const { closeTrajectory, selectTrajectory, trajectorySelected } =
+    useTrajectorySelection();
+  const trajectoryControlsAvailable = Boolean(
+    trajectory && trajectory.position_segments.length > 0,
   );
+  const trajectoryControlsExpanded =
+    trajectorySelected && trajectoryControlsAvailable;
+  const {
+    elementRef: trajectoryControlsRef,
+    height: trajectoryControlsHeight,
+  } = useElementHeight(trajectoryControlsAvailable);
   const bottomOverlayHeight = trajectoryControlsAvailable
     ? trajectoryControlsHeight + TRAJECTORY_CONTROLS_BOTTOM_INSET
     : 0;
@@ -50,7 +55,10 @@ export function ProjectScene({
         <div
           className="absolute left-3 right-3 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"
           ref={trajectoryControlsRef}
-          style={{ bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET, zIndex: FLOATING_PANEL_Z_INDEX }}
+          style={{
+            bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET,
+            zIndex: FLOATING_PANEL_Z_INDEX,
+          }}
         >
           <PlaybackControlsContainer
             collapsed={!trajectoryControlsExpanded}

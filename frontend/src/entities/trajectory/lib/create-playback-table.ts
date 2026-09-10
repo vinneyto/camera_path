@@ -17,15 +17,24 @@ export function createPlaybackTable(
   for (let index = 1; index <= sampleCount; index += 1) {
     const previousPosition = (index - 1) / sampleCount;
     const pathPosition = index / sampleCount;
-    const meanSpeed = (evaluateSpeed(trajectory, previousPosition) + evaluateSpeed(trajectory, pathPosition)) / 2;
+    const meanSpeed =
+      (evaluateSpeed(trajectory, previousPosition) +
+        evaluateSpeed(trajectory, pathPosition)) /
+      2;
     time += trajectory.total_length / sampleCount / Math.max(meanSpeed, 1e-6);
     table.push({ pathPosition, time });
   }
 
   if (time > 0 && trajectory.duration_seconds > 0) {
     const durationScale = trajectory.duration_seconds / time;
-    const scaled = table.map((sample) => ({ ...sample, time: sample.time * durationScale }));
-    scaled[scaled.length - 1] = { pathPosition: 1, time: trajectory.duration_seconds };
+    const scaled = table.map((sample) => ({
+      ...sample,
+      time: sample.time * durationScale,
+    }));
+    scaled[scaled.length - 1] = {
+      pathPosition: 1,
+      time: trajectory.duration_seconds,
+    };
     return scaled;
   }
   return table;

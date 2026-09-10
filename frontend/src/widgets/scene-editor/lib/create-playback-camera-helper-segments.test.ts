@@ -29,6 +29,8 @@ describe("createPlaybackCameraHelperSegments", () => {
       "#f87171": 4,
       "#f8fafc": 1,
     });
-    expect(segments.every(({ end, start }) => end[2] <= 0 && start[2] <= 0)).toBe(true);
+    expect(
+      segments.every(({ end, start }) => end[2] <= 0 && start[2] <= 0),
+    ).toBe(true);
   });
 });

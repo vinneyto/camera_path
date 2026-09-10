@@ -31,12 +31,18 @@ export function WebGlScreenSpaceLine({
       toneMapped: false,
       transparent,
     });
-    const object = new Mesh(createScreenSpaceLineGeometry(points, radius), material);
+    const object = new Mesh(
+      createScreenSpaceLineGeometry(points, radius),
+      material,
+    );
     object.layers.set(layer);
     object.renderOrder = renderOrder;
 
     if (hitSlop > 0) {
-      const hitMesh = new Mesh(createScreenSpaceLineGeometry(points, radius + hitSlop), material);
+      const hitMesh = new Mesh(
+        createScreenSpaceLineGeometry(points, radius + hitSlop),
+        material,
+      );
       object.raycast = (raycaster, intersections) => {
         hitMesh.matrixWorld.copy(object.matrixWorld);
         const startIndex = intersections.length;
@@ -49,14 +55,28 @@ export function WebGlScreenSpaceLine({
     }
 
     return object;
-  }, [color, depthTest, depthWrite, hitSlop, layer, points, radius, renderOrder, transparent]);
+  }, [
+    color,
+    depthTest,
+    depthWrite,
+    hitSlop,
+    layer,
+    points,
+    radius,
+    renderOrder,
+    transparent,
+  ]);
 
-  useEffect(() => () => {
-    line.geometry.dispose();
-    line.material.dispose();
-    const hitGeometry = line.userData.hitGeometry;
-    if (hitGeometry && typeof hitGeometry.dispose === "function") hitGeometry.dispose();
-  }, [line]);
+  useEffect(
+    () => () => {
+      line.geometry.dispose();
+      line.material.dispose();
+      const hitGeometry = line.userData.hitGeometry;
+      if (hitGeometry && typeof hitGeometry.dispose === "function")
+        hitGeometry.dispose();
+    },
+    [line],
+  );
 
   return <primitive dispose={null} object={line} {...eventHandlers} />;
 }

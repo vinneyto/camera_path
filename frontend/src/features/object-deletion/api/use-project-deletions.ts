@@ -15,7 +15,9 @@ function useProjectObjectDeletion(
     onSuccess: (project) => {
       queryClient.setQueryData(projectKeys.detail(projectId), project);
       void queryClient.invalidateQueries({ queryKey: projectKeys.list() });
-      void queryClient.invalidateQueries({ queryKey: projectKeys.trajectory(projectId) });
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.trajectory(projectId),
+      });
     },
   });
 }
@@ -30,7 +32,9 @@ export function useDeleteProject() {
         projects?.filter((project) => project.id !== projectId),
       );
       queryClient.removeQueries({ queryKey: projectKeys.detail(projectId) });
-      queryClient.removeQueries({ queryKey: projectKeys.trajectory(projectId) });
+      queryClient.removeQueries({
+        queryKey: projectKeys.trajectory(projectId),
+      });
     },
   });
 }

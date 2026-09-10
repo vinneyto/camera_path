@@ -27,15 +27,16 @@ describe("TileGaussianCloudInstance raycasting", () => {
       });
     });
     const instance = new TileGaussianCloudInstance(cloud, false, vi.fn());
-    const raycaster = new Raycaster(
-      new Vector3(),
-      new Vector3(0, 0, -1),
-    );
+    const raycaster = new Raycaster(new Vector3(), new Vector3(0, 0, -1));
 
-    expect(raycaster.intersectObjects([cloud, trajectory])[0]?.object).toBe(trajectory);
+    expect(raycaster.intersectObjects([cloud, trajectory])[0]?.object).toBe(
+      trajectory,
+    );
 
     instance.setRaycastable(true);
 
-    expect(raycaster.intersectObjects([cloud, trajectory])[0]?.object).toBe(cloud);
+    expect(raycaster.intersectObjects([cloud, trajectory])[0]?.object).toBe(
+      cloud,
+    );
   });
 });

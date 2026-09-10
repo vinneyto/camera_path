@@ -1,12 +1,22 @@
-import type { AnchorCreate, AnchorUpdate, Project } from "@/entities/project/model/types";
-import type { ChatResult, CompiledTrajectory } from "@/entities/trajectory/model/types";
+import type {
+  AnchorCreate,
+  AnchorUpdate,
+  Project,
+} from "@/entities/project/model/types";
+import type {
+  ChatResult,
+  CompiledTrajectory,
+} from "@/entities/trajectory/model/types";
 import { apiRequest } from "@/shared/api/http";
 
 export const projectApi = {
   list: () => apiRequest<Project[]>("/projects"),
   get: (projectId: string) => apiRequest<Project>(`/projects/${projectId}`),
   create: (name: string) =>
-    apiRequest<Project>("/projects", { method: "POST", body: JSON.stringify({ name }) }),
+    apiRequest<Project>("/projects", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
   delete: (projectId: string) =>
     apiRequest<void>(`/projects/${projectId}`, { method: "DELETE" }),
   addAnchor: (projectId: string, anchor: AnchorCreate) =>
@@ -20,13 +30,23 @@ export const projectApi = {
       body: JSON.stringify(anchor),
     }),
   deleteAnchor: (projectId: string, anchorId: string) =>
-    apiRequest<Project>(`/projects/${projectId}/anchors/${anchorId}`, { method: "DELETE" }),
+    apiRequest<Project>(`/projects/${projectId}/anchors/${anchorId}`, {
+      method: "DELETE",
+    }),
   deleteSpeedKeyframe: (projectId: string, keyframeId: string) =>
-    apiRequest<Project>(`/projects/${projectId}/motion/keyframes/${keyframeId}`, { method: "DELETE" }),
+    apiRequest<Project>(
+      `/projects/${projectId}/motion/keyframes/${keyframeId}`,
+      { method: "DELETE" },
+    ),
   deleteCameraKeyframe: (projectId: string, keyframeId: string) =>
-    apiRequest<Project>(`/projects/${projectId}/camera/keyframes/${keyframeId}`, { method: "DELETE" }),
+    apiRequest<Project>(
+      `/projects/${projectId}/camera/keyframes/${keyframeId}`,
+      { method: "DELETE" },
+    ),
   compile: (projectId: string) =>
-    apiRequest<CompiledTrajectory>(`/projects/${projectId}/trajectory/compiled`),
+    apiRequest<CompiledTrajectory>(
+      `/projects/${projectId}/trajectory/compiled`,
+    ),
   saveUserMessage: (projectId: string, id: string, message: string) =>
     apiRequest<Project>(`/projects/${projectId}/chat/user-messages`, {
       method: "POST",

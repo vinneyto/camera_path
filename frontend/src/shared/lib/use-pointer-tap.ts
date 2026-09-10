@@ -39,29 +39,37 @@ export function usePointerTap<T>({
     };
   }, []);
 
-  const handlePointerMove = useCallback((value: T, event: PointerTapEvent) => {
-    const pendingTap = pendingTapRef.current;
-    if (pendingTap === null || pendingTap.pointerId !== event.pointerId) return false;
+  const handlePointerMove = useCallback(
+    (value: T, event: PointerTapEvent) => {
+      const pendingTap = pendingTapRef.current;
+      if (pendingTap === null || pendingTap.pointerId !== event.pointerId)
+        return false;
 
-    const distance = Math.hypot(
-      event.clientX - pendingTap.startX,
-      event.clientY - pendingTap.startY,
-    );
-    if (distance > movementThreshold) {
+      const distance = Math.hypot(
+        event.clientX - pendingTap.startX,
+        event.clientY - pendingTap.startY,
+      );
+      if (distance > movementThreshold) {
+        cancel();
+        return true;
+      }
+
+      pendingTap.value = value;
+      return false;
+    },
+    [cancel, movementThreshold],
+  );
+
+  const handlePointerUp = useCallback(
+    (event: Pick<PointerTapEvent, "pointerId">) => {
+      const pendingTap = pendingTapRef.current;
+      if (pendingTap === null || pendingTap.pointerId !== event.pointerId)
+        return;
       cancel();
-      return true;
-    }
-
-    pendingTap.value = value;
-    return false;
-  }, [cancel, movementThreshold]);
-
-  const handlePointerUp = useCallback((event: Pick<PointerTapEvent, "pointerId">) => {
-    const pendingTap = pendingTapRef.current;
-    if (pendingTap === null || pendingTap.pointerId !== event.pointerId) return;
-    cancel();
-    onTap(pendingTap.value);
-  }, [cancel, onTap]);
+      onTap(pendingTap.value);
+    },
+    [cancel, onTap],
+  );
 
   return {
     cancel,

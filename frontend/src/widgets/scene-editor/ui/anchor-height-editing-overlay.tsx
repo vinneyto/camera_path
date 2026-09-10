@@ -31,15 +31,18 @@ export function AnchorHeightEditingOverlay({
   dragging,
   lift,
 }: AnchorHeightEditingOverlayProps) {
-  const highlight = useMemo<GaussianHighlightVolumeOptions>(() => ({
-    bottomOffset: ANCHOR_PLACEMENT_FLASHLIGHT_BOTTOM_OFFSET,
-    color: ANCHOR_PLACEMENT_FLASHLIGHT_COLOR,
-    height: Math.max(lift, 0.05),
-    position: anchor.surface_position,
-    radius: ANCHOR_PLACEMENT_FLASHLIGHT_RADIUS,
-    strength: ANCHOR_PLACEMENT_FLASHLIGHT_STRENGTH,
-    type: "color",
-  }), [anchor.surface_position, lift]);
+  const highlight = useMemo<GaussianHighlightVolumeOptions>(
+    () => ({
+      bottomOffset: ANCHOR_PLACEMENT_FLASHLIGHT_BOTTOM_OFFSET,
+      color: ANCHOR_PLACEMENT_FLASHLIGHT_COLOR,
+      height: Math.max(lift, 0.05),
+      position: anchor.surface_position,
+      radius: ANCHOR_PLACEMENT_FLASHLIGHT_RADIUS,
+      strength: ANCHOR_PLACEMENT_FLASHLIGHT_STRENGTH,
+      type: "color",
+    }),
+    [anchor.surface_position, lift],
+  );
 
   return (
     <>

@@ -9,7 +9,10 @@ import { ANCHOR_ICON_Z_INDEX_RANGE } from "@/shared/ui";
 
 const ANCHOR_MARKER_HIT_RADIUS = 0.13;
 
-interface AnchorMarkerProps extends Omit<ThreeElements["group"], "children" | "position"> {
+interface AnchorMarkerProps extends Omit<
+  ThreeElements["group"],
+  "children" | "position"
+> {
   anchor: Anchor;
   hovered?: boolean;
 }
@@ -20,16 +23,20 @@ export function AnchorMarker({
   ...groupProps
 }: AnchorMarkerProps) {
   const supportMarkerTexture = useTexture("/anchor-target.png");
-  const axis = anchor.lift_axis === "surface_normal" ? anchor.surface_normal : [0, 1, 0];
+  const axis =
+    anchor.lift_axis === "surface_normal" ? anchor.surface_normal : [0, 1, 0];
   const position = anchor.surface_position.map(
     (component, index) => component + axis[index] * anchor.lift,
   ) as [number, number, number];
-  const surfaceOffset = axis.map(
-    (component) => -component * anchor.lift,
-  ) as [number, number, number];
+  const surfaceOffset = axis.map((component) => -component * anchor.lift) as [
+    number,
+    number,
+    number,
+  ];
 
-  const interactive = groupProps.onContextMenu !== undefined
-    || groupProps.onPointerDown !== undefined;
+  const interactive =
+    groupProps.onContextMenu !== undefined ||
+    groupProps.onPointerDown !== undefined;
   const highlighted = hovered;
 
   return (
@@ -66,7 +73,9 @@ export function AnchorMarker({
             aria-hidden
             className={cn(
               "absolute bottom-0 left-0 size-3.5 -translate-x-1/2 drop-shadow-sm transition-colors",
-              highlighted ? "fill-orange-400 text-orange-300" : "fill-orange-500 text-orange-400",
+              highlighted
+                ? "fill-orange-400 text-orange-300"
+                : "fill-orange-500 text-orange-400",
             )}
             strokeWidth={2}
           />

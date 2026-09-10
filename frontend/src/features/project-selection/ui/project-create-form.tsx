@@ -10,7 +10,10 @@ interface ProjectCreateFormProps {
   onCreate: (name: string) => Promise<boolean>;
 }
 
-export function ProjectCreateForm({ disabled, onCreate }: ProjectCreateFormProps) {
+export function ProjectCreateForm({
+  disabled,
+  onCreate,
+}: ProjectCreateFormProps) {
   const [name, setName] = useState("");
 
   async function handleSubmit(event: FormEvent) {

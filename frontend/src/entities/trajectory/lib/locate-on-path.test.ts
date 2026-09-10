@@ -38,7 +38,9 @@ const trajectory = {
 
 describe("locateOnPath", () => {
   it("maps normalized distance to Bezier t through the compiled arc-length table", () => {
-    const halfT = trajectory.arc_length_table.find((sample) => sample.t === 0.5)!;
+    const halfT = trajectory.arc_length_table.find(
+      (sample) => sample.t === 0.5,
+    )!;
     const sample = locateOnPath(trajectory, halfT.distance / curve.length);
     const expected = evaluateBezier(curve, 0.5);
 
@@ -51,11 +53,15 @@ describe("locateOnPath", () => {
   });
 
   it("handles a segment boundary without a duplicate start sample", () => {
-    const straight = (id: string, start: number, end: number): CubicBezier3D => ({
+    const straight = (
+      id: string,
+      start: number,
+      end: number,
+    ): CubicBezier3D => ({
       source_segment_id: id,
       p0: [start, 0, 0],
       p1: [start + (end - start) / 3, 0, 0],
-      p2: [start + 2 * (end - start) / 3, 0, 0],
+      p2: [start + (2 * (end - start)) / 3, 0, 0],
       p3: [end, 0, 0],
       length: end - start,
     });
@@ -69,7 +75,9 @@ describe("locateOnPath", () => {
       total_length: 2,
     } as unknown as CompiledTrajectory;
 
-    expect(locateOnPath(twoSegments, 0.5).position.toArray()).toEqual([1, 0, 0]);
+    expect(locateOnPath(twoSegments, 0.5).position.toArray()).toEqual([
+      1, 0, 0,
+    ]);
     expect(locateOnPath(twoSegments, 0.75).position.x).toBeCloseTo(1.5);
   });
 });

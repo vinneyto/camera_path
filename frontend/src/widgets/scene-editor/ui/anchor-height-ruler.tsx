@@ -9,7 +9,10 @@ interface AnchorHeightRulerProps {
   surfacePosition: Vec3;
 }
 
-export function AnchorHeightRuler({ lift, surfacePosition }: AnchorHeightRulerProps) {
+export function AnchorHeightRuler({
+  lift,
+  surfacePosition,
+}: AnchorHeightRulerProps) {
   const [x, y, z] = surfacePosition;
 
   return (

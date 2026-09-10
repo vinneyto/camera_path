@@ -6,7 +6,10 @@ interface ProjectPageProps {
   searchParams: Promise<{ renderer?: string | string[] }>;
 }
 
-export default async function ProjectPage({ params, searchParams }: ProjectPageProps) {
+export default async function ProjectPage({
+  params,
+  searchParams,
+}: ProjectPageProps) {
   const { projectId } = await params;
   const { renderer } = await searchParams;
   return (

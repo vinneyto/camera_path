@@ -8,7 +8,10 @@ interface AnchorReferencePickerProps {
   onSelect: (anchor: Anchor) => void;
 }
 
-export function AnchorReferencePicker({ anchors, onSelect }: AnchorReferencePickerProps) {
+export function AnchorReferencePicker({
+  anchors,
+  onSelect,
+}: AnchorReferencePickerProps) {
   if (anchors.length === 0) return null;
   return (
     <div className="flex gap-1 overflow-x-auto pb-1">

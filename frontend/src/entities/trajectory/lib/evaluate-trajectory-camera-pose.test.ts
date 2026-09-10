@@ -9,23 +9,27 @@ import type {
 import { evaluateTrajectoryCameraPose } from "./evaluate-trajectory-camera-pose";
 
 function createTrajectory(aim: ResolvedCameraAim): CompiledTrajectory {
-  const keyframes = [{
-    id: "aim",
-    path_position: 0,
-    aim,
-    interpolation_to_next: "smoothstep" as const,
-  }];
+  const keyframes = [
+    {
+      id: "aim",
+      path_position: 0,
+      aim,
+      interpolation_to_next: "smoothstep" as const,
+    },
+  ];
   return {
     project_id: "project",
     revision: 1,
-    position_segments: [{
-      source_segment_id: "segment",
-      p0: [0, 0, 0],
-      p1: [1 / 3, 0, 0],
-      p2: [2 / 3, 0, 0],
-      p3: [1, 0, 0],
-      length: 1,
-    }],
+    position_segments: [
+      {
+        source_segment_id: "segment",
+        p0: [0, 0, 0],
+        p1: [1 / 3, 0, 0],
+        p2: [2 / 3, 0, 0],
+        p3: [1, 0, 0],
+        length: 1,
+      },
+    ],
     arc_length_table: [
       { segment_index: 0, t: 0, distance: 0 },
       { segment_index: 0, t: 1, distance: 1 },
@@ -56,7 +60,11 @@ describe("evaluateTrajectoryCameraPose", () => {
 
   it("uses the resolved look-at point for orientation", () => {
     const pose = evaluateTrajectoryCameraPose(
-      createTrajectory({ kind: "look_at_point", scene_point_id: "target", position: [0.5, 1, -1] }),
+      createTrajectory({
+        kind: "look_at_point",
+        scene_point_id: "target",
+        position: [0.5, 1, -1],
+      }),
       0.5,
     );
     const forward = new Vector3(0, 0, -1).applyQuaternion(pose.quaternion);

@@ -3,7 +3,10 @@ import type { Intersection, Object3D, Ray } from "three";
 import { Sphere } from "three/webgpu";
 
 import type { GaussianCloudInstance } from "../../model/gaussian-rendering-backend";
-import type { SceneSurfaceBounds, SceneSurfaceHit } from "../../model/scene-surface-types";
+import type {
+  SceneSurfaceBounds,
+  SceneSurfaceHit,
+} from "../../model/scene-surface-types";
 
 export class TileGaussianCloudInstance implements GaussianCloudInstance {
   readonly bounds: SceneSurfaceBounds | null;
@@ -37,11 +40,11 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
   }
 
   getHit(intersection: Intersection<Object3D>, ray: Ray): SceneSurfaceHit {
-    const normal = intersection.face?.normal
-      .clone()
-      .transformDirection(intersection.object.matrixWorld)
-      .normalize()
-      ?? ray.direction.clone().negate().normalize();
+    const normal =
+      intersection.face?.normal
+        .clone()
+        .transformDirection(intersection.object.matrixWorld)
+        .normalize() ?? ray.direction.clone().negate().normalize();
     return {
       normal: normal.toArray(),
       position: intersection.point.toArray(),

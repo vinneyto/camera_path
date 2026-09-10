@@ -3,17 +3,26 @@ import type { Intersection, Object3D, Ray } from "three";
 import { Sphere } from "three";
 
 import type { GaussianCloudInstance } from "../../model/gaussian-rendering-backend";
-import type { SceneSurfaceBounds, SceneSurfaceHit } from "../../model/scene-surface-types";
+import type {
+  SceneSurfaceBounds,
+  SceneSurfaceHit,
+} from "../../model/scene-surface-types";
 
 export class SparkGaussianCloudInstance implements GaussianCloudInstance {
   readonly bounds: SceneSurfaceBounds;
   readonly object: SplatMesh;
   private disposed = false;
 
-  constructor(mesh: SplatMesh, private readonly onDispose: () => void) {
+  constructor(
+    mesh: SplatMesh,
+    private readonly onDispose: () => void,
+  ) {
     this.object = mesh;
     mesh.updateWorldMatrix(true, false);
-    const sphere = mesh.getBoundingBox().getBoundingSphere(new Sphere()).applyMatrix4(mesh.matrixWorld);
+    const sphere = mesh
+      .getBoundingBox()
+      .getBoundingSphere(new Sphere())
+      .applyMatrix4(mesh.matrixWorld);
     this.bounds = { center: sphere.center.toArray(), radius: sphere.radius };
   }
 

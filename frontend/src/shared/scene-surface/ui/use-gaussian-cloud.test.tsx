@@ -28,7 +28,9 @@ function createWrapper(backend: GaussianRenderingBackend) {
   return function Wrapper({ children }: PropsWithChildren) {
     return (
       <StrictMode>
-        <SceneSurfaceProvider backend={backend}>{children}</SceneSurfaceProvider>
+        <SceneSurfaceProvider backend={backend}>
+          {children}
+        </SceneSurfaceProvider>
       </StrictMode>
     );
   };
@@ -72,9 +74,12 @@ describe("useGaussianCloud", () => {
     let resolveCloud: ((instance: GaussianCloudInstance) => void) | undefined;
     const backend: GaussianRenderingBackend = {
       container: null,
-      createCloud: vi.fn(() => new Promise<GaussianCloudInstance>((resolve) => {
-        resolveCloud = resolve;
-      })),
+      createCloud: vi.fn(
+        () =>
+          new Promise<GaussianCloudInstance>((resolve) => {
+            resolveCloud = resolve;
+          }),
+      ),
       createHighlightVolume: vi.fn(),
       dispose: vi.fn(),
       invalidate: vi.fn(),

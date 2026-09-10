@@ -31,7 +31,9 @@ export function KeyframeTimeline({
   renderMarker,
 }: KeyframeTimelineProps) {
   const [menu, setMenu] = useState<KeyframeMenuState | null>(null);
-  const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(null);
+  const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(
+    null,
+  );
 
   return (
     <>
@@ -45,7 +47,11 @@ export function KeyframeTimeline({
           onContextMenu={(event) => {
             event.preventDefault();
             setSelectedKeyframeId(keyframe.id);
-            setMenu({ keyframeId: keyframe.id, x: event.clientX, y: event.clientY });
+            setMenu({
+              keyframeId: keyframe.id,
+              x: event.clientX,
+              y: event.clientY,
+            });
           }}
           onClick={() => setSelectedKeyframeId(keyframe.id)}
           onPointerDown={(event) => event.stopPropagation()}
@@ -59,12 +65,18 @@ export function KeyframeTimeline({
         </button>
       ))}
       <ContextMenu
-        items={menu ? [{
-          destructive: true,
-          disabled: deletingKeyframeId === menu.keyframeId,
-          label: deleteLabel,
-          onSelect: () => onDeleteKeyframe(menu.keyframeId),
-        }] : []}
+        items={
+          menu
+            ? [
+                {
+                  destructive: true,
+                  disabled: deletingKeyframeId === menu.keyframeId,
+                  label: deleteLabel,
+                  onSelect: () => onDeleteKeyframe(menu.keyframeId),
+                },
+              ]
+            : []
+        }
         onClose={() => setMenu(null)}
         position={menu}
       />

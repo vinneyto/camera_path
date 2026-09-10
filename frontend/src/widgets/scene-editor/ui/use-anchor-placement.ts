@@ -23,9 +23,12 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
   const setActiveTool = useSetActiveEditorTool();
   const [previewHit, setPreviewHit] = useState<SceneSurfaceHit | null>(null);
 
-  const handleTap = useCallback((hit: SceneSurfaceHit) => {
-    onPlace(hit.position, hit.normal);
-  }, [onPlace]);
+  const handleTap = useCallback(
+    (hit: SceneSurfaceHit) => {
+      onPlace(hit.position, hit.normal);
+    },
+    [onPlace],
+  );
   const {
     cancel: cancelPointerTap,
     handlePointerDown: beginPointerTap,
@@ -40,47 +43,54 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     if (activeTool === null) cancelPointerTap();
   }, [activeTool, cancelPointerTap]);
 
-  const handlePointerDown = useCallback((
-    hit: SceneSurfaceHit,
-    event: ThreeEvent<PointerEvent>,
-  ) => {
-    const pointerType = event.nativeEvent.pointerType;
-    const enabled = activeTool === "anchor"
-      || getAnchorToolModifier(event.nativeEvent).pressed
-      || pointerType === "touch";
-    if (!enabled) return;
-    if (pointerType === "touch") setActiveTool("anchor");
-    beginPointerTap(hit, event);
-    setPreviewHit(hit);
-    (event.target as Element | null)?.setPointerCapture?.(event.pointerId);
-  }, [activeTool, beginPointerTap, setActiveTool]);
-
-  const handlePointerMove = useCallback((
-    hit: SceneSurfaceHit,
-    event: ThreeEvent<PointerEvent>,
-  ) => {
-    if (activeTool === "anchor" || getAnchorToolModifier(event.nativeEvent).pressed) {
+  const handlePointerDown = useCallback(
+    (hit: SceneSurfaceHit, event: ThreeEvent<PointerEvent>) => {
+      const pointerType = event.nativeEvent.pointerType;
+      const enabled =
+        activeTool === "anchor" ||
+        getAnchorToolModifier(event.nativeEvent).pressed ||
+        pointerType === "touch";
+      if (!enabled) return;
+      if (pointerType === "touch") setActiveTool("anchor");
+      beginPointerTap(hit, event);
       setPreviewHit(hit);
-    }
-    const moved = movePointerTap(hit, event);
-    if (moved) setPreviewHit(null);
-  }, [activeTool, movePointerTap]);
+      (event.target as Element | null)?.setPointerCapture?.(event.pointerId);
+    },
+    [activeTool, beginPointerTap, setActiveTool],
+  );
 
-  const handlePointerUp = useCallback((
-    _hit: SceneSurfaceHit,
-    event: ThreeEvent<PointerEvent>,
-  ) => {
-    (event.target as Element | null)?.releasePointerCapture?.(event.pointerId);
-    const enabled = activeTool === "anchor"
-      || getAnchorToolModifier(event.nativeEvent).pressed
-      || event.nativeEvent.pointerType === "touch";
-    if (enabled) finishPointerTap(event);
-    else cancelPointerTap();
-    if (event.nativeEvent.pointerType === "touch") {
-      setPreviewHit(null);
-      setActiveTool(null);
-    }
-  }, [activeTool, cancelPointerTap, finishPointerTap, setActiveTool]);
+  const handlePointerMove = useCallback(
+    (hit: SceneSurfaceHit, event: ThreeEvent<PointerEvent>) => {
+      if (
+        activeTool === "anchor" ||
+        getAnchorToolModifier(event.nativeEvent).pressed
+      ) {
+        setPreviewHit(hit);
+      }
+      const moved = movePointerTap(hit, event);
+      if (moved) setPreviewHit(null);
+    },
+    [activeTool, movePointerTap],
+  );
+
+  const handlePointerUp = useCallback(
+    (_hit: SceneSurfaceHit, event: ThreeEvent<PointerEvent>) => {
+      (event.target as Element | null)?.releasePointerCapture?.(
+        event.pointerId,
+      );
+      const enabled =
+        activeTool === "anchor" ||
+        getAnchorToolModifier(event.nativeEvent).pressed ||
+        event.nativeEvent.pointerType === "touch";
+      if (enabled) finishPointerTap(event);
+      else cancelPointerTap();
+      if (event.nativeEvent.pointerType === "touch") {
+        setPreviewHit(null);
+        setActiveTool(null);
+      }
+    },
+    [activeTool, cancelPointerTap, finishPointerTap, setActiveTool],
+  );
 
   const handleControlsChange = useCallback(() => {
     cancelPointerTap();
@@ -91,11 +101,14 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     setPreviewHit(null);
   }, []);
 
-  const handlePointerCancel = useCallback((event: ThreeEvent<PointerEvent>) => {
-    cancelPointerTap();
-    setPreviewHit(null);
-    if (event.nativeEvent.pointerType === "touch") setActiveTool(null);
-  }, [cancelPointerTap, setActiveTool]);
+  const handlePointerCancel = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      cancelPointerTap();
+      setPreviewHit(null);
+      if (event.nativeEvent.pointerType === "touch") setActiveTool(null);
+    },
+    [cancelPointerTap, setActiveTool],
+  );
 
   return {
     handleControlsChange,

@@ -46,7 +46,8 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     source: GaussianCloudSource,
     options: GaussianCloudOptions = {},
   ): Promise<GaussianCloudInstance> {
-    if (this.disposed) throw new Error("TileGaussianRenderingBackend is disposed");
+    if (this.disposed)
+      throw new Error("TileGaussianRenderingBackend is disposed");
 
     let cloud: GaussianCloud;
     if (source.kind === "url") {
@@ -63,7 +64,9 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
     if (this.disposed) {
       cloud.dispose();
-      throw new Error("TileGaussianRenderingBackend was disposed while loading a cloud");
+      throw new Error(
+        "TileGaussianRenderingBackend was disposed while loading a cloud",
+      );
     }
 
     cloud.raycastMode = "full";
@@ -88,18 +91,18 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   createHighlightVolume(
     options: GaussianHighlightVolumeOptions,
   ): GaussianHighlightVolumeInstance {
-    if (this.disposed) throw new Error("TileGaussianRenderingBackend is disposed");
-    if (this.pass === null) throw new Error("A Gaussian cloud must be loaded before highlighting");
+    if (this.disposed)
+      throw new Error("TileGaussianRenderingBackend is disposed");
+    if (this.pass === null)
+      throw new Error("A Gaussian cloud must be loaded before highlighting");
     if (this.highlightVolume !== null) {
-      throw new Error("TileGaussianRenderingBackend supports one highlight volume at a time");
+      throw new Error(
+        "TileGaussianRenderingBackend supports one highlight volume at a time",
+      );
     }
-    const volume = new TileGaussianHighlightVolume(
-      this.pass,
-      options,
-      () => {
-        if (this.highlightVolume === volume) this.highlightVolume = null;
-      },
-    );
+    const volume = new TileGaussianHighlightVolume(this.pass, options, () => {
+      if (this.highlightVolume === volume) this.highlightVolume = null;
+    });
     this.highlightVolume = volume;
     return volume;
   }
@@ -141,7 +144,8 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
   private ensurePass(): void {
     if (this.pass !== null) return;
-    const { camera, getOpaqueViewDepth, registerLayer, renderer } = this.pipeline;
+    const { camera, getOpaqueViewDepth, registerLayer, renderer } =
+      this.pipeline;
     if (!(camera instanceof PerspectiveCamera)) {
       throw new TypeError("3dgs-tile-webgpu requires a PerspectiveCamera");
     }

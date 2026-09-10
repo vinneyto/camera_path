@@ -8,10 +8,13 @@ export function useAddAnchor(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (anchor: AnchorCreate) => projectApi.addAnchor(projectId, anchor),
+    mutationFn: (anchor: AnchorCreate) =>
+      projectApi.addAnchor(projectId, anchor),
     onSuccess: (project) => {
       queryClient.setQueryData(projectKeys.detail(projectId), project);
-      void queryClient.invalidateQueries({ queryKey: projectKeys.trajectory(projectId) });
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.trajectory(projectId),
+      });
     },
   });
 }

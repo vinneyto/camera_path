@@ -64,17 +64,15 @@ export function SceneSurface({
     if (typeof onPointerUp === "function") onPointerUp(event);
   }
 
-  return cloud
-    ? (
-        <primitive
-          {...objectProps}
-          dispose={null}
-          object={cloud.object}
-          onClick={handleClick}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-        />
-      )
-    : null;
+  return cloud ? (
+    <primitive
+      {...objectProps}
+      dispose={null}
+      object={cloud.object}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    />
+  ) : null;
 }

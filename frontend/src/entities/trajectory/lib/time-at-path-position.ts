@@ -1,6 +1,9 @@
 import type { PlaybackSample } from "./create-playback-table";
 
-export function timeAtPathPosition(table: PlaybackSample[], pathPosition: number): number {
+export function timeAtPathPosition(
+  table: PlaybackSample[],
+  pathPosition: number,
+): number {
   if (table.length === 0) return 0;
   const position = Math.min(1, Math.max(0, pathPosition));
 

@@ -22,7 +22,9 @@ export function useGaussianRenderingBackend(
   const backend = useMemo(() => {
     if (renderer instanceof WebGPURenderer) {
       if (pipeline === null) {
-        throw new Error("WebGPU Gaussian rendering requires RenderPipelineProvider");
+        throw new Error(
+          "WebGPU Gaussian rendering requires RenderPipelineProvider",
+        );
       }
       return new TileGaussianRenderingBackend(pipeline);
     }

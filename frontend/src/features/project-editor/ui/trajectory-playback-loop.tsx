@@ -8,21 +8,31 @@ import {
   type CompiledTrajectory,
 } from "@/entities/trajectory";
 
-import { useEditorStore, useEditorStoreApi } from "../model/editor-store-provider";
+import {
+  useEditorStore,
+  useEditorStoreApi,
+} from "../model/editor-store-provider";
 
 interface TrajectoryPlaybackLoopProps {
   trajectory: CompiledTrajectory | null;
 }
 
-export function TrajectoryPlaybackLoop({ trajectory }: TrajectoryPlaybackLoopProps) {
-  const table = useMemo(() => trajectory ? createPlaybackTable(trajectory) : [], [trajectory]);
+export function TrajectoryPlaybackLoop({
+  trajectory,
+}: TrajectoryPlaybackLoopProps) {
+  const table = useMemo(
+    () => (trajectory ? createPlaybackTable(trajectory) : []),
+    [trajectory],
+  );
   const duration = table.at(-1)?.time ?? 0;
   const playing = useEditorStore((state) => state.playback.playing);
   const { resetPlayback, setPlaybackFrame, setPlaying } = useEditorStore(
     (state) => state.playbackActions,
   );
   const store = useEditorStoreApi();
-  const trajectoryKey = trajectory ? `${trajectory.project_id}:${trajectory.revision}` : null;
+  const trajectoryKey = trajectory
+    ? `${trajectory.project_id}:${trajectory.revision}`
+    : null;
 
   useEffect(() => {
     resetPlayback();
@@ -42,7 +52,10 @@ export function TrajectoryPlaybackLoop({ trajectory }: TrajectoryPlaybackLoopPro
         setPlaying(false);
         return;
       }
-      setPlaybackFrame(pathPositionAtTime(table, currentElapsed), currentElapsed);
+      setPlaybackFrame(
+        pathPositionAtTime(table, currentElapsed),
+        currentElapsed,
+      );
       frame = requestAnimationFrame(animate);
     }
 
