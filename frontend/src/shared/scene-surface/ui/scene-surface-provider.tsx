@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, type PropsWithChildren, useContext, useEffect } from "react";
+import { createContext, type PropsWithChildren, useContext, useEffect, useMemo } from "react";
 
+import { GaussianCloudResourceCache } from "../model/gaussian-cloud-resource-cache";
 import type { GaussianRenderingBackend } from "../model/gaussian-rendering-backend";
 
 interface SceneSurfaceProviderProps extends PropsWithChildren {
@@ -14,12 +15,18 @@ interface BackendOwnership {
 }
 
 const SceneSurfaceBackendContext = createContext<GaussianRenderingBackend | null>(null);
+const GaussianCloudResourceCacheContext = createContext<GaussianCloudResourceCache | null>(null);
 const backendOwnership = new WeakMap<GaussianRenderingBackend, BackendOwnership>();
 
 export function SceneSurfaceProvider({
   backend,
   children,
 }: SceneSurfaceProviderProps) {
+  const cloudResourceCache = useMemo(
+    () => new GaussianCloudResourceCache(backend),
+    [backend],
+  );
+
   useEffect(() => {
     const ownership = backendOwnership.get(backend) ?? { count: 0, disposeTimer: null };
     if (ownership.disposeTimer !== null) window.clearTimeout(ownership.disposeTimer);
@@ -46,7 +53,9 @@ export function SceneSurfaceProvider({
 
   return (
     <SceneSurfaceBackendContext.Provider value={backend}>
-      {content}
+      <GaussianCloudResourceCacheContext.Provider value={cloudResourceCache}>
+        {content}
+      </GaussianCloudResourceCacheContext.Provider>
     </SceneSurfaceBackendContext.Provider>
   );
 }
@@ -57,4 +66,12 @@ export function useSceneSurfaceBackend(): GaussianRenderingBackend {
     throw new Error("SceneSurface must be rendered inside SceneSurfaceProvider");
   }
   return backend;
+}
+
+export function useGaussianCloudResourceCache(): GaussianCloudResourceCache {
+  const cache = useContext(GaussianCloudResourceCacheContext);
+  if (cache === null) {
+    throw new Error("Gaussian cloud resources must be used inside SceneSurfaceProvider");
+  }
+  return cache;
 }

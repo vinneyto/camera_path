@@ -1,9 +1,9 @@
 "use client";
 
 import type { ThreeEvent } from "@react-three/fiber";
+import { useEffect, useEffectEvent } from "react";
 
 import type { SceneSurfaceProps } from "../model/scene-surface-types";
-import { useSceneSurfaceBackend } from "./scene-surface-provider";
 import { useGaussianCloud } from "./use-gaussian-cloud";
 
 export function SceneSurface({
@@ -23,16 +23,21 @@ export function SceneSurface({
   source,
   ...objectProps
 }: SceneSurfaceProps) {
-  const backend = useSceneSurfaceBackend();
-  const cloud = useGaussianCloud({
-    backend,
+  const [cloud, loading, error] = useGaussianCloud({
     name,
-    onError,
-    onLoading,
-    onReady,
     raycastable,
     source,
   });
+  const notifyStatus = useEffectEvent(() => {
+    if (loading) onLoading?.();
+    if (error !== null) onError?.(error);
+    const bounds = cloud?.bounds;
+    if (bounds !== null && bounds !== undefined) onReady?.({ bounds });
+  });
+
+  useEffect(() => {
+    notifyStatus();
+  }, [cloud, error, loading]);
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     if (cloud === null) return;
