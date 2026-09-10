@@ -7,13 +7,18 @@ describe("apiRequest", () => {
 
   it("accepts a successful response without a JSON body", async () => {
     const json = vi.fn();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      json,
-      ok: true,
-      status: 204,
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json,
+        ok: true,
+        status: 204,
+      }),
+    );
 
-    await expect(apiRequest<void>("/projects/project-1", { method: "DELETE" })).resolves.toBeUndefined();
+    await expect(
+      apiRequest<void>("/projects/project-1", { method: "DELETE" }),
+    ).resolves.toBeUndefined();
     expect(json).not.toHaveBeenCalled();
   });
 });

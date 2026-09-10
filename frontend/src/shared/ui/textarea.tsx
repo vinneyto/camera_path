@@ -2,7 +2,10 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
 
-export function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+export function Textarea({
+  className,
+  ...props
+}: React.ComponentProps<"textarea">) {
   return (
     <textarea
       className={cn(

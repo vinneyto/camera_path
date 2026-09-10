@@ -52,8 +52,14 @@ export function ContextMenu({ items, onClose, position }: ContextMenuProps) {
 
   if (!position) return null;
 
-  const left = typeof window === "undefined" ? position.x : Math.min(position.x, window.innerWidth - 188);
-  const top = typeof window === "undefined" ? position.y : Math.min(position.y, window.innerHeight - 52);
+  const left =
+    typeof window === "undefined"
+      ? position.x
+      : Math.min(position.x, window.innerWidth - 188);
+  const top =
+    typeof window === "undefined"
+      ? position.y
+      : Math.min(position.y, window.innerHeight - 52);
 
   return createPortal(
     <div
@@ -61,7 +67,11 @@ export function ContextMenu({ items, onClose, position }: ContextMenuProps) {
       className="fixed min-w-44 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-xl"
       ref={menuRef}
       role="menu"
-      style={{ left: Math.max(8, left), top: Math.max(8, top), zIndex: CONTEXT_MENU_Z_INDEX }}
+      style={{
+        left: Math.max(8, left),
+        top: Math.max(8, top),
+        zIndex: CONTEXT_MENU_Z_INDEX,
+      }}
     >
       {items.map((item) => (
         <button

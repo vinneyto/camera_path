@@ -36,26 +36,26 @@ export function useGaussianCloud({
     name: string | undefined;
     source: GaussianCloudSource;
   } | null>(null);
-  const cloud = loaded?.source === source
-    && loaded.name === name
-    ? loaded.instance
-    : null;
-  const error = failed?.source === source && failed.name === name
-    ? failed.error
-    : null;
+  const cloud =
+    loaded?.source === source && loaded.name === name ? loaded.instance : null;
+  const error =
+    failed?.source === source && failed.name === name ? failed.error : null;
 
   useEffect(() => {
     let active = true;
     const lease = cache.acquire(source, { name });
-    void lease.promise.then((result) => {
-      if (!active) return;
-      setFailed(null);
-      setLoaded({ instance: result, name, source });
-    }).catch((reason: unknown) => {
-      if (!active) return;
-      const error = reason instanceof Error ? reason : new Error(String(reason));
-      setFailed({ error, name, source });
-    });
+    void lease.promise
+      .then((result) => {
+        if (!active) return;
+        setFailed(null);
+        setLoaded({ instance: result, name, source });
+      })
+      .catch((reason: unknown) => {
+        if (!active) return;
+        const error =
+          reason instanceof Error ? reason : new Error(String(reason));
+        setFailed({ error, name, source });
+      });
 
     return () => {
       active = false;

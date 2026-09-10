@@ -33,24 +33,35 @@ export function SpeedGraph({
   pathPosition,
   trajectory,
 }: SpeedGraphProps) {
-  const [hoveredKeyframeId, setHoveredKeyframeId] = useState<string | null>(null);
+  const [hoveredKeyframeId, setHoveredKeyframeId] = useState<string | null>(
+    null,
+  );
   const [menu, setMenu] = useState<SpeedMenuState | null>(null);
   const samples = useMemo(
-    () => Array.from({ length: 101 }, (_, index) => ({
-      position: index / 100,
-      speed: evaluateSpeed(trajectory, index / 100),
-    })),
+    () =>
+      Array.from({ length: 101 }, (_, index) => ({
+        position: index / 100,
+        speed: evaluateSpeed(trajectory, index / 100),
+      })),
     [trajectory],
   );
-  const maximum = Math.max(2, Math.ceil(Math.max(...samples.map((sample) => sample.speed)) * 2) / 2);
-  const speedY = (speed: number) => PLOT_BOTTOM - (speed / maximum) * (PLOT_BOTTOM - PLOT_TOP);
-  const points = samples.map((sample) => `${graphX(sample.position)},${speedY(sample.speed)}`).join(" ");
+  const maximum = Math.max(
+    2,
+    Math.ceil(Math.max(...samples.map((sample) => sample.speed)) * 2) / 2,
+  );
+  const speedY = (speed: number) =>
+    PLOT_BOTTOM - (speed / maximum) * (PLOT_BOTTOM - PLOT_TOP);
+  const points = samples
+    .map((sample) => `${graphX(sample.position)},${speedY(sample.speed)}`)
+    .join(" ");
   const middleY = (PLOT_TOP + PLOT_BOTTOM) / 2;
 
   return (
     <div className="min-h-0 border-b p-2 pb-1">
       <div className="mb-0.5 flex items-center justify-between">
-        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Speed over path</h3>
+        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Speed over path
+        </h3>
         <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
           {evaluateSpeed(trajectory, pathPosition).toFixed(2)} m/s
         </span>
@@ -63,9 +74,24 @@ export function SpeedGraph({
           viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
         >
           {[PLOT_TOP, middleY, PLOT_BOTTOM].map((y) => (
-            <line key={y} stroke="var(--chart-grid)" vectorEffect="non-scaling-stroke" x1={PLOT_LEFT} x2={PLOT_RIGHT} y1={y} y2={y} />
+            <line
+              key={y}
+              stroke="var(--chart-grid)"
+              vectorEffect="non-scaling-stroke"
+              x1={PLOT_LEFT}
+              x2={PLOT_RIGHT}
+              y1={y}
+              y2={y}
+            />
           ))}
-          <line stroke="var(--chart-grid)" vectorEffect="non-scaling-stroke" x1={PLOT_LEFT} x2={PLOT_LEFT} y1={PLOT_TOP} y2={PLOT_BOTTOM} />
+          <line
+            stroke="var(--chart-grid)"
+            vectorEffect="non-scaling-stroke"
+            x1={PLOT_LEFT}
+            x2={PLOT_LEFT}
+            y1={PLOT_TOP}
+            y2={PLOT_BOTTOM}
+          />
           <polyline
             fill="none"
             points={points}
@@ -84,7 +110,9 @@ export function SpeedGraph({
             y2={PLOT_BOTTOM + 6}
           />
         </svg>
-        <span className="absolute left-0 top-[31px] text-[7px] text-muted-foreground">Speed, m/s</span>
+        <span className="absolute left-0 top-[31px] text-[7px] text-muted-foreground">
+          Speed, m/s
+        </span>
         {[
           { label: maximum.toFixed(1), y: PLOT_TOP },
           { label: (maximum / 2).toFixed(1), y: middleY },
@@ -108,12 +136,19 @@ export function SpeedGraph({
               onBlur={() => setHoveredKeyframeId(null)}
               onContextMenu={(event) => {
                 event.preventDefault();
-                setMenu({ keyframeId: keyframe.id, x: event.clientX, y: event.clientY });
+                setMenu({
+                  keyframeId: keyframe.id,
+                  x: event.clientX,
+                  y: event.clientY,
+                });
               }}
               onFocus={() => setHoveredKeyframeId(keyframe.id)}
               onMouseEnter={() => setHoveredKeyframeId(keyframe.id)}
               onMouseLeave={() => setHoveredKeyframeId(null)}
-              style={{ left: graphLeft(keyframe.path_position), top: speedY(keyframe.speed) }}
+              style={{
+                left: graphLeft(keyframe.path_position),
+                top: speedY(keyframe.speed),
+              }}
               type="button"
             >
               <span className="absolute inset-0 rounded-full border-2 border-[var(--chart-speed)] opacity-0 transition-opacity group-focus-visible:opacity-30 group-hover:opacity-30" />
@@ -128,12 +163,18 @@ export function SpeedGraph({
         })}
       </div>
       <ContextMenu
-        items={menu ? [{
-          destructive: true,
-          disabled: deletingKeyframeId === menu.keyframeId,
-          label: "Delete speed keyframe",
-          onSelect: () => onDeleteKeyframe(menu.keyframeId),
-        }] : []}
+        items={
+          menu
+            ? [
+                {
+                  destructive: true,
+                  disabled: deletingKeyframeId === menu.keyframeId,
+                  label: "Delete speed keyframe",
+                  onSelect: () => onDeleteKeyframe(menu.keyframeId),
+                },
+              ]
+            : []
+        }
         onClose={() => setMenu(null)}
         position={menu}
       />

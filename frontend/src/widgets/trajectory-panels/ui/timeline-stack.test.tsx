@@ -18,7 +18,14 @@ describe("TimelineStack", () => {
         ...common,
         color: "red",
         id: "first-lane",
-        keyframes: [{ ariaLabel: "First", id: "first", pathPosition: 0.25, tooltip: "First tooltip" }],
+        keyframes: [
+          {
+            ariaLabel: "First",
+            id: "first",
+            pathPosition: 0.25,
+            tooltip: "First tooltip",
+          },
+        ],
         lineY: 20,
         title: "First lane",
       },
@@ -26,7 +33,14 @@ describe("TimelineStack", () => {
         ...common,
         color: "blue",
         id: "lane",
-        keyframes: [{ ariaLabel: "Second", id: "second", pathPosition: 0.75, tooltip: "Second tooltip" }],
+        keyframes: [
+          {
+            ariaLabel: "Second",
+            id: "second",
+            pathPosition: 0.75,
+            tooltip: "Second tooltip",
+          },
+        ],
         lineY: 20,
         title: "Lane",
       },
@@ -41,7 +55,11 @@ describe("TimelineStack", () => {
     ];
 
     const markup = renderToStaticMarkup(
-      <TimelineStack onScrub={() => undefined} pathPosition={0.5} tracks={tracks} />,
+      <TimelineStack
+        onScrub={() => undefined}
+        pathPosition={0.5}
+        tracks={tracks}
+      />,
     );
 
     expect(markup.match(/data-timeline-playhead/g)).toHaveLength(1);

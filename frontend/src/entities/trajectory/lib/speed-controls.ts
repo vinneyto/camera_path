@@ -1,4 +1,7 @@
-import type { Interpolation, SpeedKeyframe } from "@/entities/project/model/types";
+import type {
+  Interpolation,
+  SpeedKeyframe,
+} from "@/entities/project/model/types";
 import type { CompiledTrajectory } from "@/entities/trajectory/model/types";
 
 export interface SpeedControl {
@@ -19,10 +22,18 @@ export function speedControls(trajectory: CompiledTrajectory): SpeedControl[] {
   }));
 
   if (controls.length === 0 || controls[0].pathPosition > 0) {
-    controls.unshift({ pathPosition: 0, speed: defaultSpeed, interpolation: "smoothstep" });
+    controls.unshift({
+      pathPosition: 0,
+      speed: defaultSpeed,
+      interpolation: "smoothstep",
+    });
   }
   if (controls.at(-1)?.pathPosition !== 1) {
-    controls.push({ pathPosition: 1, speed: defaultSpeed, interpolation: "smoothstep" });
+    controls.push({
+      pathPosition: 1,
+      speed: defaultSpeed,
+      interpolation: "smoothstep",
+    });
   }
   return controls;
 }

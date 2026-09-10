@@ -37,9 +37,17 @@ export type ScreenSpaceLineProps = ScreenSpaceLineObjectProps & {
 
 export function ScreenSpaceLine(props: ScreenSpaceLineProps) {
   const renderer = useThree((state) => state.gl);
-  const isWebGpu = Boolean((renderer as { isWebGPURenderer?: boolean }).isWebGPURenderer);
+  const isWebGpu = Boolean(
+    (renderer as { isWebGPURenderer?: boolean }).isWebGPURenderer,
+  );
   const { hitSlop, radius, webGpuHitSlop, width, ...commonProps } = props;
-  return isWebGpu
-    ? <WebGpuScreenSpaceLine {...commonProps} hitSlop={webGpuHitSlop} width={width} />
-    : <WebGlScreenSpaceLine {...commonProps} hitSlop={hitSlop} radius={radius} />;
+  return isWebGpu ? (
+    <WebGpuScreenSpaceLine
+      {...commonProps}
+      hitSlop={webGpuHitSlop}
+      width={width}
+    />
+  ) : (
+    <WebGlScreenSpaceLine {...commonProps} hitSlop={hitSlop} radius={radius} />
+  );
 }

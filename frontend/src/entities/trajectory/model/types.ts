@@ -1,4 +1,9 @@
-import type { FollowPathAim, Interpolation, SpeedKeyframe, Vec3 } from "@/entities/project/model/types";
+import type {
+  FollowPathAim,
+  Interpolation,
+  SpeedKeyframe,
+  Vec3,
+} from "@/entities/project/model/types";
 
 export interface ResolvedLookAtPointAim {
   kind: "look_at_point";
@@ -28,7 +33,11 @@ export interface CompiledTrajectory {
   project_id: string;
   revision: number;
   position_segments: CubicBezier3D[];
-  arc_length_table: Array<{ segment_index: number; t: number; distance: number }>;
+  arc_length_table: Array<{
+    segment_index: number;
+    t: number;
+    distance: number;
+  }>;
   total_length: number;
   duration_seconds: number;
   motion_profile: {

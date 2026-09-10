@@ -13,7 +13,8 @@ export function useElementHeight(active: boolean) {
       return;
     }
 
-    const updateHeight = () => setHeight(element.getBoundingClientRect().height);
+    const updateHeight = () =>
+      setHeight(element.getBoundingClientRect().height);
     const observer = new ResizeObserver(updateHeight);
     updateHeight();
     observer.observe(element);

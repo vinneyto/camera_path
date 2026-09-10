@@ -29,9 +29,10 @@ export class GaussianCloudResourceCache {
   ): GaussianCloudResourceLease {
     const name = options.name;
     let entry = this.entries.find(
-      (candidate) => !candidate.disposed
-        && candidate.name === name
-        && this.sourcesMatch(candidate.source, source),
+      (candidate) =>
+        !candidate.disposed &&
+        candidate.name === name &&
+        this.sourcesMatch(candidate.source, source),
     );
 
     if (entry === undefined) {
@@ -63,7 +64,9 @@ export class GaussianCloudResourceCache {
           if (entry.users > 0 || entry.disposed) return;
           entry.disposed = true;
           this.remove(entry);
-          void entry.promise.then((cloud) => cloud.dispose()).catch(() => undefined);
+          void entry.promise
+            .then((cloud) => cloud.dispose())
+            .catch(() => undefined);
         });
       },
     };
@@ -79,7 +82,8 @@ export class GaussianCloudResourceCache {
     right: GaussianCloudSource,
   ): boolean {
     if (left.kind !== right.kind) return false;
-    if (left.kind === "url" && right.kind === "url") return left.url === right.url;
+    if (left.kind === "url" && right.kind === "url")
+      return left.url === right.url;
     if (left.kind === "buffer" && right.kind === "buffer") {
       return left.buffer === right.buffer && left.name === right.name;
     }

@@ -6,7 +6,10 @@ import {
 import { bool } from "three/tsl";
 import type { Node } from "three/webgpu";
 
-export function createTileRasterDepthNodes(viewDepth: Node, mode: DepthSortMode) {
+export function createTileRasterDepthNodes(
+  viewDepth: Node,
+  mode: DepthSortMode,
+) {
   const occluded = rasterPixelValue.lessThan(rasterViewDepth);
   return {
     rasterPixelValueNode: viewDepth,

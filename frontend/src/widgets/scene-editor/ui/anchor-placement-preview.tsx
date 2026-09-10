@@ -24,7 +24,11 @@ interface AnchorPlacementPreviewProps {
   label: string;
 }
 
-export function AnchorPlacementPreview({ backend, hit, label }: AnchorPlacementPreviewProps) {
+export function AnchorPlacementPreview({
+  backend,
+  hit,
+  label,
+}: AnchorPlacementPreviewProps) {
   const highlight: GaussianHighlightVolumeOptions = {
     bottomOffset: ANCHOR_PLACEMENT_FLASHLIGHT_BOTTOM_OFFSET,
     color: ANCHOR_PLACEMENT_FLASHLIGHT_COLOR,

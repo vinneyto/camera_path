@@ -7,5 +7,9 @@ export function createPerspectiveViewDepthNode(
 ): Node<"float"> {
   const cameraNear = reference("near", "float", camera);
   const cameraFar = reference("far", "float", camera);
-  return perspectiveDepthToViewZ(perspectiveDepth, cameraNear, cameraFar).negate();
+  return perspectiveDepthToViewZ(
+    perspectiveDepth,
+    cameraNear,
+    cameraFar,
+  ).negate();
 }

@@ -13,14 +13,20 @@ interface TimelineStackProps {
   tracks: KeyframeTrackDescriptor[];
 }
 
-export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackProps) {
+export function TimelineStack({
+  onScrub,
+  pathPosition,
+  tracks,
+}: TimelineStackProps) {
   const scrub = (event: PointerEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    onScrub(pathPositionFromClientX(
-      event.clientX,
-      bounds.left + TRACK_HORIZONTAL_PADDING,
-      bounds.width - TRACK_HORIZONTAL_PADDING * 2,
-    ));
+    onScrub(
+      pathPositionFromClientX(
+        event.clientX,
+        bounds.left + TRACK_HORIZONTAL_PADDING,
+        bounds.width - TRACK_HORIZONTAL_PADDING * 2,
+      ),
+    );
   };
 
   return (
@@ -30,7 +36,15 @@ export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackPr
       onKeyDown={(event) => {
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
         event.preventDefault();
-        onScrub(Math.min(1, Math.max(0, pathPosition + (event.key === "ArrowLeft" ? -0.01 : 0.01))));
+        onScrub(
+          Math.min(
+            1,
+            Math.max(
+              0,
+              pathPosition + (event.key === "ArrowLeft" ? -0.01 : 0.01),
+            ),
+          ),
+        );
       }}
       onPointerDown={(event) => {
         if ((event.target as Element).closest("button")) return;
@@ -38,7 +52,8 @@ export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackPr
         scrub(event);
       }}
       onPointerMove={(event) => {
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) scrub(event);
+        if (event.currentTarget.hasPointerCapture(event.pointerId))
+          scrub(event);
       }}
       onPointerUp={(event) => {
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -48,7 +63,10 @@ export function TimelineStack({ onScrub, pathPosition, tracks }: TimelineStackPr
       tabIndex={0}
     >
       {tracks.map((track, index) => (
-        <div className={index < tracks.length - 1 ? "border-b" : undefined} key={track.id}>
+        <div
+          className={index < tracks.length - 1 ? "border-b" : undefined}
+          key={track.id}
+        >
           <KeyLaneTrack track={track} />
         </div>
       ))}

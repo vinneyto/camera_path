@@ -23,7 +23,9 @@ const project: Project = {
   segments: [],
 };
 
-function createTrajectory(keyframes: CompiledTrajectory["camera_track"]["keyframes"]) {
+function createTrajectory(
+  keyframes: CompiledTrajectory["camera_track"]["keyframes"],
+) {
   return {
     camera_track: {
       default_aim: { kind: "follow_path", direction: "forward" },
@@ -37,47 +39,55 @@ describe("createAimTrack", () => {
     const track = createAimTrack({
       onDeleteKeyframe: () => undefined,
       project,
-      trajectory: createTrajectory([{
-        id: "follow-path",
-        path_position: 0,
-        aim: { kind: "follow_path", direction: "forward" },
-        interpolation_to_next: "smoothstep",
-      }]),
+      trajectory: createTrajectory([
+        {
+          id: "follow-path",
+          path_position: 0,
+          aim: { kind: "follow_path", direction: "forward" },
+          interpolation_to_next: "smoothstep",
+        },
+      ]),
     });
 
     expect(track.summary).toBe("1 key");
     expect(track.height).toBe(28);
     expect(track.lineY).toBe(14);
-    expect(track.keyframes).toEqual([{
-      ariaLabel: "Along trajectory at 0%",
-      id: "follow-path",
-      pathPosition: 0,
-      tooltip: "Along trajectory",
-    }]);
+    expect(track.keyframes).toEqual([
+      {
+        ariaLabel: "Along trajectory at 0%",
+        id: "follow-path",
+        pathPosition: 0,
+        tooltip: "Along trajectory",
+      },
+    ]);
   });
 
   it("shows the persisted start keyframe and its target", () => {
     const track = createAimTrack({
       onDeleteKeyframe: () => undefined,
       project,
-      trajectory: createTrajectory([{
-        id: "aim",
-        path_position: 0,
-        aim: {
-          kind: "look_at_point",
-          scene_point_id: "target",
-          position: [0, 1, 0],
+      trajectory: createTrajectory([
+        {
+          id: "aim",
+          path_position: 0,
+          aim: {
+            kind: "look_at_point",
+            scene_point_id: "target",
+            position: [0, 1, 0],
+          },
+          interpolation_to_next: "smoothstep",
         },
-        interpolation_to_next: "smoothstep",
-      }]),
+      ]),
     });
 
     expect(track.summary).toBe("1 key");
-    expect(track.keyframes).toEqual([{
-      ariaLabel: "Look at Subject at 0%",
-      id: "aim",
-      pathPosition: 0,
-      tooltip: "Look at Subject",
-    }]);
+    expect(track.keyframes).toEqual([
+      {
+        ariaLabel: "Look at Subject at 0%",
+        id: "aim",
+        pathPosition: 0,
+        tooltip: "Look at Subject",
+      },
+    ]);
   });
 });

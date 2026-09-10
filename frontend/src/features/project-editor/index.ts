@@ -1,4 +1,8 @@
-export type { CameraMode, EditorHoveredObject, EditorTool } from "./model/editor-store";
+export type {
+  CameraMode,
+  EditorHoveredObject,
+  EditorTool,
+} from "./model/editor-store";
 export { EditorStoreProvider } from "./model/editor-store-provider";
 export { getAnchorToolModifier } from "./model/get-anchor-tool-modifier";
 export { useActiveEditorTool } from "./model/use-active-editor-tool";

@@ -1,6 +1,9 @@
 import { Vector3 } from "three";
 
-import type { CompiledTrajectory, ResolvedCameraAim } from "@/entities/trajectory/model/types";
+import type {
+  CompiledTrajectory,
+  ResolvedCameraAim,
+} from "@/entities/trajectory/model/types";
 import { locateOnPath } from "@/entities/trajectory/lib/locate-on-path";
 
 export function aimDirection(

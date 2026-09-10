@@ -59,7 +59,10 @@ describe("editor store", () => {
     store.getState().toolActions.hoverAnchor("anchor-b");
     store.getState().toolActions.clearHoveredAnchor("anchor-a");
 
-    expect(store.getState().tool.hoveredObject).toEqual({ id: "anchor-b", type: "anchor" });
+    expect(store.getState().tool.hoveredObject).toEqual({
+      id: "anchor-b",
+      type: "anchor",
+    });
 
     store.getState().toolActions.clearHoveredAnchor("anchor-b");
     expect(store.getState().tool.hoveredObject).toBeNull();

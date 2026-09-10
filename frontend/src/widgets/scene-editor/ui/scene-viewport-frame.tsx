@@ -32,30 +32,44 @@ export function SceneViewportFrame({
   const { theme } = useTheme();
   const { cameraMode } = useCameraMode();
   const dark = theme === "dark";
-  const [anchorMenu, setAnchorMenu] = useState<(ContextMenuPosition & { anchor: Anchor }) | null>(null);
-  const [surfaceState, setSurfaceState] = useState<SurfaceState>({ status: "loading" });
-  const handleSurfaceLoading = useCallback(() => setSurfaceState({ status: "loading" }), []);
-  const handleSurfaceReady = useCallback(() => setSurfaceState({ status: "ready" }), []);
+  const [anchorMenu, setAnchorMenu] = useState<
+    (ContextMenuPosition & { anchor: Anchor }) | null
+  >(null);
+  const [surfaceState, setSurfaceState] = useState<SurfaceState>({
+    status: "loading",
+  });
+  const handleSurfaceLoading = useCallback(
+    () => setSurfaceState({ status: "loading" }),
+    [],
+  );
+  const handleSurfaceReady = useCallback(
+    () => setSurfaceState({ status: "ready" }),
+    [],
+  );
   const handleSurfaceError = useCallback((error: Error) => {
     setSurfaceState({ status: "error", message: error.message });
   }, []);
 
   return (
     <div className="relative h-full w-full">
-      {available && renderScene({
-        background: dark ? DARK_BACKGROUND : LIGHT_BACKGROUND,
-        dark,
-        onOpenAnchorMenu: (anchor, position) => setAnchorMenu({ ...position, anchor }),
-        onSurfaceError: handleSurfaceError,
-        onSurfaceLoading: handleSurfaceLoading,
-        onSurfaceReady: handleSurfaceReady,
-      })}
+      {available &&
+        renderScene({
+          background: dark ? DARK_BACKGROUND : LIGHT_BACKGROUND,
+          dark,
+          onOpenAnchorMenu: (anchor, position) =>
+            setAnchorMenu({ ...position, anchor }),
+          onSurfaceError: handleSurfaceError,
+          onSurfaceLoading: handleSurfaceLoading,
+          onSurfaceReady: handleSurfaceReady,
+        })}
       {available === false && <SceneMessage message={unavailableMessage} />}
       {available !== false && surfaceState.status === "loading" && (
         <SceneMessage message="Loading mug.ply…" />
       )}
       {available !== false && surfaceState.status === "error" && (
-        <SceneMessage message={`Could not load mug.ply: ${surfaceState.message}`} />
+        <SceneMessage
+          message={`Could not load mug.ply: ${surfaceState.message}`}
+        />
       )}
       {available && (
         <div
@@ -66,17 +80,25 @@ export function SceneViewportFrame({
             onModeChange={(mode) => {
               if (mode === "trajectory") setAnchorMenu(null);
             }}
-            trajectoryAvailable={trajectoryAvailable && surfaceState.status === "ready"}
+            trajectoryAvailable={
+              trajectoryAvailable && surfaceState.status === "ready"
+            }
           />
         </div>
       )}
       {cameraMode === "orbit" && (
         <ContextMenu
-          items={anchorMenu ? [{
-            destructive: true,
-            label: `Delete anchor ${anchorMenu.anchor.label}`,
-            onSelect: () => onDeleteAnchor(anchorMenu.anchor),
-          }] : []}
+          items={
+            anchorMenu
+              ? [
+                  {
+                    destructive: true,
+                    label: `Delete anchor ${anchorMenu.anchor.label}`,
+                    onSelect: () => onDeleteAnchor(anchorMenu.anchor),
+                  },
+                ]
+              : []
+          }
           onClose={() => setAnchorMenu(null)}
           position={anchorMenu}
         />

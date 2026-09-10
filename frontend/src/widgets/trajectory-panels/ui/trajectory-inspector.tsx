@@ -34,28 +34,33 @@ export function TrajectoryInspector({
   project,
   trajectory,
 }: TrajectoryInspectorProps) {
-  const keyframeTracks = useMemo(() => [
-    createAimTrack({
-      deletingKeyframeId: deletingAimKeyframeId,
-      onDeleteKeyframe: onDeleteAimKeyframe,
-      project,
-      trajectory,
-    }),
-  ], [
-    deletingAimKeyframeId,
-    onDeleteAimKeyframe,
-    project,
-    trajectory,
-  ]);
+  const keyframeTracks = useMemo(
+    () => [
+      createAimTrack({
+        deletingKeyframeId: deletingAimKeyframeId,
+        onDeleteKeyframe: onDeleteAimKeyframe,
+        project,
+        trajectory,
+      }),
+    ],
+    [deletingAimKeyframeId, onDeleteAimKeyframe, project, trajectory],
+  );
 
   return (
     <section className="border-t bg-muted/35 p-2">
       <div className="mb-1.5 flex items-center justify-between px-0.5">
         <div className="flex items-center gap-2">
           <h2 className="text-xs font-semibold">Trajectory controls</h2>
-          <span className="text-[10px] text-muted-foreground">{trajectory.total_length.toFixed(2)} m</span>
+          <span className="text-[10px] text-muted-foreground">
+            {trajectory.total_length.toFixed(2)} m
+          </span>
         </div>
-        <Button aria-label="Close trajectory panels" onClick={onClose} size="icon" variant="ghost">
+        <Button
+          aria-label="Close trajectory panels"
+          onClick={onClose}
+          size="icon"
+          variant="ghost"
+        >
           <X className="size-3.5" />
         </Button>
       </div>

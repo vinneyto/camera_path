@@ -33,7 +33,8 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   }
 
   setBackground(background: SceneSurfaceBackground): void {
-    if (this.disposed) throw new Error("SparkGaussianRenderingBackend is disposed");
+    if (this.disposed)
+      throw new Error("SparkGaussianRenderingBackend is disposed");
     this.renderer.setClearColor(
       new Color().setRGB(background[0], background[1], background[2]),
       background[3],
@@ -44,16 +45,18 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     source: GaussianCloudSource,
     options: GaussianCloudOptions = {},
   ): Promise<GaussianCloudInstance> {
-    if (this.disposed) throw new Error("SparkGaussianRenderingBackend is disposed");
+    if (this.disposed)
+      throw new Error("SparkGaussianRenderingBackend is disposed");
     const mesh = new SplatMesh({
       ...(source.kind === "url"
         ? { url: source.url }
         : { fileBytes: source.buffer, fileName: source.name }),
       raycastable: options.raycastable ?? true,
     });
-    mesh.name = options.name
-      ?? (source.kind === "buffer" ? source.name : undefined)
-      ?? "Scene surface";
+    mesh.name =
+      options.name ??
+      (source.kind === "buffer" ? source.name : undefined) ??
+      "Scene surface";
 
     try {
       await mesh.initialized;
@@ -63,16 +66,22 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     }
     if (this.disposed) {
       mesh.dispose();
-      throw new Error("SparkGaussianRenderingBackend was disposed while loading a cloud");
+      throw new Error(
+        "SparkGaussianRenderingBackend was disposed while loading a cloud",
+      );
     }
 
-    const instance = new SparkGaussianCloudInstance(mesh, () => this.clouds.delete(instance));
+    const instance = new SparkGaussianCloudInstance(mesh, () =>
+      this.clouds.delete(instance),
+    );
     this.clouds.add(instance);
     return instance;
   }
 
   createHighlightVolume(): GaussianHighlightVolumeInstance {
-    throw new Error("Gaussian highlight volumes are not implemented by the Spark example backend");
+    throw new Error(
+      "Gaussian highlight volumes are not implemented by the Spark example backend",
+    );
   }
 
   invalidate(): void {}

@@ -18,7 +18,9 @@ export function useUpdateAnchor(projectId: string) {
     onSuccess: (project) => {
       queryClient.setQueryData(projectKeys.detail(projectId), project);
       void queryClient.invalidateQueries({ queryKey: projectKeys.list() });
-      void queryClient.invalidateQueries({ queryKey: projectKeys.trajectory(projectId) });
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.trajectory(projectId),
+      });
     },
   });
 }

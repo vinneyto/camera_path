@@ -78,31 +78,43 @@ export function SceneContents({
     gaussianDprMode,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
-  const heightEditing = useAnchorHeightEditing({ anchors, onCommit: onUpdateAnchorLift });
+  const heightEditing = useAnchorHeightEditing({
+    anchors,
+    onCommit: onUpdateAnchorLift,
+  });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
-  useStopOrbitControlsInertia(orbitControlsRef, cameraMode === "orbit" && activeTool !== null);
+  useStopOrbitControlsInertia(
+    orbitControlsRef,
+    cameraMode === "orbit" && activeTool !== null,
+  );
 
   useEffect(() => {
-    if (cameraMode === "trajectory" && !trajectoryAvailable) setCameraMode("orbit");
+    if (cameraMode === "trajectory" && !trajectoryAvailable)
+      setCameraMode("orbit");
   }, [cameraMode, setCameraMode, trajectoryAvailable]);
 
   useEffect(() => {
     renderingBackend.invalidate();
   }, [anchors, renderingBackend]);
 
-  const handleSurfaceReady = useCallback((surface: SceneSurfaceReady) => {
-    frameSurface(camera, surface.bounds, setOrbitTarget);
-    onSurfaceReady();
-  }, [camera, onSurfaceReady]);
+  const handleSurfaceReady = useCallback(
+    (surface: SceneSurfaceReady) => {
+      frameSurface(camera, surface.bounds, setOrbitTarget);
+      onSurfaceReady();
+    },
+    [camera, onSurfaceReady],
+  );
   const handleOrbitEnd = useCallback(() => {
     const controls = orbitControlsRef.current;
     if (controls !== null) setOrbitTarget(controls.target.toArray() as Vec3);
   }, []);
   const editorVisible = cameraMode === "orbit";
   // Equal projected depths share a z-index, so stable DOM order is the tie-breaker.
-  const orderedAnchors = [...anchors].sort((left, right) => left.id.localeCompare(right.id));
+  const orderedAnchors = [...anchors].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  );
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
@@ -129,27 +141,33 @@ export function SceneContents({
           label={getAnchorLabel(anchors)}
         />
       )}
-      {editorVisible && orderedAnchors.map((anchor) => {
-        const markerAnchor = heightEditing.preview?.anchorId === anchor.id
-          ? { ...anchor, lift: heightEditing.preview.lift, lift_axis: "world_up" as const }
-          : anchor;
-        return (
-          <AnchorMarker
-            anchor={markerAnchor}
-            hovered={heightEditing.hoveredAnchorId === anchor.id}
-            key={anchor.id}
-            {...heightEditing.getAnchorInteractionProps(anchor)}
-            onContextMenu={(event) => {
-              event.stopPropagation();
-              event.nativeEvent.preventDefault();
-              onOpenAnchorMenu(anchor, {
-                x: event.nativeEvent.clientX,
-                y: event.nativeEvent.clientY,
-              });
-            }}
-          />
-        );
-      })}
+      {editorVisible &&
+        orderedAnchors.map((anchor) => {
+          const markerAnchor =
+            heightEditing.preview?.anchorId === anchor.id
+              ? {
+                  ...anchor,
+                  lift: heightEditing.preview.lift,
+                  lift_axis: "world_up" as const,
+                }
+              : anchor;
+          return (
+            <AnchorMarker
+              anchor={markerAnchor}
+              hovered={heightEditing.hoveredAnchorId === anchor.id}
+              key={anchor.id}
+              {...heightEditing.getAnchorInteractionProps(anchor)}
+              onContextMenu={(event) => {
+                event.stopPropagation();
+                event.nativeEvent.preventDefault();
+                onOpenAnchorMenu(anchor, {
+                  x: event.nativeEvent.clientX,
+                  y: event.nativeEvent.clientY,
+                });
+              }}
+            />
+          );
+        })}
       {editorVisible && heightEditing.activeAnchor !== null && (
         <AnchorHeightEditingOverlay
           anchor={heightEditing.activeAnchor}
@@ -182,7 +200,10 @@ export function SceneContents({
           target={orbitTarget}
         />
       ) : trajectoryAvailable && trajectory ? (
-        <TrajectoryCameraControl pathPosition={pathPosition} trajectory={trajectory} />
+        <TrajectoryCameraControl
+          pathPosition={pathPosition}
+          trajectory={trajectory}
+        />
       ) : null}
     </SceneSurfaceProvider>
   );

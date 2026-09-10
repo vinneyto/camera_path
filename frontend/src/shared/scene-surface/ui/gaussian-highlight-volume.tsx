@@ -25,8 +25,9 @@ export function GaussianHighlightVolume({
 
   useEffect(() => {
     if (
-      instanceRef.current !== null
-      && (instanceRef.current.backend !== backend || instanceRef.current.type !== options.type)
+      instanceRef.current !== null &&
+      (instanceRef.current.backend !== backend ||
+        instanceRef.current.type !== options.type)
     ) {
       instanceRef.current.instance.dispose();
       instanceRef.current = null;
@@ -42,10 +43,13 @@ export function GaussianHighlightVolume({
     instanceRef.current.instance.update(options);
   }, [backend, options]);
 
-  useEffect(() => () => {
-    instanceRef.current?.instance.dispose();
-    instanceRef.current = null;
-  }, []);
+  useEffect(
+    () => () => {
+      instanceRef.current?.instance.dispose();
+      instanceRef.current = null;
+    },
+    [],
+  );
 
   return null;
 }

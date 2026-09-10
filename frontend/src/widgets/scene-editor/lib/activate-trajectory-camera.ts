@@ -4,7 +4,9 @@ const TRAJECTORY_CAMERA_FOV = 50;
 const TRAJECTORY_CAMERA_NEAR = 0.01;
 const TRAJECTORY_CAMERA_FAR = 100;
 
-export function activateTrajectoryCamera(camera: PerspectiveCamera): () => void {
+export function activateTrajectoryCamera(
+  camera: PerspectiveCamera,
+): () => void {
   const saved = {
     far: camera.far,
     fov: camera.fov,

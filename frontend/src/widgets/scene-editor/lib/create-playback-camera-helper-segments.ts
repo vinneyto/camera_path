@@ -34,7 +34,7 @@ export function createPlaybackCameraHelperSegments({
   fovDegrees,
   near,
 }: PlaybackCameraHelperOptions): PlaybackCameraHelperSegment[] {
-  const halfFovRadians = fovDegrees * Math.PI / 360;
+  const halfFovRadians = (fovDegrees * Math.PI) / 360;
   const nearHalfHeight = Math.tan(halfFovRadians) * near;
   const nearHalfWidth = nearHalfHeight * aspect;
   const farHalfHeight = Math.tan(halfFovRadians) * far;
@@ -85,7 +85,11 @@ export function createPlaybackCameraHelperSegments({
     add(PLAYBACK_CAMERA_HELPER_COLORS.frustum, corners[3], corners[0]);
   }
   for (let index = 0; index < 4; index += 1) {
-    add(PLAYBACK_CAMERA_HELPER_COLORS.frustum, nearCorners[index], farCorners[index]);
+    add(
+      PLAYBACK_CAMERA_HELPER_COLORS.frustum,
+      nearCorners[index],
+      farCorners[index],
+    );
     add(PLAYBACK_CAMERA_HELPER_COLORS.cone, origin, nearCorners[index]);
   }
   add(PLAYBACK_CAMERA_HELPER_COLORS.up, up[0], up[1]);

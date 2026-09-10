@@ -19,7 +19,9 @@ function createInstance(): GaussianCloudInstance {
   };
 }
 
-function createBackend(instance: GaussianCloudInstance): GaussianRenderingBackend {
+function createBackend(
+  instance: GaussianCloudInstance,
+): GaussianRenderingBackend {
   return {
     container: null,
     createCloud: vi.fn().mockResolvedValue(instance),

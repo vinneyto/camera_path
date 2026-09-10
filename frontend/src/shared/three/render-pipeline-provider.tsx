@@ -39,7 +39,9 @@ interface PipelineResources {
   transparent: ReturnType<typeof scenePass>;
 }
 
-const RenderPipelineContext = createContext<RenderPipelineContextValue | null>(null);
+const RenderPipelineContext = createContext<RenderPipelineContextValue | null>(
+  null,
+);
 
 export function RenderPipelineProvider({ children }: PropsWithChildren) {
   const camera = useThree((state) => state.camera);
@@ -50,14 +52,17 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
   const resourcesRef = useRef<PipelineResources | null>(null);
 
   if (!(renderer instanceof WebGPURenderer)) {
-    throw new TypeError("RenderPipelineCanvas requires Three.js WebGPURenderer");
+    throw new TypeError(
+      "RenderPipelineCanvas requires Three.js WebGPURenderer",
+    );
   }
 
   const rebuildOutput = useCallback(() => {
     const resources = resourcesRef.current;
     if (resources === null) return;
     const layers = [...layersRef.current.values()].sort(
-      (left, right) => left.order - right.order || left.sequence - right.sequence,
+      (left, right) =>
+        left.order - right.order || left.sequence - right.sequence,
     );
     let output: Node<"vec4"> = resources.opaque;
     for (const layer of layers) {
@@ -76,41 +81,53 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     resources.pipeline.needsUpdate = true;
   }, []);
 
-  const getOpaqueViewDepth = useCallback((screenUv: Node): Node<"float"> => {
-    const resources = resourcesRef.current;
-    if (resources === null) {
-      throw new Error("Render pipeline depth is unavailable before pipeline initialization");
-    }
-    if (!(camera instanceof PerspectiveCamera)) {
-      throw new TypeError("Render pipeline depth requires a PerspectiveCamera");
-    }
-    const perspectiveDepth = resources.opaque.getTextureNode("depth").sample(screenUv);
-    return createPerspectiveViewDepthNode(perspectiveDepth, camera);
-  }, [camera]);
+  const getOpaqueViewDepth = useCallback(
+    (screenUv: Node): Node<"float"> => {
+      const resources = resourcesRef.current;
+      if (resources === null) {
+        throw new Error(
+          "Render pipeline depth is unavailable before pipeline initialization",
+        );
+      }
+      if (!(camera instanceof PerspectiveCamera)) {
+        throw new TypeError(
+          "Render pipeline depth requires a PerspectiveCamera",
+        );
+      }
+      const perspectiveDepth = resources.opaque
+        .getTextureNode("depth")
+        .sample(screenUv);
+      return createPerspectiveViewDepthNode(perspectiveDepth, camera);
+    },
+    [camera],
+  );
 
-  const registerLayer = useCallback((
-    node: Node<"vec4">,
-    options: RenderPipelineLayerOptions = {},
-  ) => {
-    const key = Symbol("render-pipeline-layer");
-    layersRef.current.set(key, {
-      node,
-      order: options.order ?? 0,
-      sequence: nextSequenceRef.current++,
-    });
-    rebuildOutput();
-    return () => {
-      layersRef.current.delete(key);
+  const registerLayer = useCallback(
+    (node: Node<"vec4">, options: RenderPipelineLayerOptions = {}) => {
+      const key = Symbol("render-pipeline-layer");
+      layersRef.current.set(key, {
+        node,
+        order: options.order ?? 0,
+        sequence: nextSequenceRef.current++,
+      });
       rebuildOutput();
-    };
-  }, [rebuildOutput]);
+      return () => {
+        layersRef.current.delete(key);
+        rebuildOutput();
+      };
+    },
+    [rebuildOutput],
+  );
 
-  const value = useMemo<RenderPipelineContextValue>(() => ({
-    camera,
-    getOpaqueViewDepth,
-    registerLayer,
-    renderer,
-  }), [camera, getOpaqueViewDepth, registerLayer, renderer]);
+  const value = useMemo<RenderPipelineContextValue>(
+    () => ({
+      camera,
+      getOpaqueViewDepth,
+      registerLayer,
+      renderer,
+    }),
+    [camera, getOpaqueViewDepth, registerLayer, renderer],
+  );
 
   useLayoutEffect(() => {
     const sceneLayers = new Layers();
@@ -159,7 +176,9 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
 export function useRenderPipeline(): RenderPipelineContextValue {
   const value = useOptionalRenderPipeline();
   if (value === null) {
-    throw new Error("useRenderPipeline must be used inside RenderPipelineCanvas");
+    throw new Error(
+      "useRenderPipeline must be used inside RenderPipelineCanvas",
+    );
   }
   return value;
 }

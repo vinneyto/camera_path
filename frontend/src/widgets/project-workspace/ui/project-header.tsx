@@ -20,12 +20,20 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
       </Link>
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-xs font-semibold">{project.name}</h1>
-        <p className="text-[9px] text-muted-foreground">Revision {project.revision}</p>
+        <p className="text-[9px] text-muted-foreground">
+          Revision {project.revision}
+        </p>
       </div>
       <GaussianDprSelect />
       <ThemeToggle />
-      <Badge className="gap-1"><MapPin className="size-2.5" />{Object.keys(project.anchors).length}</Badge>
-      <Badge className="gap-1"><Boxes className="size-2.5" />{project.segments.length}</Badge>
+      <Badge className="gap-1">
+        <MapPin className="size-2.5" />
+        {Object.keys(project.anchors).length}
+      </Badge>
+      <Badge className="gap-1">
+        <Boxes className="size-2.5" />
+        {project.segments.length}
+      </Badge>
     </header>
   );
 }

@@ -9,7 +9,10 @@ export interface PathSample {
   tangent: Vector3;
 }
 
-export function locateOnPath(trajectory: CompiledTrajectory, pathPosition: number): PathSample {
+export function locateOnPath(
+  trajectory: CompiledTrajectory,
+  pathPosition: number,
+): PathSample {
   const segments = trajectory.position_segments;
   if (segments.length === 0) {
     return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
@@ -20,7 +23,8 @@ export function locateOnPath(trajectory: CompiledTrajectory, pathPosition: numbe
     return { position: new Vector3(), tangent: new Vector3(0, 0, -1) };
   }
 
-  const targetDistance = Math.min(1, Math.max(0, pathPosition)) * trajectory.total_length;
+  const targetDistance =
+    Math.min(1, Math.max(0, pathPosition)) * trajectory.total_length;
   let low = 0;
   let high = table.length;
   while (low < high) {
@@ -34,7 +38,8 @@ export function locateOnPath(trajectory: CompiledTrajectory, pathPosition: numbe
   const left = table[leftIndex];
   const right = table[rightIndex];
   const distanceWidth = right.distance - left.distance;
-  const weight = distanceWidth > 0 ? (targetDistance - left.distance) / distanceWidth : 0;
+  const weight =
+    distanceWidth > 0 ? (targetDistance - left.distance) / distanceWidth : 0;
   const segmentIndex = right.segment_index;
   const leftT = left.segment_index === segmentIndex ? left.t : 0;
   const t = leftT + (right.t - leftT) * Math.min(1, Math.max(0, weight));

@@ -31,10 +31,13 @@ describe("useTrajectoryPlayback", () => {
     const wrapper = ({ children }: PropsWithChildren) => (
       <EditorStoreProvider>{children}</EditorStoreProvider>
     );
-    const { result } = renderHook(() => ({
-      first: useTrajectoryPlayback(trajectory),
-      second: useTrajectoryPlayback(trajectory),
-    }), { wrapper });
+    const { result } = renderHook(
+      () => ({
+        first: useTrajectoryPlayback(trajectory),
+        second: useTrajectoryPlayback(trajectory),
+      }),
+      { wrapper },
+    );
 
     act(() => result.current.first.toggle());
 

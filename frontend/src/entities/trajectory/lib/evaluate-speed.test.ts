@@ -12,7 +12,12 @@ const trajectory = {
   motion_profile: {
     default_speed: 2,
     keyframes: [
-      { id: "slow", path_position: 0.5, speed: 1, interpolation_to_next: "linear" },
+      {
+        id: "slow",
+        path_position: 0.5,
+        speed: 1,
+        interpolation_to_next: "linear",
+      },
     ],
   },
 } as CompiledTrajectory;

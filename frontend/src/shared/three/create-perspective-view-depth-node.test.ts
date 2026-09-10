@@ -7,10 +7,13 @@ import { createPerspectiveViewDepthNode } from "./create-perspective-view-depth-
 it("keeps camera clipping planes live after the depth node is created", () => {
   const camera = new PerspectiveCamera(42, 1, 0.01, 100);
   const viewDepth = createPerspectiveViewDepthNode(float(0.5), camera);
-  const references: Array<{ property: string; reference: PerspectiveCamera }> = [];
+  const references: Array<{ property: string; reference: PerspectiveCamera }> =
+    [];
   viewDepth.traverse((node) => {
     if (!("property" in node) || !("reference" in node)) return;
-    references.push(node as unknown as { property: string; reference: PerspectiveCamera });
+    references.push(
+      node as unknown as { property: string; reference: PerspectiveCamera },
+    );
   });
 
   const nearReference = references.find((node) => node.property === "near");

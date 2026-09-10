@@ -1,7 +1,10 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 
-import { sampleTrajectory, type CompiledTrajectory } from "@/entities/trajectory";
+import {
+  sampleTrajectory,
+  type CompiledTrajectory,
+} from "@/entities/trajectory";
 import { useHoveredTrajectory } from "@/features/project-editor";
 import { RENDER_PIPELINE_OVERLAY_LAYER, ScreenSpaceLine } from "@/shared/three";
 
@@ -20,9 +23,16 @@ export function TrajectoryLine({
   trajectory,
   onSelect,
 }: TrajectoryLineProps) {
-  const { clearHoveredTrajectory, hovered, hoverTrajectory } = useHoveredTrajectory();
+  const { clearHoveredTrajectory, hovered, hoverTrajectory } =
+    useHoveredTrajectory();
   const points = useMemo(() => sampleTrajectory(trajectory), [trajectory]);
-  const color = hovered ? "#fb923c" : selected ? "#f97316" : dark ? "#e5e7eb" : "#171717";
+  const color = hovered
+    ? "#fb923c"
+    : selected
+      ? "#f97316"
+      : dark
+        ? "#e5e7eb"
+        : "#171717";
 
   useEffect(() => () => clearHoveredTrajectory(), [clearHoveredTrajectory]);
   useEffect(() => {

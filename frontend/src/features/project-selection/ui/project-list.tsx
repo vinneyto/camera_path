@@ -18,11 +18,18 @@ interface ProjectMenuState extends ContextMenuPosition {
   project: Project;
 }
 
-export function ProjectList({ deletingProjectId, loading, onDelete, projects }: ProjectListProps) {
+export function ProjectList({
+  deletingProjectId,
+  loading,
+  onDelete,
+  projects,
+}: ProjectListProps) {
   const [menu, setMenu] = useState<ProjectMenuState | null>(null);
 
   if (loading) {
-    return <LoaderCircle className="mx-auto mt-16 size-5 animate-spin text-muted-foreground" />;
+    return (
+      <LoaderCircle className="mx-auto mt-16 size-5 animate-spin text-muted-foreground" />
+    );
   }
 
   if (projects.length === 0) {
@@ -47,14 +54,17 @@ export function ProjectList({ deletingProjectId, loading, onDelete, projects }: 
           >
             <Card className="group flex items-center gap-3 p-3 transition-colors hover:bg-accent">
               <div className="flex size-8 items-center justify-center rounded-md bg-secondary">
-                {deletingProjectId === project.id
-                  ? <LoaderCircle className="size-4 animate-spin" />
-                  : <Box className="size-4" />}
+                {deletingProjectId === project.id ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Box className="size-4" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium">{project.name}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {Object.keys(project.anchors).length} anchors · {project.segments.length} segments
+                  {Object.keys(project.anchors).length} anchors ·{" "}
+                  {project.segments.length} segments
                 </p>
               </div>
               <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
@@ -63,12 +73,18 @@ export function ProjectList({ deletingProjectId, loading, onDelete, projects }: 
         ))}
       </div>
       <ContextMenu
-        items={menu ? [{
-          destructive: true,
-          disabled: deletingProjectId === menu.project.id,
-          label: "Delete project",
-          onSelect: () => onDelete(menu.project),
-        }] : []}
+        items={
+          menu
+            ? [
+                {
+                  destructive: true,
+                  disabled: deletingProjectId === menu.project.id,
+                  label: "Delete project",
+                  onSelect: () => onDelete(menu.project),
+                },
+              ]
+            : []
+        }
         onClose={() => setMenu(null)}
         position={menu}
       />

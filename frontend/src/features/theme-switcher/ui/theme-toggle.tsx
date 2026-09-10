@@ -17,7 +17,11 @@ export function ThemeToggle() {
       title={`Switch to ${nextTheme} theme`}
       variant="ghost"
     >
-      {theme === "dark" ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+      {theme === "dark" ? (
+        <Sun className="size-3.5" />
+      ) : (
+        <Moon className="size-3.5" />
+      )}
     </Button>
   );
 }

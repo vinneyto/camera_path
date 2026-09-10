@@ -30,7 +30,9 @@ it("restores the Gaussian pass color node when the volume is disposed", () => {
   const highlightNode = pass.gaussianColorNode;
 
   expect(highlightNode).not.toBe(baseColorNode);
-  expect(JSON.stringify(highlightNode.toJSON())).toContain('"type":"ConditionalNode"');
+  expect(JSON.stringify(highlightNode.toJSON())).toContain(
+    '"type":"ConditionalNode"',
+  );
   volume.update({
     bottomOffset: 0.01,
     color: [1, 0.98, 0.92],
@@ -81,7 +83,9 @@ it("restores the Gaussian pass position node when a ripple volume is disposed", 
 
   expect(rippleNode).not.toBe(basePositionWorldNode);
   expect(pass.gaussianColorNode).not.toBe(baseColorNode);
-  expect(JSON.stringify(rippleNode.toJSON())).toContain('"type":"ConditionalNode"');
+  expect(JSON.stringify(rippleNode.toJSON())).toContain(
+    '"type":"ConditionalNode"',
+  );
   volume.prepareFrame();
   expect(invalidate).toHaveBeenCalledTimes(2);
 

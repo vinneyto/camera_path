@@ -18,7 +18,11 @@ const EditorStoreContext = createContext<EditorStoreApi | null>(null);
 
 export function EditorStoreProvider({ children }: PropsWithChildren) {
   const [store] = useState(createEditorStore);
-  return <EditorStoreContext.Provider value={store}>{children}</EditorStoreContext.Provider>;
+  return (
+    <EditorStoreContext.Provider value={store}>
+      {children}
+    </EditorStoreContext.Provider>
+  );
 }
 
 export function useEditorStore<T>(selector: (state: EditorStore) => T): T {
@@ -27,6 +31,7 @@ export function useEditorStore<T>(selector: (state: EditorStore) => T): T {
 
 export function useEditorStoreApi(): EditorStoreApi {
   const store = useContext(EditorStoreContext);
-  if (store === null) throw new Error("Editor state must be used inside EditorStoreProvider");
+  if (store === null)
+    throw new Error("Editor state must be used inside EditorStoreProvider");
   return store;
 }

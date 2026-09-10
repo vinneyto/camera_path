@@ -16,7 +16,11 @@ export function CameraViewOffset({ bottomInset }: CameraViewOffsetProps) {
   const width = useThree((state) => state.size.width);
 
   useLayoutEffect(() => {
-    if (!("isPerspectiveCamera" in camera) || camera.isPerspectiveCamera !== true) return;
+    if (
+      !("isPerspectiveCamera" in camera) ||
+      camera.isPerspectiveCamera !== true
+    )
+      return;
 
     const perspectiveCamera = camera as PerspectiveCamera;
     applyCameraViewOffset(perspectiveCamera, width, height, bottomInset);

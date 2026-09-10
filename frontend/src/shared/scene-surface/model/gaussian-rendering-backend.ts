@@ -17,8 +17,7 @@ interface GaussianHighlightVolumeBaseOptions {
   radius: number;
 }
 
-export interface GaussianColorHighlightVolumeOptions
-  extends GaussianHighlightVolumeBaseOptions {
+export interface GaussianColorHighlightVolumeOptions extends GaussianHighlightVolumeBaseOptions {
   bottomOffset: number;
   color: SceneSurfacePoint;
   height: number;
@@ -26,8 +25,7 @@ export interface GaussianColorHighlightVolumeOptions
   type: "color";
 }
 
-export interface GaussianRippleHighlightVolumeOptions
-  extends GaussianHighlightVolumeBaseOptions {
+export interface GaussianRippleHighlightVolumeOptions extends GaussianHighlightVolumeBaseOptions {
   amplitude: number;
   speed: number;
   tintColor: SceneSurfacePoint;
@@ -39,8 +37,7 @@ export interface GaussianRippleHighlightVolumeOptions
 }
 
 export type GaussianHighlightVolumeOptions =
-  | GaussianColorHighlightVolumeOptions
-  | GaussianRippleHighlightVolumeOptions;
+  GaussianColorHighlightVolumeOptions | GaussianRippleHighlightVolumeOptions;
 
 export interface GaussianHighlightVolumeInstance {
   dispose(): void;

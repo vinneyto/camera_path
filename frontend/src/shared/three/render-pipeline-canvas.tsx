@@ -7,7 +7,11 @@ import { createWebGpuRenderer } from "./create-webgpu-renderer";
 import { RenderPipelineProvider } from "./render-pipeline-provider";
 
 /** A WebGPU R3F Canvas whose frame output is owned by Three.js RenderPipeline. */
-export function RenderPipelineCanvas({ children, onCreated, ...props }: Omit<CanvasProps, "gl">) {
+export function RenderPipelineCanvas({
+  children,
+  onCreated,
+  ...props
+}: Omit<CanvasProps, "gl">) {
   return (
     <Canvas
       {...props}

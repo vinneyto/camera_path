@@ -1,6 +1,9 @@
 import type { PlaybackSample } from "@/entities/trajectory/lib/create-playback-table";
 
-export function pathPositionAtTime(table: PlaybackSample[], time: number): number {
+export function pathPositionAtTime(
+  table: PlaybackSample[],
+  time: number,
+): number {
   if (table.length === 0 || time <= 0) return 0;
   const duration = table.at(-1)?.time ?? 0;
   if (time >= duration) return 1;

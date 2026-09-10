@@ -11,18 +11,26 @@ interface PointerEventData {
   pointerId: number;
 }
 
-function event(pointerId: number, clientX = 10, clientY = 20): PointerEventData {
+function event(
+  pointerId: number,
+  clientX = 10,
+  clientY = 20,
+): PointerEventData {
   return { clientX, clientY, pointerId };
 }
 
 describe("usePointerTap", () => {
   it("calls onTap with the latest value for a clean tap", () => {
     const onTap = vi.fn();
-    const { result } = renderHook(() => usePointerTap({ movementThreshold: 5, onTap }));
+    const { result } = renderHook(() =>
+      usePointerTap({ movementThreshold: 5, onTap }),
+    );
     const pointerTap = result.current;
 
     pointerTap.handlePointerDown("initial", event(1));
-    expect(pointerTap.handlePointerMove("latest", event(1, 13, 24))).toBe(false);
+    expect(pointerTap.handlePointerMove("latest", event(1, 13, 24))).toBe(
+      false,
+    );
     pointerTap.handlePointerUp(event(1));
 
     expect(onTap).toHaveBeenCalledOnce();
@@ -31,7 +39,9 @@ describe("usePointerTap", () => {
 
   it("does not call onTap after movement above the threshold", () => {
     const onTap = vi.fn();
-    const { result } = renderHook(() => usePointerTap({ movementThreshold: 5, onTap }));
+    const { result } = renderHook(() =>
+      usePointerTap({ movementThreshold: 5, onTap }),
+    );
     const pointerTap = result.current;
 
     pointerTap.handlePointerDown("value", event(1));
@@ -43,7 +53,9 @@ describe("usePointerTap", () => {
 
   it("does not call onTap after cancel", () => {
     const onTap = vi.fn();
-    const { result } = renderHook(() => usePointerTap({ movementThreshold: 5, onTap }));
+    const { result } = renderHook(() =>
+      usePointerTap({ movementThreshold: 5, onTap }),
+    );
     const pointerTap = result.current;
 
     pointerTap.handlePointerDown("value", event(1));
@@ -55,7 +67,9 @@ describe("usePointerTap", () => {
 
   it("ignores a different pointerId", () => {
     const onTap = vi.fn();
-    const { result } = renderHook(() => usePointerTap({ movementThreshold: 5, onTap }));
+    const { result } = renderHook(() =>
+      usePointerTap({ movementThreshold: 5, onTap }),
+    );
     const pointerTap = result.current;
 
     pointerTap.handlePointerDown("value", event(1));

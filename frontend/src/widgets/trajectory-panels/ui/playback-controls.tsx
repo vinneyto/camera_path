@@ -27,14 +27,30 @@ export function PlaybackControls({
   onToggle,
 }: PlaybackControlsProps) {
   return (
-    <div className={cn(
-      "flex h-10 items-center gap-2 px-3",
-      !embedded && "border-t bg-background/95 backdrop-blur",
-    )}>
-      <Button aria-label={playing ? "Pause" : "Play"} onClick={onToggle} size="icon" variant="ghost">
-        {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+    <div
+      className={cn(
+        "flex h-10 items-center gap-2 px-3",
+        !embedded && "border-t bg-background/95 backdrop-blur",
+      )}
+    >
+      <Button
+        aria-label={playing ? "Pause" : "Play"}
+        onClick={onToggle}
+        size="icon"
+        variant="ghost"
+      >
+        {playing ? (
+          <Pause className="size-3.5" />
+        ) : (
+          <Play className="size-3.5" />
+        )}
       </Button>
-      <Button aria-label="Restart" onClick={() => onSeek(0)} size="icon" variant="ghost">
+      <Button
+        aria-label="Restart"
+        onClick={() => onSeek(0)}
+        size="icon"
+        variant="ghost"
+      >
         <RotateCcw className="size-3.5" />
       </Button>
       <input
