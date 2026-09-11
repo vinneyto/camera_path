@@ -8,7 +8,7 @@ import type { CompiledTrajectory } from "@/entities/trajectory";
 import { Button } from "@/shared/ui";
 
 import { createAimTrack } from "../lib/create-aim-track";
-import { createOrientationTracks } from "../lib/create-orientation-tracks";
+import { createOrientationTrack } from "../lib/create-orientation-track";
 import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
 
@@ -47,10 +47,9 @@ export function TrajectoryInspector({
         project,
         trajectory,
       }),
-      ...createOrientationTracks({
+      createOrientationTrack({
         deletingKeyframeId: deletingOrientationKeyframeId,
         onDeleteKeyframe: onDeleteOrientationKeyframe,
-        pathPosition,
         trajectory,
       }),
     ],
@@ -59,7 +58,6 @@ export function TrajectoryInspector({
       deletingOrientationKeyframeId,
       onDeleteAimKeyframe,
       onDeleteOrientationKeyframe,
-      pathPosition,
       project,
       trajectory,
     ],

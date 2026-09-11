@@ -4,14 +4,13 @@ import type { PointerEvent } from "react";
 
 import { graphLeft, TRACK_HORIZONTAL_PADDING } from "../lib/graph-layout";
 import { pathPositionFromClientX } from "../lib/path-position-from-client-x";
-import type { TimelineTrackDescriptor } from "../model/timeline-track";
+import type { KeyframeTrackDescriptor } from "../model/timeline-track";
 import { KeyLaneTrack } from "./key-lane-track";
-import { ScalarCurveTrack } from "./scalar-curve-track";
 
 interface TimelineStackProps {
   onScrub: (pathPosition: number) => void;
   pathPosition: number;
-  tracks: TimelineTrackDescriptor[];
+  tracks: KeyframeTrackDescriptor[];
 }
 
 export function TimelineStack({
@@ -68,11 +67,7 @@ export function TimelineStack({
           className={index < tracks.length - 1 ? "border-b" : undefined}
           key={track.id}
         >
-          {track.kind === "scalar" ? (
-            <ScalarCurveTrack track={track} />
-          ) : (
-            <KeyLaneTrack track={track} />
-          )}
+          <KeyLaneTrack track={track} />
         </div>
       ))}
       <span className="pointer-events-none absolute bottom-2 left-2 right-2 top-6 z-20">

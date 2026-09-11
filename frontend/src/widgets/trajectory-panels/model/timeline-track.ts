@@ -8,10 +8,10 @@ export interface TimelineKeyframe {
 }
 
 export interface KeyframeTrackDescriptor {
-  kind: "key";
   color: string;
   deleteLabel: string;
   deletingKeyframeId?: string;
+  emptyState: string | null;
   height: number;
   id: string;
   keyframes: TimelineKeyframe[];
@@ -21,26 +21,3 @@ export interface KeyframeTrackDescriptor {
   summary: string;
   title: string;
 }
-
-export interface ScalarTimelineKeyframe extends TimelineKeyframe {
-  value: number;
-}
-
-export interface ScalarTrackDescriptor {
-  color: string;
-  deleteLabel: string;
-  deletingKeyframeId?: string;
-  domain: readonly [number, number];
-  height: number;
-  id: string;
-  keyframes: ScalarTimelineKeyframe[];
-  kind: "scalar";
-  onDeleteKeyframe: (keyframeId: string) => void;
-  renderMarker: () => ReactNode;
-  samples: Array<{ pathPosition: number; value: number }>;
-  summary: string;
-  title: string;
-}
-
-export type TimelineTrackDescriptor =
-  KeyframeTrackDescriptor | ScalarTrackDescriptor;

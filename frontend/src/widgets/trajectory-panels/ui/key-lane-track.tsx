@@ -42,6 +42,17 @@ export function KeyLaneTrack({ track }: KeyLaneTrackProps) {
           onDeleteKeyframe={track.onDeleteKeyframe}
           renderMarker={track.renderMarker}
         />
+        {track.keyframes.length === 0 && track.emptyState && (
+          <p
+            className="absolute -translate-y-1/2 text-[8px] text-muted-foreground"
+            style={{
+              left: `${(PLOT_LEFT / GRAPH_WIDTH) * 100}%`,
+              top: track.lineY,
+            }}
+          >
+            {track.emptyState}
+          </p>
+        )}
       </div>
     </div>
   );
