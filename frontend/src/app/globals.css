@@ -22,6 +22,9 @@
   --ring: oklch(0.62 0.13 48);
   --chart-speed: #4563ff;
   --chart-aim: #13a4a8;
+  --chart-yaw: #8b5cf6;
+  --chart-pitch: #ec4899;
+  --chart-roll: #f59e0b;
   --chart-grid: color-mix(in oklab, var(--foreground) 11%, transparent);
   --scene-background: #ebe9e5;
   --scene-ground: #d9d6d0;
@@ -51,6 +54,9 @@
   --ring: oklch(0.68 0.13 50);
   --chart-speed: #6f83ff;
   --chart-aim: #27b8bb;
+  --chart-yaw: #a78bfa;
+  --chart-pitch: #f472b6;
+  --chart-roll: #fbbf24;
   --chart-grid: color-mix(in oklab, var(--foreground) 13%, transparent);
   --scene-background: #0c1017;
   --scene-ground: #171c24;

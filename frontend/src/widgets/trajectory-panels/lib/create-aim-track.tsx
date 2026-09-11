@@ -28,6 +28,7 @@ export function createAimTrack({
   });
 
   return {
+    kind: "key",
     color: "var(--chart-aim)",
     deleteLabel: "Delete camera aim keyframe",
     deletingKeyframeId,

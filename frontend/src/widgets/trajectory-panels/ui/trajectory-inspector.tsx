@@ -8,13 +8,16 @@ import type { CompiledTrajectory } from "@/entities/trajectory";
 import { Button } from "@/shared/ui";
 
 import { createAimTrack } from "../lib/create-aim-track";
+import { createOrientationTracks } from "../lib/create-orientation-tracks";
 import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
 
 interface TrajectoryInspectorProps {
   deletingAimKeyframeId?: string;
+  deletingOrientationKeyframeId?: string;
   deletingSpeedKeyframeId?: string;
   onDeleteAimKeyframe: (keyframeId: string) => void;
+  onDeleteOrientationKeyframe: (keyframeId: string) => void;
   onDeleteSpeedKeyframe: (keyframeId: string) => void;
   onScrub: (pathPosition: number) => void;
   pathPosition: number;
@@ -25,9 +28,11 @@ interface TrajectoryInspectorProps {
 
 export function TrajectoryInspector({
   deletingAimKeyframeId,
+  deletingOrientationKeyframeId,
   deletingSpeedKeyframeId,
   onClose,
   onDeleteAimKeyframe,
+  onDeleteOrientationKeyframe,
   onDeleteSpeedKeyframe,
   onScrub,
   pathPosition,
@@ -42,8 +47,22 @@ export function TrajectoryInspector({
         project,
         trajectory,
       }),
+      ...createOrientationTracks({
+        deletingKeyframeId: deletingOrientationKeyframeId,
+        onDeleteKeyframe: onDeleteOrientationKeyframe,
+        pathPosition,
+        trajectory,
+      }),
     ],
-    [deletingAimKeyframeId, onDeleteAimKeyframe, project, trajectory],
+    [
+      deletingAimKeyframeId,
+      deletingOrientationKeyframeId,
+      onDeleteAimKeyframe,
+      onDeleteOrientationKeyframe,
+      pathPosition,
+      project,
+      trajectory,
+    ],
   );
 
   return (
