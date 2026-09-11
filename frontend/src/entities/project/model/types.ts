@@ -28,6 +28,12 @@ export interface LookAtPointAim {
 
 export type CameraAim = FollowPathAim | LookAtPointAim;
 
+export interface CameraOrientation {
+  yaw_deg: number;
+  pitch_deg: number;
+  roll_deg: number;
+}
+
 export interface SpeedKeyframe {
   id: string;
   path_position: number;
@@ -40,6 +46,25 @@ export interface CameraKeyframe {
   path_position: number;
   aim: CameraAim;
   interpolation_to_next: Interpolation;
+}
+
+export interface CameraOrientationKeyframe {
+  id: string;
+  path_position: number;
+  orientation: CameraOrientation;
+  interpolation_to_next: Interpolation;
+}
+
+export interface CameraOrientationKeyframeCreate {
+  path_position: number;
+  orientation: CameraOrientation;
+  interpolation_to_next?: Interpolation;
+}
+
+export interface CameraOrientationKeyframeUpdate {
+  path_position?: number;
+  orientation?: CameraOrientation;
+  interpolation_to_next?: Interpolation;
 }
 
 export interface ChatHistoryMessage {
@@ -58,6 +83,8 @@ export interface Project {
   camera_track: {
     default_aim: FollowPathAim;
     keyframes: Record<string, CameraKeyframe>;
+    default_orientation: CameraOrientation;
+    orientation_keyframes: Record<string, CameraOrientationKeyframe>;
     world_up: Vec3;
   };
   motion_profile: {

@@ -50,3 +50,10 @@ export function useDeleteSpeedKeyframe(projectId: string) {
 export function useDeleteCameraKeyframe(projectId: string) {
   return useProjectObjectDeletion(projectId, projectApi.deleteCameraKeyframe);
 }
+
+export function useDeleteCameraOrientationKeyframe(projectId: string) {
+  return useProjectObjectDeletion(
+    projectId,
+    projectApi.deleteCameraOrientationKeyframe,
+  );
+}

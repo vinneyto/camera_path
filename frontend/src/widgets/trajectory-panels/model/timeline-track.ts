@@ -11,6 +11,7 @@ export interface KeyframeTrackDescriptor {
   color: string;
   deleteLabel: string;
   deletingKeyframeId?: string;
+  emptyState: string | null;
   height: number;
   id: string;
   keyframes: TimelineKeyframe[];
