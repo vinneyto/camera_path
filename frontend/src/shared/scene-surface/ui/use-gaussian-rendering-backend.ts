@@ -19,6 +19,8 @@ export function useGaussianRenderingBackend(
 ): GaussianRenderingBackend {
   const renderer = useThree((state) => state.gl);
   const pipeline = useOptionalRenderPipeline();
+  // The backend is an imperative resource owner consumed outside React and
+  // disposed by SceneSurfaceProvider; stable identity is part of that contract.
   const backend = useMemo(() => {
     if (renderer instanceof WebGPURenderer) {
       if (pipeline === null) {

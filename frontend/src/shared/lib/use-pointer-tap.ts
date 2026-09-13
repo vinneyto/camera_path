@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
 interface PointerTapEvent {
   clientX: number;
@@ -26,50 +26,43 @@ export function usePointerTap<T>({
 }: UsePointerTapOptions<T>) {
   const pendingTapRef = useRef<PendingPointerTap<T> | null>(null);
 
-  const cancel = useCallback(() => {
+  function cancel() {
     pendingTapRef.current = null;
-  }, []);
+  }
 
-  const handlePointerDown = useCallback((value: T, event: PointerTapEvent) => {
+  function handlePointerDown(value: T, event: PointerTapEvent) {
     pendingTapRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       value,
     };
-  }, []);
+  }
 
-  const handlePointerMove = useCallback(
-    (value: T, event: PointerTapEvent) => {
-      const pendingTap = pendingTapRef.current;
-      if (pendingTap === null || pendingTap.pointerId !== event.pointerId)
-        return false;
-
-      const distance = Math.hypot(
-        event.clientX - pendingTap.startX,
-        event.clientY - pendingTap.startY,
-      );
-      if (distance > movementThreshold) {
-        cancel();
-        return true;
-      }
-
-      pendingTap.value = value;
+  function handlePointerMove(value: T, event: PointerTapEvent) {
+    const pendingTap = pendingTapRef.current;
+    if (pendingTap === null || pendingTap.pointerId !== event.pointerId)
       return false;
-    },
-    [cancel, movementThreshold],
-  );
 
-  const handlePointerUp = useCallback(
-    (event: Pick<PointerTapEvent, "pointerId">) => {
-      const pendingTap = pendingTapRef.current;
-      if (pendingTap === null || pendingTap.pointerId !== event.pointerId)
-        return;
+    const distance = Math.hypot(
+      event.clientX - pendingTap.startX,
+      event.clientY - pendingTap.startY,
+    );
+    if (distance > movementThreshold) {
       cancel();
-      onTap(pendingTap.value);
-    },
-    [cancel, onTap],
-  );
+      return true;
+    }
+
+    pendingTap.value = value;
+    return false;
+  }
+
+  function handlePointerUp(event: Pick<PointerTapEvent, "pointerId">) {
+    const pendingTap = pendingTapRef.current;
+    if (pendingTap === null || pendingTap.pointerId !== event.pointerId) return;
+    cancel();
+    onTap(pendingTap.value);
+  }
 
   return {
     cancel,

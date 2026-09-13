@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light";
 
@@ -30,20 +30,17 @@ export function ThemeProvider({
     return () => window.clearTimeout(updateTheme);
   }, []);
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({
-      theme,
-      toggleTheme: () => {
-        setTheme((currentTheme) => {
-          const nextTheme = currentTheme === "dark" ? "light" : "dark";
-          window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-          applyTheme(nextTheme);
-          return nextTheme;
-        });
-      },
-    }),
-    [theme],
-  );
+  const value: ThemeContextValue = {
+    theme,
+    toggleTheme: () => {
+      setTheme((currentTheme) => {
+        const nextTheme = currentTheme === "dark" ? "light" : "dark";
+        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        applyTheme(nextTheme);
+        return nextTheme;
+      });
+    },
+  };
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

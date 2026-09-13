@@ -7,7 +7,6 @@ import {
   useCallback,
   useContext,
   useLayoutEffect,
-  useMemo,
   useRef,
 } from "react";
 import { Layers } from "three";
@@ -57,6 +56,8 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     );
   }
 
+  // These callbacks are registered by imperative pipeline consumers. Their
+  // identity must stay stable until the matching unregister cleanup runs.
   const rebuildOutput = useCallback(() => {
     const resources = resourcesRef.current;
     if (resources === null) return;
@@ -119,15 +120,12 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     [rebuildOutput],
   );
 
-  const value = useMemo<RenderPipelineContextValue>(
-    () => ({
-      camera,
-      getOpaqueViewDepth,
-      registerLayer,
-      renderer,
-    }),
-    [camera, getOpaqueViewDepth, registerLayer, renderer],
-  );
+  const value: RenderPipelineContextValue = {
+    camera,
+    getOpaqueViewDepth,
+    registerLayer,
+    renderer,
+  };
 
   useLayoutEffect(() => {
     const sceneLayers = new Layers();

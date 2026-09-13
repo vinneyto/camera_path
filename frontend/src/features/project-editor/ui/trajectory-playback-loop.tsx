@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import {
   createPlaybackTable,
@@ -20,10 +20,9 @@ interface TrajectoryPlaybackLoopProps {
 export function TrajectoryPlaybackLoop({
   trajectory,
 }: TrajectoryPlaybackLoopProps) {
-  const table = useMemo(
-    () => (trajectory ? createPlaybackTable(trajectory) : []),
-    [trajectory],
-  );
+  // React Compiler caches this derived value while trajectory is unchanged.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const table = trajectory ? createPlaybackTable(trajectory) : [];
   const duration = table.at(-1)?.time ?? 0;
   const playing = useEditorStore((state) => state.playback.playing);
   const { resetPlayback, setPlaybackFrame, setPlaying } = useEditorStore(

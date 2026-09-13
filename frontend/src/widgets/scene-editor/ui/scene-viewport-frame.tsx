@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import type { Anchor } from "@/entities/project";
 import { CameraModeToggle, useCameraMode } from "@/features/project-editor";
@@ -38,17 +38,17 @@ export function SceneViewportFrame({
   const [surfaceState, setSurfaceState] = useState<SurfaceState>({
     status: "loading",
   });
-  const handleSurfaceLoading = useCallback(
-    () => setSurfaceState({ status: "loading" }),
-    [],
-  );
-  const handleSurfaceReady = useCallback(
-    () => setSurfaceState({ status: "ready" }),
-    [],
-  );
-  const handleSurfaceError = useCallback((error: Error) => {
+  function handleSurfaceLoading() {
+    setSurfaceState({ status: "loading" });
+  }
+
+  function handleSurfaceReady() {
+    setSurfaceState({ status: "ready" });
+  }
+
+  function handleSurfaceError(error: Error) {
     setSurfaceState({ status: "error", message: error.message });
-  }, []);
+  }
 
   return (
     <div className="relative h-full w-full">

@@ -1,5 +1,5 @@
 import type { ThreeEvent } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import {
   sampleTrajectory,
@@ -25,7 +25,7 @@ export function TrajectoryLine({
 }: TrajectoryLineProps) {
   const { clearHoveredTrajectory, hovered, hoverTrajectory } =
     useHoveredTrajectory();
-  const points = useMemo(() => sampleTrajectory(trajectory), [trajectory]);
+  const points = sampleTrajectory(trajectory);
   const color = hovered
     ? "#fb923c"
     : selected

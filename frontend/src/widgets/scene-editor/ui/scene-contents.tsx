@@ -1,6 +1,6 @@
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
@@ -99,17 +99,15 @@ export function SceneContents({
     renderingBackend.invalidate();
   }, [anchors, renderingBackend]);
 
-  const handleSurfaceReady = useCallback(
-    (surface: SceneSurfaceReady) => {
-      frameSurface(camera, surface.bounds, setOrbitTarget);
-      onSurfaceReady();
-    },
-    [camera, onSurfaceReady],
-  );
-  const handleOrbitEnd = useCallback(() => {
+  function handleSurfaceReady(surface: SceneSurfaceReady) {
+    frameSurface(camera, surface.bounds, setOrbitTarget);
+    onSurfaceReady();
+  }
+
+  function handleOrbitEnd() {
     const controls = orbitControlsRef.current;
     if (controls !== null) setOrbitTarget(controls.target.toArray() as Vec3);
-  }, []);
+  }
   const editorVisible = cameraMode === "orbit";
   // Equal projected depths share a z-index, so stable DOM order is the tie-breaker.
   const orderedAnchors = [...anchors].sort((left, right) =>

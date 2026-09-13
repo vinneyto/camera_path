@@ -33,6 +33,8 @@ export function SceneSurfaceProvider({
   backend,
   children,
 }: SceneSurfaceProviderProps) {
+  // The cache is a mutable resource owner shared by descendant effects. Its
+  // identity must remain tied to the backend, not to individual React renders.
   const cloudResourceCache = useMemo(
     () => new GaussianCloudResourceCache(backend),
     [backend],

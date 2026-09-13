@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
 import type { Project } from "@/entities/project";
 import { ChatPanel, useSendChatMessage } from "@/features/chat-agent";
 import { useTrajectorySelection } from "@/features/project-editor";
@@ -19,10 +17,7 @@ export function ChatPanelContainer({
 }: ChatPanelContainerProps) {
   const chatMutation = useSendChatMessage(projectId);
   const { selectTrajectory } = useTrajectorySelection();
-  const anchors = useMemo(
-    () => Object.values(project.anchors),
-    [project.anchors],
-  );
+  const anchors = Object.values(project.anchors);
   const requestError = queryError ?? chatMutation.error;
   const error = requestError instanceof Error ? requestError.message : null;
 

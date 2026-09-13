@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { evaluateSpeed, type CompiledTrajectory } from "@/entities/trajectory";
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
@@ -37,14 +37,10 @@ export function SpeedGraph({
     null,
   );
   const [menu, setMenu] = useState<SpeedMenuState | null>(null);
-  const samples = useMemo(
-    () =>
-      Array.from({ length: 101 }, (_, index) => ({
-        position: index / 100,
-        speed: evaluateSpeed(trajectory, index / 100),
-      })),
-    [trajectory],
-  );
+  const samples = Array.from({ length: 101 }, (_, index) => ({
+    position: index / 100,
+    speed: evaluateSpeed(trajectory, index / 100),
+  }));
   const maximum = Math.max(
     2,
     Math.ceil(Math.max(...samples.map((sample) => sample.speed)) * 2) / 2,
