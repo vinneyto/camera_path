@@ -13,3 +13,4 @@
 - Prefer TSL when custom shader logic is required for the supported WebGPU path.
 - Create disposable Three.js/GPU resources and dispose them in the setup and cleanup of the same `useEffect`. Do not create or memoize such a resource with `useMemo` and dispose it from a separate effect: React Strict Mode may run the effect cleanup and setup again while retaining the memoized resource, causing reuse after `dispose()`.
 - Do not create a ref only to carry the latest prop or state value into an effect. When the resulting update is cheap, apply it directly in a `useEffect` or `useLayoutEffect` and list the value in that effect's dependencies.
+- React Compiler is enabled for the frontend. Do not add `useMemo`, `useCallback`, or `memo` by default. Add manual memoization only when stable identity is required by an external API or a measured performance case justifies it; keep the reason explicit in the code.

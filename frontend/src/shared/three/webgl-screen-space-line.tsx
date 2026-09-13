@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Mesh, MeshBasicMaterial } from "three";
 
 import { createScreenSpaceLineGeometry } from "./create-screen-space-line-geometry";
@@ -23,7 +23,30 @@ export function WebGlScreenSpaceLine({
   transparent = false,
   ...eventHandlers
 }: WebGlScreenSpaceLineProps) {
-  const line = useMemo(() => {
+  const [line] = useState(
+    () =>
+      new Mesh<
+        ReturnType<typeof createScreenSpaceLineGeometry>,
+        MeshBasicMaterial
+      >(),
+  );
+  const lineRef = useRef(line);
+  const initialResourcesRef = useRef<{
+    geometry: typeof line.geometry;
+    material: typeof line.material;
+  } | null>({
+    geometry: line.geometry,
+    material: line.material,
+  });
+
+  useLayoutEffect(() => {
+    const initialResources = initialResourcesRef.current;
+    if (initialResources !== null) {
+      initialResources.geometry.dispose();
+      initialResources.material.dispose();
+      initialResourcesRef.current = null;
+    }
+
     const material = new MeshBasicMaterial({
       color,
       depthTest,
@@ -31,30 +54,33 @@ export function WebGlScreenSpaceLine({
       toneMapped: false,
       transparent,
     });
-    const object = new Mesh(
-      createScreenSpaceLineGeometry(points, radius),
-      material,
-    );
-    object.layers.set(layer);
-    object.renderOrder = renderOrder;
+    const geometry = createScreenSpaceLineGeometry(points, radius);
+    let hitGeometry: ReturnType<typeof createScreenSpaceLineGeometry> | null =
+      null;
+    lineRef.current.geometry = geometry;
+    lineRef.current.material = material;
+    lineRef.current.layers.set(layer);
+    lineRef.current.renderOrder = renderOrder;
+    lineRef.current.raycast = Mesh.prototype.raycast;
 
     if (hitSlop > 0) {
-      const hitMesh = new Mesh(
-        createScreenSpaceLineGeometry(points, radius + hitSlop),
-        material,
-      );
-      object.raycast = (raycaster, intersections) => {
-        hitMesh.matrixWorld.copy(object.matrixWorld);
+      hitGeometry = createScreenSpaceLineGeometry(points, radius + hitSlop);
+      const hitMesh = new Mesh(hitGeometry, material);
+      lineRef.current.raycast = (raycaster, intersections) => {
+        hitMesh.matrixWorld.copy(lineRef.current.matrixWorld);
         const startIndex = intersections.length;
         hitMesh.raycast(raycaster, intersections);
         for (let index = startIndex; index < intersections.length; index += 1) {
-          intersections[index].object = object;
+          intersections[index].object = lineRef.current;
         }
       };
-      object.userData.hitGeometry = hitMesh.geometry;
     }
 
-    return object;
+    return () => {
+      geometry.dispose();
+      material.dispose();
+      hitGeometry?.dispose();
+    };
   }, [
     color,
     depthTest,
@@ -66,17 +92,6 @@ export function WebGlScreenSpaceLine({
     renderOrder,
     transparent,
   ]);
-
-  useEffect(
-    () => () => {
-      line.geometry.dispose();
-      line.material.dispose();
-      const hitGeometry = line.userData.hitGeometry;
-      if (hitGeometry && typeof hitGeometry.dispose === "function")
-        hitGeometry.dispose();
-    },
-    [line],
-  );
 
   return <primitive dispose={null} object={line} {...eventHandlers} />;
 }

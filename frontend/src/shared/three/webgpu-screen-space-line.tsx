@@ -1,7 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
@@ -28,11 +28,8 @@ export function WebGpuScreenSpaceLine({
   ...objectProps
 }: WebGpuScreenSpaceLineProps) {
   const pixelRatio = useThree((state) => state.viewport.dpr);
-  const normalizedPoints = useMemo(
-    () => normalizeScreenSpaceLinePoints(points),
-    [points],
-  );
-  const line = useMemo(() => {
+  const normalizedPoints = normalizeScreenSpaceLinePoints(points);
+  const [line] = useState(() => {
     const object = new Line2() as Line2 & { raycastThreshold: number };
     object.raycastThreshold = 0;
     const raycast = object.raycast.bind(object);
@@ -46,13 +43,13 @@ export function WebGpuScreenSpaceLine({
       }
     };
     return object;
-  }, []);
+  });
   const lineRef = useRef(line);
 
   useLayoutEffect(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
-    lineRef.current.geometry = geometry;
+    lineRef.current!.geometry = geometry;
 
     return () => {
       geometry.dispose();
@@ -69,7 +66,7 @@ export function WebGpuScreenSpaceLine({
       transparent,
       worldUnits: false,
     });
-    lineRef.current.material = material;
+    lineRef.current!.material = material;
 
     return () => {
       material.dispose();
@@ -77,9 +74,9 @@ export function WebGpuScreenSpaceLine({
   }, [color, depthTest, depthWrite, transparent, width]);
 
   useLayoutEffect(() => {
-    lineRef.current.layers.set(layer);
-    lineRef.current.renderOrder = renderOrder;
-    lineRef.current.raycastThreshold = getLine2RaycastThreshold(
+    lineRef.current!.layers.set(layer);
+    lineRef.current!.renderOrder = renderOrder;
+    lineRef.current!.raycastThreshold = getLine2RaycastThreshold(
       width,
       hitSlop,
       pixelRatio,

@@ -1,7 +1,6 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useMemo } from "react";
 
 import type { Project } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
@@ -39,29 +38,19 @@ export function TrajectoryInspector({
   project,
   trajectory,
 }: TrajectoryInspectorProps) {
-  const keyframeTracks = useMemo(
-    () => [
-      createAimTrack({
-        deletingKeyframeId: deletingAimKeyframeId,
-        onDeleteKeyframe: onDeleteAimKeyframe,
-        project,
-        trajectory,
-      }),
-      createOrientationTrack({
-        deletingKeyframeId: deletingOrientationKeyframeId,
-        onDeleteKeyframe: onDeleteOrientationKeyframe,
-        trajectory,
-      }),
-    ],
-    [
-      deletingAimKeyframeId,
-      deletingOrientationKeyframeId,
-      onDeleteAimKeyframe,
-      onDeleteOrientationKeyframe,
+  const keyframeTracks = [
+    createAimTrack({
+      deletingKeyframeId: deletingAimKeyframeId,
+      onDeleteKeyframe: onDeleteAimKeyframe,
       project,
       trajectory,
-    ],
-  );
+    }),
+    createOrientationTrack({
+      deletingKeyframeId: deletingOrientationKeyframeId,
+      onDeleteKeyframe: onDeleteOrientationKeyframe,
+      trajectory,
+    }),
+  ];
 
   return (
     <section className="border-t bg-muted/35 p-2">

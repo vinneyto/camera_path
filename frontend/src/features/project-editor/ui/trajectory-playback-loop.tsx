@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import {
   createPlaybackTable,
@@ -20,11 +20,6 @@ interface TrajectoryPlaybackLoopProps {
 export function TrajectoryPlaybackLoop({
   trajectory,
 }: TrajectoryPlaybackLoopProps) {
-  const table = useMemo(
-    () => (trajectory ? createPlaybackTable(trajectory) : []),
-    [trajectory],
-  );
-  const duration = table.at(-1)?.time ?? 0;
   const playing = useEditorStore((state) => state.playback.playing);
   const { resetPlayback, setPlaybackFrame, setPlaying } = useEditorStore(
     (state) => state.playbackActions,
@@ -39,6 +34,8 @@ export function TrajectoryPlaybackLoop({
   }, [resetPlayback, trajectoryKey]);
 
   useEffect(() => {
+    const table = trajectory ? createPlaybackTable(trajectory) : [];
+    const duration = table.at(-1)?.time ?? 0;
     if (!playing || duration <= 0) return;
     let frame = 0;
     let previous = performance.now();
@@ -61,7 +58,7 @@ export function TrajectoryPlaybackLoop({
 
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [duration, playing, setPlaybackFrame, setPlaying, store, table]);
+  }, [playing, setPlaybackFrame, setPlaying, store, trajectory]);
 
   return null;
 }

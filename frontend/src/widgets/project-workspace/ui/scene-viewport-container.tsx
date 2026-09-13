@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 
 import { type Project, type Vec3 } from "@/entities/project";
@@ -41,10 +40,7 @@ export function SceneViewportContainer({
   const activeTool = useActiveEditorTool();
   const { cameraMode } = useCameraMode();
   const playback = useTrajectoryPlayback(trajectory);
-  const anchors = useMemo(
-    () => Object.values(project.anchors),
-    [project.anchors],
-  );
+  const anchors = Object.values(project.anchors);
   const mutating =
     addAnchorMutation.isPending ||
     updateAnchorMutation.isPending ||
