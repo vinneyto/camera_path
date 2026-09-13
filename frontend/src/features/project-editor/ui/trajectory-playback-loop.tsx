@@ -20,6 +20,10 @@ interface TrajectoryPlaybackLoopProps {
 export function TrajectoryPlaybackLoop({
   trajectory,
 }: TrajectoryPlaybackLoopProps) {
+  // React Compiler caches this derived value while trajectory is unchanged.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const table = trajectory ? createPlaybackTable(trajectory) : [];
+  const duration = table.at(-1)?.time ?? 0;
   const playing = useEditorStore((state) => state.playback.playing);
   const { resetPlayback, setPlaybackFrame, setPlaying } = useEditorStore(
     (state) => state.playbackActions,
@@ -34,8 +38,6 @@ export function TrajectoryPlaybackLoop({
   }, [resetPlayback, trajectoryKey]);
 
   useEffect(() => {
-    const table = trajectory ? createPlaybackTable(trajectory) : [];
-    const duration = table.at(-1)?.time ?? 0;
     if (!playing || duration <= 0) return;
     let frame = 0;
     let previous = performance.now();
@@ -58,7 +60,7 @@ export function TrajectoryPlaybackLoop({
 
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [playing, setPlaybackFrame, setPlaying, store, trajectory]);
+  }, [duration, playing, setPlaybackFrame, setPlaying, store, table]);
 
   return null;
 }
