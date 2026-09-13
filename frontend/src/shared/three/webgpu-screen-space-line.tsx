@@ -1,7 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import { useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
@@ -45,20 +45,27 @@ export function WebGpuScreenSpaceLine({
     };
     return object;
   }, []);
+  const lineRef = useRef(line);
 
-  // eslint-disable-next-line react-hooks/immutability
   useLayoutEffect(() => {
+    if (!lineRef.current) {
+      return;
+    }
+
     const geometry = new LineGeometry();
     geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
-    // eslint-disable-next-line react-hooks/immutability
-    line.geometry = geometry;
+    lineRef.current.geometry = geometry;
 
     return () => {
       geometry.dispose();
     };
-  }, [line, normalizedPoints]);
+  }, [normalizedPoints]);
 
   useLayoutEffect(() => {
+    if (!lineRef.current) {
+      return;
+    }
+
     const material = new Line2NodeMaterial({
       color,
       depthTest,
@@ -68,24 +75,26 @@ export function WebGpuScreenSpaceLine({
       transparent,
       worldUnits: false,
     });
-    // eslint-disable-next-line react-hooks/immutability
-    line.material = material;
+    lineRef.current.material = material;
 
     return () => {
       material.dispose();
     };
-  }, [color, depthTest, depthWrite, line, transparent, width]);
+  }, [color, depthTest, depthWrite, transparent, width]);
 
   useLayoutEffect(() => {
-    line.layers.set(layer);
-    // eslint-disable-next-line react-hooks/immutability
-    line.renderOrder = renderOrder;
-    line.raycastThreshold = getLine2RaycastThreshold(
+    if (!lineRef.current) {
+      return;
+    }
+
+    lineRef.current.layers.set(layer);
+    lineRef.current.renderOrder = renderOrder;
+    lineRef.current.raycastThreshold = getLine2RaycastThreshold(
       width,
       hitSlop,
       pixelRatio,
     );
-  }, [hitSlop, layer, line, pixelRatio, renderOrder, width]);
+  }, [hitSlop, layer, pixelRatio, renderOrder, width]);
 
   if (normalizedPoints.length < 2) return null;
   return <primitive dispose={null} object={line} {...objectProps} />;

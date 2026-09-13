@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { Mesh, MeshBasicMaterial } from "three";
 
 import { createScreenSpaceLineGeometry } from "./create-screen-space-line-geometry";
@@ -31,24 +31,28 @@ export function WebGlScreenSpaceLine({
       >(),
     [],
   );
+  const lineRef = useRef(line);
 
   useLayoutEffect(() => {
+    if (!lineRef.current) {
+      return;
+    }
+
     const geometry = createScreenSpaceLineGeometry(points, radius);
-    // eslint-disable-next-line react-hooks/immutability
-    line.geometry = geometry;
-    line.raycast = Mesh.prototype.raycast;
+    lineRef.current.geometry = geometry;
+    lineRef.current.raycast = Mesh.prototype.raycast;
     let hitGeometry: ReturnType<typeof createScreenSpaceLineGeometry> | null =
       null;
 
     if (hitSlop > 0) {
       hitGeometry = createScreenSpaceLineGeometry(points, radius + hitSlop);
       const hitMesh = new Mesh(hitGeometry);
-      line.raycast = (raycaster, intersections) => {
-        hitMesh.matrixWorld.copy(line.matrixWorld);
+      lineRef.current.raycast = (raycaster, intersections) => {
+        hitMesh.matrixWorld.copy(lineRef.current.matrixWorld);
         const startIndex = intersections.length;
         hitMesh.raycast(raycaster, intersections);
         for (let index = startIndex; index < intersections.length; index += 1) {
-          intersections[index].object = line;
+          intersections[index].object = lineRef.current;
         }
       };
     }
@@ -57,9 +61,13 @@ export function WebGlScreenSpaceLine({
       geometry.dispose();
       hitGeometry?.dispose();
     };
-  }, [hitSlop, line, points, radius]);
+  }, [hitSlop, points, radius]);
 
   useLayoutEffect(() => {
+    if (!lineRef.current) {
+      return;
+    }
+
     const material = new MeshBasicMaterial({
       color,
       depthTest,
@@ -67,19 +75,21 @@ export function WebGlScreenSpaceLine({
       toneMapped: false,
       transparent,
     });
-    // eslint-disable-next-line react-hooks/immutability
-    line.material = material;
+    lineRef.current.material = material;
 
     return () => {
       material.dispose();
     };
-  }, [color, depthTest, depthWrite, line, transparent]);
+  }, [color, depthTest, depthWrite, transparent]);
 
   useLayoutEffect(() => {
-    line.layers.set(layer);
-    // eslint-disable-next-line react-hooks/immutability
-    line.renderOrder = renderOrder;
-  }, [layer, line, renderOrder]);
+    if (!lineRef.current) {
+      return;
+    }
+
+    lineRef.current.layers.set(layer);
+    lineRef.current.renderOrder = renderOrder;
+  }, [layer, renderOrder]);
 
   return <primitive dispose={null} object={line} {...eventHandlers} />;
 }
