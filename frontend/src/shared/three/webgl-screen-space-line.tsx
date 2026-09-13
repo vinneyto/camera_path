@@ -1,8 +1,5 @@
 "use client";
 
-/* eslint-disable react-hooks/immutability -- Mesh is an imperative Three.js object intentionally mutated by lifecycle effects. */
-/* eslint-disable react-hooks/use-memo -- Keep the named imperative object factory explicit. */
-
 import { useLayoutEffect, useMemo } from "react";
 import { Mesh, MeshBasicMaterial } from "three";
 
@@ -26,17 +23,18 @@ export function WebGlScreenSpaceLine({
   transparent = false,
   ...eventHandlers
 }: WebGlScreenSpaceLineProps) {
-  function createLine() {
-    return new Mesh<
-      ReturnType<typeof createScreenSpaceLineGeometry>,
-      MeshBasicMaterial
-    >();
-  }
-
-  const line = useMemo(createLine, []);
+  const line = useMemo(
+    () =>
+      new Mesh<
+        ReturnType<typeof createScreenSpaceLineGeometry>,
+        MeshBasicMaterial
+      >(),
+    [],
+  );
 
   useLayoutEffect(() => {
     const geometry = createScreenSpaceLineGeometry(points, radius);
+    // eslint-disable-next-line react-hooks/immutability
     line.geometry = geometry;
     line.raycast = Mesh.prototype.raycast;
     let hitGeometry: ReturnType<typeof createScreenSpaceLineGeometry> | null =
@@ -69,6 +67,7 @@ export function WebGlScreenSpaceLine({
       toneMapped: false,
       transparent,
     });
+    // eslint-disable-next-line react-hooks/immutability
     line.material = material;
 
     return () => {
@@ -78,6 +77,7 @@ export function WebGlScreenSpaceLine({
 
   useLayoutEffect(() => {
     line.layers.set(layer);
+    // eslint-disable-next-line react-hooks/immutability
     line.renderOrder = renderOrder;
   }, [layer, line, renderOrder]);
 
