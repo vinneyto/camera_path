@@ -1,6 +1,9 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+/* eslint-disable react-hooks/immutability -- Mesh is an imperative Three.js object intentionally mutated by lifecycle effects. */
+/* eslint-disable react-hooks/use-memo -- Keep the named imperative object factory explicit. */
+
+import { useLayoutEffect, useMemo } from "react";
 import { Mesh, MeshBasicMaterial } from "three";
 
 import { createScreenSpaceLineGeometry } from "./create-screen-space-line-geometry";
@@ -23,34 +26,31 @@ export function WebGlScreenSpaceLine({
   transparent = false,
   ...eventHandlers
 }: WebGlScreenSpaceLineProps) {
-  // The Mesh is the stable imperative object mounted by R3F. Its disposable
-  // geometry and material are owned separately by the layout effect below.
-  const line = useMemo(
-    () =>
-      new Mesh<
-        ReturnType<typeof createScreenSpaceLineGeometry>,
-        MeshBasicMaterial
-      >(),
-    [],
-  );
-  const lineRef = useRef(line);
+  function createLine() {
+    return new Mesh<
+      ReturnType<typeof createScreenSpaceLineGeometry>,
+      MeshBasicMaterial
+    >();
+  }
+
+  const line = useMemo(createLine, []);
 
   useLayoutEffect(() => {
     const geometry = createScreenSpaceLineGeometry(points, radius);
-    lineRef.current.geometry = geometry;
-    lineRef.current.raycast = Mesh.prototype.raycast;
+    line.geometry = geometry;
+    line.raycast = Mesh.prototype.raycast;
     let hitGeometry: ReturnType<typeof createScreenSpaceLineGeometry> | null =
       null;
 
     if (hitSlop > 0) {
       hitGeometry = createScreenSpaceLineGeometry(points, radius + hitSlop);
       const hitMesh = new Mesh(hitGeometry);
-      lineRef.current.raycast = (raycaster, intersections) => {
-        hitMesh.matrixWorld.copy(lineRef.current.matrixWorld);
+      line.raycast = (raycaster, intersections) => {
+        hitMesh.matrixWorld.copy(line.matrixWorld);
         const startIndex = intersections.length;
         hitMesh.raycast(raycaster, intersections);
         for (let index = startIndex; index < intersections.length; index += 1) {
-          intersections[index].object = lineRef.current;
+          intersections[index].object = line;
         }
       };
     }
@@ -59,7 +59,7 @@ export function WebGlScreenSpaceLine({
       geometry.dispose();
       hitGeometry?.dispose();
     };
-  }, [hitSlop, points, radius]);
+  }, [hitSlop, line, points, radius]);
 
   useLayoutEffect(() => {
     const material = new MeshBasicMaterial({
@@ -69,17 +69,17 @@ export function WebGlScreenSpaceLine({
       toneMapped: false,
       transparent,
     });
-    lineRef.current.material = material;
+    line.material = material;
 
     return () => {
       material.dispose();
     };
-  }, [color, depthTest, depthWrite, transparent]);
+  }, [color, depthTest, depthWrite, line, transparent]);
 
   useLayoutEffect(() => {
-    lineRef.current.layers.set(layer);
-    lineRef.current.renderOrder = renderOrder;
-  }, [layer, renderOrder]);
+    line.layers.set(layer);
+    line.renderOrder = renderOrder;
+  }, [layer, line, renderOrder]);
 
   return <primitive dispose={null} object={line} {...eventHandlers} />;
 }

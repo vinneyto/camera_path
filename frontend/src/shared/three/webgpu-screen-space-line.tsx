@@ -1,7 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/immutability -- Line2 is an imperative Three.js object intentionally mutated by lifecycle effects. */
+/* eslint-disable react-hooks/use-memo -- Keep the named imperative object factory explicit. */
+
 import { useThree } from "@react-three/fiber";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { Line2 } from "three/addons/lines/webgpu/Line2.js";
 import { Line2NodeMaterial } from "three/webgpu";
@@ -29,7 +32,8 @@ export function WebGpuScreenSpaceLine({
 }: WebGpuScreenSpaceLineProps) {
   const pixelRatio = useThree((state) => state.viewport.dpr);
   const normalizedPoints = normalizeScreenSpaceLinePoints(points);
-  const [line] = useState(() => {
+
+  function createLine() {
     const object = new Line2() as Line2 & { raycastThreshold: number };
     object.raycastThreshold = 0;
     const raycast = object.raycast.bind(object);
@@ -43,18 +47,19 @@ export function WebGpuScreenSpaceLine({
       }
     };
     return object;
-  });
-  const lineRef = useRef(line);
+  }
+
+  const line = useMemo(createLine, []);
 
   useLayoutEffect(() => {
     const geometry = new LineGeometry();
     geometry.setPositions(normalizedPoints.flatMap((point) => point.toArray()));
-    lineRef.current!.geometry = geometry;
+    line.geometry = geometry;
 
     return () => {
       geometry.dispose();
     };
-  }, [normalizedPoints]);
+  }, [line, normalizedPoints]);
 
   useLayoutEffect(() => {
     const material = new Line2NodeMaterial({
@@ -66,22 +71,22 @@ export function WebGpuScreenSpaceLine({
       transparent,
       worldUnits: false,
     });
-    lineRef.current!.material = material;
+    line.material = material;
 
     return () => {
       material.dispose();
     };
-  }, [color, depthTest, depthWrite, transparent, width]);
+  }, [color, depthTest, depthWrite, line, transparent, width]);
 
   useLayoutEffect(() => {
-    lineRef.current!.layers.set(layer);
-    lineRef.current!.renderOrder = renderOrder;
-    lineRef.current!.raycastThreshold = getLine2RaycastThreshold(
+    line.layers.set(layer);
+    line.renderOrder = renderOrder;
+    line.raycastThreshold = getLine2RaycastThreshold(
       width,
       hitSlop,
       pixelRatio,
     );
-  }, [hitSlop, layer, pixelRatio, renderOrder, width]);
+  }, [hitSlop, layer, line, pixelRatio, renderOrder, width]);
 
   if (normalizedPoints.length < 2) return null;
   return <primitive dispose={null} object={line} {...objectProps} />;
