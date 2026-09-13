@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { Mesh, MeshBasicMaterial } from "three";
 
 import { createScreenSpaceLineGeometry } from "./create-screen-space-line-geometry";
@@ -23,12 +23,15 @@ export function WebGlScreenSpaceLine({
   transparent = false,
   ...eventHandlers
 }: WebGlScreenSpaceLineProps) {
-  const [line] = useState(
+  // The Mesh is the stable imperative object mounted by R3F. Its disposable
+  // geometry and material are owned separately by the layout effect below.
+  const line = useMemo(
     () =>
       new Mesh<
         ReturnType<typeof createScreenSpaceLineGeometry>,
         MeshBasicMaterial
       >(),
+    [],
   );
   const lineRef = useRef(line);
   const initialResourcesRef = useRef<{
