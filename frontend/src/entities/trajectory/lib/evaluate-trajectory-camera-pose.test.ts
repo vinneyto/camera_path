@@ -40,6 +40,8 @@ function createTrajectory(aim: ResolvedCameraAim): CompiledTrajectory {
     camera_track: {
       default_aim: { kind: "follow_path", direction: "forward" },
       keyframes,
+      default_orientation: { yaw_deg: 0, pitch_deg: 0, roll_deg: 0 },
+      orientation_keyframes: [],
       world_up: [0, 1, 0],
     },
     warnings: [],
@@ -85,5 +87,52 @@ describe("evaluateTrajectoryCameraPose", () => {
     const expected = new Vector3(-0.5, 1, -1).normalize();
 
     expect(forward.distanceTo(expected)).toBeLessThan(1e-8);
+  });
+
+  it("applies yaw, pitch and roll in the local camera frame", () => {
+    const yawTrajectory = createTrajectory({
+      kind: "follow_path",
+      direction: "forward",
+    });
+    yawTrajectory.camera_track.default_orientation.yaw_deg = 90;
+    const yawForward = new Vector3(0, 0, -1).applyQuaternion(
+      evaluateTrajectoryCameraPose(yawTrajectory, 0.5).quaternion,
+    );
+    expect(yawForward.distanceTo(new Vector3(0, 0, -1))).toBeLessThan(1e-8);
+
+    const pitchTrajectory = createTrajectory({
+      kind: "follow_path",
+      direction: "forward",
+    });
+    pitchTrajectory.camera_track.default_orientation.pitch_deg = 90;
+    const pitchForward = new Vector3(0, 0, -1).applyQuaternion(
+      evaluateTrajectoryCameraPose(pitchTrajectory, 0.5).quaternion,
+    );
+    expect(pitchForward.distanceTo(new Vector3(0, 1, 0))).toBeLessThan(1e-8);
+
+    const rollTrajectory = createTrajectory({
+      kind: "follow_path",
+      direction: "forward",
+    });
+    rollTrajectory.camera_track.default_orientation.roll_deg = 90;
+    const rollUp = evaluateTrajectoryCameraPose(rollTrajectory, 0.5).up;
+    expect(rollUp.distanceTo(new Vector3(0, 0, 1))).toBeLessThan(1e-8);
+  });
+
+  it("builds a stable frame when world up is collinear with the view direction", () => {
+    const trajectory = createTrajectory({
+      kind: "look_at_point",
+      scene_point_id: "target",
+      position: [0.5, 1, 0],
+    });
+    const pose = evaluateTrajectoryCameraPose(trajectory, 0.5);
+    const values = [...pose.quaternion.toArray(), ...pose.up.toArray()];
+
+    expect(values.every(Number.isFinite)).toBe(true);
+    expect(
+      new Vector3(0, 0, -1)
+        .applyQuaternion(pose.quaternion)
+        .distanceTo(new Vector3(0, 1, 0)),
+    ).toBeLessThan(1e-8);
   });
 });

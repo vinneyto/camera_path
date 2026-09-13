@@ -1,6 +1,9 @@
 import type {
   AnchorCreate,
   AnchorUpdate,
+  CameraOrientation,
+  CameraOrientationKeyframeCreate,
+  CameraOrientationKeyframeUpdate,
   Project,
 } from "@/entities/project/model/types";
 import type {
@@ -41,6 +44,39 @@ export const projectApi = {
   deleteCameraKeyframe: (projectId: string, keyframeId: string) =>
     apiRequest<Project>(
       `/projects/${projectId}/camera/keyframes/${keyframeId}`,
+      { method: "DELETE" },
+    ),
+  updateDefaultCameraOrientation: (
+    projectId: string,
+    orientation: CameraOrientation,
+  ) =>
+    apiRequest<Project>(`/projects/${projectId}/camera/orientation`, {
+      method: "PATCH",
+      body: JSON.stringify(orientation),
+    }),
+  addCameraOrientationKeyframe: (
+    projectId: string,
+    keyframe: CameraOrientationKeyframeCreate,
+  ) =>
+    apiRequest<Project>(`/projects/${projectId}/camera/orientation/keyframes`, {
+      method: "POST",
+      body: JSON.stringify(keyframe),
+    }),
+  updateCameraOrientationKeyframe: (
+    projectId: string,
+    keyframeId: string,
+    keyframe: CameraOrientationKeyframeUpdate,
+  ) =>
+    apiRequest<Project>(
+      `/projects/${projectId}/camera/orientation/keyframes/${keyframeId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(keyframe),
+      },
+    ),
+  deleteCameraOrientationKeyframe: (projectId: string, keyframeId: string) =>
+    apiRequest<Project>(
+      `/projects/${projectId}/camera/orientation/keyframes/${keyframeId}`,
       { method: "DELETE" },
     ),
   compile: (projectId: string) =>

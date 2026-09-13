@@ -13,7 +13,9 @@ const trajectory: CompiledTrajectory = {
   arc_length_table: [],
   camera_track: {
     default_aim: { direction: "forward", kind: "follow_path" },
+    default_orientation: { pitch_deg: 0, roll_deg: 0, yaw_deg: 0 },
     keyframes: [],
+    orientation_keyframes: [],
     world_up: [0, 1, 0],
   },
   duration_seconds: 1,

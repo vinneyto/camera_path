@@ -1,4 +1,6 @@
 import type {
+  CameraOrientation,
+  CameraOrientationKeyframe,
   FollowPathAim,
   Interpolation,
   SpeedKeyframe,
@@ -47,6 +49,8 @@ export interface CompiledTrajectory {
   camera_track: {
     default_aim: FollowPathAim;
     keyframes: CompiledCameraKeyframe[];
+    default_orientation: CameraOrientation;
+    orientation_keyframes: CameraOrientationKeyframe[];
     world_up: Vec3;
   };
   warnings: string[];

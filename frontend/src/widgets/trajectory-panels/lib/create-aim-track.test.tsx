@@ -9,7 +9,9 @@ const project: Project = {
   anchors: {},
   camera_track: {
     default_aim: { kind: "follow_path", direction: "forward" },
+    default_orientation: { pitch_deg: 0, roll_deg: 0, yaw_deg: 0 },
     keyframes: {},
+    orientation_keyframes: {},
     world_up: [0, 1, 0],
   },
   chat_history: [],
@@ -50,8 +52,8 @@ describe("createAimTrack", () => {
     });
 
     expect(track.summary).toBe("1 key");
-    expect(track.height).toBe(28);
-    expect(track.lineY).toBe(14);
+    expect(track.height).toBe(24);
+    expect(track.lineY).toBe(10);
     expect(track.keyframes).toEqual([
       {
         ariaLabel: "Along trajectory at 0%",

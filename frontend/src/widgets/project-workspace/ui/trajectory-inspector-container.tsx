@@ -5,6 +5,7 @@ import type { CompiledTrajectory } from "@/entities/trajectory";
 import { useTrajectoryPlayback } from "@/features/project-editor";
 import {
   useDeleteCameraKeyframe,
+  useDeleteCameraOrientationKeyframe,
   useDeleteSpeedKeyframe,
 } from "@/features/object-deletion";
 import { TrajectoryInspector } from "@/widgets/trajectory-panels";
@@ -25,6 +26,8 @@ export function TrajectoryInspectorContainer({
   const playback = useTrajectoryPlayback(trajectory);
   const deleteSpeedKeyframeMutation = useDeleteSpeedKeyframe(projectId);
   const deleteCameraKeyframeMutation = useDeleteCameraKeyframe(projectId);
+  const deleteCameraOrientationKeyframeMutation =
+    useDeleteCameraOrientationKeyframe(projectId);
 
   function deleteSpeedKeyframe(keyframeId: string) {
     if (!window.confirm("Delete this speed keyframe?")) return;
@@ -36,12 +39,21 @@ export function TrajectoryInspectorContainer({
     deleteCameraKeyframeMutation.mutate(keyframeId);
   }
 
+  function deleteCameraOrientationKeyframe(keyframeId: string) {
+    if (!window.confirm("Delete this camera orientation keyframe?")) return;
+    deleteCameraOrientationKeyframeMutation.mutate(keyframeId);
+  }
+
   return (
     <TrajectoryInspector
       deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
+      deletingOrientationKeyframeId={
+        deleteCameraOrientationKeyframeMutation.variables
+      }
       deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
       onClose={onClose}
       onDeleteAimKeyframe={deleteCameraKeyframe}
+      onDeleteOrientationKeyframe={deleteCameraOrientationKeyframe}
       onDeleteSpeedKeyframe={deleteSpeedKeyframe}
       onScrub={playback.seek}
       pathPosition={playback.pathPosition}
