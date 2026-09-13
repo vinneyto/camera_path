@@ -34,41 +34,17 @@ export function WebGlScreenSpaceLine({
     [],
   );
   const lineRef = useRef(line);
-  const initialResourcesRef = useRef<{
-    geometry: typeof line.geometry;
-    material: typeof line.material;
-  } | null>({
-    geometry: line.geometry,
-    material: line.material,
-  });
 
   useLayoutEffect(() => {
-    const initialResources = initialResourcesRef.current;
-    if (initialResources !== null) {
-      initialResources.geometry.dispose();
-      initialResources.material.dispose();
-      initialResourcesRef.current = null;
-    }
-
-    const material = new MeshBasicMaterial({
-      color,
-      depthTest,
-      depthWrite,
-      toneMapped: false,
-      transparent,
-    });
     const geometry = createScreenSpaceLineGeometry(points, radius);
+    lineRef.current.geometry = geometry;
+    lineRef.current.raycast = Mesh.prototype.raycast;
     let hitGeometry: ReturnType<typeof createScreenSpaceLineGeometry> | null =
       null;
-    lineRef.current.geometry = geometry;
-    lineRef.current.material = material;
-    lineRef.current.layers.set(layer);
-    lineRef.current.renderOrder = renderOrder;
-    lineRef.current.raycast = Mesh.prototype.raycast;
 
     if (hitSlop > 0) {
       hitGeometry = createScreenSpaceLineGeometry(points, radius + hitSlop);
-      const hitMesh = new Mesh(hitGeometry, material);
+      const hitMesh = new Mesh(hitGeometry);
       lineRef.current.raycast = (raycaster, intersections) => {
         hitMesh.matrixWorld.copy(lineRef.current.matrixWorld);
         const startIndex = intersections.length;
@@ -81,20 +57,29 @@ export function WebGlScreenSpaceLine({
 
     return () => {
       geometry.dispose();
-      material.dispose();
       hitGeometry?.dispose();
     };
-  }, [
-    color,
-    depthTest,
-    depthWrite,
-    hitSlop,
-    layer,
-    points,
-    radius,
-    renderOrder,
-    transparent,
-  ]);
+  }, [hitSlop, points, radius]);
+
+  useLayoutEffect(() => {
+    const material = new MeshBasicMaterial({
+      color,
+      depthTest,
+      depthWrite,
+      toneMapped: false,
+      transparent,
+    });
+    lineRef.current.material = material;
+
+    return () => {
+      material.dispose();
+    };
+  }, [color, depthTest, depthWrite, transparent]);
+
+  useLayoutEffect(() => {
+    lineRef.current.layers.set(layer);
+    lineRef.current.renderOrder = renderOrder;
+  }, [layer, renderOrder]);
 
   return <primitive dispose={null} object={line} {...eventHandlers} />;
 }
