@@ -7,12 +7,14 @@ import {
 } from "@/entities/trajectory";
 import { useHoveredTrajectory } from "@/features/project-editor";
 import { RENDER_PIPELINE_OVERLAY_LAYER, ScreenSpaceLine } from "@/shared/three";
+import type { ContextMenuPosition } from "@/shared/ui";
 
 interface TrajectoryLineProps {
   dark: boolean;
   interactive: boolean;
   selected: boolean;
   trajectory: CompiledTrajectory;
+  onOpenMenu: (position: ContextMenuPosition) => void;
   onSelect: () => void;
 }
 
@@ -21,6 +23,7 @@ export function TrajectoryLine({
   interactive,
   selected,
   trajectory,
+  onOpenMenu,
   onSelect,
 }: TrajectoryLineProps) {
   const { clearHoveredTrajectory, hovered, hoverTrajectory } =
@@ -47,6 +50,16 @@ export function TrajectoryLine({
     onSelect();
   }
 
+  function handleContextMenu(event: ThreeEvent<MouseEvent>) {
+    if (!interactive) return;
+    event.stopPropagation();
+    event.nativeEvent.preventDefault();
+    onOpenMenu({
+      x: event.nativeEvent.clientX,
+      y: event.nativeEvent.clientY,
+    });
+  }
+
   function handlePointerOver(event: ThreeEvent<PointerEvent>) {
     if (!interactive || event.nativeEvent.pointerType === "touch") return;
     event.stopPropagation();
@@ -66,6 +79,7 @@ export function TrajectoryLine({
       depthWrite={false}
       hitSlop={0.025}
       onClick={handleClick}
+      onContextMenu={handleContextMenu}
       onPointerOut={handlePointerOut}
       onPointerOver={handlePointerOver}
       layer={RENDER_PIPELINE_OVERLAY_LAYER}

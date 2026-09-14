@@ -14,7 +14,7 @@ export function useTrajectoryPlayback(trajectory: CompiledTrajectory | null) {
   const { elapsed, pathPosition, playing } = useEditorStore(
     (state) => state.playback,
   );
-  const { setPlaybackFrame, setPlaying } = useEditorStore(
+  const { resetPlayback, setPlaybackFrame, setPlaying } = useEditorStore(
     (state) => state.playbackActions,
   );
 
@@ -30,5 +30,13 @@ export function useTrajectoryPlayback(trajectory: CompiledTrajectory | null) {
     setPlaying(!playing);
   }
 
-  return { duration, elapsed, pathPosition, playing, seek, toggle };
+  return {
+    duration,
+    elapsed,
+    pathPosition,
+    playing,
+    reset: resetPlayback,
+    seek,
+    toggle,
+  };
 }

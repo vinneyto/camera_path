@@ -13,6 +13,8 @@ import { useElementHeight } from "./use-element-height";
 interface ProjectSceneProps {
   project: Project;
   projectId: string;
+  deletingTrajectory: boolean;
+  onDeleteTrajectory: () => void;
   rendererBackend: "webgl" | "webgpu";
   trajectory: CompiledTrajectory | null;
 }
@@ -22,6 +24,8 @@ const TRAJECTORY_CONTROLS_BOTTOM_INSET = 12;
 export function ProjectScene({
   project,
   projectId,
+  deletingTrajectory,
+  onDeleteTrajectory,
   rendererBackend,
   trajectory,
 }: ProjectSceneProps) {
@@ -44,6 +48,8 @@ export function ProjectScene({
     <div className="relative min-h-[260px] flex-1">
       <SceneViewportContainer
         bottomOverlayHeight={bottomOverlayHeight}
+        deletingTrajectory={deletingTrajectory}
+        onDeleteTrajectory={onDeleteTrajectory}
         onSelectTrajectory={selectTrajectory}
         project={project}
         projectId={projectId}

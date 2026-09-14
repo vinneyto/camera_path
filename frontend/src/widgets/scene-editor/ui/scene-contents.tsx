@@ -45,6 +45,7 @@ interface SceneContentsProps {
   onSurfaceReady: () => void;
   onUpdateAnchorLift: (anchorId: string, lift: number) => Promise<void>;
   onOpenAnchorMenu: (anchor: Anchor, position: ContextMenuPosition) => void;
+  onOpenTrajectoryMenu: (position: ContextMenuPosition) => void;
   onSelectTrajectory: () => void;
   pathPosition: number;
   selected: boolean;
@@ -61,6 +62,7 @@ export function SceneContents({
   onSurfaceReady,
   onUpdateAnchorLift,
   onOpenAnchorMenu,
+  onOpenTrajectoryMenu,
   onSelectTrajectory,
   pathPosition,
   selected,
@@ -178,6 +180,7 @@ export function SceneContents({
         <TrajectoryLine
           dark={dark}
           interactive={activeTool === null}
+          onOpenMenu={onOpenTrajectoryMenu}
           onSelect={onSelectTrajectory}
           selected={selected}
           trajectory={trajectory}
