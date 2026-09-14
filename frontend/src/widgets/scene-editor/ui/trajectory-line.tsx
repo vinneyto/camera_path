@@ -60,6 +60,12 @@ export function TrajectoryLine({
     });
   }
 
+  function handlePointerDown(event: ThreeEvent<PointerEvent>) {
+    if (!interactive || event.button !== 2) return;
+    event.stopPropagation();
+    event.nativeEvent.preventDefault();
+  }
+
   function handlePointerOver(event: ThreeEvent<PointerEvent>) {
     if (!interactive || event.nativeEvent.pointerType === "touch") return;
     event.stopPropagation();
@@ -80,6 +86,7 @@ export function TrajectoryLine({
       hitSlop={0.025}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      onPointerDown={handlePointerDown}
       onPointerOut={handlePointerOut}
       onPointerOver={handlePointerOver}
       layer={RENDER_PIPELINE_OVERLAY_LAYER}

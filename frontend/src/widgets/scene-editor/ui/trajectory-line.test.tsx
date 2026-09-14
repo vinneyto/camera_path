@@ -28,8 +28,15 @@ vi.mock("@/features/project-editor", () => ({
 
 vi.mock("@/shared/three", () => ({
   RENDER_PIPELINE_OVERLAY_LAYER: 1,
-  ScreenSpaceLine: ({ onContextMenu }: ComponentProps<"button">) => (
-    <button data-testid="trajectory-line" onContextMenu={onContextMenu} />
+  ScreenSpaceLine: ({
+    onContextMenu,
+    onPointerDown,
+  }: ComponentProps<"button">) => (
+    <button
+      data-testid="trajectory-line"
+      onContextMenu={onContextMenu}
+      onPointerDown={onPointerDown}
+    />
   ),
 }));
 
@@ -43,8 +50,9 @@ describe("TrajectoryLine", () => {
   it("opens its menu at the pointer and suppresses the browser event", () => {
     const onOpenMenu = vi.fn();
     const parentContextMenu = vi.fn();
+    const parentPointerDown = vi.fn();
     render(
-      <div onContextMenu={parentContextMenu}>
+      <div onContextMenu={parentContextMenu} onPointerDown={parentPointerDown}>
         <TrajectoryLine
           dark
           interactive
@@ -56,6 +64,12 @@ describe("TrajectoryLine", () => {
       </div>,
     );
 
+    const pointerEvent = new PointerEvent("pointerdown", {
+      bubbles: true,
+      button: 2,
+      cancelable: true,
+    });
+    screen.getByTestId("trajectory-line").dispatchEvent(pointerEvent);
     const event = new MouseEvent("contextmenu", {
       bubbles: true,
       cancelable: true,
@@ -64,6 +78,8 @@ describe("TrajectoryLine", () => {
     });
     screen.getByTestId("trajectory-line").dispatchEvent(event);
 
+    expect(pointerEvent.defaultPrevented).toBe(true);
+    expect(parentPointerDown).not.toHaveBeenCalled();
     expect(event.defaultPrevented).toBe(true);
     expect(parentContextMenu).not.toHaveBeenCalled();
     expect(onOpenMenu).toHaveBeenCalledWith({ x: 120, y: 80 });
