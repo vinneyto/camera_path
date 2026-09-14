@@ -95,3 +95,39 @@ it("restores the Gaussian pass position node when a ripple volume is disposed", 
   expect(pass.gaussianColorNode).toBe(baseColorNode);
   expect(onDispose).toHaveBeenCalledOnce();
 });
+
+it("moves an active highlight to a replacement Gaussian pass", () => {
+  const firstBaseColor = vec3(0.2);
+  const secondBaseColor = vec3(0.4);
+  const firstPass = {
+    gaussianColorNode: firstBaseColor,
+    gaussianPositionWorldNode: vec3(0),
+    invalidate: vi.fn(),
+  } as unknown as GaussianPass;
+  const secondPass = {
+    gaussianColorNode: secondBaseColor,
+    gaussianPositionWorldNode: vec3(0),
+    invalidate: vi.fn(),
+  } as unknown as GaussianPass;
+  const volume = new TileGaussianHighlightVolume(
+    firstPass,
+    {
+      bottomOffset: 0,
+      color: [1, 1, 1],
+      height: 1,
+      position: [0, 0, 0],
+      radius: 1,
+      strength: 1,
+      type: "color",
+    },
+    vi.fn(),
+  );
+
+  volume.replacePass(secondPass);
+
+  expect(firstPass.gaussianColorNode).toBe(firstBaseColor);
+  expect(secondPass.gaussianColorNode).not.toBe(secondBaseColor);
+  expect(secondPass.invalidate).toHaveBeenCalledOnce();
+  volume.dispose();
+  expect(secondPass.gaussianColorNode).toBe(secondBaseColor);
+});

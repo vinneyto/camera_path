@@ -11,8 +11,10 @@ from camera_path.models import (
     Anchor,
     ArcLengthSample,
     CameraAim,
+    CenterWeightedDepthOfFieldFocus,
     CompiledCameraKeyframe,
     CompiledCameraTrack,
+    CompiledDepthOfFieldKeyframe,
     CompiledMotionProfile,
     CompiledTrajectory,
     CubicBezier3D,
@@ -20,7 +22,10 @@ from camera_path.models import (
     LookAtPointAim,
     Project,
     ResolvedCameraAim,
+    ResolvedDepthOfFieldFocus,
     ResolvedLookAtPointAim,
+    ResolvedScenePointDepthOfFieldFocus,
+    ScenePointDepthOfFieldFocus,
     SpeedKeyframe,
     SpiralSegment,
     SplineSegment,
@@ -282,8 +287,6 @@ def validate_project(project: Project) -> list[str]:
     if len(speed_positions) != len(set(speed_positions)):
         raise GeometryError("speed keyframes must have unique path positions")
     camera_positions = [item.path_position for item in project.camera_track.keyframes.values()]
-    if 0.0 not in camera_positions:
-        raise GeometryError("camera aim keyframe at path position 0 is required")
     if len(camera_positions) != len(set(camera_positions)):
         raise GeometryError("camera keyframes must have unique path positions")
     orientation_positions = [
@@ -291,6 +294,11 @@ def validate_project(project: Project) -> list[str]:
     ]
     if len(orientation_positions) != len(set(orientation_positions)):
         raise GeometryError("camera orientation keyframes must have unique path positions")
+    depth_of_field_positions = [
+        item.path_position for item in project.camera_track.depth_of_field_keyframes.values()
+    ]
+    if len(depth_of_field_positions) != len(set(depth_of_field_positions)):
+        raise GeometryError("depth of field keyframes must have unique path positions")
 
     aims = [project.camera_track.default_aim]
     aims.extend(item.aim for item in project.camera_track.keyframes.values())
@@ -299,6 +307,12 @@ def validate_project(project: Project) -> list[str]:
         for aim in aims
         if isinstance(aim, LookAtPointAim) and aim.scene_point_id not in project.scene_points
     }
+    missing_scene_points.update(
+        focus.scene_point_id
+        for item in project.camera_track.depth_of_field_keyframes.values()
+        if isinstance((focus := item.focus), ScenePointDepthOfFieldFocus)
+        and focus.scene_point_id not in project.scene_points
+    )
     if missing_scene_points:
         raise GeometryError(
             f"camera track references missing scene points: {sorted(missing_scene_points)}"
@@ -409,6 +423,19 @@ def _resolve_aim(project: Project, aim: CameraAim) -> ResolvedCameraAim:
     return ResolvedLookAtPointAim(scene_point_id=point.id, position=point.position)
 
 
+def _resolve_depth_of_field_focus(
+    project: Project,
+    focus: CenterWeightedDepthOfFieldFocus | ScenePointDepthOfFieldFocus,
+) -> ResolvedDepthOfFieldFocus:
+    if not isinstance(focus, ScenePointDepthOfFieldFocus):
+        return focus
+    point = project.scene_points[focus.scene_point_id]
+    return ResolvedScenePointDepthOfFieldFocus(
+        scene_point_id=point.id,
+        position=point.position,
+    )
+
+
 def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajectory:
     if tolerance <= 0.0:
         raise ValueError("tolerance must be positive")
@@ -464,6 +491,19 @@ def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajec
                 project.camera_track.orientation_keyframes.values(),
                 key=lambda item: item.path_position,
             ),
+            depth_of_field_keyframes=[
+                CompiledDepthOfFieldKeyframe(
+                    id=item.id,
+                    path_position=item.path_position,
+                    focus=_resolve_depth_of_field_focus(project, item.focus),
+                    focus_range_scale=item.focus_range_scale,
+                    bokeh_scale=item.bokeh_scale,
+                )
+                for item in sorted(
+                    project.camera_track.depth_of_field_keyframes.values(),
+                    key=lambda item: item.path_position,
+                )
+            ],
             world_up=project.camera_track.world_up,
         ),
         warnings=warnings,

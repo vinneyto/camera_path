@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { GaussianCloudInstance } from "../model/gaussian-rendering-backend";
 import type { GaussianCloudSource } from "../model/scene-surface-types";
@@ -14,7 +14,6 @@ interface LoadedGaussianCloud {
 
 interface UseGaussianCloudOptions {
   name?: string;
-  raycastable: boolean;
   source: GaussianCloudSource;
 }
 
@@ -26,7 +25,6 @@ type UseGaussianCloudResult = readonly [
 
 export function useGaussianCloud({
   name,
-  raycastable,
   source,
 }: UseGaussianCloudOptions): UseGaussianCloudResult {
   const cache = useGaussianCloudResourceCache();
@@ -62,10 +60,6 @@ export function useGaussianCloud({
       lease.release();
     };
   }, [cache, name, source]);
-
-  useLayoutEffect(() => {
-    cloud?.setRaycastable(raycastable);
-  }, [cloud, raycastable]);
 
   return [cloud, cloud === null && error === null, error];
 }

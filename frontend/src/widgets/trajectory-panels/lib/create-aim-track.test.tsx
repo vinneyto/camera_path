@@ -8,6 +8,7 @@ import { createAimTrack } from "./create-aim-track";
 const project: Project = {
   anchors: {},
   camera_track: {
+    depth_of_field_keyframes: {},
     default_aim: { kind: "follow_path", direction: "forward" },
     default_orientation: { pitch_deg: 0, roll_deg: 0, yaw_deg: 0 },
     keyframes: {},

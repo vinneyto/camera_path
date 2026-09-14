@@ -15,7 +15,6 @@ function createInstance(): GaussianCloudInstance {
     dispose: vi.fn(),
     getHit: vi.fn(),
     object: new Object3D(),
-    setRaycastable: vi.fn(),
   };
 }
 

@@ -38,6 +38,7 @@ function createTrajectory(aim: ResolvedCameraAim): CompiledTrajectory {
     duration_seconds: 1,
     motion_profile: { default_speed: 1, keyframes: [] },
     camera_track: {
+      depth_of_field_keyframes: [],
       default_aim: { kind: "follow_path", direction: "forward" },
       keyframes,
       default_orientation: { yaw_deg: 0, pitch_deg: 0, roll_deg: 0 },

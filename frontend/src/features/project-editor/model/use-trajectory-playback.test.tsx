@@ -12,6 +12,7 @@ import { useTrajectoryPlayback } from "./use-trajectory-playback";
 const trajectory: CompiledTrajectory = {
   arc_length_table: [],
   camera_track: {
+    depth_of_field_keyframes: [],
     default_aim: { direction: "forward", kind: "follow_path" },
     default_orientation: { pitch_deg: 0, roll_deg: 0, yaw_deg: 0 },
     keyframes: [],

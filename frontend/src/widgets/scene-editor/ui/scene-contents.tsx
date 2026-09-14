@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
-import type { CompiledTrajectory } from "@/entities/trajectory";
+import {
+  evaluateDepthOfFieldKeyframe,
+  type CompiledTrajectory,
+} from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
 import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
 import {
@@ -19,11 +22,13 @@ import {
   type SceneSurfaceBackground,
   useGaussianRenderingBackend,
 } from "@/shared/scene-surface";
+import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER, DepthOfField } from "@/shared/three";
 import type { ContextMenuPosition } from "@/shared/ui";
 
 import { AnchorMarker } from "./anchor-marker";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
+import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { PlaybackCamera } from "./playback-camera";
@@ -34,11 +39,13 @@ import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 
 const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
+const GAUSSIAN_CLOUD_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 
 interface SceneContentsProps {
   anchors: Anchor[];
   background: SceneSurfaceBackground;
   dark: boolean;
+  depthOfFieldSupported?: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
   onSurfaceError: (error: Error) => void;
   onSurfaceLoading: () => void;
@@ -56,6 +63,7 @@ export function SceneContents({
   anchors,
   background,
   dark,
+  depthOfFieldSupported = false,
   onAddAnchor,
   onSurfaceError,
   onSurfaceLoading,
@@ -75,9 +83,22 @@ export function SceneContents({
   const gaussianDprMode = useGaussianRenderingSettingsStore(
     (state) => state.dprMode,
   );
+  const depthOfFieldKeyframe = trajectory
+    ? evaluateDepthOfFieldKeyframe(trajectory, pathPosition)
+    : null;
+  const depthOfFieldFocus = depthOfFieldKeyframe?.focus ?? null;
+  const depthOfFieldTimelinePresent = Boolean(
+    trajectory?.camera_track.depth_of_field_keyframes.length,
+  );
+  const depthOfFieldEnabled =
+    depthOfFieldSupported &&
+    cameraMode === "trajectory" &&
+    depthOfFieldTimelinePresent;
   const renderingBackend = useGaussianRenderingBackend(
     background,
     gaussianDprMode,
+    depthOfFieldEnabled,
+    GAUSSIAN_CLOUD_LAYERS,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
   const heightEditing = useAnchorHeightEditing({
@@ -86,6 +107,7 @@ export function SceneContents({
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
+  const [surfaceRadius, setSurfaceRadius] = useState<number | null>(null);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
   useStopOrbitControlsInertia(
     orbitControlsRef,
@@ -102,8 +124,14 @@ export function SceneContents({
   }, [anchors, renderingBackend]);
 
   function handleSurfaceReady(surface: SceneSurfaceReady) {
+    setSurfaceRadius(surface.bounds.radius);
     frameSurface(camera, surface.bounds, setOrbitTarget);
     onSurfaceReady();
+  }
+
+  function handleSurfaceLoading() {
+    setSurfaceRadius(null);
+    onSurfaceLoading();
   }
 
   function handleOrbitEnd() {
@@ -122,7 +150,7 @@ export function SceneContents({
         name="Mug Gaussian cloud"
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
-        onLoading={onSurfaceLoading}
+        onLoading={handleSurfaceLoading}
         raycastable={isGaussianSurfacePickActive(activeTool)}
         {...(editorVisible ? placement.surfaceEventProps : {})}
         source={SCENE_SURFACE_SOURCE}
@@ -187,7 +215,19 @@ export function SceneContents({
         />
       )}
       {editorVisible && trajectoryAvailable && trajectory && (
-        <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
+        <>
+          <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
+          {depthOfFieldSupported &&
+            depthOfFieldFocus !== null &&
+            surfaceRadius !== null && (
+              <DepthOfFieldFocusHelper
+                fallbackRayLength={surfaceRadius * 4}
+                focus={depthOfFieldFocus}
+                pathPosition={pathPosition}
+                trajectory={trajectory}
+              />
+            )}
+        </>
       )}
       {cameraMode === "orbit" ? (
         <OrbitControls
@@ -201,10 +241,22 @@ export function SceneContents({
           target={orbitTarget}
         />
       ) : trajectoryAvailable && trajectory ? (
-        <TrajectoryCameraControl
-          pathPosition={pathPosition}
-          trajectory={trajectory}
-        />
+        <>
+          <TrajectoryCameraControl
+            pathPosition={pathPosition}
+            trajectory={trajectory}
+          />
+          {depthOfFieldEnabled && depthOfFieldKeyframe !== null && (
+            <DepthOfField
+              bokeh={depthOfFieldKeyframe.bokeh_scale}
+              focalLength={Math.max(
+                (surfaceRadius ?? 1) * depthOfFieldKeyframe.focus_range_scale,
+                0.001,
+              )}
+              focus={depthOfFieldKeyframe.focus}
+            />
+          )}
+        </>
       ) : null}
     </SceneSurfaceProvider>
   );

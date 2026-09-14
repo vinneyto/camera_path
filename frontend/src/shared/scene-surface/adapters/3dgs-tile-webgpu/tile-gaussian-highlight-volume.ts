@@ -9,15 +9,15 @@ import type {
 
 export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInstance {
   private readonly amplitude = uniform(0);
-  private readonly baseColorNode: Node<"vec3">;
-  private readonly basePositionWorldNode: Node<"vec3">;
+  private baseColorNode: Node<"vec3">;
+  private basePositionWorldNode: Node<"vec3">;
   private readonly bottom = uniform(0);
   private readonly color = uniform(new Vector3());
-  private readonly colorNode: Node<"vec3"> | null;
+  private colorNode: Node<"vec3"> | null;
   private disposed = false;
   private readonly height = uniform(0);
   private readonly position = uniform(new Vector3());
-  private readonly positionWorldNode: Node<"vec3"> | null;
+  private positionWorldNode: Node<"vec3"> | null;
   private readonly radius = uniform(0);
   private readonly speed = uniform(0);
   private readonly strength = uniform(0);
@@ -27,42 +27,34 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInsta
   private readonly wavelength = uniform(1);
 
   constructor(
-    private readonly pass: GaussianPass,
+    private pass: GaussianPass,
     options: GaussianHighlightVolumeOptions,
     private readonly onDispose: () => void,
   ) {
     this.baseColorNode = pass.gaussianColorNode as Node<"vec3">;
     this.basePositionWorldNode = pass.gaussianPositionWorldNode as Node<"vec3">;
     this.type = options.type;
-    this.colorNode =
-      options.type === "color"
-        ? this.createColorNode()
-        : this.createRippleTintNode();
-    this.positionWorldNode =
-      options.type === "ripple" ? this.createRippleNode() : null;
+    this.colorNode = null;
+    this.positionWorldNode = null;
     this.update(options);
-    if (this.colorNode !== null) this.pass.gaussianColorNode = this.colorNode;
-    if (this.positionWorldNode !== null) {
-      this.pass.gaussianPositionWorldNode = this.positionWorldNode;
-    }
+    this.attach();
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    if (
-      this.colorNode !== null &&
-      this.pass.gaussianColorNode === this.colorNode
-    ) {
-      this.pass.gaussianColorNode = this.baseColorNode;
-    }
-    if (
-      this.positionWorldNode !== null &&
-      this.pass.gaussianPositionWorldNode === this.positionWorldNode
-    ) {
-      this.pass.gaussianPositionWorldNode = this.basePositionWorldNode;
-    }
+    this.detach();
     this.onDispose();
+  }
+
+  replacePass(pass: GaussianPass): void {
+    if (this.disposed) return;
+    this.detach();
+    this.pass = pass;
+    this.baseColorNode = pass.gaussianColorNode as Node<"vec3">;
+    this.basePositionWorldNode = pass.gaussianPositionWorldNode as Node<"vec3">;
+    this.attach();
+    this.pass.invalidate();
   }
 
   prepareFrame(): void {
@@ -94,6 +86,34 @@ export class TileGaussianHighlightVolume implements GaussianHighlightVolumeInsta
     this.verticalFalloffRadius.value = options.verticalFalloffRadius;
     this.wavelength.value = options.wavelength;
     this.pass.invalidate();
+  }
+
+  private attach(): void {
+    this.colorNode =
+      this.type === "color"
+        ? this.createColorNode()
+        : this.createRippleTintNode();
+    this.positionWorldNode =
+      this.type === "ripple" ? this.createRippleNode() : null;
+    this.pass.gaussianColorNode = this.colorNode;
+    if (this.positionWorldNode !== null) {
+      this.pass.gaussianPositionWorldNode = this.positionWorldNode;
+    }
+  }
+
+  private detach(): void {
+    if (
+      this.colorNode !== null &&
+      this.pass.gaussianColorNode === this.colorNode
+    ) {
+      this.pass.gaussianColorNode = this.baseColorNode;
+    }
+    if (
+      this.positionWorldNode !== null &&
+      this.pass.gaussianPositionWorldNode === this.positionWorldNode
+    ) {
+      this.pass.gaussianPositionWorldNode = this.basePositionWorldNode;
+    }
   }
 
   private createColorNode(): Node<"vec3"> {

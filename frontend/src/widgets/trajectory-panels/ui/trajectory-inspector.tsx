@@ -8,31 +8,41 @@ import { Button } from "@/shared/ui";
 
 import { createAimTrack } from "../lib/create-aim-track";
 import { createOrientationTrack } from "../lib/create-orientation-track";
+import { createDepthOfFieldTrack } from "../lib/create-depth-of-field-track";
 import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
+import { RenderEffectsControl } from "./render-effects-control";
 
 interface TrajectoryInspectorProps {
   deletingAimKeyframeId?: string;
   deletingOrientationKeyframeId?: string;
   deletingSpeedKeyframeId?: string;
+  deletingDepthOfFieldKeyframeId?: string;
   onDeleteAimKeyframe: (keyframeId: string) => void;
   onDeleteOrientationKeyframe: (keyframeId: string) => void;
   onDeleteSpeedKeyframe: (keyframeId: string) => void;
+  onDeleteDepthOfFieldKeyframe: (keyframeId: string) => void;
   onScrub: (pathPosition: number) => void;
   pathPosition: number;
   project: Project;
   trajectory: CompiledTrajectory;
   onClose: () => void;
+  effectsPending?: boolean;
+  onAddDepthOfField: () => void;
 }
 
 export function TrajectoryInspector({
   deletingAimKeyframeId,
   deletingOrientationKeyframeId,
   deletingSpeedKeyframeId,
+  deletingDepthOfFieldKeyframeId,
+  effectsPending,
+  onAddDepthOfField,
   onClose,
   onDeleteAimKeyframe,
   onDeleteOrientationKeyframe,
   onDeleteSpeedKeyframe,
+  onDeleteDepthOfFieldKeyframe,
   onScrub,
   pathPosition,
   project,
@@ -50,7 +60,13 @@ export function TrajectoryInspector({
       onDeleteKeyframe: onDeleteOrientationKeyframe,
       trajectory,
     }),
-  ];
+    createDepthOfFieldTrack({
+      deletingKeyframeId: deletingDepthOfFieldKeyframeId,
+      onDeleteKeyframe: onDeleteDepthOfFieldKeyframe,
+      project,
+      trajectory,
+    }),
+  ].filter((track) => track.keyframes.length > 0);
 
   return (
     <section className="border-t bg-muted/35 p-2">
@@ -61,14 +77,23 @@ export function TrajectoryInspector({
             {trajectory.total_length.toFixed(2)} m
           </span>
         </div>
-        <Button
-          aria-label="Close trajectory panels"
-          onClick={onClose}
-          size="icon"
-          variant="ghost"
-        >
-          <X className="size-3.5" />
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <RenderEffectsControl
+            disabled={effectsPending}
+            hasDepthOfField={
+              trajectory.camera_track.depth_of_field_keyframes.length > 0
+            }
+            onAddDepthOfField={onAddDepthOfField}
+          />
+          <Button
+            aria-label="Close trajectory panels"
+            onClick={onClose}
+            size="icon"
+            variant="ghost"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
       </div>
       <div className="overflow-hidden rounded-md border bg-card">
         <SpeedGraph
@@ -77,11 +102,13 @@ export function TrajectoryInspector({
           pathPosition={pathPosition}
           trajectory={trajectory}
         />
-        <TimelineStack
-          onScrub={onScrub}
-          pathPosition={pathPosition}
-          tracks={keyframeTracks}
-        />
+        {keyframeTracks.length > 0 && (
+          <TimelineStack
+            onScrub={onScrub}
+            pathPosition={pathPosition}
+            tracks={keyframeTracks}
+          />
+        )}
       </div>
     </section>
   );

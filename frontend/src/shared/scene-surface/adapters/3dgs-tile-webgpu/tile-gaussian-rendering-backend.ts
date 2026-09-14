@@ -21,6 +21,7 @@ import type {
   GaussianRenderingBackend,
 } from "../../model/gaussian-rendering-backend";
 import type { GaussianCloudSource } from "../../model/scene-surface-types";
+import { enableAdditionalObjectLayers } from "../../model/enable-additional-object-layers";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
 import { TileGaussianCloudInstance } from "./tile-gaussian-cloud-instance";
@@ -29,14 +30,20 @@ import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   readonly container = null;
   private readonly clouds = new Set<TileGaussianCloudInstance>();
+  private depthEnabled = false;
   private disposed = false;
   private highlightVolume: TileGaussianHighlightVolume | null = null;
   private pass: GaussianPass | null = null;
   private readonly store = new GaussianStore();
   private unregisterPass: (() => void) | null = null;
   private dprMode: GaussianDprMode = "1x";
+  private readonly additionalCloudLayers: readonly number[];
 
-  constructor(private readonly pipeline: SceneRenderPipeline) {
+  constructor(
+    private readonly pipeline: SceneRenderPipeline,
+    additionalCloudLayers: readonly number[] = [],
+  ) {
+    this.additionalCloudLayers = [...additionalCloudLayers];
     if (!(pipeline.camera instanceof PerspectiveCamera)) {
       throw new TypeError("3dgs-tile-webgpu requires a PerspectiveCamera");
     }
@@ -70,20 +77,17 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
 
     cloud.raycastMode = "full";
+    enableAdditionalObjectLayers(cloud, this.additionalCloudLayers);
     try {
       this.ensurePass();
     } catch (reason) {
       cloud.dispose();
       throw reason;
     }
-    const instance = new TileGaussianCloudInstance(
-      cloud,
-      options.raycastable ?? true,
-      () => {
-        this.clouds.delete(instance);
-        if (this.clouds.size === 0) this.disposePass();
-      },
-    );
+    const instance = new TileGaussianCloudInstance(cloud, () => {
+      this.clouds.delete(instance);
+      if (this.clouds.size === 0) this.disposePass();
+    });
     this.clouds.add(instance);
     return instance;
   }
@@ -109,6 +113,18 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
   invalidate(): void {
     if (!this.disposed) this.pass?.invalidate();
+  }
+
+  isDepthEnabled(): boolean {
+    return this.depthEnabled;
+  }
+
+  setDepthEnabled(enabled: boolean): void {
+    if (this.disposed)
+      throw new Error("TileGaussianRenderingBackend is disposed");
+    if (this.depthEnabled === enabled) return;
+    this.depthEnabled = enabled;
+    if (this.pass !== null) this.recreatePass();
   }
 
   dispose(): void {
@@ -144,6 +160,10 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
   private ensurePass(): void {
     if (this.pass !== null) return;
+    this.recreatePass();
+  }
+
+  private recreatePass(): void {
     const { camera, getOpaqueViewDepth, registerLayer, renderer } =
       this.pipeline;
     if (!(camera instanceof PerspectiveCamera)) {
@@ -151,6 +171,8 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
     const pass = gaussianPass(renderer, camera, this.store, {
       background: [0, 0, 0, 0],
+      depthAlphaThreshold: 0.95,
+      outputDepth: this.depthEnabled,
       redrawStrategy: "auto",
     });
     const depthNodes = createTileRasterDepthNodes(
@@ -160,8 +182,16 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     pass.rasterPixelValueNode = depthNodes.rasterPixelValueNode;
     pass.rasterBreakNode = depthNodes.rasterBreakNode;
     pass.rasterDiscardNode = depthNodes.rasterDiscardNode;
+    const previousPass = this.pass;
+    const unregisterPreviousPass = this.unregisterPass;
     this.pass = pass;
     this.syncResolutionScale(this.dprMode);
-    this.unregisterPass = registerLayer(pass, { order: -100 });
+    this.unregisterPass = registerLayer(pass, {
+      ...(this.depthEnabled ? { depth: pass.getTextureNode("depth").r } : {}),
+      order: -100,
+    });
+    this.highlightVolume?.replacePass(pass);
+    unregisterPreviousPass?.();
+    previousPass?.dispose();
   }
 }

@@ -11,9 +11,11 @@ import type {
   GaussianCloudSource,
   SceneSurfaceBackground,
 } from "../../model/scene-surface-types";
+import { enableAdditionalObjectLayers } from "../../model/enable-additional-object-layers";
 import { SparkGaussianCloudInstance } from "./spark-gaussian-cloud-instance";
 
 export interface SparkGaussianRenderingBackendOptions {
+  additionalCloudLayers?: readonly number[];
   renderer: WebGLRenderer;
 }
 
@@ -24,8 +26,13 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   private readonly previousAlpha: number;
   private readonly previousColor: Color;
   private readonly renderer: WebGLRenderer;
+  private readonly additionalCloudLayers: readonly number[];
 
-  constructor({ renderer }: SparkGaussianRenderingBackendOptions) {
+  constructor({
+    additionalCloudLayers = [],
+    renderer,
+  }: SparkGaussianRenderingBackendOptions) {
+    this.additionalCloudLayers = [...additionalCloudLayers];
     this.renderer = renderer;
     this.previousColor = renderer.getClearColor(new Color()).clone();
     this.previousAlpha = renderer.getClearAlpha();
@@ -51,12 +58,13 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
       ...(source.kind === "url"
         ? { url: source.url }
         : { fileBytes: source.buffer, fileName: source.name }),
-      raycastable: options.raycastable ?? true,
+      raycastable: true,
     });
     mesh.name =
       options.name ??
       (source.kind === "buffer" ? source.name : undefined) ??
       "Scene surface";
+    enableAdditionalObjectLayers(mesh, this.additionalCloudLayers);
 
     try {
       await mesh.initialized;
@@ -85,6 +93,18 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   }
 
   invalidate(): void {}
+
+  isDepthEnabled(): boolean {
+    return false;
+  }
+
+  setDepthEnabled(enabled: boolean): void {
+    if (enabled) {
+      throw new Error(
+        "Depth output is unavailable in the Spark example backend",
+      );
+    }
+  }
 
   dispose(): void {
     if (this.disposed) return;

@@ -1,6 +1,7 @@
 export { createPlaybackTable } from "./lib/create-playback-table";
 export { evaluateAim } from "./lib/evaluate-aim";
 export { evaluateCameraOrientation } from "./lib/evaluate-camera-orientation";
+export { evaluateDepthOfFieldKeyframe } from "./lib/evaluate-depth-of-field-keyframe";
 export { evaluateTrajectoryCameraPose } from "./lib/evaluate-trajectory-camera-pose";
 export type { TrajectoryCameraPose } from "./lib/evaluate-trajectory-camera-pose";
 export { evaluateSpeed } from "./lib/evaluate-speed";
@@ -9,4 +10,8 @@ export { locateOnPath } from "./lib/locate-on-path";
 export { pathPositionAtTime } from "./lib/path-position-at-time";
 export { sampleTrajectory } from "./lib/sample-trajectory";
 export { timeAtPathPosition } from "./lib/time-at-path-position";
-export type { ChatResult, CompiledTrajectory } from "./model/types";
+export type {
+  ChatResult,
+  CompiledTrajectory,
+  ResolvedDepthOfFieldFocus,
+} from "./model/types";

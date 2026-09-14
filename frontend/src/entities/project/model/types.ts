@@ -67,6 +67,40 @@ export interface CameraOrientationKeyframeUpdate {
   interpolation_to_next?: Interpolation;
 }
 
+export interface CenterWeightedDepthOfFieldFocus {
+  kind: "center_weighted_9";
+}
+
+export interface ScenePointDepthOfFieldFocus {
+  kind: "scene_point";
+  scene_point_id: string;
+}
+
+export type DepthOfFieldFocus =
+  CenterWeightedDepthOfFieldFocus | ScenePointDepthOfFieldFocus;
+
+export interface DepthOfFieldKeyframe {
+  id: string;
+  path_position: number;
+  focus: DepthOfFieldFocus;
+  focus_range_scale: number;
+  bokeh_scale: number;
+}
+
+export interface DepthOfFieldKeyframeCreate {
+  path_position: number;
+  focus: DepthOfFieldFocus;
+  focus_range_scale?: number;
+  bokeh_scale?: number;
+}
+
+export interface DepthOfFieldKeyframeUpdate {
+  path_position?: number;
+  focus?: DepthOfFieldFocus;
+  focus_range_scale?: number;
+  bokeh_scale?: number;
+}
+
 export interface ChatHistoryMessage {
   id: string;
   role: "user" | "assistant";
@@ -85,6 +119,7 @@ export interface Project {
     keyframes: Record<string, CameraKeyframe>;
     default_orientation: CameraOrientation;
     orientation_keyframes: Record<string, CameraOrientationKeyframe>;
+    depth_of_field_keyframes: Record<string, DepthOfFieldKeyframe>;
     world_up: Vec3;
   };
   motion_profile: {

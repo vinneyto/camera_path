@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import Annotated, Literal
-from uuid import NAMESPACE_URL, uuid4, uuid5
+from uuid import uuid4
 
-from pydantic import BaseModel, Field, FiniteFloat, field_validator, model_validator
+from pydantic import BaseModel, Field, FiniteFloat, field_validator
 
 Vec3 = tuple[float, float, float]
 Interpolation = Literal["smoothstep", "linear", "hold"]
@@ -140,86 +140,46 @@ class CameraOrientationKeyframeUpdate(BaseModel):
     interpolation_to_next: Interpolation | None = None
 
 
+class CenterWeightedDepthOfFieldFocus(BaseModel):
+    kind: Literal["center_weighted_9"] = "center_weighted_9"
+
+
+class ScenePointDepthOfFieldFocus(BaseModel):
+    kind: Literal["scene_point"] = "scene_point"
+    scene_point_id: str
+
+
+DepthOfFieldFocus = Annotated[
+    CenterWeightedDepthOfFieldFocus | ScenePointDepthOfFieldFocus,
+    Field(discriminator="kind"),
+]
+
+
+class DepthOfFieldKeyframeCreate(BaseModel):
+    path_position: float = Field(ge=0.0, le=1.0)
+    focus: DepthOfFieldFocus = Field(default_factory=CenterWeightedDepthOfFieldFocus)
+    focus_range_scale: float = Field(default=0.25, gt=0.0)
+    bokeh_scale: float = Field(default=6.0, ge=0.0)
+
+
+class DepthOfFieldKeyframe(DepthOfFieldKeyframeCreate):
+    id: str = Field(default_factory=new_id)
+
+
+class DepthOfFieldKeyframeUpdate(BaseModel):
+    path_position: float | None = Field(default=None, ge=0.0, le=1.0)
+    focus: DepthOfFieldFocus | None = None
+    focus_range_scale: float | None = Field(default=None, gt=0.0)
+    bokeh_scale: float | None = Field(default=None, ge=0.0)
+
+
 class CameraTrack(BaseModel):
-    default_aim: FollowPathAim = Field(default_factory=FollowPathAim)
+    default_aim: CameraAim = Field(default_factory=FollowPathAim)
     keyframes: dict[str, CameraKeyframe] = Field(default_factory=dict)
     default_orientation: CameraOrientation = Field(default_factory=CameraOrientation)
     orientation_keyframes: dict[str, CameraOrientationKeyframe] = Field(default_factory=dict)
+    depth_of_field_keyframes: dict[str, DepthOfFieldKeyframe] = Field(default_factory=dict)
     world_up: Vec3 = (0.0, 1.0, 0.0)
-
-    def set_start_aim(
-        self,
-        aim: CameraAim,
-        interpolation_to_next: Interpolation | None = None,
-    ) -> CameraKeyframe:
-        self.default_aim = FollowPathAim()
-        item = next(
-            (keyframe for keyframe in self.keyframes.values() if keyframe.path_position == 0),
-            None,
-        )
-        if item is None:
-            item = CameraKeyframe(
-                path_position=0,
-                aim=aim,
-                interpolation_to_next=interpolation_to_next or "smoothstep",
-            )
-        else:
-            update: dict[str, object] = {"aim": aim}
-            if interpolation_to_next is not None:
-                update["interpolation_to_next"] = interpolation_to_next
-            item = item.model_copy(update=update)
-        self.keyframes[item.id] = item
-        return item
-
-    def ensure_start_aim(self) -> CameraKeyframe:
-        item = next(
-            (keyframe for keyframe in self.keyframes.values() if keyframe.path_position == 0),
-            None,
-        )
-        return item if item is not None else self.set_start_aim(FollowPathAim())
-
-    @model_validator(mode="before")
-    @classmethod
-    def materialize_start_aim(cls, value: object) -> object:
-        if not isinstance(value, dict):
-            return value
-        raw_default_aim = value.get("default_aim", FollowPathAim().model_dump())
-        default_aim = (
-            raw_default_aim.model_dump()
-            if isinstance(raw_default_aim, FollowPathAim | LookAtPointAim)
-            else raw_default_aim
-        )
-        if not isinstance(default_aim, dict):
-            default_aim = FollowPathAim().model_dump()
-
-        normalized = dict(value)
-        keyframes = dict(normalized.get("keyframes") or {})
-        has_start_keyframe = any(
-            (isinstance(keyframe, dict) and keyframe.get("path_position") == 0)
-            or (isinstance(keyframe, CameraKeyframe) and keyframe.path_position == 0)
-            for keyframe in keyframes.values()
-        )
-        if not has_start_keyframe:
-            aim_kind = default_aim.get("kind", "follow_path")
-            aim_value = default_aim.get(
-                "scene_point_id" if aim_kind == "look_at_point" else "direction",
-                "forward",
-            )
-            start_id = str(
-                uuid5(
-                    NAMESPACE_URL,
-                    f"camera-path:start-aim:{aim_kind}:{aim_value}",
-                )
-            )
-            keyframes[start_id] = {
-                "id": start_id,
-                "path_position": 0.0,
-                "aim": default_aim,
-                "interpolation_to_next": "smoothstep",
-            }
-        normalized["default_aim"] = FollowPathAim().model_dump()
-        normalized["keyframes"] = keyframes
-        return normalized
 
 
 class CameraTrackUpdate(BaseModel):
@@ -300,6 +260,24 @@ class ResolvedLookAtPointAim(LookAtPointAim):
 ResolvedCameraAim = Annotated[FollowPathAim | ResolvedLookAtPointAim, Field(discriminator="kind")]
 
 
+class ResolvedScenePointDepthOfFieldFocus(ScenePointDepthOfFieldFocus):
+    position: Vec3
+
+
+ResolvedDepthOfFieldFocus = Annotated[
+    CenterWeightedDepthOfFieldFocus | ResolvedScenePointDepthOfFieldFocus,
+    Field(discriminator="kind"),
+]
+
+
+class CompiledDepthOfFieldKeyframe(BaseModel):
+    id: str
+    path_position: float
+    focus: ResolvedDepthOfFieldFocus
+    focus_range_scale: float
+    bokeh_scale: float
+
+
 class CompiledCameraKeyframe(BaseModel):
     id: str
     path_position: float
@@ -312,6 +290,7 @@ class CompiledCameraTrack(BaseModel):
     keyframes: list[CompiledCameraKeyframe]
     default_orientation: CameraOrientation
     orientation_keyframes: list[CameraOrientationKeyframe]
+    depth_of_field_keyframes: list[CompiledDepthOfFieldKeyframe]
     world_up: Vec3
 
 

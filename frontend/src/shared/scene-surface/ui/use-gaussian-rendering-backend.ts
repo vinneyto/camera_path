@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import { WebGLRenderer } from "three";
 import { WebGPURenderer } from "three/webgpu";
 
@@ -13,9 +13,13 @@ import type { GaussianRenderingBackend } from "../model/gaussian-rendering-backe
 import type { GaussianDprMode } from "../model/gaussian-dpr-mode";
 import type { SceneSurfaceBackground } from "../model/scene-surface-types";
 
+const EMPTY_CLOUD_LAYERS: readonly number[] = [];
+
 export function useGaussianRenderingBackend(
   background: SceneSurfaceBackground,
   dprMode: GaussianDprMode = "1x",
+  depthEnabled = false,
+  additionalCloudLayers: readonly number[] = EMPTY_CLOUD_LAYERS,
 ): GaussianRenderingBackend {
   const renderer = useThree((state) => state.gl);
   const pipeline = useOptionalRenderPipeline();
@@ -28,19 +32,27 @@ export function useGaussianRenderingBackend(
           "WebGPU Gaussian rendering requires RenderPipelineProvider",
         );
       }
-      return new TileGaussianRenderingBackend(pipeline);
+      return new TileGaussianRenderingBackend(pipeline, additionalCloudLayers);
     }
     if (renderer instanceof WebGLRenderer) {
-      return new SparkGaussianRenderingBackend({ renderer });
+      return new SparkGaussianRenderingBackend({
+        additionalCloudLayers,
+        renderer,
+      });
     }
     throw new TypeError("Unsupported Three.js renderer");
-  }, [pipeline, renderer]);
+  }, [additionalCloudLayers, pipeline, renderer]);
 
   useEffect(() => {
     if (backend instanceof SparkGaussianRenderingBackend) {
       backend.setBackground(background);
     }
   }, [backend, background]);
+
+  useLayoutEffect(() => {
+    backend.setDepthEnabled?.(depthEnabled);
+    return () => backend.setDepthEnabled?.(false);
+  }, [backend, depthEnabled]);
 
   useFrame(() => {
     if (backend instanceof TileGaussianRenderingBackend) {

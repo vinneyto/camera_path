@@ -15,9 +15,11 @@ from camera_path.models import (
     CameraKeyframe,
     CameraOrientation,
     CameraOrientationKeyframe,
+    DepthOfFieldKeyframe,
     LookAtPointAim,
     Project,
     ScenePoint,
+    ScenePointDepthOfFieldFocus,
     SpeedKeyframe,
     SpiralSegment,
     SplineSegment,
@@ -142,17 +144,33 @@ def test_camera_track_resolves_scene_point_position() -> None:
 
     compiled = compile_project(project)
 
-    resolved = compiled.camera_track.keyframes[1].aim
+    resolved = compiled.camera_track.keyframes[0].aim
     assert resolved.kind == "look_at_point"
     assert resolved.position == point.position
 
 
-def test_camera_track_requires_a_start_aim_keyframe() -> None:
+def test_camera_track_allows_no_aim_keyframes() -> None:
     project = Project()
     project.camera_track.keyframes.clear()
 
-    with pytest.raises(GeometryError, match="camera aim keyframe at path position 0 is required"):
-        validate_project(project)
+    assert validate_project(project) == []
+
+
+def test_depth_of_field_track_resolves_scene_point_position() -> None:
+    point = ScenePoint(label="Subject", position=(4, 5, 6))
+    key = DepthOfFieldKeyframe(
+        path_position=0.4,
+        focus=ScenePointDepthOfFieldFocus(scene_point_id=point.id),
+    )
+    project = Project(scene_points={point.id: point})
+    project.camera_track.depth_of_field_keyframes[key.id] = key
+
+    compiled = compile_project(project)
+
+    compiled_key = compiled.camera_track.depth_of_field_keyframes[0]
+    assert compiled_key.focus.position == point.position
+    assert compiled_key.focus_range_scale == 0.25
+    assert compiled_key.bokeh_scale == 6
 
 
 def test_camera_orientation_track_compiles_sorted_and_unwrapped() -> None:

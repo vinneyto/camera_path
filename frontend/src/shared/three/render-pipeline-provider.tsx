@@ -16,7 +16,7 @@ import {
   WebGPURenderer,
   type Node,
 } from "three/webgpu";
-import { pass as scenePass } from "three/tsl";
+import { min, pass as scenePass } from "three/tsl";
 
 import { compositeDepthTestedPremultipliedOver } from "./composite-depth-tested-premultiplied-over";
 import { compositePremultipliedOver } from "./composite-premultiplied-over";
@@ -27,6 +27,9 @@ import {
 } from "./render-pipeline-scene-layers";
 import type {
   RenderPipelineContextValue,
+  RenderPipelineEffect,
+  RenderPipelineEffectOptions,
+  RenderPipelineEffectTransform,
   RenderPipelineLayer,
   RenderPipelineLayerOptions,
 } from "./render-pipeline-types";
@@ -47,6 +50,7 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
   const renderer = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
   const layersRef = useRef(new Map<symbol, RenderPipelineLayer>());
+  const effectsRef = useRef(new Map<symbol, RenderPipelineEffect>());
   const nextSequenceRef = useRef(0);
   const resourcesRef = useRef<PipelineResources | null>(null);
 
@@ -66,17 +70,30 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
         left.order - right.order || left.sequence - right.sequence,
     );
     let output: Node<"vec4"> = resources.opaque;
+    let sceneDepth: Node<"float"> = resources.opaque.getTextureNode("depth").r;
     for (const layer of layers) {
       output = compositePremultipliedOver(output, layer.node);
+      if (layer.depth !== undefined) sceneDepth = min(sceneDepth, layer.depth);
     }
-    const withTransparentScene = compositeDepthTestedPremultipliedOver(
+    let withEffects = compositeDepthTestedPremultipliedOver(
       output,
       resources.transparent,
       resources.opaque.getViewZNode(),
       resources.transparent.getViewZNode(),
     );
+    sceneDepth = min(
+      sceneDepth,
+      resources.transparent.getTextureNode("depth").r,
+    );
+    const effects = [...effectsRef.current.values()].sort(
+      (left, right) =>
+        left.order - right.order || left.sequence - right.sequence,
+    );
+    for (const effect of effects) {
+      withEffects = effect.transform(withEffects, sceneDepth);
+    }
     resources.pipeline.outputNode = compositePremultipliedOver(
-      withTransparentScene,
+      withEffects,
       resources.overlay,
     );
     resources.pipeline.needsUpdate = true;
@@ -107,6 +124,7 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     (node: Node<"vec4">, options: RenderPipelineLayerOptions = {}) => {
       const key = Symbol("render-pipeline-layer");
       layersRef.current.set(key, {
+        depth: options.depth,
         node,
         order: options.order ?? 0,
         sequence: nextSequenceRef.current++,
@@ -120,9 +138,30 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     [rebuildOutput],
   );
 
+  const registerEffect = useCallback(
+    (
+      transform: RenderPipelineEffectTransform,
+      options: RenderPipelineEffectOptions = {},
+    ) => {
+      const key = Symbol("render-pipeline-effect");
+      effectsRef.current.set(key, {
+        order: options.order ?? 0,
+        sequence: nextSequenceRef.current++,
+        transform,
+      });
+      rebuildOutput();
+      return () => {
+        effectsRef.current.delete(key);
+        rebuildOutput();
+      };
+    },
+    [rebuildOutput],
+  );
+
   const value: RenderPipelineContextValue = {
     camera,
     getOpaqueViewDepth,
+    registerEffect,
     registerLayer,
     renderer,
   };
