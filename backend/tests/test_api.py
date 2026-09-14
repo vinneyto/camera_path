@@ -27,39 +27,51 @@ async def test_frontend_origin_is_allowed(app) -> None:
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
 
 
-async def test_project_effect_settings_are_persisted(app) -> None:
+async def test_depth_of_field_timeline_is_persisted(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         project = (await client.post("/projects", json={"name": "DoF"})).json()
 
-        response = await client.put(
-            f"/projects/{project['id']}/settings",
-            json={
-                "effects": [
-                    {
-                        "kind": "depth_of_field",
-                        "autofocus": "center_weighted_9",
-                        "bokeh": 6,
-                    }
-                ]
-            },
+        response = await client.post(
+            f"/projects/{project['id']}/camera/depth-of-field/keyframes",
+            json={"path_position": 0.25, "focus": {"kind": "center_weighted_9"}},
         )
 
         assert response.status_code == 200
-        assert response.json()["settings"] == {
-            "effects": [
-                {
-                    "kind": "depth_of_field",
-                    "autofocus": "center_weighted_9",
-                    "bokeh": 6.0,
-                }
-            ]
+        keys = response.json()["camera_track"]["depth_of_field_keyframes"]
+        keyframe_id = next(iter(keys))
+        assert keys[keyframe_id]["focus"] == {"kind": "center_weighted_9"}
+        point_project = (
+            await client.post(
+                f"/projects/{project['id']}/scene-points",
+                json={"label": "Subject", "position": [1, 2, 3]},
+            )
+        ).json()
+        point_id = next(iter(point_project["scene_points"]))
+        updated = await client.patch(
+            f"/projects/{project['id']}/camera/depth-of-field/keyframes/{keyframe_id}",
+            json={
+                "path_position": 0.5,
+                "focus": {"kind": "scene_point", "scene_point_id": point_id},
+            },
+        )
+        assert updated.status_code == 200
+        keys = updated.json()["camera_track"]["depth_of_field_keyframes"]
+        compiled = (
+            await client.get(f"/projects/{project['id']}/trajectory/compiled")
+        ).json()
+        assert compiled["camera_track"]["depth_of_field_keyframes"][0]["focus"] == {
+            "kind": "scene_point",
+            "scene_point_id": point_id,
+            "position": [1.0, 2.0, 3.0],
         }
         reloaded = (await client.get(f"/projects/{project['id']}")).json()
-        assert reloaded["settings"] == response.json()["settings"]
+        assert reloaded["camera_track"]["depth_of_field_keyframes"] == keys
 
-        disabled = await client.put(f"/projects/{project['id']}/settings", json={"effects": []})
+        disabled = await client.delete(
+            f"/projects/{project['id']}/camera/depth-of-field/keyframes/{keyframe_id}"
+        )
         assert disabled.status_code == 200
-        assert disabled.json()["settings"] == {"effects": []}
+        assert disabled.json()["camera_track"]["depth_of_field_keyframes"] == {}
 
 
 async def test_project_edit_compile_and_undo(app) -> None:
@@ -216,7 +228,7 @@ async def test_client_can_edit_speed_and_camera_graphs(app) -> None:
 
         compiled = (await client.get(f"/projects/{project_id}/trajectory/compiled")).json()
         assert compiled["motion_profile"]["keyframes"][0]["speed"] == 0.25
-        assert compiled["camera_track"]["keyframes"][1]["aim"]["position"] == [4.0, 5.0, 6.0]
+        assert compiled["camera_track"]["keyframes"][0]["aim"]["position"] == [4.0, 5.0, 6.0]
 
         assert (
             await client.delete(f"/projects/{project_id}/scene-points/{point_id}")
@@ -329,26 +341,14 @@ async def test_client_can_change_default_speed_and_aim(app) -> None:
         assert motion.json()["motion_profile"]["default_speed"] == 3.0
         assert camera.status_code == 200
         camera_track = camera.json()["camera_track"]
-        assert camera_track["default_aim"] == {"kind": "follow_path", "direction": "forward"}
-        assert len(camera_track["keyframes"]) == 1
-        keyframe = next(iter(camera_track["keyframes"].values()))
-        assert keyframe["path_position"] == 0
-        assert keyframe["aim"] == {"kind": "look_at_point", "scene_point_id": point_id}
+        assert camera_track["default_aim"] == {
+            "kind": "look_at_point",
+            "scene_point_id": point_id,
+        }
+        assert camera_track["keyframes"] == {}
 
         reloaded = (await client.get(f"/projects/{project_id}")).json()
         assert reloaded["camera_track"]["keyframes"] == camera_track["keyframes"]
-
-        start_id = next(iter(camera_track["keyframes"]))
-        reverted = (
-            await client.delete(f"/projects/{project_id}/camera/keyframes/{start_id}")
-        ).json()
-        reverted_keys = list(reverted["camera_track"]["keyframes"].values())
-        assert len(reverted_keys) == 1
-        assert reverted_keys[0]["path_position"] == 0
-        assert reverted_keys[0]["aim"] == {
-            "kind": "follow_path",
-            "direction": "forward",
-        }
 
         replaced = (
             await client.post(
@@ -433,19 +433,14 @@ async def test_clear_trajectory_preserves_scene_setup(app) -> None:
         assert set(cleared.json()["anchors"]) == set(anchor_ids)
         assert cleared.json()["segments"] == []
         assert cleared.json()["motion_profile"]["keyframes"] == {}
-        camera_keyframes = list(cleared.json()["camera_track"]["keyframes"].values())
-        assert len(camera_keyframes) == 1
-        assert camera_keyframes[0]["path_position"] == 0
-        assert camera_keyframes[0]["aim"] == {
-            "kind": "follow_path",
-            "direction": "forward",
-        }
+        assert cleared.json()["camera_track"]["keyframes"] == {}
         assert cleared.json()["camera_track"]["default_orientation"] == {
             "yaw_deg": 0.0,
             "pitch_deg": 0.0,
             "roll_deg": 0.0,
         }
         assert cleared.json()["camera_track"]["orientation_keyframes"] == {}
+        assert cleared.json()["camera_track"]["depth_of_field_keyframes"] == {}
 
 
 async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:

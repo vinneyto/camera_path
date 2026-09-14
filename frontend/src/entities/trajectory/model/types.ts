@@ -1,6 +1,7 @@
 import type {
   CameraOrientation,
   CameraOrientationKeyframe,
+  CenterWeightedDepthOfFieldFocus,
   FollowPathAim,
   Interpolation,
   SpeedKeyframe,
@@ -14,6 +15,21 @@ export interface ResolvedLookAtPointAim {
 }
 
 export type ResolvedCameraAim = FollowPathAim | ResolvedLookAtPointAim;
+
+export interface ResolvedScenePointDepthOfFieldFocus {
+  kind: "scene_point";
+  scene_point_id: string;
+  position: Vec3;
+}
+
+export type ResolvedDepthOfFieldFocus =
+  CenterWeightedDepthOfFieldFocus | ResolvedScenePointDepthOfFieldFocus;
+
+export interface CompiledDepthOfFieldKeyframe {
+  id: string;
+  path_position: number;
+  focus: ResolvedDepthOfFieldFocus;
+}
 
 export interface CubicBezier3D {
   source_segment_id: string;
@@ -51,6 +67,7 @@ export interface CompiledTrajectory {
     keyframes: CompiledCameraKeyframe[];
     default_orientation: CameraOrientation;
     orientation_keyframes: CameraOrientationKeyframe[];
+    depth_of_field_keyframes: CompiledDepthOfFieldKeyframe[];
     world_up: Vec3;
   };
   warnings: string[];

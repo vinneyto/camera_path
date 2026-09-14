@@ -24,10 +24,11 @@ from camera_path.models import (
     ChatMessage,
     ChatResult,
     CompiledTrajectory,
+    DepthOfFieldKeyframeCreate,
+    DepthOfFieldKeyframeUpdate,
     MotionProfileUpdate,
     Project,
     ProjectCreate,
-    ProjectSettings,
     ProjectUpdate,
     ScenePointCreate,
     ScenePointUpdate,
@@ -82,13 +83,6 @@ async def get_project(project_id: str, service: Service) -> Project:
 @router.patch("/projects/{project_id}", response_model=Project)
 async def update_project(project_id: str, data: ProjectUpdate, service: Service) -> Project:
     return await service.update_project(project_id, data)
-
-
-@router.put("/projects/{project_id}/settings", response_model=Project)
-async def update_project_settings(
-    project_id: str, data: ProjectSettings, service: Service
-) -> Project:
-    return await service.update_project_settings(project_id, data)
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -267,6 +261,42 @@ async def delete_camera_orientation_keyframe(
 ) -> Project:
     try:
         return await service.delete_camera_orientation_keyframe(project_id, keyframe_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@router.post("/projects/{project_id}/camera/depth-of-field/keyframes", response_model=Project)
+async def add_depth_of_field_keyframe(
+    project_id: str, data: DepthOfFieldKeyframeCreate, service: Service
+) -> Project:
+    return await service.add_depth_of_field_keyframe(project_id, data)
+
+
+@router.patch(
+    "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
+    response_model=Project,
+)
+async def update_depth_of_field_keyframe(
+    project_id: str,
+    keyframe_id: str,
+    data: DepthOfFieldKeyframeUpdate,
+    service: Service,
+) -> Project:
+    try:
+        return await service.update_depth_of_field_keyframe(project_id, keyframe_id, data)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@router.delete(
+    "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
+    response_model=Project,
+)
+async def delete_depth_of_field_keyframe(
+    project_id: str, keyframe_id: str, service: Service
+) -> Project:
+    try:
+        return await service.delete_depth_of_field_keyframe(project_id, keyframe_id)
     except KeyError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
 

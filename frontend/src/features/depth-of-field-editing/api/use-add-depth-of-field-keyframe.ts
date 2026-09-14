@@ -5,18 +5,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   projectApi,
   projectKeys,
-  type ProjectSettings,
+  type DepthOfFieldKeyframeCreate,
 } from "@/entities/project";
 
-export function useUpdateProjectSettings(projectId: string) {
+export function useAddDepthOfFieldKeyframe(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (settings: ProjectSettings) =>
-      projectApi.updateSettings(projectId, settings),
+    mutationFn: (keyframe: DepthOfFieldKeyframeCreate) =>
+      projectApi.addDepthOfFieldKeyframe(projectId, keyframe),
     onSuccess: (project) => {
       queryClient.setQueryData(projectKeys.detail(projectId), project);
       void queryClient.invalidateQueries({ queryKey: projectKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.trajectory(projectId),
+      });
     },
   });
 }

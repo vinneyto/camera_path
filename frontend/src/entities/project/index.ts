@@ -14,9 +14,11 @@ export type {
   CameraOrientationKeyframeCreate,
   CameraOrientationKeyframeUpdate,
   ChatHistoryMessage,
-  DepthOfFieldEffect,
+  DepthOfFieldFocus,
+  DepthOfFieldKeyframe,
+  DepthOfFieldKeyframeCreate,
+  DepthOfFieldKeyframeUpdate,
   Interpolation,
   Project,
-  ProjectSettings,
   Vec3,
 } from "./model/types";

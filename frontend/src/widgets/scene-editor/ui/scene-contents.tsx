@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
-import type { CompiledTrajectory } from "@/entities/trajectory";
+import {
+  evaluateDepthOfFieldFocus,
+  type CompiledTrajectory,
+} from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
 import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
 import {
@@ -41,7 +44,6 @@ interface SceneContentsProps {
   anchors: Anchor[];
   background: SceneSurfaceBackground;
   dark: boolean;
-  depthOfFieldBokeh?: number;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
   onSurfaceError: (error: Error) => void;
   onSurfaceLoading: () => void;
@@ -59,7 +61,6 @@ export function SceneContents({
   anchors,
   background,
   dark,
-  depthOfFieldBokeh,
   onAddAnchor,
   onSurfaceError,
   onSurfaceLoading,
@@ -79,10 +80,13 @@ export function SceneContents({
   const gaussianDprMode = useGaussianRenderingSettingsStore(
     (state) => state.dprMode,
   );
+  const depthOfFieldFocus = trajectory
+    ? evaluateDepthOfFieldFocus(trajectory, pathPosition)
+    : null;
   const renderingBackend = useGaussianRenderingBackend(
     background,
     gaussianDprMode,
-    depthOfFieldBokeh !== undefined,
+    depthOfFieldFocus !== null,
     GAUSSIAN_CLOUD_LAYERS,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
@@ -131,10 +135,11 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
-      {depthOfFieldBokeh !== undefined && surfaceRadius !== null && (
+      {depthOfFieldFocus !== null && surfaceRadius !== null && (
         <DepthOfField
-          bokeh={depthOfFieldBokeh}
+          bokeh={6}
           focalLength={Math.max(surfaceRadius * 0.25, 0.001)}
+          focus={depthOfFieldFocus}
         />
       )}
       <SceneSurface

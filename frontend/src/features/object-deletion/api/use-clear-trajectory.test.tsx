@@ -12,6 +12,7 @@ import { useClearTrajectory } from "./use-clear-trajectory";
 const project: Project = {
   anchors: {},
   camera_track: {
+    depth_of_field_keyframes: {},
     default_aim: { direction: "forward", kind: "follow_path" },
     default_orientation: { pitch_deg: 0, roll_deg: 0, yaw_deg: 0 },
     keyframes: {},
@@ -23,7 +24,6 @@ const project: Project = {
   motion_profile: { default_speed: 1, keyframes: {} },
   name: "Project",
   revision: 2,
-  settings: { effects: [] },
   scene_points: {},
   segments: [],
 };

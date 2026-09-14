@@ -57,3 +57,10 @@ export function useDeleteCameraOrientationKeyframe(projectId: string) {
     projectApi.deleteCameraOrientationKeyframe,
   );
 }
+
+export function useDeleteDepthOfFieldKeyframe(projectId: string) {
+  return useProjectObjectDeletion(
+    projectId,
+    projectApi.deleteDepthOfFieldKeyframe,
+  );
+}

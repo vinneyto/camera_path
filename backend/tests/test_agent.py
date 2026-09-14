@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from camera_path.agent import TrajectoryAgent
-from camera_path.models import FollowPathAim, LookAtPointAim, Project, ScenePoint
+from camera_path.models import LookAtPointAim, Project, ScenePoint
 from camera_path.repository import SQLiteProjectRepository
 from camera_path.service import TrajectoryService
 
@@ -107,11 +107,6 @@ async def test_agent_streams_text_and_persists_result(monkeypatch, tmp_path) -> 
 def test_agent_executes_camera_orientation_tools() -> None:
     project = Project()
 
-    default_result = TrajectoryAgent._execute(
-        project,
-        "set_default_camera_orientation",
-        {"yaw_deg": 15, "pitch_deg": -10, "roll_deg": 360},
-    )
     created = TrajectoryAgent._execute(
         project,
         "create_camera_orientation_keyframe",
@@ -139,8 +134,7 @@ def test_agent_executes_camera_orientation_tools() -> None:
 
     state = TrajectoryAgent._execute(project, "get_project_state", {})
     item = state["camera_track"]["orientation_keyframes"][keyframe_id]
-    assert default_result["status"] == "ok"
-    assert state["camera_track"]["default_orientation"]["roll_deg"] == 360
+    assert state["camera_track"]["default_orientation"]["roll_deg"] == 0
     assert item["path_position"] == 0.4
     assert item["orientation"] == {"yaw_deg": 30.0, "pitch_deg": 12.0, "roll_deg": -2.0}
     assert item["interpolation_to_next"] == "hold"
@@ -149,39 +143,36 @@ def test_agent_executes_camera_orientation_tools() -> None:
     assert project.camera_track.orientation_keyframes == {}
 
 
-def test_agent_materializes_whole_path_look_at_as_one_start_keyframe() -> None:
+def test_agent_creates_explicit_aim_keyframes() -> None:
     target = ScenePoint(label="Subject", position=(1, 2, 3))
     project = Project(scene_points={target.id: target})
     arguments = {
+        "path_position": 0,
         "aim_kind": "look_at_point",
         "scene_point_id": target.id,
         "direction": None,
+        "interpolation_to_next": "smoothstep",
     }
 
-    first = TrajectoryAgent._execute(project, "set_default_camera_aim", arguments)
-    second = TrajectoryAgent._execute(project, "set_default_camera_aim", arguments)
+    created = TrajectoryAgent._execute(project, "create_camera_keyframe", arguments)
 
-    assert first["id"] == second["id"]
+    keyframe = project.camera_track.keyframes[created["id"]]
     assert project.camera_track.default_aim.kind == "follow_path"
-    assert len(project.camera_track.keyframes) == 1
-    keyframe = next(iter(project.camera_track.keyframes.values()))
     assert keyframe.path_position == 0
     assert keyframe.aim == LookAtPointAim(scene_point_id=target.id)
 
 
-def test_agent_keeps_a_real_follow_path_keyframe_at_the_start() -> None:
+def test_agent_can_create_and_delete_depth_of_field_keys() -> None:
     project = Project()
-    start = next(iter(project.camera_track.keyframes.values()))
-    arguments = {
-        "aim_kind": "follow_path",
-        "scene_point_id": None,
-        "direction": "backward",
-    }
+    created = TrajectoryAgent._execute(
+        project,
+        "create_depth_of_field_keyframe",
+        {"path_position": 0.4, "focus_kind": "center_weighted_9", "scene_point_id": None},
+    )
+    keyframe_id = created["id"]
 
-    item = TrajectoryAgent._execute(project, "set_default_camera_aim", arguments)
-
-    assert item["id"] == start.id
-    assert len(project.camera_track.keyframes) == 1
-    keyframe = next(iter(project.camera_track.keyframes.values()))
-    assert keyframe.path_position == 0
-    assert keyframe.aim == FollowPathAim(direction="backward")
+    assert project.camera_track.depth_of_field_keyframes[keyframe_id].focus.kind == (
+        "center_weighted_9"
+    )
+    TrajectoryAgent._execute(project, "delete_depth_of_field_keyframe", {"id": keyframe_id})
+    assert project.camera_track.depth_of_field_keyframes == {}

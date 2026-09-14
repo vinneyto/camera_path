@@ -32,10 +32,7 @@ describe("enableAdditionalObjectLayers", () => {
       });
     };
     enableAdditionalObjectLayers(surface, [2]);
-    const raycaster = new Raycaster(
-      new Vector3(),
-      new Vector3(0, 0, -1),
-    );
+    const raycaster = new Raycaster(new Vector3(), new Vector3(0, 0, -1));
     raycaster.layers.set(2);
 
     const hit = raycaster.intersectObjects([anchor, surface])[0];

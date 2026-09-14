@@ -7,6 +7,8 @@ import { MathUtils, Raycaster, Vector2, Vector3 } from "three";
 import { perspectiveDepthToViewZ, uniform } from "three/tsl";
 import { PerspectiveCamera, type Node } from "three/webgpu";
 
+import type { ResolvedDepthOfFieldFocus } from "@/entities/trajectory";
+
 import { CENTER_WEIGHTED_AUTOFOCUS_PATTERN } from "./center-weighted-autofocus-pattern";
 import { getCameraForwardNdc } from "./get-camera-forward-ndc";
 import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "./render-pipeline-scene-layers";
@@ -16,6 +18,7 @@ import { weightedMedianFocusDistance } from "./weighted-median-focus-distance";
 interface DepthOfFieldProps {
   bokeh: number;
   focalLength: number;
+  focus: ResolvedDepthOfFieldFocus;
 }
 
 interface DisposableDepthOfFieldNode extends Node<"vec4"> {
@@ -34,9 +37,11 @@ interface DepthOfFieldResources {
   pointer: Vector2;
   principalPoint: Vector3;
   raycaster: Raycaster;
+  direction: Vector3;
+  focusPoint: Vector3;
 }
 
-export function DepthOfField({ bokeh, focalLength }: DepthOfFieldProps) {
+export function DepthOfField({ bokeh, focalLength, focus }: DepthOfFieldProps) {
   const camera = useThree((state) => state.camera);
   const scene = useThree((state) => state.scene);
   const { registerEffect } = useRenderPipeline();
@@ -59,6 +64,8 @@ export function DepthOfField({ bokeh, focalLength }: DepthOfFieldProps) {
       pointer: new Vector2(),
       principalPoint: new Vector3(),
       raycaster,
+      direction: new Vector3(),
+      focusPoint: new Vector3(),
     };
     resourcesRef.current = resources;
     const unregister = registerEffect((input, sceneDepth) => {
@@ -88,7 +95,13 @@ export function DepthOfField({ bokeh, focalLength }: DepthOfFieldProps) {
     const resources = resourcesRef.current;
     if (resources === null || !(camera instanceof PerspectiveCamera)) return;
     const now = performance.now();
-    if (now - resources.lastAutofocusTime >= 50) {
+    if (focus.kind === "scene_point") {
+      const distance = resources.focusPoint
+        .fromArray(focus.position)
+        .sub(camera.position)
+        .dot(camera.getWorldDirection(resources.direction));
+      if (distance > camera.near) resources.focusTargetDistance = distance;
+    } else if (now - resources.lastAutofocusTime >= 50) {
       resources.lastAutofocusTime = now;
       scene.updateMatrixWorld(true);
       const principalPoint = getCameraForwardNdc(

@@ -22,6 +22,7 @@
   --ring: oklch(0.62 0.13 48);
   --chart-speed: #4563ff;
   --chart-aim: #13a4a8;
+  --chart-dof: #22a55b;
   --chart-orientation: #8b5cf6;
   --chart-grid: color-mix(in oklab, var(--foreground) 11%, transparent);
   --scene-background: #ebe9e5;
@@ -52,6 +53,7 @@
   --ring: oklch(0.68 0.13 50);
   --chart-speed: #6f83ff;
   --chart-aim: #27b8bb;
+  --chart-dof: #36c878;
   --chart-orientation: #a78bfa;
   --chart-grid: color-mix(in oklab, var(--foreground) 13%, transparent);
   --scene-background: #0c1017;

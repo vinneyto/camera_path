@@ -11,12 +11,15 @@ from camera_path.models import (
     CameraKeyframe,
     CameraOrientation,
     CameraOrientationKeyframe,
+    CenterWeightedDepthOfFieldFocus,
     ChatHistoryMessage,
     ChatResult,
+    DepthOfFieldKeyframe,
     FollowPathAim,
     LookAtPointAim,
     Project,
     ScenePoint,
+    ScenePointDepthOfFieldFocus,
     SpeedKeyframe,
     SpiralSegment,
     SplineSegment,
@@ -29,14 +32,16 @@ Use only supplied deterministic tools and never invent ids. Inspect project stat
 Path positions are normalized arc length: 0 is the start and 1 is the end.
 Speed keyframes contain metres-per-second values. smoothstep and linear interpolate to the next
 key; hold keeps the current value and jumps at the next key.
-Camera keyframes either follow the path tangent or look at a scene point. Every trajectory has a
-real camera aim keyframe at path position 0, including the initial follow-path behavior. The
-runtime blends the two resulting view directions between neighboring keys. Scene points are
-independent of path anchors. A look-at target for the whole trajectory updates that start key;
-the key remains in effect to the end unless a later key replaces it. Camera orientation adds local
+Camera keyframes either follow the path tangent or look at a scene point. With no aim keys the
+camera follows the path forward. The runtime blends the two resulting view directions between
+neighboring keys. Scene points are independent of path anchors. Camera orientation adds local
 yaw (around local up), pitch (around local right), then
 roll (around the view axis) on top of that base aim frame. Angles are unwrapped degrees, so a
-0-to-360 transition is a full turn. Prefer incremental create/update/delete operations; do not
+0-to-360 transition is a full turn; with no orientation keys all three offsets are zero.
+Depth-of-field keys select either center-weighted nine-ray autofocus or a concrete scene point.
+With no depth-of-field keys the effect is disabled. With one key its focus mode applies across the
+whole trajectory; multiple keys switch focus mode at their path positions. Prefer incremental
+create/update/delete operations; do not
 clear unrelated user work.
 Explain every resulting change briefly after the tools finish."""
 
@@ -58,7 +63,7 @@ TOOLS: list[dict[str, Any]] = [
         "type": "function",
         "name": "get_project_state",
         "description": (
-            "Read anchors, segments, scene points, speed keys, camera aim and orientation keys."
+            "Read anchors, segments, scene points, speed, aim, orientation and depth-of-field keys."
         ),
         "parameters": _object({}, []),
         "strict": True,
@@ -68,40 +73,6 @@ TOOLS: list[dict[str, Any]] = [
         "name": "set_default_speed",
         "description": "Set the constant baseline speed in metres per second.",
         "parameters": _object({"speed": {"type": "number", "exclusiveMinimum": 0}}, ["speed"]),
-        "strict": True,
-    },
-    {
-        "type": "function",
-        "name": "set_default_camera_aim",
-        "description": (
-            "Update the real camera aim keyframe at path position 0 for behavior used from the "
-            "start of the trajectory."
-        ),
-        "parameters": _object(
-            {
-                "aim_kind": {"type": "string", "enum": ["follow_path", "look_at_point"]},
-                "scene_point_id": {"type": ["string", "null"]},
-                "direction": {
-                    "type": ["string", "null"],
-                    "enum": ["forward", "backward", None],
-                },
-            },
-            ["aim_kind", "scene_point_id", "direction"],
-        ),
-        "strict": True,
-    },
-    {
-        "type": "function",
-        "name": "set_default_camera_orientation",
-        "description": "Set baseline local yaw, pitch and roll offsets in unwrapped degrees.",
-        "parameters": _object(
-            {
-                "yaw_deg": {"type": "number"},
-                "pitch_deg": {"type": "number"},
-                "roll_deg": {"type": "number"},
-            },
-            ["yaw_deg", "pitch_deg", "roll_deg"],
-        ),
         "strict": True,
     },
     {
@@ -350,6 +321,53 @@ TOOLS: list[dict[str, Any]] = [
         "parameters": ID_PARAMETERS,
         "strict": True,
     },
+    {
+        "type": "function",
+        "name": "create_depth_of_field_keyframe",
+        "description": (
+            "Enable depth of field or add a focus change. Use center_weighted_9 for nine-ray "
+            "autofocus, or scene_point for a fixed scene target."
+        ),
+        "parameters": _object(
+            {
+                "path_position": {"type": "number", "minimum": 0, "maximum": 1},
+                "focus_kind": {
+                    "type": "string",
+                    "enum": ["center_weighted_9", "scene_point"],
+                },
+                "scene_point_id": {"type": ["string", "null"]},
+            },
+            ["path_position", "focus_kind", "scene_point_id"],
+        ),
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "update_depth_of_field_keyframe",
+        "description": "Move or change one depth-of-field focus key.",
+        "parameters": _object(
+            {
+                "id": {"type": "string"},
+                "path_position": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+                "focus_kind": {
+                    "type": ["string", "null"],
+                    "enum": ["center_weighted_9", "scene_point", None],
+                },
+                "scene_point_id": {"type": ["string", "null"]},
+            },
+            ["id", "path_position", "focus_kind", "scene_point_id"],
+        ),
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "delete_depth_of_field_keyframe",
+        "description": (
+            "Delete one depth-of-field key. Deleting the last key disables the effect."
+        ),
+        "parameters": ID_PARAMETERS,
+        "strict": True,
+    },
 ]
 
 
@@ -482,6 +500,16 @@ class TrajectoryAgent:
             return LookAtPointAim(scene_point_id=arguments["scene_point_id"])
         return FollowPathAim(direction=arguments.get("direction") or "forward")
 
+    @staticmethod
+    def _depth_of_field_focus(
+        arguments: dict[str, Any],
+    ) -> CenterWeightedDepthOfFieldFocus | ScenePointDepthOfFieldFocus:
+        if arguments["focus_kind"] == "scene_point":
+            if not arguments.get("scene_point_id"):
+                raise ValueError("scene_point_id is required for scene_point focus")
+            return ScenePointDepthOfFieldFocus(scene_point_id=arguments["scene_point_id"])
+        return CenterWeightedDepthOfFieldFocus()
+
     @classmethod
     def _execute(cls, draft: Project, name: str, arguments: dict[str, Any]) -> Any:
         if name == "get_project_state":
@@ -495,12 +523,6 @@ class TrajectoryAgent:
         if name == "set_default_speed":
             draft.motion_profile.default_speed = arguments["speed"]
             item = draft.motion_profile
-        elif name == "set_default_camera_aim":
-            aim = cls._aim(arguments)
-            item = draft.camera_track.set_start_aim(aim)
-        elif name == "set_default_camera_orientation":
-            draft.camera_track.default_orientation = CameraOrientation(**arguments)
-            item = draft.camera_track.default_orientation
         elif name == "create_spline":
             item = SplineSegment(**arguments)
             draft.segments.append(item)
@@ -529,18 +551,12 @@ class TrajectoryAgent:
             )
         elif name == "create_camera_keyframe":
             aim = cls._aim(arguments)
-            if arguments["path_position"] == 0:
-                item = draft.camera_track.set_start_aim(
-                    aim,
-                    arguments["interpolation_to_next"],
-                )
-            else:
-                item = CameraKeyframe(
-                    path_position=arguments["path_position"],
-                    aim=aim,
-                    interpolation_to_next=arguments["interpolation_to_next"],
-                )
-                draft.camera_track.keyframes[item.id] = item
+            item = CameraKeyframe(
+                path_position=arguments["path_position"],
+                aim=aim,
+                interpolation_to_next=arguments["interpolation_to_next"],
+            )
+            draft.camera_track.keyframes[item.id] = item
         elif name == "update_camera_keyframe":
             patch = {
                 key: value
@@ -554,12 +570,10 @@ class TrajectoryAgent:
                 {"id": arguments["id"], **patch},
                 "camera keyframe",
             )
-            draft.camera_track.ensure_start_aim()
         elif name == "delete_camera_keyframe":
             item = cls._delete_dict_item(
                 draft.camera_track.keyframes, arguments["id"], "camera keyframe"
             )
-            draft.camera_track.ensure_start_aim()
         elif name == "create_camera_orientation_keyframe":
             item = CameraOrientationKeyframe(
                 path_position=arguments["path_position"],
@@ -600,6 +614,31 @@ class TrajectoryAgent:
                 draft.camera_track.orientation_keyframes,
                 arguments["id"],
                 "camera orientation keyframe",
+            )
+        elif name == "create_depth_of_field_keyframe":
+            item = DepthOfFieldKeyframe(
+                path_position=arguments["path_position"],
+                focus=cls._depth_of_field_focus(arguments),
+            )
+            draft.camera_track.depth_of_field_keyframes[item.id] = item
+        elif name == "update_depth_of_field_keyframe":
+            patch = {
+                key: value
+                for key, value in arguments.items()
+                if key == "path_position" and value is not None
+            }
+            if arguments["focus_kind"] is not None:
+                patch["focus"] = cls._depth_of_field_focus(arguments)
+            item = cls._update_dict_item(
+                draft.camera_track.depth_of_field_keyframes,
+                {"id": arguments["id"], **patch},
+                "depth of field keyframe",
+            )
+        elif name == "delete_depth_of_field_keyframe":
+            item = cls._delete_dict_item(
+                draft.camera_track.depth_of_field_keyframes,
+                arguments["id"],
+                "depth of field keyframe",
             )
         else:
             raise ValueError(f"unknown tool: {name}")
@@ -645,9 +684,20 @@ class TrajectoryAgent:
             for item in draft.camera_track.keyframes.values()
             if isinstance(item.aim, LookAtPointAim) and item.aim.scene_point_id == item_id
         ]
-        if references and not cascade:
-            raise ValueError(f"scene point {item_id} is used by camera keyframes {references}")
+        depth_of_field_references = [
+            item.id
+            for item in draft.camera_track.depth_of_field_keyframes.values()
+            if isinstance(item.focus, ScenePointDepthOfFieldFocus)
+            and item.focus.scene_point_id == item_id
+        ]
+        all_references = references + depth_of_field_references
+        if all_references and not cascade:
+            raise ValueError(
+                f"scene point {item_id} is used by camera or depth of field keyframes "
+                f"{all_references}"
+            )
         for keyframe_id in references:
             del draft.camera_track.keyframes[keyframe_id]
-        draft.camera_track.ensure_start_aim()
+        for keyframe_id in depth_of_field_references:
+            del draft.camera_track.depth_of_field_keyframes[keyframe_id]
         return draft.scene_points.pop(item_id)

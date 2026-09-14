@@ -4,8 +4,9 @@ import type {
   CameraOrientation,
   CameraOrientationKeyframeCreate,
   CameraOrientationKeyframeUpdate,
+  DepthOfFieldKeyframeCreate,
+  DepthOfFieldKeyframeUpdate,
   Project,
-  ProjectSettings,
 } from "@/entities/project/model/types";
 import type {
   ChatResult,
@@ -23,11 +24,6 @@ export const projectApi = {
     }),
   delete: (projectId: string) =>
     apiRequest<void>(`/projects/${projectId}`, { method: "DELETE" }),
-  updateSettings: (projectId: string, settings: ProjectSettings) =>
-    apiRequest<Project>(`/projects/${projectId}/settings`, {
-      method: "PUT",
-      body: JSON.stringify(settings),
-    }),
   addAnchor: (projectId: string, anchor: AnchorCreate) =>
     apiRequest<Project>(`/projects/${projectId}/anchors`, {
       method: "POST",
@@ -83,6 +79,28 @@ export const projectApi = {
   deleteCameraOrientationKeyframe: (projectId: string, keyframeId: string) =>
     apiRequest<Project>(
       `/projects/${projectId}/camera/orientation/keyframes/${keyframeId}`,
+      { method: "DELETE" },
+    ),
+  addDepthOfFieldKeyframe: (
+    projectId: string,
+    keyframe: DepthOfFieldKeyframeCreate,
+  ) =>
+    apiRequest<Project>(
+      `/projects/${projectId}/camera/depth-of-field/keyframes`,
+      { method: "POST", body: JSON.stringify(keyframe) },
+    ),
+  updateDepthOfFieldKeyframe: (
+    projectId: string,
+    keyframeId: string,
+    keyframe: DepthOfFieldKeyframeUpdate,
+  ) =>
+    apiRequest<Project>(
+      `/projects/${projectId}/camera/depth-of-field/keyframes/${keyframeId}`,
+      { method: "PATCH", body: JSON.stringify(keyframe) },
+    ),
+  deleteDepthOfFieldKeyframe: (projectId: string, keyframeId: string) =>
+    apiRequest<Project>(
+      `/projects/${projectId}/camera/depth-of-field/keyframes/${keyframeId}`,
       { method: "DELETE" },
     ),
   clearTrajectory: (projectId: string) =>

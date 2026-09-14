@@ -2,12 +2,13 @@
 
 import { X } from "lucide-react";
 
-import type { DepthOfFieldEffect, Project } from "@/entities/project";
+import type { Project } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { Button } from "@/shared/ui";
 
 import { createAimTrack } from "../lib/create-aim-track";
 import { createOrientationTrack } from "../lib/create-orientation-track";
+import { createDepthOfFieldTrack } from "../lib/create-depth-of-field-track";
 import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
 import { RenderEffectsControl } from "./render-effects-control";
@@ -16,32 +17,32 @@ interface TrajectoryInspectorProps {
   deletingAimKeyframeId?: string;
   deletingOrientationKeyframeId?: string;
   deletingSpeedKeyframeId?: string;
+  deletingDepthOfFieldKeyframeId?: string;
   onDeleteAimKeyframe: (keyframeId: string) => void;
   onDeleteOrientationKeyframe: (keyframeId: string) => void;
   onDeleteSpeedKeyframe: (keyframeId: string) => void;
+  onDeleteDepthOfFieldKeyframe: (keyframeId: string) => void;
   onScrub: (pathPosition: number) => void;
   pathPosition: number;
   project: Project;
   trajectory: CompiledTrajectory;
   onClose: () => void;
-  depthOfField: DepthOfFieldEffect | null;
   effectsPending?: boolean;
   onAddDepthOfField: () => void;
-  onRemoveDepthOfField: () => void;
 }
 
 export function TrajectoryInspector({
   deletingAimKeyframeId,
   deletingOrientationKeyframeId,
   deletingSpeedKeyframeId,
-  depthOfField,
+  deletingDepthOfFieldKeyframeId,
   effectsPending,
   onAddDepthOfField,
   onClose,
   onDeleteAimKeyframe,
   onDeleteOrientationKeyframe,
   onDeleteSpeedKeyframe,
-  onRemoveDepthOfField,
+  onDeleteDepthOfFieldKeyframe,
   onScrub,
   pathPosition,
   project,
@@ -59,7 +60,13 @@ export function TrajectoryInspector({
       onDeleteKeyframe: onDeleteOrientationKeyframe,
       trajectory,
     }),
-  ];
+    createDepthOfFieldTrack({
+      deletingKeyframeId: deletingDepthOfFieldKeyframeId,
+      onDeleteKeyframe: onDeleteDepthOfFieldKeyframe,
+      project,
+      trajectory,
+    }),
+  ].filter((track) => track.keyframes.length > 0);
 
   return (
     <section className="border-t bg-muted/35 p-2">
@@ -72,10 +79,11 @@ export function TrajectoryInspector({
         </div>
         <div className="flex items-center gap-1.5">
           <RenderEffectsControl
-            depthOfField={depthOfField}
             disabled={effectsPending}
+            hasDepthOfField={
+              trajectory.camera_track.depth_of_field_keyframes.length > 0
+            }
             onAddDepthOfField={onAddDepthOfField}
-            onRemoveDepthOfField={onRemoveDepthOfField}
           />
           <Button
             aria-label="Close trajectory panels"
@@ -94,11 +102,13 @@ export function TrajectoryInspector({
           pathPosition={pathPosition}
           trajectory={trajectory}
         />
-        <TimelineStack
-          onScrub={onScrub}
-          pathPosition={pathPosition}
-          tracks={keyframeTracks}
-        />
+        {keyframeTracks.length > 0 && (
+          <TimelineStack
+            onScrub={onScrub}
+            pathPosition={pathPosition}
+            tracks={keyframeTracks}
+          />
+        )}
       </div>
     </section>
   );
