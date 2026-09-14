@@ -62,6 +62,7 @@ describe("TileGaussianRenderingBackend pass", () => {
       expect.anything(),
       {
         background: [0, 0, 0, 0],
+        depthAlphaThreshold: 0.95,
         outputDepth: false,
         redrawStrategy: "auto",
       },
@@ -111,6 +112,9 @@ describe("TileGaussianRenderingBackend pass", () => {
     expect(
       gaussianPassMock.mock.calls.map((call) => call[3]?.outputDepth),
     ).toEqual([false, true, false]);
+    expect(
+      gaussianPassMock.mock.calls.map((call) => call[3]?.depthAlphaThreshold),
+    ).toEqual([0.95, 0.95, 0.95]);
     expect(registerLayer).toHaveBeenNthCalledWith(1, passes[0], {
       order: -100,
     });

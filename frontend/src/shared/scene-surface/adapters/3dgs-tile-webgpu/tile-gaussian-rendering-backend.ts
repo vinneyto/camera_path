@@ -171,6 +171,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
     const pass = gaussianPass(renderer, camera, this.store, {
       background: [0, 0, 0, 0],
+      depthAlphaThreshold: 0.95,
       outputDepth: this.depthEnabled,
       redrawStrategy: "auto",
     });
