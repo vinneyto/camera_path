@@ -86,10 +86,13 @@ export function SceneContents({
   const depthOfFieldFocus = trajectory
     ? evaluateDepthOfFieldFocus(trajectory, pathPosition)
     : null;
+  const depthOfFieldTimelinePresent = Boolean(
+    trajectory?.camera_track.depth_of_field_keyframes.length,
+  );
   const depthOfFieldEnabled =
     depthOfFieldSupported &&
     cameraMode === "trajectory" &&
-    depthOfFieldFocus !== null;
+    depthOfFieldTimelinePresent;
   const renderingBackend = useGaussianRenderingBackend(
     background,
     gaussianDprMode,
@@ -142,15 +145,6 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
-      {depthOfFieldEnabled &&
-        depthOfFieldFocus !== null &&
-        surfaceRadius !== null && (
-          <DepthOfField
-            bokeh={6}
-            focalLength={Math.max(surfaceRadius * 0.25, 0.001)}
-            focus={depthOfFieldFocus}
-          />
-        )}
       <SceneSurface
         name="Mug Gaussian cloud"
         onError={onSurfaceError}
@@ -246,10 +240,19 @@ export function SceneContents({
           target={orbitTarget}
         />
       ) : trajectoryAvailable && trajectory ? (
-        <TrajectoryCameraControl
-          pathPosition={pathPosition}
-          trajectory={trajectory}
-        />
+        <>
+          <TrajectoryCameraControl
+            pathPosition={pathPosition}
+            trajectory={trajectory}
+          />
+          {depthOfFieldEnabled && depthOfFieldFocus !== null && (
+            <DepthOfField
+              bokeh={6}
+              focalLength={Math.max((surfaceRadius ?? 1) * 0.25, 0.001)}
+              focus={depthOfFieldFocus}
+            />
+          )}
+        </>
       ) : null}
     </SceneSurfaceProvider>
   );
