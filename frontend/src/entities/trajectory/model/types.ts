@@ -29,6 +29,8 @@ export interface CompiledDepthOfFieldKeyframe {
   id: string;
   path_position: number;
   focus: ResolvedDepthOfFieldFocus;
+  focus_range_scale: number;
+  bokeh_scale: number;
 }
 
 export interface CubicBezier3D {

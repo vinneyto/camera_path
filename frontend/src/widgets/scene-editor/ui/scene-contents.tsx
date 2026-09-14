@@ -5,7 +5,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
 import {
-  evaluateDepthOfFieldFocus,
+  evaluateDepthOfFieldKeyframe,
   type CompiledTrajectory,
 } from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
@@ -83,9 +83,10 @@ export function SceneContents({
   const gaussianDprMode = useGaussianRenderingSettingsStore(
     (state) => state.dprMode,
   );
-  const depthOfFieldFocus = trajectory
-    ? evaluateDepthOfFieldFocus(trajectory, pathPosition)
+  const depthOfFieldKeyframe = trajectory
+    ? evaluateDepthOfFieldKeyframe(trajectory, pathPosition)
     : null;
+  const depthOfFieldFocus = depthOfFieldKeyframe?.focus ?? null;
   const depthOfFieldTimelinePresent = Boolean(
     trajectory?.camera_track.depth_of_field_keyframes.length,
   );
@@ -245,11 +246,14 @@ export function SceneContents({
             pathPosition={pathPosition}
             trajectory={trajectory}
           />
-          {depthOfFieldEnabled && depthOfFieldFocus !== null && (
+          {depthOfFieldEnabled && depthOfFieldKeyframe !== null && (
             <DepthOfField
-              bokeh={6}
-              focalLength={Math.max((surfaceRadius ?? 1) * 0.25, 0.001)}
-              focus={depthOfFieldFocus}
+              bokeh={depthOfFieldKeyframe.bokeh_scale}
+              focalLength={Math.max(
+                (surfaceRadius ?? 1) * depthOfFieldKeyframe.focus_range_scale,
+                0.001,
+              )}
+              focus={depthOfFieldKeyframe.focus}
             />
           )}
         </>

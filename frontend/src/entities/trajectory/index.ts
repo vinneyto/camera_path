@@ -1,7 +1,7 @@
 export { createPlaybackTable } from "./lib/create-playback-table";
 export { evaluateAim } from "./lib/evaluate-aim";
 export { evaluateCameraOrientation } from "./lib/evaluate-camera-orientation";
-export { evaluateDepthOfFieldFocus } from "./lib/evaluate-depth-of-field-focus";
+export { evaluateDepthOfFieldKeyframe } from "./lib/evaluate-depth-of-field-keyframe";
 export { evaluateTrajectoryCameraPose } from "./lib/evaluate-trajectory-camera-pose";
 export type { TrajectoryCameraPose } from "./lib/evaluate-trajectory-camera-pose";
 export { evaluateSpeed } from "./lib/evaluate-speed";

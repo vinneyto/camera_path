@@ -167,7 +167,10 @@ def test_depth_of_field_track_resolves_scene_point_position() -> None:
 
     compiled = compile_project(project)
 
-    assert compiled.camera_track.depth_of_field_keyframes[0].focus.position == point.position
+    compiled_key = compiled.camera_track.depth_of_field_keyframes[0]
+    assert compiled_key.focus.position == point.position
+    assert compiled_key.focus_range_scale == 0.25
+    assert compiled_key.bokeh_scale == 6
 
 
 def test_camera_orientation_track_compiles_sorted_and_unwrapped() -> None:

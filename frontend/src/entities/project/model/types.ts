@@ -83,16 +83,22 @@ export interface DepthOfFieldKeyframe {
   id: string;
   path_position: number;
   focus: DepthOfFieldFocus;
+  focus_range_scale: number;
+  bokeh_scale: number;
 }
 
 export interface DepthOfFieldKeyframeCreate {
   path_position: number;
   focus: DepthOfFieldFocus;
+  focus_range_scale?: number;
+  bokeh_scale?: number;
 }
 
 export interface DepthOfFieldKeyframeUpdate {
   path_position?: number;
   focus?: DepthOfFieldFocus;
+  focus_range_scale?: number;
+  bokeh_scale?: number;
 }
 
 export interface ChatHistoryMessage {

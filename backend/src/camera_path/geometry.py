@@ -496,6 +496,8 @@ def compile_project(project: Project, tolerance: float = 1e-3) -> CompiledTrajec
                     id=item.id,
                     path_position=item.path_position,
                     focus=_resolve_depth_of_field_focus(project, item.focus),
+                    focus_range_scale=item.focus_range_scale,
+                    bokeh_scale=item.bokeh_scale,
                 )
                 for item in sorted(
                     project.camera_track.depth_of_field_keyframes.values(),

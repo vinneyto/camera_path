@@ -19,6 +19,8 @@ describe("createDepthOfFieldTrack", () => {
             id: "auto",
             path_position: 0,
             focus: { kind: "center_weighted_9" },
+            focus_range_scale: 0.25,
+            bokeh_scale: 6,
           },
           {
             id: "point",
@@ -28,6 +30,8 @@ describe("createDepthOfFieldTrack", () => {
               scene_point_id: "subject",
               position: [1, 2, 3],
             },
+            focus_range_scale: 0.1,
+            bokeh_scale: 12,
           },
         ],
       },
@@ -40,8 +44,8 @@ describe("createDepthOfFieldTrack", () => {
     });
 
     expect(track.keyframes.map((key) => key.tooltip)).toEqual([
-      "Nine-point autofocus",
-      "Focus on Subject",
+      "Nine-point autofocus · Focus range 25% · Bokeh 6",
+      "Focus on Subject · Focus range 10% · Bokeh 12",
     ]);
   });
 });

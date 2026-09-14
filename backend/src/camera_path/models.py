@@ -158,6 +158,8 @@ DepthOfFieldFocus = Annotated[
 class DepthOfFieldKeyframeCreate(BaseModel):
     path_position: float = Field(ge=0.0, le=1.0)
     focus: DepthOfFieldFocus = Field(default_factory=CenterWeightedDepthOfFieldFocus)
+    focus_range_scale: float = Field(default=0.25, gt=0.0)
+    bokeh_scale: float = Field(default=6.0, ge=0.0)
 
 
 class DepthOfFieldKeyframe(DepthOfFieldKeyframeCreate):
@@ -167,6 +169,8 @@ class DepthOfFieldKeyframe(DepthOfFieldKeyframeCreate):
 class DepthOfFieldKeyframeUpdate(BaseModel):
     path_position: float | None = Field(default=None, ge=0.0, le=1.0)
     focus: DepthOfFieldFocus | None = None
+    focus_range_scale: float | None = Field(default=None, gt=0.0)
+    bokeh_scale: float | None = Field(default=None, ge=0.0)
 
 
 class CameraTrack(BaseModel):
@@ -270,6 +274,8 @@ class CompiledDepthOfFieldKeyframe(BaseModel):
     id: str
     path_position: float
     focus: ResolvedDepthOfFieldFocus
+    focus_range_scale: float
+    bokeh_scale: float
 
 
 class CompiledCameraKeyframe(BaseModel):

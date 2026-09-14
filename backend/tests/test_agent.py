@@ -167,12 +167,34 @@ def test_agent_can_create_and_delete_depth_of_field_keys() -> None:
     created = TrajectoryAgent._execute(
         project,
         "create_depth_of_field_keyframe",
-        {"path_position": 0.4, "focus_kind": "center_weighted_9", "scene_point_id": None},
+        {
+            "path_position": 0.4,
+            "focus_kind": "center_weighted_9",
+            "scene_point_id": None,
+            "focus_range_scale": 0.1,
+            "bokeh_scale": 10,
+        },
     )
     keyframe_id = created["id"]
 
     assert project.camera_track.depth_of_field_keyframes[keyframe_id].focus.kind == (
         "center_weighted_9"
     )
+    assert project.camera_track.depth_of_field_keyframes[keyframe_id].focus_range_scale == 0.1
+    assert project.camera_track.depth_of_field_keyframes[keyframe_id].bokeh_scale == 10
+    TrajectoryAgent._execute(
+        project,
+        "update_depth_of_field_keyframe",
+        {
+            "id": keyframe_id,
+            "path_position": None,
+            "focus_kind": None,
+            "scene_point_id": None,
+            "focus_range_scale": 0.3,
+            "bokeh_scale": 3,
+        },
+    )
+    assert project.camera_track.depth_of_field_keyframes[keyframe_id].focus_range_scale == 0.3
+    assert project.camera_track.depth_of_field_keyframes[keyframe_id].bokeh_scale == 3
     TrajectoryAgent._execute(project, "delete_depth_of_field_keyframe", {"id": keyframe_id})
     assert project.camera_track.depth_of_field_keyframes == {}

@@ -326,7 +326,8 @@ TOOLS: list[dict[str, Any]] = [
         "name": "create_depth_of_field_keyframe",
         "description": (
             "Enable depth of field or add a focus change. Use center_weighted_9 for nine-ray "
-            "autofocus, or scene_point for a fixed scene target."
+            "autofocus, or scene_point for a fixed scene target. A smaller focus_range_scale "
+            "and a larger bokeh_scale produce a stronger effect."
         ),
         "parameters": _object(
             {
@@ -336,8 +337,24 @@ TOOLS: list[dict[str, Any]] = [
                     "enum": ["center_weighted_9", "scene_point"],
                 },
                 "scene_point_id": {"type": ["string", "null"]},
+                "focus_range_scale": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Sharp focus range relative to the scene radius; default 0.25.",
+                },
+                "bokeh_scale": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Artistic bokeh strength; default 6.",
+                },
             },
-            ["path_position", "focus_kind", "scene_point_id"],
+            [
+                "path_position",
+                "focus_kind",
+                "scene_point_id",
+                "focus_range_scale",
+                "bokeh_scale",
+            ],
         ),
         "strict": True,
     },
@@ -354,8 +371,23 @@ TOOLS: list[dict[str, Any]] = [
                     "enum": ["center_weighted_9", "scene_point", None],
                 },
                 "scene_point_id": {"type": ["string", "null"]},
+                "focus_range_scale": {
+                    "type": ["number", "null"],
+                    "exclusiveMinimum": 0,
+                },
+                "bokeh_scale": {
+                    "type": ["number", "null"],
+                    "minimum": 0,
+                },
             },
-            ["id", "path_position", "focus_kind", "scene_point_id"],
+            [
+                "id",
+                "path_position",
+                "focus_kind",
+                "scene_point_id",
+                "focus_range_scale",
+                "bokeh_scale",
+            ],
         ),
         "strict": True,
     },
@@ -619,13 +651,16 @@ class TrajectoryAgent:
             item = DepthOfFieldKeyframe(
                 path_position=arguments["path_position"],
                 focus=cls._depth_of_field_focus(arguments),
+                focus_range_scale=arguments["focus_range_scale"],
+                bokeh_scale=arguments["bokeh_scale"],
             )
             draft.camera_track.depth_of_field_keyframes[item.id] = item
         elif name == "update_depth_of_field_keyframe":
             patch = {
                 key: value
                 for key, value in arguments.items()
-                if key == "path_position" and value is not None
+                if key in {"path_position", "focus_range_scale", "bokeh_scale"}
+                and value is not None
             }
             if arguments["focus_kind"] is not None:
                 patch["focus"] = cls._depth_of_field_focus(arguments)

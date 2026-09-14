@@ -26,10 +26,16 @@ export function createDepthOfFieldTrack({
               "scene point"
             }`;
       return {
-        ariaLabel: `${label} at ${Math.round(keyframe.path_position * 100)}%`,
+        ariaLabel: `${label}, focus range ${Math.round(
+          keyframe.focus_range_scale * 100,
+        )}% of scene radius, bokeh ${keyframe.bokeh_scale}, at ${Math.round(
+          keyframe.path_position * 100,
+        )}%`,
         id: keyframe.id,
         pathPosition: keyframe.path_position,
-        tooltip: label,
+        tooltip: `${label} · Focus range ${Math.round(
+          keyframe.focus_range_scale * 100,
+        )}% · Bokeh ${keyframe.bokeh_scale}`,
       };
     },
   );

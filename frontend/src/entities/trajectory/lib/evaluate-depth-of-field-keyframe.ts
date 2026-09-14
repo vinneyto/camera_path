@@ -1,12 +1,12 @@
 import type {
+  CompiledDepthOfFieldKeyframe,
   CompiledTrajectory,
-  ResolvedDepthOfFieldFocus,
 } from "../model/types";
 
-export function evaluateDepthOfFieldFocus(
+export function evaluateDepthOfFieldKeyframe(
   trajectory: CompiledTrajectory,
   pathPosition: number,
-): ResolvedDepthOfFieldFocus | null {
+): CompiledDepthOfFieldKeyframe | null {
   const keyframes = trajectory.camera_track.depth_of_field_keyframes;
   if (keyframes.length === 0) return null;
 
@@ -16,5 +16,5 @@ export function evaluateDepthOfFieldFocus(
     if (keyframe.path_position > position) break;
     active = keyframe;
   }
-  return active.focus;
+  return active;
 }

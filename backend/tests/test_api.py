@@ -40,6 +40,8 @@ async def test_depth_of_field_timeline_is_persisted(app) -> None:
         keys = response.json()["camera_track"]["depth_of_field_keyframes"]
         keyframe_id = next(iter(keys))
         assert keys[keyframe_id]["focus"] == {"kind": "center_weighted_9"}
+        assert keys[keyframe_id]["focus_range_scale"] == 0.25
+        assert keys[keyframe_id]["bokeh_scale"] == 6
         point_project = (
             await client.post(
                 f"/projects/{project['id']}/scene-points",
@@ -52,6 +54,8 @@ async def test_depth_of_field_timeline_is_persisted(app) -> None:
             json={
                 "path_position": 0.5,
                 "focus": {"kind": "scene_point", "scene_point_id": point_id},
+                "focus_range_scale": 0.1,
+                "bokeh_scale": 12,
             },
         )
         assert updated.status_code == 200
@@ -64,6 +68,8 @@ async def test_depth_of_field_timeline_is_persisted(app) -> None:
             "scene_point_id": point_id,
             "position": [1.0, 2.0, 3.0],
         }
+        assert compiled["camera_track"]["depth_of_field_keyframes"][0]["focus_range_scale"] == 0.1
+        assert compiled["camera_track"]["depth_of_field_keyframes"][0]["bokeh_scale"] == 12
         reloaded = (await client.get(f"/projects/{project['id']}")).json()
         assert reloaded["camera_track"]["depth_of_field_keyframes"] == keys
 
