@@ -9,9 +9,8 @@ import { PerspectiveCamera, type Node } from "three/webgpu";
 
 import type { ResolvedDepthOfFieldFocus } from "@/entities/trajectory";
 
-import { CENTER_WEIGHTED_AUTOFOCUS_PATTERN } from "./center-weighted-autofocus-pattern";
-import { getCameraForwardNdc } from "./get-camera-forward-ndc";
 import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "./render-pipeline-scene-layers";
+import { forEachCenterWeightedAutofocusRay } from "./for-each-center-weighted-autofocus-ray";
 import { useRenderPipeline } from "./render-pipeline-provider";
 import { weightedMedianFocusDistance } from "./weighted-median-focus-distance";
 
@@ -104,24 +103,18 @@ export function DepthOfField({ bokeh, focalLength, focus }: DepthOfFieldProps) {
     } else if (now - resources.lastAutofocusTime >= 50) {
       resources.lastAutofocusTime = now;
       scene.updateMatrixWorld(true);
-      const principalPoint = getCameraForwardNdc(
+      const samples: Array<{ distance: number; weight: number }> = [];
+      forEachCenterWeightedAutofocusRay(
         camera,
-        resources.principalPoint,
+        resources.raycaster,
+        resources,
+        (raycaster, sample) => {
+          const hit = raycaster.intersectObjects(scene.children, true)[0];
+          if (hit !== undefined) {
+            samples.push({ distance: hit.distance, weight: sample.weight });
+          }
+        },
       );
-      const samples = CENTER_WEIGHTED_AUTOFOCUS_PATTERN.flatMap((sample) => {
-        resources.pointer.set(
-          principalPoint.x + sample.x,
-          principalPoint.y + sample.y,
-        );
-        resources.raycaster.setFromCamera(resources.pointer, camera);
-        const hit = resources.raycaster.intersectObjects(
-          scene.children,
-          true,
-        )[0];
-        return hit === undefined
-          ? []
-          : [{ distance: hit.distance, weight: sample.weight }];
-      });
       const distance = weightedMedianFocusDistance(samples);
       if (distance !== null) {
         const deadZone = Math.max(distance * 0.01, 0.0001);

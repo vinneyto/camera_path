@@ -1,5 +1,6 @@
 export { RenderPipelineCanvas } from "./render-pipeline-canvas";
 export { DepthOfField } from "./depth-of-field";
+export { forEachCenterWeightedAutofocusRay } from "./for-each-center-weighted-autofocus-ray";
 export {
   useOptionalRenderPipeline,
   useRenderPipeline,

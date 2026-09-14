@@ -28,6 +28,7 @@ import type { ContextMenuPosition } from "@/shared/ui";
 import { AnchorMarker } from "./anchor-marker";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
+import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { PlaybackCamera } from "./playback-camera";
@@ -44,6 +45,7 @@ interface SceneContentsProps {
   anchors: Anchor[];
   background: SceneSurfaceBackground;
   dark: boolean;
+  depthOfFieldSupported?: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
   onSurfaceError: (error: Error) => void;
   onSurfaceLoading: () => void;
@@ -61,6 +63,7 @@ export function SceneContents({
   anchors,
   background,
   dark,
+  depthOfFieldSupported = false,
   onAddAnchor,
   onSurfaceError,
   onSurfaceLoading,
@@ -83,10 +86,14 @@ export function SceneContents({
   const depthOfFieldFocus = trajectory
     ? evaluateDepthOfFieldFocus(trajectory, pathPosition)
     : null;
+  const depthOfFieldEnabled =
+    depthOfFieldSupported &&
+    cameraMode === "trajectory" &&
+    depthOfFieldFocus !== null;
   const renderingBackend = useGaussianRenderingBackend(
     background,
     gaussianDprMode,
-    depthOfFieldFocus !== null,
+    depthOfFieldEnabled,
     GAUSSIAN_CLOUD_LAYERS,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
@@ -135,13 +142,15 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
-      {depthOfFieldFocus !== null && surfaceRadius !== null && (
-        <DepthOfField
-          bokeh={6}
-          focalLength={Math.max(surfaceRadius * 0.25, 0.001)}
-          focus={depthOfFieldFocus}
-        />
-      )}
+      {depthOfFieldEnabled &&
+        depthOfFieldFocus !== null &&
+        surfaceRadius !== null && (
+          <DepthOfField
+            bokeh={6}
+            focalLength={Math.max(surfaceRadius * 0.25, 0.001)}
+            focus={depthOfFieldFocus}
+          />
+        )}
       <SceneSurface
         name="Mug Gaussian cloud"
         onError={onSurfaceError}
@@ -211,7 +220,19 @@ export function SceneContents({
         />
       )}
       {editorVisible && trajectoryAvailable && trajectory && (
-        <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
+        <>
+          <PlaybackCamera pathPosition={pathPosition} trajectory={trajectory} />
+          {depthOfFieldSupported &&
+            depthOfFieldFocus !== null &&
+            surfaceRadius !== null && (
+              <DepthOfFieldFocusHelper
+                fallbackRayLength={surfaceRadius * 4}
+                focus={depthOfFieldFocus}
+                pathPosition={pathPosition}
+                trajectory={trajectory}
+              />
+            )}
+        </>
       )}
       {cameraMode === "orbit" ? (
         <OrbitControls

@@ -36,6 +36,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
             anchors={props.anchors}
             background={context.background}
             dark={context.dark}
+            depthOfFieldSupported
             onAddAnchor={props.onAddAnchor}
             onOpenAnchorMenu={context.onOpenAnchorMenu}
             onOpenTrajectoryMenu={context.onOpenTrajectoryMenu}

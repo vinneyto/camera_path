@@ -28,7 +28,7 @@ export function TrajectoryCameraControl({
     camera.quaternion.copy(pose.quaternion);
     camera.up.copy(pose.up);
     camera.updateMatrixWorld();
-  });
+  }, -1);
 
   return null;
 }
