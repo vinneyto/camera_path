@@ -3,11 +3,12 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { dof } from "three/addons/tsl/display/DepthOfFieldNode.js";
 import { useLayoutEffect, useRef } from "react";
-import { MathUtils, Raycaster, Vector2 } from "three";
+import { MathUtils, Raycaster, Vector2, Vector3 } from "three";
 import { perspectiveDepthToViewZ, uniform } from "three/tsl";
 import { PerspectiveCamera, type Node } from "three/webgpu";
 
 import { CENTER_WEIGHTED_AUTOFOCUS_PATTERN } from "./center-weighted-autofocus-pattern";
+import { getCameraForwardNdc } from "./get-camera-forward-ndc";
 import { RENDER_PIPELINE_SCENE_LAYER } from "./render-pipeline-scene-layers";
 import { useRenderPipeline } from "./render-pipeline-provider";
 import { weightedMedianFocusDistance } from "./weighted-median-focus-distance";
@@ -31,6 +32,7 @@ interface DepthOfFieldResources {
   lastAutofocusTime: number;
   outputNodes: DisposableDepthOfFieldNode[];
   pointer: Vector2;
+  principalPoint: Vector3;
   raycaster: Raycaster;
 }
 
@@ -56,6 +58,7 @@ export function DepthOfField({ bokeh }: DepthOfFieldProps) {
       lastAutofocusTime: -Infinity,
       outputNodes,
       pointer: new Vector2(),
+      principalPoint: new Vector3(),
       raycaster,
     };
     resourcesRef.current = resources;
@@ -88,8 +91,16 @@ export function DepthOfField({ bokeh }: DepthOfFieldProps) {
     const now = performance.now();
     if (now - resources.lastAutofocusTime >= 50) {
       resources.lastAutofocusTime = now;
+      scene.updateMatrixWorld(true);
+      const principalPoint = getCameraForwardNdc(
+        camera,
+        resources.principalPoint,
+      );
       const samples = CENTER_WEIGHTED_AUTOFOCUS_PATTERN.flatMap((sample) => {
-        resources.pointer.set(sample.x, sample.y);
+        resources.pointer.set(
+          principalPoint.x + sample.x,
+          principalPoint.y + sample.y,
+        );
         resources.raycaster.setFromCamera(resources.pointer, camera);
         const hit = resources.raycaster.intersectObjects(
           scene.children,
