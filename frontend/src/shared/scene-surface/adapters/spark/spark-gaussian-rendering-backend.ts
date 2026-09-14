@@ -11,9 +11,11 @@ import type {
   GaussianCloudSource,
   SceneSurfaceBackground,
 } from "../../model/scene-surface-types";
+import { enableAdditionalObjectLayers } from "../../model/enable-additional-object-layers";
 import { SparkGaussianCloudInstance } from "./spark-gaussian-cloud-instance";
 
 export interface SparkGaussianRenderingBackendOptions {
+  additionalCloudLayers?: readonly number[];
   renderer: WebGLRenderer;
 }
 
@@ -24,8 +26,13 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   private readonly previousAlpha: number;
   private readonly previousColor: Color;
   private readonly renderer: WebGLRenderer;
+  private readonly additionalCloudLayers: readonly number[];
 
-  constructor({ renderer }: SparkGaussianRenderingBackendOptions) {
+  constructor({
+    additionalCloudLayers = [],
+    renderer,
+  }: SparkGaussianRenderingBackendOptions) {
+    this.additionalCloudLayers = [...additionalCloudLayers];
     this.renderer = renderer;
     this.previousColor = renderer.getClearColor(new Color()).clone();
     this.previousAlpha = renderer.getClearAlpha();
@@ -57,6 +64,7 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
       options.name ??
       (source.kind === "buffer" ? source.name : undefined) ??
       "Scene surface";
+    enableAdditionalObjectLayers(mesh, this.additionalCloudLayers);
 
     try {
       await mesh.initialized;

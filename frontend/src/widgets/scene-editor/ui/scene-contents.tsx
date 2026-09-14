@@ -19,7 +19,7 @@ import {
   type SceneSurfaceBackground,
   useGaussianRenderingBackend,
 } from "@/shared/scene-surface";
-import { DepthOfField } from "@/shared/three";
+import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER, DepthOfField } from "@/shared/three";
 import type { ContextMenuPosition } from "@/shared/ui";
 
 import { AnchorMarker } from "./anchor-marker";
@@ -35,6 +35,7 @@ import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 
 const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
+const GAUSSIAN_CLOUD_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 
 interface SceneContentsProps {
   anchors: Anchor[];
@@ -82,6 +83,7 @@ export function SceneContents({
     background,
     gaussianDprMode,
     depthOfFieldBokeh !== undefined,
+    GAUSSIAN_CLOUD_LAYERS,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
   const heightEditing = useAnchorHeightEditing({
@@ -90,6 +92,7 @@ export function SceneContents({
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
+  const [surfaceRadius, setSurfaceRadius] = useState<number | null>(null);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
   useStopOrbitControlsInertia(
     orbitControlsRef,
@@ -106,8 +109,14 @@ export function SceneContents({
   }, [anchors, renderingBackend]);
 
   function handleSurfaceReady(surface: SceneSurfaceReady) {
+    setSurfaceRadius(surface.bounds.radius);
     frameSurface(camera, surface.bounds, setOrbitTarget);
     onSurfaceReady();
+  }
+
+  function handleSurfaceLoading() {
+    setSurfaceRadius(null);
+    onSurfaceLoading();
   }
 
   function handleOrbitEnd() {
@@ -122,14 +131,17 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
-      {depthOfFieldBokeh !== undefined && (
-        <DepthOfField bokeh={depthOfFieldBokeh} />
+      {depthOfFieldBokeh !== undefined && surfaceRadius !== null && (
+        <DepthOfField
+          bokeh={depthOfFieldBokeh}
+          focalLength={Math.max(surfaceRadius * 0.25, 0.001)}
+        />
       )}
       <SceneSurface
         name="Mug Gaussian cloud"
         onError={onSurfaceError}
         onReady={handleSurfaceReady}
-        onLoading={onSurfaceLoading}
+        onLoading={handleSurfaceLoading}
         raycastable={isGaussianSurfacePickActive(activeTool)}
         {...(editorVisible ? placement.surfaceEventProps : {})}
         source={SCENE_SURFACE_SOURCE}

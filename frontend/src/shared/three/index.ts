@@ -12,6 +12,7 @@ export type {
   SceneRenderPipeline,
 } from "./render-pipeline-types";
 export {
+  DEPTH_OF_FIELD_AUTOFOCUS_LAYER,
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
 } from "./render-pipeline-scene-layers";

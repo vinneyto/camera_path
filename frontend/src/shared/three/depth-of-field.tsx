@@ -9,12 +9,13 @@ import { PerspectiveCamera, type Node } from "three/webgpu";
 
 import { CENTER_WEIGHTED_AUTOFOCUS_PATTERN } from "./center-weighted-autofocus-pattern";
 import { getCameraForwardNdc } from "./get-camera-forward-ndc";
-import { RENDER_PIPELINE_SCENE_LAYER } from "./render-pipeline-scene-layers";
+import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "./render-pipeline-scene-layers";
 import { useRenderPipeline } from "./render-pipeline-provider";
 import { weightedMedianFocusDistance } from "./weighted-median-focus-distance";
 
 interface DepthOfFieldProps {
   bokeh: number;
+  focalLength: number;
 }
 
 interface DisposableDepthOfFieldNode extends Node<"vec4"> {
@@ -26,7 +27,6 @@ interface FloatUniformNode extends Node<"float"> {
 }
 
 interface DepthOfFieldResources {
-  focalLength: FloatUniformNode;
   focusDistance: FloatUniformNode;
   focusTargetDistance: number;
   lastAutofocusTime: number;
@@ -36,7 +36,7 @@ interface DepthOfFieldResources {
   raycaster: Raycaster;
 }
 
-export function DepthOfField({ bokeh }: DepthOfFieldProps) {
+export function DepthOfField({ bokeh, focalLength }: DepthOfFieldProps) {
   const camera = useThree((state) => state.camera);
   const scene = useThree((state) => state.scene);
   const { registerEffect } = useRenderPipeline();
@@ -47,12 +47,11 @@ export function DepthOfField({ bokeh }: DepthOfFieldProps) {
       throw new TypeError("Depth of field requires a PerspectiveCamera");
     }
     const focusDistance = uniform(1) as FloatUniformNode;
-    const focalLength = uniform(0.05) as FloatUniformNode;
+    const focalLengthNode = uniform(focalLength) as FloatUniformNode;
     const outputNodes: DisposableDepthOfFieldNode[] = [];
     const raycaster = new Raycaster();
-    raycaster.layers.set(RENDER_PIPELINE_SCENE_LAYER);
+    raycaster.layers.set(DEPTH_OF_FIELD_AUTOFOCUS_LAYER);
     const resources: DepthOfFieldResources = {
-      focalLength,
       focusDistance,
       focusTargetDistance: 1,
       lastAutofocusTime: -Infinity,
@@ -72,7 +71,7 @@ export function DepthOfField({ bokeh }: DepthOfFieldProps) {
         input,
         viewDepth,
         focusDistance,
-        focalLength,
+        focalLengthNode,
         bokeh,
       ) as unknown as DisposableDepthOfFieldNode;
       outputNodes.push(output);
@@ -83,7 +82,7 @@ export function DepthOfField({ bokeh }: DepthOfFieldProps) {
       unregister();
       for (const output of outputNodes) output.dispose();
     };
-  }, [bokeh, camera, registerEffect]);
+  }, [bokeh, camera, focalLength, registerEffect]);
 
   useFrame((_state, delta) => {
     const resources = resourcesRef.current;
@@ -115,7 +114,6 @@ export function DepthOfField({ bokeh }: DepthOfFieldProps) {
         const deadZone = Math.max(distance * 0.01, 0.0001);
         if (Math.abs(distance - resources.focusTargetDistance) > deadZone) {
           resources.focusTargetDistance = distance;
-          resources.focalLength.value = Math.max(distance * 0.05, 0.001);
         }
       }
     }
