@@ -20,7 +20,9 @@ export function AnchorReferencePicker({
           className="h-6 shrink-0 px-2 text-[10px]"
           key={anchor.id}
           onClick={() => onSelect(anchor)}
+          onPointerDown={(event) => event.preventDefault()}
           size="sm"
+          tabIndex={-1}
           type="button"
           variant="outline"
         >
