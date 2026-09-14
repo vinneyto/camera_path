@@ -39,8 +39,8 @@ export function ProjectScene({
   const {
     elementRef: trajectoryControlsRef,
     height: trajectoryControlsHeight,
-  } = useElementHeight(trajectoryControlsAvailable);
-  const bottomOverlayHeight = trajectoryControlsAvailable
+  } = useElementHeight(trajectoryControlsExpanded);
+  const bottomOverlayHeight = trajectoryControlsExpanded
     ? trajectoryControlsHeight + TRAJECTORY_CONTROLS_BOTTOM_INSET
     : 0;
 
