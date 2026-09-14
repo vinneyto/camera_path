@@ -79,6 +79,10 @@ export const projectApi = {
       `/projects/${projectId}/camera/orientation/keyframes/${keyframeId}`,
       { method: "DELETE" },
     ),
+  clearTrajectory: (projectId: string) =>
+    apiRequest<Project>(`/projects/${projectId}/trajectory`, {
+      method: "DELETE",
+    }),
   compile: (projectId: string) =>
     apiRequest<CompiledTrajectory>(
       `/projects/${projectId}/trajectory/compiled`,

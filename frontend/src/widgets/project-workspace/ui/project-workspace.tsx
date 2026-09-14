@@ -6,7 +6,13 @@ import {
   useCompiledTrajectoryQuery,
   useProjectQuery,
 } from "@/entities/project";
-import { TrajectoryPlaybackLoop } from "@/features/project-editor";
+import {
+  TrajectoryPlaybackLoop,
+  useHoveredTrajectory,
+  useTrajectoryPlayback,
+  useTrajectorySelection,
+} from "@/features/project-editor";
+import { useClearTrajectory } from "@/features/object-deletion";
 
 import { ChatPanelContainer } from "./chat-panel-container";
 import { ProjectHeader } from "./project-header";
@@ -25,7 +31,26 @@ export function ProjectWorkspace({
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const project = projectQuery.data;
   const trajectory = trajectoryQuery.data ?? null;
-  const queryError = projectQuery.error ?? trajectoryQuery.error;
+  const clearTrajectoryMutation = useClearTrajectory(projectId);
+  const { closeTrajectory } = useTrajectorySelection();
+  const { clearHoveredTrajectory } = useHoveredTrajectory();
+  const playback = useTrajectoryPlayback(trajectory);
+  const queryError =
+    projectQuery.error ??
+    trajectoryQuery.error ??
+    clearTrajectoryMutation.error;
+
+  async function clearTrajectory() {
+    if (clearTrajectoryMutation.isPending) return;
+    try {
+      await clearTrajectoryMutation.mutateAsync();
+      closeTrajectory();
+      clearHoveredTrajectory();
+      playback.reset();
+    } catch {
+      // The mutation exposes the error through the existing workspace error UI.
+    }
+  }
 
   if (projectQuery.isPending || trajectoryQuery.isPending) {
     return (
@@ -49,6 +74,8 @@ export function ProjectWorkspace({
       <div className="flex min-h-0 min-w-0 flex-col">
         <ProjectHeader project={project} />
         <ProjectScene
+          deletingTrajectory={clearTrajectoryMutation.isPending}
+          onDeleteTrajectory={() => void clearTrajectory()}
           project={project}
           projectId={projectId}
           rendererBackend={rendererBackend}

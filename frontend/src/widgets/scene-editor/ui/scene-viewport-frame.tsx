@@ -22,9 +22,15 @@ type SurfaceState =
   | { status: "ready" }
   | { status: "error"; message: string };
 
+type SceneContextMenu =
+  | (ContextMenuPosition & { anchor: Anchor; type: "anchor" })
+  | (ContextMenuPosition & { type: "trajectory" });
+
 export function SceneViewportFrame({
   available,
+  deletingTrajectory,
   onDeleteAnchor,
+  onDeleteTrajectory,
   renderScene,
   trajectoryAvailable,
   unavailableMessage = "This renderer is unavailable in this browser",
@@ -32,9 +38,7 @@ export function SceneViewportFrame({
   const { theme } = useTheme();
   const { cameraMode } = useCameraMode();
   const dark = theme === "dark";
-  const [anchorMenu, setAnchorMenu] = useState<
-    (ContextMenuPosition & { anchor: Anchor }) | null
-  >(null);
+  const [contextMenu, setContextMenu] = useState<SceneContextMenu | null>(null);
   const [surfaceState, setSurfaceState] = useState<SurfaceState>({
     status: "loading",
   });
@@ -57,7 +61,9 @@ export function SceneViewportFrame({
           background: dark ? DARK_BACKGROUND : LIGHT_BACKGROUND,
           dark,
           onOpenAnchorMenu: (anchor, position) =>
-            setAnchorMenu({ ...position, anchor }),
+            setContextMenu({ ...position, anchor, type: "anchor" }),
+          onOpenTrajectoryMenu: (position) =>
+            setContextMenu({ ...position, type: "trajectory" }),
           onSurfaceError: handleSurfaceError,
           onSurfaceLoading: handleSurfaceLoading,
           onSurfaceReady: handleSurfaceReady,
@@ -78,7 +84,9 @@ export function SceneViewportFrame({
         >
           <CameraModeToggle
             onModeChange={(mode) => {
-              if (mode === "trajectory") setAnchorMenu(null);
+              if (mode === "trajectory") {
+                setContextMenu(null);
+              }
             }}
             trajectoryAvailable={
               trajectoryAvailable && surfaceState.status === "ready"
@@ -89,18 +97,27 @@ export function SceneViewportFrame({
       {cameraMode === "orbit" && (
         <ContextMenu
           items={
-            anchorMenu
+            contextMenu?.type === "anchor"
               ? [
                   {
                     destructive: true,
-                    label: `Delete anchor ${anchorMenu.anchor.label}`,
-                    onSelect: () => onDeleteAnchor(anchorMenu.anchor),
+                    label: `Delete anchor ${contextMenu.anchor.label}`,
+                    onSelect: () => onDeleteAnchor(contextMenu.anchor),
                   },
                 ]
-              : []
+              : contextMenu?.type === "trajectory"
+                ? [
+                    {
+                      destructive: true,
+                      disabled: deletingTrajectory,
+                      label: "Delete trajectory",
+                      onSelect: onDeleteTrajectory,
+                    },
+                  ]
+                : []
           }
-          onClose={() => setAnchorMenu(null)}
-          position={anchorMenu}
+          onClose={() => setContextMenu(null)}
+          position={contextMenu}
         />
       )}
     </div>

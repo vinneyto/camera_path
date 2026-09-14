@@ -11,7 +11,9 @@ export function SceneViewport(props: SceneViewportProps) {
   return (
     <SceneViewportFrame
       available
+      deletingTrajectory={props.deletingTrajectory}
       onDeleteAnchor={props.onDeleteAnchor}
+      onDeleteTrajectory={props.onDeleteTrajectory}
       trajectoryAvailable={Boolean(props.trajectory?.position_segments.length)}
       renderScene={(context) => (
         <Canvas
@@ -27,6 +29,7 @@ export function SceneViewport(props: SceneViewportProps) {
             dark={context.dark}
             onAddAnchor={props.onAddAnchor}
             onOpenAnchorMenu={context.onOpenAnchorMenu}
+            onOpenTrajectoryMenu={context.onOpenTrajectoryMenu}
             onSelectTrajectory={props.onSelectTrajectory}
             onSurfaceError={context.onSurfaceError}
             onSurfaceLoading={context.onSurfaceLoading}

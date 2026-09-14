@@ -17,6 +17,8 @@ import { SceneViewport, SceneWebGpuViewport } from "@/widgets/scene-editor";
 
 interface SceneViewportContainerProps {
   bottomOverlayHeight: number;
+  deletingTrajectory: boolean;
+  onDeleteTrajectory: () => void;
   onSelectTrajectory: () => void;
   project: Project;
   projectId: string;
@@ -27,6 +29,8 @@ interface SceneViewportContainerProps {
 
 export function SceneViewportContainer({
   bottomOverlayHeight,
+  deletingTrajectory,
+  onDeleteTrajectory,
   onSelectTrajectory,
   project,
   projectId,
@@ -75,8 +79,10 @@ export function SceneViewportContainer({
       <Viewport
         anchors={anchors}
         bottomOverlayHeight={bottomOverlayHeight}
+        deletingTrajectory={deletingTrajectory}
         onAddAnchor={(position, normal) => void addAnchor(position, normal)}
         onDeleteAnchor={(anchor) => deleteAnchorMutation.mutate(anchor.id)}
+        onDeleteTrajectory={onDeleteTrajectory}
         onSelectTrajectory={onSelectTrajectory}
         onUpdateAnchorLift={updateAnchorLift}
         pathPosition={playback.pathPosition}
