@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import { WebGLRenderer } from "three";
 import { WebGPURenderer } from "three/webgpu";
 
@@ -16,6 +16,7 @@ import type { SceneSurfaceBackground } from "../model/scene-surface-types";
 export function useGaussianRenderingBackend(
   background: SceneSurfaceBackground,
   dprMode: GaussianDprMode = "1x",
+  depthEnabled = false,
 ): GaussianRenderingBackend {
   const renderer = useThree((state) => state.gl);
   const pipeline = useOptionalRenderPipeline();
@@ -41,6 +42,11 @@ export function useGaussianRenderingBackend(
       backend.setBackground(background);
     }
   }, [backend, background]);
+
+  useLayoutEffect(() => {
+    backend.setDepthEnabled?.(depthEnabled);
+    return () => backend.setDepthEnabled?.(false);
+  }, [backend, depthEnabled]);
 
   useFrame(() => {
     if (backend instanceof TileGaussianRenderingBackend) {

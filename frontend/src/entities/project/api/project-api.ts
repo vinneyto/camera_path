@@ -5,6 +5,7 @@ import type {
   CameraOrientationKeyframeCreate,
   CameraOrientationKeyframeUpdate,
   Project,
+  ProjectSettings,
 } from "@/entities/project/model/types";
 import type {
   ChatResult,
@@ -22,6 +23,11 @@ export const projectApi = {
     }),
   delete: (projectId: string) =>
     apiRequest<void>(`/projects/${projectId}`, { method: "DELETE" }),
+  updateSettings: (projectId: string, settings: ProjectSettings) =>
+    apiRequest<Project>(`/projects/${projectId}/settings`, {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    }),
   addAnchor: (projectId: string, anchor: AnchorCreate) =>
     apiRequest<Project>(`/projects/${projectId}/anchors`, {
       method: "POST",

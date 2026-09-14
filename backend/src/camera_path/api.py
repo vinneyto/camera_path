@@ -27,6 +27,7 @@ from camera_path.models import (
     MotionProfileUpdate,
     Project,
     ProjectCreate,
+    ProjectSettings,
     ProjectUpdate,
     ScenePointCreate,
     ScenePointUpdate,
@@ -81,6 +82,13 @@ async def get_project(project_id: str, service: Service) -> Project:
 @router.patch("/projects/{project_id}", response_model=Project)
 async def update_project(project_id: str, data: ProjectUpdate, service: Service) -> Project:
     return await service.update_project(project_id, data)
+
+
+@router.put("/projects/{project_id}/settings", response_model=Project)
+async def update_project_settings(
+    project_id: str, data: ProjectSettings, service: Service
+) -> Project:
+    return await service.update_project_settings(project_id, data)
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)

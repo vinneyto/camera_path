@@ -27,6 +27,41 @@ async def test_frontend_origin_is_allowed(app) -> None:
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
 
 
+async def test_project_effect_settings_are_persisted(app) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        project = (await client.post("/projects", json={"name": "DoF"})).json()
+
+        response = await client.put(
+            f"/projects/{project['id']}/settings",
+            json={
+                "effects": [
+                    {
+                        "kind": "depth_of_field",
+                        "autofocus": "center_weighted_9",
+                        "bokeh": 6,
+                    }
+                ]
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json()["settings"] == {
+            "effects": [
+                {
+                    "kind": "depth_of_field",
+                    "autofocus": "center_weighted_9",
+                    "bokeh": 6.0,
+                }
+            ]
+        }
+        reloaded = (await client.get(f"/projects/{project['id']}")).json()
+        assert reloaded["settings"] == response.json()["settings"]
+
+        disabled = await client.put(f"/projects/{project['id']}/settings", json={"effects": []})
+        assert disabled.status_code == 200
+        assert disabled.json()["settings"] == {"effects": []}
+
+
 async def test_project_edit_compile_and_undo(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/projects", json={"name": "Demo"})

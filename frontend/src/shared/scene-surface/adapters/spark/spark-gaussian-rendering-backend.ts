@@ -51,7 +51,7 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
       ...(source.kind === "url"
         ? { url: source.url }
         : { fileBytes: source.buffer, fileName: source.name }),
-      raycastable: options.raycastable ?? true,
+      raycastable: true,
     });
     mesh.name =
       options.name ??
@@ -85,6 +85,18 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   }
 
   invalidate(): void {}
+
+  isDepthEnabled(): boolean {
+    return false;
+  }
+
+  setDepthEnabled(enabled: boolean): void {
+    if (enabled) {
+      throw new Error(
+        "Depth output is unavailable in the Spark example backend",
+      );
+    }
+  }
 
   dispose(): void {
     if (this.disposed) return;

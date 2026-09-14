@@ -80,6 +80,11 @@ export function SceneViewportContainer({
         anchors={anchors}
         bottomOverlayHeight={bottomOverlayHeight}
         deletingTrajectory={deletingTrajectory}
+        depthOfField={
+          project.settings.effects.find(
+            (effect) => effect.kind === "depth_of_field",
+          ) ?? null
+        }
         onAddAnchor={(position, normal) => void addAnchor(position, normal)}
         onDeleteAnchor={(anchor) => deleteAnchorMutation.mutate(anchor.id)}
         onDeleteTrajectory={onDeleteTrajectory}

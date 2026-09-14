@@ -258,6 +258,16 @@ class ChatHistoryMessage(BaseModel):
     content: str
 
 
+class DepthOfFieldEffect(BaseModel):
+    kind: Literal["depth_of_field"] = "depth_of_field"
+    autofocus: Literal["center_weighted_9"] = "center_weighted_9"
+    bokeh: float = Field(default=6.0, ge=0.0, le=20.0)
+
+
+class ProjectSettings(BaseModel):
+    effects: list[DepthOfFieldEffect] = Field(default_factory=list)
+
+
 class Project(BaseModel):
     id: str = Field(default_factory=new_id)
     name: str = Field(default="Untitled camera path", min_length=1, max_length=128)
@@ -267,6 +277,7 @@ class Project(BaseModel):
     segments: list[TrajectorySegment] = Field(default_factory=list)
     camera_track: CameraTrack = Field(default_factory=CameraTrack)
     motion_profile: MotionProfile = Field(default_factory=MotionProfile)
+    settings: ProjectSettings = Field(default_factory=ProjectSettings)
     chat_history: list[ChatHistoryMessage] = Field(default_factory=list)
 
 

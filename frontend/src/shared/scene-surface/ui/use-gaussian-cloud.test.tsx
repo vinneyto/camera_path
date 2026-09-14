@@ -20,7 +20,6 @@ function createInstance(): GaussianCloudInstance {
     dispose: vi.fn(),
     getHit: vi.fn(),
     object: new Object3D(),
-    setRaycastable: vi.fn(),
   };
 }
 
@@ -37,7 +36,7 @@ function createWrapper(backend: GaussianRenderingBackend) {
 }
 
 describe("useGaussianCloud", () => {
-  it("shares the Strict Mode load and updates raycastability without recreating", async () => {
+  it("shares the Strict Mode load without recreating", async () => {
     const instance = createInstance();
     const backend: GaussianRenderingBackend = {
       container: null,
@@ -46,27 +45,19 @@ describe("useGaussianCloud", () => {
       dispose: vi.fn(),
       invalidate: vi.fn(),
     };
-    const { rerender, result } = renderHook(
-      ({ raycastable }) => useGaussianCloud({ raycastable, source }),
-      {
-        initialProps: { raycastable: false },
-        wrapper: createWrapper(backend),
-      },
-    );
+    const { result } = renderHook(() => useGaussianCloud({ source }), {
+      wrapper: createWrapper(backend),
+    });
 
     expect(result.current).toEqual([null, true, null]);
     await act(async () => {
       await Promise.resolve();
     });
-    rerender({ raycastable: true });
-
     expect(result.current).toEqual([instance, false, null]);
     expect(backend.createCloud).toHaveBeenCalledOnce();
     expect(backend.createCloud).toHaveBeenCalledWith(source, {
       name: undefined,
     });
-    expect(instance.setRaycastable).toHaveBeenNthCalledWith(1, false);
-    expect(instance.setRaycastable).toHaveBeenLastCalledWith(true);
   });
 
   it("reuses an in-flight load during the Strict Mode effect probe", async () => {
@@ -84,10 +75,9 @@ describe("useGaussianCloud", () => {
       dispose: vi.fn(),
       invalidate: vi.fn(),
     };
-    const { result, unmount } = renderHook(
-      () => useGaussianCloud({ raycastable: false, source }),
-      { wrapper: createWrapper(backend) },
-    );
+    const { result, unmount } = renderHook(() => useGaussianCloud({ source }), {
+      wrapper: createWrapper(backend),
+    });
 
     expect(backend.createCloud).toHaveBeenCalledOnce();
 
@@ -116,10 +106,9 @@ describe("useGaussianCloud", () => {
       dispose: vi.fn(),
       invalidate: vi.fn(),
     };
-    const { result } = renderHook(
-      () => useGaussianCloud({ raycastable: false, source }),
-      { wrapper: createWrapper(backend) },
-    );
+    const { result } = renderHook(() => useGaussianCloud({ source }), {
+      wrapper: createWrapper(backend),
+    });
 
     expect(result.current).toEqual([null, true, null]);
     await act(async () => {

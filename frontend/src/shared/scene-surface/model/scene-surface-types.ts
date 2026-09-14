@@ -35,6 +35,7 @@ export interface SceneSurfaceProps extends Omit<
   onSurfacePointerDown?: SceneSurfacePointerHandler;
   onSurfacePointerMove?: SceneSurfacePointerHandler;
   onSurfacePointerUp?: SceneSurfacePointerHandler;
+  /** Controls R3F pointer events; the object remains available to scene raycasts. */
   raycastable?: boolean;
   source: GaussianCloudSource;
 }

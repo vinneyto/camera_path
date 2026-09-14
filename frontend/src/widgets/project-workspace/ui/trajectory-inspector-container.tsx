@@ -3,6 +3,7 @@
 import type { Project } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { useTrajectoryPlayback } from "@/features/project-editor";
+import { useUpdateProjectSettings } from "@/features/project-settings";
 import {
   useDeleteCameraKeyframe,
   useDeleteCameraOrientationKeyframe,
@@ -24,6 +25,7 @@ export function TrajectoryInspectorContainer({
   trajectory,
 }: TrajectoryInspectorContainerProps) {
   const playback = useTrajectoryPlayback(trajectory);
+  const updateSettingsMutation = useUpdateProjectSettings(projectId);
   const deleteSpeedKeyframeMutation = useDeleteSpeedKeyframe(projectId);
   const deleteCameraKeyframeMutation = useDeleteCameraKeyframe(projectId);
   const deleteCameraOrientationKeyframeMutation =
@@ -44,6 +46,11 @@ export function TrajectoryInspectorContainer({
     deleteCameraOrientationKeyframeMutation.mutate(keyframeId);
   }
 
+  const depthOfField =
+    project.settings.effects.find(
+      (effect) => effect.kind === "depth_of_field",
+    ) ?? null;
+
   return (
     <TrajectoryInspector
       deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
@@ -51,10 +58,26 @@ export function TrajectoryInspectorContainer({
         deleteCameraOrientationKeyframeMutation.variables
       }
       deletingSpeedKeyframeId={deleteSpeedKeyframeMutation.variables}
+      depthOfField={depthOfField}
+      effectsPending={updateSettingsMutation.isPending}
+      onAddDepthOfField={() =>
+        updateSettingsMutation.mutate({
+          effects: [
+            {
+              kind: "depth_of_field",
+              autofocus: "center_weighted_9",
+              bokeh: 6,
+            },
+          ],
+        })
+      }
       onClose={onClose}
       onDeleteAimKeyframe={deleteCameraKeyframe}
       onDeleteOrientationKeyframe={deleteCameraOrientationKeyframe}
       onDeleteSpeedKeyframe={deleteSpeedKeyframe}
+      onRemoveDepthOfField={() =>
+        updateSettingsMutation.mutate({ effects: [] })
+      }
       onScrub={playback.seek}
       pathPosition={playback.pathPosition}
       project={project}

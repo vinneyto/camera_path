@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { Anchor, Vec3 } from "@/entities/project";
+import type { Anchor, DepthOfFieldEffect, Vec3 } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import type { SceneSurfaceBackground } from "@/shared/scene-surface";
 import type { ContextMenuPosition } from "@/shared/ui";
@@ -9,6 +9,7 @@ export interface SceneViewportProps {
   anchors: Anchor[];
   bottomOverlayHeight?: number;
   deletingTrajectory: boolean;
+  depthOfField?: DepthOfFieldEffect | null;
   pathPosition: number;
   selected: boolean;
   trajectory: CompiledTrajectory | null;

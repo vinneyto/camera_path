@@ -19,6 +19,7 @@ const project: Project = {
   motion_profile: { default_speed: 1, keyframes: {} },
   name: "Project",
   revision: 1,
+  settings: { effects: [] },
   scene_points: {
     target: { id: "target", label: "Subject", position: [0, 1, 0] },
   },

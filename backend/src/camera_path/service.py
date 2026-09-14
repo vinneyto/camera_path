@@ -22,6 +22,7 @@ from camera_path.models import (
     MotionProfileUpdate,
     Project,
     ProjectCreate,
+    ProjectSettings,
     ProjectUpdate,
     ScenePoint,
     ScenePointCreate,
@@ -59,6 +60,12 @@ class TrajectoryService:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         draft.name = data.name
+        return await self._commit(draft, expected)
+
+    async def update_project_settings(self, project_id: str, settings: ProjectSettings) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.settings = settings.model_copy(deep=True)
         return await self._commit(draft, expected)
 
     async def delete_project(self, project_id: str) -> None:

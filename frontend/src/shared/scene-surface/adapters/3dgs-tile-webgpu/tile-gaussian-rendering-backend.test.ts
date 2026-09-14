@@ -62,12 +62,66 @@ describe("TileGaussianRenderingBackend pass", () => {
       expect.anything(),
       {
         background: [0, 0, 0, 0],
+        outputDepth: false,
         redrawStrategy: "auto",
       },
     );
     expect(registerLayer).toHaveBeenCalledWith(pass, { order: -100 });
     backend.invalidate();
     expect(pass.invalidate).toHaveBeenCalledOnce();
+    backend.dispose();
+  });
+
+  it("contributes Gaussian depth only while depth output is enabled", () => {
+    gaussianPassMock.mockReset();
+    const depthNodes = [{}, {}, {}];
+    const passes = depthNodes.map((depth) => {
+      let resolutionScale = 1;
+      return {
+        depthSortMode: "float32",
+        dispose: vi.fn(),
+        getResolutionScale: () => resolutionScale,
+        getTextureNode: () => ({ r: depth }),
+        invalidate: vi.fn(),
+        setResolutionScale: (value: number) => {
+          resolutionScale = value;
+        },
+      } as unknown as GaussianPass;
+    });
+    gaussianPassMock
+      .mockReturnValueOnce(passes[0])
+      .mockReturnValueOnce(passes[1])
+      .mockReturnValueOnce(passes[2]);
+    const registerLayer = vi.fn(() => vi.fn());
+    const backend = new TileGaussianRenderingBackend({
+      camera: new PerspectiveCamera(),
+      getOpaqueViewDepth: vi.fn(() => ({})),
+      registerLayer,
+      renderer: { getPixelRatio: () => 1 } as unknown as WebGPURenderer,
+    } as unknown as SceneRenderPipeline);
+
+    (
+      backend as unknown as {
+        ensurePass(): void;
+      }
+    ).ensurePass();
+    backend.setDepthEnabled(true);
+    backend.setDepthEnabled(false);
+
+    expect(
+      gaussianPassMock.mock.calls.map((call) => call[3]?.outputDepth),
+    ).toEqual([false, true, false]);
+    expect(registerLayer).toHaveBeenNthCalledWith(1, passes[0], {
+      order: -100,
+    });
+    expect(registerLayer).toHaveBeenNthCalledWith(2, passes[1], {
+      depth: depthNodes[1],
+      order: -100,
+    });
+    expect(registerLayer).toHaveBeenNthCalledWith(3, passes[2], {
+      order: -100,
+    });
+    expect(backend.isDepthEnabled()).toBe(false);
     backend.dispose();
   });
 });

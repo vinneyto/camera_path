@@ -1,0 +1,120 @@
+"use client";
+
+import { useFrame, useThree } from "@react-three/fiber";
+import { dof } from "three/addons/tsl/display/DepthOfFieldNode.js";
+import { useLayoutEffect, useRef } from "react";
+import { MathUtils, Raycaster, Vector2 } from "three";
+import { perspectiveDepthToViewZ, uniform } from "three/tsl";
+import { PerspectiveCamera, type Node } from "three/webgpu";
+
+import { CENTER_WEIGHTED_AUTOFOCUS_PATTERN } from "./center-weighted-autofocus-pattern";
+import { RENDER_PIPELINE_SCENE_LAYER } from "./render-pipeline-scene-layers";
+import { useRenderPipeline } from "./render-pipeline-provider";
+import { weightedMedianFocusDistance } from "./weighted-median-focus-distance";
+
+interface DepthOfFieldProps {
+  bokeh: number;
+}
+
+interface DisposableDepthOfFieldNode extends Node<"vec4"> {
+  dispose(): void;
+}
+
+interface FloatUniformNode extends Node<"float"> {
+  value: number;
+}
+
+interface DepthOfFieldResources {
+  focalLength: FloatUniformNode;
+  focusDistance: FloatUniformNode;
+  focusTargetDistance: number;
+  lastAutofocusTime: number;
+  outputNodes: DisposableDepthOfFieldNode[];
+  pointer: Vector2;
+  raycaster: Raycaster;
+}
+
+export function DepthOfField({ bokeh }: DepthOfFieldProps) {
+  const camera = useThree((state) => state.camera);
+  const scene = useThree((state) => state.scene);
+  const { registerEffect } = useRenderPipeline();
+  const resourcesRef = useRef<DepthOfFieldResources | null>(null);
+
+  useLayoutEffect(() => {
+    if (!(camera instanceof PerspectiveCamera)) {
+      throw new TypeError("Depth of field requires a PerspectiveCamera");
+    }
+    const focusDistance = uniform(1) as FloatUniformNode;
+    const focalLength = uniform(0.05) as FloatUniformNode;
+    const outputNodes: DisposableDepthOfFieldNode[] = [];
+    const raycaster = new Raycaster();
+    raycaster.layers.set(RENDER_PIPELINE_SCENE_LAYER);
+    const resources: DepthOfFieldResources = {
+      focalLength,
+      focusDistance,
+      focusTargetDistance: 1,
+      lastAutofocusTime: -Infinity,
+      outputNodes,
+      pointer: new Vector2(),
+      raycaster,
+    };
+    resourcesRef.current = resources;
+    const unregister = registerEffect((input, sceneDepth) => {
+      const viewDepth = perspectiveDepthToViewZ(
+        sceneDepth,
+        uniform(camera.near),
+        uniform(camera.far),
+      );
+      const output = dof(
+        input,
+        viewDepth,
+        focusDistance,
+        focalLength,
+        bokeh,
+      ) as unknown as DisposableDepthOfFieldNode;
+      outputNodes.push(output);
+      return output;
+    });
+    return () => {
+      resourcesRef.current = null;
+      unregister();
+      for (const output of outputNodes) output.dispose();
+    };
+  }, [bokeh, camera, registerEffect]);
+
+  useFrame((_state, delta) => {
+    const resources = resourcesRef.current;
+    if (resources === null || !(camera instanceof PerspectiveCamera)) return;
+    const now = performance.now();
+    if (now - resources.lastAutofocusTime >= 50) {
+      resources.lastAutofocusTime = now;
+      const samples = CENTER_WEIGHTED_AUTOFOCUS_PATTERN.flatMap((sample) => {
+        resources.pointer.set(sample.x, sample.y);
+        resources.raycaster.setFromCamera(resources.pointer, camera);
+        const hit = resources.raycaster.intersectObjects(
+          scene.children,
+          true,
+        )[0];
+        return hit === undefined
+          ? []
+          : [{ distance: hit.distance, weight: sample.weight }];
+      });
+      const distance = weightedMedianFocusDistance(samples);
+      if (distance !== null) {
+        const deadZone = Math.max(distance * 0.01, 0.0001);
+        if (Math.abs(distance - resources.focusTargetDistance) > deadZone) {
+          resources.focusTargetDistance = distance;
+          resources.focalLength.value = Math.max(distance * 0.05, 0.001);
+        }
+      }
+    }
+    resources.focusDistance.value = MathUtils.damp(
+      resources.focusDistance.value,
+      resources.focusTargetDistance,
+      12,
+      delta,
+    );
+  });
+
+  return null;
+}

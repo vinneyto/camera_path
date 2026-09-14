@@ -19,6 +19,7 @@ import {
   type SceneSurfaceBackground,
   useGaussianRenderingBackend,
 } from "@/shared/scene-surface";
+import { DepthOfField } from "@/shared/three";
 import type { ContextMenuPosition } from "@/shared/ui";
 
 import { AnchorMarker } from "./anchor-marker";
@@ -39,6 +40,7 @@ interface SceneContentsProps {
   anchors: Anchor[];
   background: SceneSurfaceBackground;
   dark: boolean;
+  depthOfFieldBokeh?: number;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
   onSurfaceError: (error: Error) => void;
   onSurfaceLoading: () => void;
@@ -56,6 +58,7 @@ export function SceneContents({
   anchors,
   background,
   dark,
+  depthOfFieldBokeh,
   onAddAnchor,
   onSurfaceError,
   onSurfaceLoading,
@@ -78,6 +81,7 @@ export function SceneContents({
   const renderingBackend = useGaussianRenderingBackend(
     background,
     gaussianDprMode,
+    depthOfFieldBokeh !== undefined,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
   const heightEditing = useAnchorHeightEditing({
@@ -118,6 +122,9 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
+      {depthOfFieldBokeh !== undefined && (
+        <DepthOfField bokeh={depthOfFieldBokeh} />
+      )}
       <SceneSurface
         name="Mug Gaussian cloud"
         onError={onSurfaceError}

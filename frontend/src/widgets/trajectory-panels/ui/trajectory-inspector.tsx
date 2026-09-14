@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 
-import type { Project } from "@/entities/project";
+import type { DepthOfFieldEffect, Project } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { Button } from "@/shared/ui";
 
@@ -10,6 +10,7 @@ import { createAimTrack } from "../lib/create-aim-track";
 import { createOrientationTrack } from "../lib/create-orientation-track";
 import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
+import { RenderEffectsControl } from "./render-effects-control";
 
 interface TrajectoryInspectorProps {
   deletingAimKeyframeId?: string;
@@ -23,16 +24,24 @@ interface TrajectoryInspectorProps {
   project: Project;
   trajectory: CompiledTrajectory;
   onClose: () => void;
+  depthOfField: DepthOfFieldEffect | null;
+  effectsPending?: boolean;
+  onAddDepthOfField: () => void;
+  onRemoveDepthOfField: () => void;
 }
 
 export function TrajectoryInspector({
   deletingAimKeyframeId,
   deletingOrientationKeyframeId,
   deletingSpeedKeyframeId,
+  depthOfField,
+  effectsPending,
+  onAddDepthOfField,
   onClose,
   onDeleteAimKeyframe,
   onDeleteOrientationKeyframe,
   onDeleteSpeedKeyframe,
+  onRemoveDepthOfField,
   onScrub,
   pathPosition,
   project,
@@ -61,14 +70,22 @@ export function TrajectoryInspector({
             {trajectory.total_length.toFixed(2)} m
           </span>
         </div>
-        <Button
-          aria-label="Close trajectory panels"
-          onClick={onClose}
-          size="icon"
-          variant="ghost"
-        >
-          <X className="size-3.5" />
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <RenderEffectsControl
+            depthOfField={depthOfField}
+            disabled={effectsPending}
+            onAddDepthOfField={onAddDepthOfField}
+            onRemoveDepthOfField={onRemoveDepthOfField}
+          />
+          <Button
+            aria-label="Close trajectory panels"
+            onClick={onClose}
+            size="icon"
+            variant="ghost"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
       </div>
       <div className="overflow-hidden rounded-md border bg-card">
         <SpeedGraph

@@ -23,6 +23,7 @@ const project: Project = {
   motion_profile: { default_speed: 1, keyframes: {} },
   name: "Project",
   revision: 2,
+  settings: { effects: [] },
   scene_points: {},
   segments: [],
 };

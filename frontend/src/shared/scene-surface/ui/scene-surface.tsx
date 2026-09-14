@@ -9,23 +9,30 @@ import { useGaussianCloud } from "./use-gaussian-cloud";
 export function SceneSurface({
   name,
   onClick,
+  onContextMenu,
+  onDoubleClick,
   onError,
   onLoading,
+  onPointerCancel,
   onPointerDown,
+  onPointerEnter,
+  onPointerLeave,
   onPointerMove,
+  onPointerOut,
+  onPointerOver,
   onPointerUp,
   onReady,
   onSurfaceClick,
   onSurfacePointerDown,
   onSurfacePointerMove,
   onSurfacePointerUp,
+  onWheel,
   raycastable = true,
   source,
   ...objectProps
 }: SceneSurfaceProps) {
   const [cloud, loading, error] = useGaussianCloud({
     name,
-    raycastable,
     source,
   });
   const notifyStatus = useEffectEvent(() => {
@@ -64,15 +71,29 @@ export function SceneSurface({
     if (typeof onPointerUp === "function") onPointerUp(event);
   }
 
+  const interactionProps = raycastable
+    ? {
+        onClick: handleClick,
+        onContextMenu,
+        onDoubleClick,
+        onPointerCancel,
+        onPointerDown: handlePointerDown,
+        onPointerEnter,
+        onPointerLeave,
+        onPointerMove: handlePointerMove,
+        onPointerOut,
+        onPointerOver,
+        onPointerUp: handlePointerUp,
+        onWheel,
+      }
+    : {};
+
   return cloud ? (
     <primitive
       {...objectProps}
+      {...interactionProps}
       dispose={null}
       object={cloud.object}
-      onClick={handleClick}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
     />
   ) : null;
 }

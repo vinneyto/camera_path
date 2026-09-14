@@ -73,6 +73,16 @@ export interface ChatHistoryMessage {
   content: string;
 }
 
+export interface DepthOfFieldEffect {
+  kind: "depth_of_field";
+  autofocus: "center_weighted_9";
+  bokeh: number;
+}
+
+export interface ProjectSettings {
+  effects: DepthOfFieldEffect[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -91,6 +101,7 @@ export interface Project {
     default_speed: number;
     keyframes: Record<string, SpeedKeyframe>;
   };
+  settings: ProjectSettings;
   chat_history: ChatHistoryMessage[];
 }
 
