@@ -320,3 +320,15 @@ class ChatResult(BaseModel):
     answer: str
     project: Project
     compiled: CompiledTrajectory
+
+
+class FieldError(BaseModel):
+    location: list[str | int]
+    message: str
+    type: str
+
+
+class ErrorResponse(BaseModel):
+    code: str
+    detail: str
+    field_errors: list[FieldError] | None = None
