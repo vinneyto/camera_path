@@ -1,384 +1,89 @@
 from __future__ import annotations
 
-import json
-from collections.abc import AsyncIterator
-from typing import Annotated, Any
+import asyncio
+from typing import Any
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
-from openai import OpenAIError
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
+from scalar_fastapi import get_scalar_api_reference
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from camera_path.agent import AgentUnavailableError, TrajectoryAgent
+from camera_path.agent import TrajectoryAgent
 from camera_path.config import Settings, settings
 from camera_path.geometry import GeometryError
-from camera_path.models import (
-    AnchorCreate,
-    AnchorUpdate,
-    CameraKeyframeCreate,
-    CameraKeyframeUpdate,
-    CameraOrientation,
-    CameraOrientationKeyframeCreate,
-    CameraOrientationKeyframeUpdate,
-    CameraTrackUpdate,
-    ChatMessage,
-    ChatResult,
-    CompiledTrajectory,
-    DepthOfFieldKeyframeCreate,
-    DepthOfFieldKeyframeUpdate,
-    MotionProfileUpdate,
-    Project,
-    ProjectCreate,
-    ProjectUpdate,
-    ScenePointCreate,
-    ScenePointUpdate,
-    SpeedKeyframeCreate,
-    SpeedKeyframeUpdate,
-    SpiralSegmentCreate,
-    SplineSegmentCreate,
-)
 from camera_path.repository import (
     ProjectNotFoundError,
     ProjectRepository,
     RevisionConflictError,
     SQLiteProjectRepository,
 )
+from camera_path.routers.api import router as business_router
+from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.service import ChatMessageConflictError, TrajectoryService
 
-router = APIRouter()
-
-
-def get_service(request: Request) -> TrajectoryService:
-    return request.app.state.trajectory_service
-
-
-def get_agent(request: Request) -> TrajectoryAgent:
-    return request.app.state.trajectory_agent
-
-
-Service = Annotated[TrajectoryService, Depends(get_service)]
-Agent = Annotated[TrajectoryAgent, Depends(get_agent)]
-
-
-@router.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
-
-
-@router.post("/projects", response_model=Project, status_code=status.HTTP_201_CREATED)
-async def create_project(data: ProjectCreate, service: Service) -> Project:
-    return await service.create_project(data)
-
-
-@router.get("/projects", response_model=list[Project])
-async def list_projects(service: Service) -> list[Project]:
-    return await service.list_projects()
-
-
-@router.get("/projects/{project_id}", response_model=Project)
-async def get_project(project_id: str, service: Service) -> Project:
-    return await service.get_project(project_id)
-
-
-@router.patch("/projects/{project_id}", response_model=Project)
-async def update_project(project_id: str, data: ProjectUpdate, service: Service) -> Project:
-    return await service.update_project(project_id, data)
-
-
-@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project(project_id: str, service: Service) -> Response:
-    await service.delete_project(project_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.post("/projects/{project_id}/reset", response_model=Project)
-async def reset_project(project_id: str, service: Service) -> Project:
-    return await service.reset_project(project_id)
-
-
-@router.delete("/projects/{project_id}/chat", response_model=Project)
-async def clear_chat(project_id: str, service: Service) -> Project:
-    return await service.clear_chat(project_id)
-
-
-@router.delete("/projects/{project_id}/trajectory", response_model=Project)
-async def clear_trajectory(project_id: str, service: Service) -> Project:
-    return await service.clear_trajectory(project_id)
-
-
-@router.post("/projects/{project_id}/anchors", response_model=Project)
-async def add_anchor(project_id: str, data: AnchorCreate, service: Service) -> Project:
-    return await service.add_anchor(project_id, data)
-
-
-@router.patch("/projects/{project_id}/anchors/{anchor_id}", response_model=Project)
-async def update_anchor(
-    project_id: str, anchor_id: str, data: AnchorUpdate, service: Service
-) -> Project:
-    try:
-        return await service.update_anchor(project_id, anchor_id, data)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.delete("/projects/{project_id}/anchors/{anchor_id}", response_model=Project)
-async def delete_anchor(project_id: str, anchor_id: str, service: Service) -> Project:
-    try:
-        return await service.delete_anchor(project_id, anchor_id)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
-
-
-@router.post("/projects/{project_id}/scene-points", response_model=Project)
-async def add_scene_point(project_id: str, data: ScenePointCreate, service: Service) -> Project:
-    return await service.add_scene_point(project_id, data)
-
-
-@router.patch("/projects/{project_id}/scene-points/{point_id}", response_model=Project)
-async def update_scene_point(
-    project_id: str, point_id: str, data: ScenePointUpdate, service: Service
-) -> Project:
-    try:
-        return await service.update_scene_point(project_id, point_id, data)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.delete("/projects/{project_id}/scene-points/{point_id}", response_model=Project)
-async def delete_scene_point(
-    project_id: str, point_id: str, service: Service, cascade: bool = False
-) -> Project:
-    try:
-        return await service.delete_scene_point(project_id, point_id, cascade)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
-
-
-@router.post("/projects/{project_id}/segments/spline", response_model=Project)
-async def add_spline(project_id: str, data: SplineSegmentCreate, service: Service) -> Project:
-    return await service.add_spline(project_id, data)
-
-
-@router.post("/projects/{project_id}/segments/spiral", response_model=Project)
-async def add_spiral(project_id: str, data: SpiralSegmentCreate, service: Service) -> Project:
-    return await service.add_spiral(project_id, data)
-
-
-@router.delete("/projects/{project_id}/segments/{segment_id}", response_model=Project)
-async def delete_segment(project_id: str, segment_id: str, service: Service) -> Project:
-    try:
-        return await service.delete_segment(project_id, segment_id)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.post("/projects/{project_id}/motion/keyframes", response_model=Project)
-async def add_speed_keyframe(
-    project_id: str, data: SpeedKeyframeCreate, service: Service
-) -> Project:
-    return await service.add_speed_keyframe(project_id, data)
-
-
-@router.patch("/projects/{project_id}/motion", response_model=Project)
-async def update_motion_profile(
-    project_id: str, data: MotionProfileUpdate, service: Service
-) -> Project:
-    return await service.update_motion_profile(project_id, data)
-
-
-@router.patch("/projects/{project_id}/motion/keyframes/{keyframe_id}", response_model=Project)
-async def update_speed_keyframe(
-    project_id: str, keyframe_id: str, data: SpeedKeyframeUpdate, service: Service
-) -> Project:
-    try:
-        return await service.update_speed_keyframe(project_id, keyframe_id, data)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.delete("/projects/{project_id}/motion/keyframes/{keyframe_id}", response_model=Project)
-async def delete_speed_keyframe(project_id: str, keyframe_id: str, service: Service) -> Project:
-    try:
-        return await service.delete_speed_keyframe(project_id, keyframe_id)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.post("/projects/{project_id}/camera/keyframes", response_model=Project)
-async def add_camera_keyframe(
-    project_id: str, data: CameraKeyframeCreate, service: Service
-) -> Project:
-    return await service.add_camera_keyframe(project_id, data)
-
-
-@router.patch("/projects/{project_id}/camera", response_model=Project)
-async def update_camera_track(
-    project_id: str, data: CameraTrackUpdate, service: Service
-) -> Project:
-    return await service.update_camera_track(project_id, data)
-
-
-@router.patch("/projects/{project_id}/camera/orientation", response_model=Project)
-async def update_default_camera_orientation(
-    project_id: str, data: CameraOrientation, service: Service
-) -> Project:
-    return await service.update_default_camera_orientation(project_id, data)
-
-
-@router.post("/projects/{project_id}/camera/orientation/keyframes", response_model=Project)
-async def add_camera_orientation_keyframe(
-    project_id: str, data: CameraOrientationKeyframeCreate, service: Service
-) -> Project:
-    return await service.add_camera_orientation_keyframe(project_id, data)
-
-
-@router.patch(
-    "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
-    response_model=Project,
-)
-async def update_camera_orientation_keyframe(
-    project_id: str,
-    keyframe_id: str,
-    data: CameraOrientationKeyframeUpdate,
-    service: Service,
-) -> Project:
-    try:
-        return await service.update_camera_orientation_keyframe(project_id, keyframe_id, data)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.delete(
-    "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
-    response_model=Project,
-)
-async def delete_camera_orientation_keyframe(
-    project_id: str, keyframe_id: str, service: Service
-) -> Project:
-    try:
-        return await service.delete_camera_orientation_keyframe(project_id, keyframe_id)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.post("/projects/{project_id}/camera/depth-of-field/keyframes", response_model=Project)
-async def add_depth_of_field_keyframe(
-    project_id: str, data: DepthOfFieldKeyframeCreate, service: Service
-) -> Project:
-    return await service.add_depth_of_field_keyframe(project_id, data)
-
-
-@router.patch(
-    "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
-    response_model=Project,
-)
-async def update_depth_of_field_keyframe(
-    project_id: str,
-    keyframe_id: str,
-    data: DepthOfFieldKeyframeUpdate,
-    service: Service,
-) -> Project:
-    try:
-        return await service.update_depth_of_field_keyframe(project_id, keyframe_id, data)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.delete(
-    "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
-    response_model=Project,
-)
-async def delete_depth_of_field_keyframe(
-    project_id: str, keyframe_id: str, service: Service
-) -> Project:
-    try:
-        return await service.delete_depth_of_field_keyframe(project_id, keyframe_id)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.patch("/projects/{project_id}/camera/keyframes/{keyframe_id}", response_model=Project)
-async def update_camera_keyframe(
-    project_id: str, keyframe_id: str, data: CameraKeyframeUpdate, service: Service
-) -> Project:
-    try:
-        return await service.update_camera_keyframe(project_id, keyframe_id, data)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.delete("/projects/{project_id}/camera/keyframes/{keyframe_id}", response_model=Project)
-async def delete_camera_keyframe(project_id: str, keyframe_id: str, service: Service) -> Project:
-    try:
-        return await service.delete_camera_keyframe(project_id, keyframe_id)
-    except KeyError as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
-
-
-@router.get("/projects/{project_id}/trajectory/compiled", response_model=CompiledTrajectory)
-async def compiled_trajectory(project_id: str, service: Service) -> CompiledTrajectory:
-    return await service.compile(project_id)
-
-
-@router.post("/projects/{project_id}/undo", response_model=Project)
-async def undo(project_id: str, service: Service) -> Project:
-    return await service.undo(project_id)
-
-
-@router.post("/projects/{project_id}/redo", response_model=Project)
-async def redo(project_id: str, service: Service) -> Project:
-    return await service.redo(project_id)
-
-
-@router.post("/projects/{project_id}/chat/messages", response_model=ChatResult)
-async def chat(project_id: str, data: ChatMessage, agent: Agent) -> ChatResult:
-    try:
-        return await agent.handle(project_id, data.message, data.id)
-    except AgentUnavailableError as error:
-        raise HTTPException(status_code=503, detail=str(error)) from error
-    except OpenAIError as error:
-        raise HTTPException(status_code=502, detail="OpenAI request failed") from error
-
-
-@router.post("/projects/{project_id}/chat/user-messages", response_model=Project)
-async def save_user_message(project_id: str, data: ChatMessage, service: Service) -> Project:
-    return await service.save_user_message(project_id, data.id, data.message)
-
-
-def _sse(event: str, data: Any) -> str:
-    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
-
-
-@router.post("/projects/{project_id}/chat/messages/stream")
-async def stream_chat(
-    project_id: str, data: ChatMessage, agent: Agent, service: Service
-) -> StreamingResponse:
-    await service.save_user_message(project_id, data.id, data.message)
-    try:
-        agent.ensure_available()
-    except AgentUnavailableError as error:
-        raise HTTPException(status_code=503, detail=str(error)) from error
-
-    async def events() -> AsyncIterator[str]:
-        try:
-            async for event in agent.handle_stream(project_id, data.message, data.id):
-                if event["type"] == "result":
-                    payload = event["result"].model_dump(mode="json")
-                else:
-                    payload = {"text": event["text"]}
-                yield _sse(event["type"], payload)
-        except (OpenAIError, ProjectNotFoundError, RuntimeError) as error:
-            yield _sse("error", {"detail": str(error)})
-
-    return StreamingResponse(
-        events(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+API_PREFIX = "/api/v1"
+OPENAPI_URL = f"{API_PREFIX}/openapi.json"
+ETAG_OPERATION_IDS = {
+    "createProject",
+    "getProject",
+    "updateProject",
+    "resetProject",
+    "createAnchor",
+    "updateAnchor",
+    "deleteAnchor",
+    "createScenePoint",
+    "updateScenePoint",
+    "deleteScenePoint",
+    "clearTrajectory",
+    "createSplineSegment",
+    "createSpiralSegment",
+    "deleteTrajectorySegment",
+    "getCompiledTrajectory",
+    "updateMotionProfile",
+    "createSpeedKeyframe",
+    "updateSpeedKeyframe",
+    "deleteSpeedKeyframe",
+    "updateCameraTrack",
+    "createCameraAimKeyframe",
+    "updateCameraAimKeyframe",
+    "deleteCameraAimKeyframe",
+    "updateCameraOrientation",
+    "createCameraOrientationKeyframe",
+    "updateCameraOrientationKeyframe",
+    "deleteCameraOrientationKeyframe",
+    "createDepthOfFieldKeyframe",
+    "updateDepthOfFieldKeyframe",
+    "deleteDepthOfFieldKeyframe",
+    "undoProjectChange",
+    "redoProjectChange",
+    "clearProjectChat",
+    "createChatMessage",
+    "saveUserChatMessage",
+}
+
+
+def _is_versioned(request: Request) -> bool:
+    return request.url.path.startswith(f"{API_PREFIX}/")
+
+
+def _error_content(
+    request: Request,
+    code: str,
+    detail: str,
+    field_errors: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    if not _is_versioned(request):
+        if field_errors is not None:
+            return {"detail": field_errors}
+        return {"detail": detail}
+    content: dict[str, Any] = {"code": code, "detail": detail}
+    if field_errors is not None:
+        content["field_errors"] = field_errors
+    return content
 
 
 def create_app(
@@ -394,38 +99,171 @@ def create_app(
         configured.openai_api_key.get_secret_value() if configured.openai_api_key else None,
     )
 
-    application = FastAPI(title="Camera Path API", version="0.3.0")
+    application = FastAPI(
+        title="Camera Path API",
+        summary="Semantic 3D camera trajectory authoring API",
+        description=(
+            "Create camera-path projects, author scene and trajectory data, edit playback "
+            "timelines, and run the trajectory agent. Canonical operations use project revision "
+            "ETags for optimistic concurrency."
+        ),
+        version="1.0.0",
+        openapi_url=OPENAPI_URL,
+        docs_url=None,
+        redoc_url=None,
+        openapi_tags=[
+            {"name": "Projects", "description": "Project lifecycle and scene resources."},
+            {"name": "Trajectory", "description": "Trajectory segments and compilation."},
+            {"name": "Timelines", "description": "Motion and camera control timelines."},
+            {"name": "History", "description": "Project undo and redo history."},
+            {"name": "Chat", "description": "Trajectory-agent chat operations."},
+        ],
+    )
     application.state.trajectory_service = service
     application.state.trajectory_agent = agent
+    application.state.project_mutation_locks: dict[str, asyncio.Lock] = {}
     application.add_middleware(
         CORSMiddleware,
         allow_origins=configured.cors_origin_list,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["ETag"],
     )
 
+    @application.get("/health", include_in_schema=False)
+    async def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @application.get("/docs", include_in_schema=False)
+    async def scalar_docs():
+        return get_scalar_api_reference(
+            openapi_url=application.openapi_url or OPENAPI_URL,
+            title=f"{application.title} — Scalar",
+        )
+
     @application.exception_handler(ProjectNotFoundError)
-    async def project_not_found(_request: Request, error: ProjectNotFoundError) -> JSONResponse:
+    async def project_not_found(request: Request, error: ProjectNotFoundError) -> JSONResponse:
+        detail = f"project {error.args[0]} not found"
         return JSONResponse(
-            status_code=404, content={"detail": f"project {error.args[0]} not found"}
+            status_code=404,
+            content=_error_content(request, "project_not_found", detail),
         )
 
     @application.exception_handler(GeometryError)
-    async def invalid_geometry(_request: Request, error: GeometryError) -> JSONResponse:
-        return JSONResponse(status_code=422, content={"detail": str(error)})
+    async def invalid_geometry(request: Request, error: GeometryError) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content=_error_content(request, "invalid_geometry", str(error)),
+        )
 
     @application.exception_handler(RevisionConflictError)
-    async def revision_conflict(_request: Request, error: RevisionConflictError) -> JSONResponse:
-        return JSONResponse(status_code=409, content={"detail": str(error)})
+    async def revision_conflict(request: Request, error: RevisionConflictError) -> JSONResponse:
+        return JSONResponse(
+            status_code=409,
+            content=_error_content(request, "revision_conflict", str(error)),
+        )
+
+    @application.exception_handler(PreconditionRequiredError)
+    async def precondition_required(
+        request: Request, error: PreconditionRequiredError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=428,
+            content=_error_content(request, "if_match_required", str(error)),
+        )
 
     @application.exception_handler(ChatMessageConflictError)
     async def chat_message_conflict(
-        _request: Request, error: ChatMessageConflictError
+        request: Request, error: ChatMessageConflictError
     ) -> JSONResponse:
-        return JSONResponse(status_code=409, content={"detail": str(error)})
+        return JSONResponse(
+            status_code=409,
+            content=_error_content(request, "chat_message_conflict", str(error)),
+        )
 
-    application.include_router(router)
+    @application.exception_handler(RequestValidationError)
+    async def validation_error(
+        request: Request, error: RequestValidationError
+    ) -> JSONResponse:
+        if not _is_versioned(request):
+            return JSONResponse(
+                status_code=422,
+                content={"detail": jsonable_encoder(error.errors())},
+            )
+        fields = [
+            {
+                "location": list(item["loc"]),
+                "message": item["msg"],
+                "type": item["type"],
+            }
+            for item in error.errors()
+        ]
+        return JSONResponse(
+            status_code=422,
+            content=_error_content(
+                request, "validation_error", "Request validation failed", fields
+            ),
+        )
+
+    @application.exception_handler(StarletteHTTPException)
+    async def http_error(request: Request, error: StarletteHTTPException) -> JSONResponse:
+        codes = {
+            404: "not_found",
+            409: "reference_conflict",
+            502: "upstream_error",
+            503: "agent_unavailable",
+        }
+        return JSONResponse(
+            status_code=error.status_code,
+            content=_error_content(
+                request, codes.get(error.status_code, "http_error"), str(error.detail)
+            ),
+            headers=error.headers,
+        )
+
+    application.include_router(business_router, prefix=API_PREFIX)
+    application.include_router(business_router, include_in_schema=False)
+
+    def versioned_openapi() -> dict[str, Any]:
+        if application.openapi_schema is not None:
+            return application.openapi_schema
+        schema = get_openapi(
+            title=application.title,
+            version=application.version,
+            summary=application.summary,
+            description=application.description,
+            routes=application.routes,
+            tags=application.openapi_tags,
+        )
+        for path, path_item in schema["paths"].items():
+            if not path.startswith(f"{API_PREFIX}/"):
+                continue
+            for method, operation in path_item.items():
+                if method not in {"post", "patch", "delete"} or "{project_id}" not in path:
+                    continue
+                for parameter in operation.get("parameters", []):
+                    if parameter["in"] == "header" and parameter["name"] == "If-Match":
+                        parameter["required"] = True
+                        parameter["schema"] = {"type": "string", "examples": ['"4"']}
+            for operation in path_item.values():
+                if not isinstance(operation, dict) or operation.get("operationId") not in (
+                    ETAG_OPERATION_IDS
+                ):
+                    continue
+                for response in operation.get("responses", {}).values():
+                    if "content" in response and any(
+                        media_type == "application/json" for media_type in response["content"]
+                    ):
+                        response.setdefault("headers", {})["ETag"] = {
+                            "description": "Revision of the returned project snapshot.",
+                            "schema": {"type": "string", "examples": ['"4"']},
+                        }
+                        break
+        application.openapi_schema = schema
+        return schema
+
+    application.openapi = versioned_openapi
     return application
 
 
