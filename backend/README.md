@@ -11,7 +11,8 @@ then atomically creates, updates or deletes individual objects.
 
 Projects, scene data, trajectory controls, chat history, and undo/redo snapshots are stored as
 JSON snapshots through SQLAlchemy's async API. Development uses SQLite at
-`./camera_path.sqlite3` by default. Set `CAMERA_PATH_DATABASE_URL` to another async SQLAlchemy URL.
+`~/.camera-path/camera_path.sqlite3` by default, preserving the previous backend location. Set
+`CAMERA_PATH_DATABASE_URL` to another async SQLAlchemy URL.
 
 The HTTP routers depend on domain-specific services. Persistence is hidden behind the
 `ProjectRepository` protocol, whose current implementation is `SQLAlchemyProjectRepository`.
@@ -35,8 +36,8 @@ CAMERA_PATH_DATABASE_URL=sqlite+aiosqlite:////absolute/path/camera_path.sqlite3 
   uv run alembic upgrade head
 ```
 
-The initial migration recognizes the previous `projects` / `project_snapshots` SQLite schema and
-adopts it without rewriting snapshots or undo/redo history.
+The initial migration recognizes the previous `projects` / `project_snapshots` SQLite schema at
+the same default path and adopts it without rewriting snapshots or undo/redo history.
 
 Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
 served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from
