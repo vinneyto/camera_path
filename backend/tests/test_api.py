@@ -79,7 +79,7 @@ async def test_depth_of_field_timeline_is_persisted(app) -> None:
         assert disabled.json()["camera_track"]["depth_of_field_keyframes"] == {}
 
 
-async def test_project_edit_compile_and_undo(app) -> None:
+async def test_project_edit_compile_and_history_is_out_of_scope(app) -> None:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/projects", json={"name": "Demo"})
         assert response.status_code == 201
@@ -112,11 +112,10 @@ async def test_project_edit_compile_and_undo(app) -> None:
         assert len(response.json()["position_segments"]) >= 2
 
         response = await client.post(f"/projects/{project['id']}/undo")
-        assert response.status_code == 200
-        assert response.json()["segments"] == []
+        assert response.status_code == 404
 
         response = await client.post(f"/projects/{project['id']}/redo")
-        assert len(response.json()["segments"]) == 1
+        assert response.status_code == 404
 
         projects = (await client.get("/projects")).json()
         assert any(item["id"] == project["id"] for item in projects)

@@ -238,6 +238,35 @@ class ProjectUpdate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
 
 
+class ProjectMetadata(BaseModel):
+    id: str
+    name: str
+    revision: int
+
+
+class Trajectory(BaseModel):
+    segments: list[TrajectorySegment] = Field(default_factory=list)
+
+
+class AimTimeline(BaseModel):
+    default_aim: CameraAim = Field(default_factory=FollowPathAim)
+    keyframes: dict[str, CameraKeyframe] = Field(default_factory=dict)
+    world_up: Vec3 = (0.0, 1.0, 0.0)
+
+
+class OrientationTimeline(BaseModel):
+    default_orientation: CameraOrientation = Field(default_factory=CameraOrientation)
+    keyframes: dict[str, CameraOrientationKeyframe] = Field(default_factory=dict)
+
+
+class DepthOfFieldTimeline(BaseModel):
+    keyframes: dict[str, DepthOfFieldKeyframe] = Field(default_factory=dict)
+
+
+class ChatHistory(BaseModel):
+    messages: list[ChatHistoryMessage] = Field(default_factory=list)
+
+
 class CubicBezier3D(BaseModel):
     source_segment_id: str
     p0: Vec3
@@ -319,6 +348,11 @@ class ChatMessage(BaseModel):
 class ChatResult(BaseModel):
     answer: str
     project: Project
+    compiled: CompiledTrajectory
+
+
+class ChatResponse(BaseModel):
+    answer: str
     compiled: CompiledTrajectory
 
 

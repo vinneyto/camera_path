@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 from camera_path.models import (
@@ -95,7 +96,7 @@ def test_empty_camera_track_stays_empty_after_round_trip() -> None:
     assert reloaded.camera_track.keyframes == {}
 
 
-async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:
+async def test_normalized_resources_survive_repository_restart(tmp_path: Path) -> None:
     database_path = tmp_path / "camera_path.sqlite3"
     repository = SQLAlchemyProjectRepository(sqlite_url(database_path))
     project = await repository.create(Project())
@@ -105,27 +106,45 @@ async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:
     second = Anchor(label="B", surface_position=(1, 0, 0))
     project.anchors[second.id] = second
     project = await repository.commit(project, project.revision)
-    await repository.undo(project.id)
-
     await repository.close()
     restarted = SQLAlchemyProjectRepository(sqlite_url(database_path))
-    undone = await restarted.get(project.id)
+    restored = await restarted.get(project.id)
 
-    assert first.id in undone.anchors
-    assert second.id not in undone.anchors
-    redone = await restarted.redo(project.id)
-    assert second.id in redone.anchors
+    assert restored.anchors == {first.id: first, second.id: second}
+    with sqlite3.connect(database_path) as connection:
+        tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+    assert "project_snapshots" not in tables
+    assert {
+        "projects",
+        "anchors",
+        "scene_points",
+        "trajectory_segments",
+        "segment_anchors",
+        "motion_profiles",
+        "speed_keyframes",
+        "camera_tracks",
+        "aim_keyframes",
+        "orientation_keyframes",
+        "depth_of_field_keyframes",
+        "chat_messages",
+    } <= tables
 
 
-async def test_commit_after_undo_discards_redo_branch(tmp_path: Path) -> None:
+async def test_commit_replaces_current_normalized_state(tmp_path: Path) -> None:
     repository = SQLAlchemyProjectRepository(sqlite_url(tmp_path / "camera_path.sqlite3"))
     project = await repository.create(Project())
     project.name = "revision one"
     project = await repository.commit(project, project.revision)
-    project.name = "discard me"
+    project.name = "revision two"
     project = await repository.commit(project, project.revision)
-    project = await repository.undo(project.id)
-    project.name = "new revision two"
+    project.name = "revision three"
     project = await repository.commit(project, project.revision)
 
-    assert (await repository.redo(project.id)).name == "new revision two"
+    restored = await repository.get(project.id)
+    assert restored.name == "revision three"
+    assert restored.revision == 3

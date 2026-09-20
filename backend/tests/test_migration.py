@@ -1,0 +1,61 @@
+import sqlite3
+
+from alembic.config import Config
+
+from alembic import command
+from camera_path.config import settings
+from camera_path.models import (
+    Anchor,
+    ChatHistoryMessage,
+    Project,
+    ScenePoint,
+    SpeedKeyframe,
+    SplineSegment,
+)
+
+
+def test_legacy_snapshot_is_migrated_to_normalized_tables(tmp_path, monkeypatch) -> None:
+    database_path = tmp_path / "legacy.sqlite3"
+    database_url = f"sqlite+aiosqlite:///{database_path}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = Config("alembic.ini")
+    command.upgrade(config, "20260920_0001")
+
+    project = Project(name="Legacy project", revision=7)
+    first = Anchor(label="First", surface_position=(0, 0, 0))
+    second = Anchor(label="Second", surface_position=(1, 0, 0))
+    point = ScenePoint(label="Subject", position=(0, 1, 0))
+    segment = SplineSegment(anchor_ids=[first.id, second.id])
+    speed = SpeedKeyframe(path_position=0.5, speed=2.0)
+    project.anchors = {first.id: first, second.id: second}
+    project.scene_points = {point.id: point}
+    project.segments = [segment]
+    project.motion_profile.keyframes = {speed.id: speed}
+    project.chat_history = [ChatHistoryMessage(role="user", content="Keep me")]
+
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO projects (id, cursor) VALUES (?, ?)", (project.id, 3))
+        connection.execute(
+            "INSERT INTO project_snapshots (project_id, position, payload) VALUES (?, ?, ?)",
+            (project.id, 3, project.model_dump_json()),
+        )
+
+    command.upgrade(config, "head")
+
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute(
+            "SELECT name, revision FROM projects WHERE id = ?", (project.id,)
+        ).fetchone() == ("Legacy project", 7)
+        assert connection.execute("SELECT COUNT(*) FROM anchors").fetchone() == (2,)
+        assert connection.execute("SELECT COUNT(*) FROM scene_points").fetchone() == (1,)
+        assert connection.execute("SELECT COUNT(*) FROM trajectory_segments").fetchone() == (1,)
+        assert connection.execute("SELECT COUNT(*) FROM segment_anchors").fetchone() == (2,)
+        assert connection.execute("SELECT COUNT(*) FROM speed_keyframes").fetchone() == (1,)
+        assert connection.execute("SELECT content FROM chat_messages").fetchone() == ("Keep me",)
+        table_names = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert "project_snapshots" not in table_names

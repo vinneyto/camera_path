@@ -9,13 +9,15 @@ MCP is intentionally not part of this version. The model calls narrow in-process
 the OpenAI Responses API. The agent receives saved conversation history and current project state,
 then atomically creates, updates or deletes individual objects.
 
-Projects, scene data, trajectory controls, chat history, and undo/redo snapshots are stored as
-JSON snapshots through SQLAlchemy's async API. Development uses SQLite at
+Projects, anchors, scene points, trajectory segments, timelines, and chat messages are stored in
+separate SQLAlchemy tables. Small polymorphic resource values remain JSON payloads inside their
+own rows, while ownership, order, and references are relational. Development uses SQLite at
 `~/.camera-path/camera_path.sqlite3` by default, preserving the previous backend location. Set
 `CAMERA_PATH_DATABASE_URL` to another async SQLAlchemy URL.
 
-The HTTP routers depend on domain-specific services. Persistence is typed through the
-`ProjectRepository` protocol; its current implementation is `SQLAlchemyProjectRepository`.
+The HTTP routers depend on domain-specific services. Persistence is typed through resource-specific
+repository protocols. The compatibility `SQLAlchemyProjectRepository` assembles the legacy
+aggregate from those repositories while the frontend migrates to resource requests.
 Declarative ORM records live separately from the Pydantic domain/API models. Tests inject a
 repository backed by a temporary database through `create_app()`.
 
@@ -36,19 +38,21 @@ CAMERA_PATH_DATABASE_URL=sqlite+aiosqlite:////absolute/path/camera_path.sqlite3 
   uv run alembic upgrade head
 ```
 
-The initial migration recognizes the previous `projects` / `project_snapshots` SQLite schema at
-the same default path and adopts it without rewriting snapshots or undo/redo history.
+The second migration reads the current snapshot from the previous `projects` /
+`project_snapshots` schema and writes it into normalized resource tables. Older undo/redo stacks
+are intentionally discarded; CP-41 and CP-42 introduce the replacement command-based history.
 
 Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
 served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from
 `backend/.env`. Geometry and REST endpoints work without an API key. Set `OPENAI_API_KEY` in that
 file only for the chat endpoints.
 
-The canonical API is mounted at `/api/v1`. Existing unversioned URLs remain available as legacy
-aliases but are hidden from OpenAPI. Read responses for one project include an `ETag` containing
-its revision, for example `"4"`. Send that value in `If-Match` when mutating the canonical API;
-a stale value returns `409`, and an omitted value returns `428`. Legacy aliases do not require
-`If-Match`.
+The canonical API is mounted at `/api/v1` and returns project metadata or one resource, never a
+full `Project` snapshot. Existing unversioned URLs remain temporarily available for the frontend
+as aggregate legacy endpoints and are hidden from OpenAPI. Read responses for one project include
+an `ETag` containing its revision, for example `"4"`. Send that value in `If-Match` when mutating
+the canonical API; a stale value returns `409`, and an omitted value returns `428`. Legacy aliases
+do not require `If-Match`.
 
 FastAPI route declarations and Pydantic models are the source of truth. Regenerate the checked-in
 schema artifact after changing the API contract:
@@ -57,6 +61,25 @@ schema artifact after changing the API contract:
 cd backend
 uv run openapi-export openapi.json
 ```
+
+### Frontend invalidation contract
+
+Every project resource carries the same project revision ETag. When parallel reads return
+different revisions, refetch only responses whose ETag is older than the highest observed value.
+After a successful mutation, invalidate these resources:
+
+| Mutation | Resources to refetch |
+| --- | --- |
+| Project metadata | project metadata |
+| Anchors | anchors, compiled trajectory |
+| Scene points | scene points, compiled trajectory |
+| Trajectory segments | editable trajectory, compiled trajectory |
+| Speed timeline | speed timeline, compiled trajectory |
+| Aim timeline | aim timeline, compiled trajectory |
+| Orientation timeline | orientation timeline, compiled trajectory |
+| Depth-of-field timeline | depth-of-field timeline, compiled trajectory |
+| Chat message/history | chat messages |
+| Agent command or project reset | all project resources |
 
 ## Test
 
@@ -124,17 +147,16 @@ quaternion.
 
 ## REST workflow
 
-1. Create a project with `POST /projects`.
-   Use `GET /projects` to restore the project list after an application restart.
-2. Add lifted path anchors with `POST /projects/{id}/anchors`.
-3. Add spline or spiral segments, or delete one with `DELETE /projects/{id}/segments/{segment_id}`.
-4. Manage look targets under `/projects/{id}/scene-points`.
-5. Set baseline speed with `PATCH /projects/{id}/motion` and manage its keys under
-   `/projects/{id}/motion/keyframes`.
-6. Set the baseline aim with `PATCH /projects/{id}/camera` and manage direction keys under
-   `/projects/{id}/camera/keyframes`.
-7. Set baseline yaw, pitch and roll with `PATCH /projects/{id}/camera/orientation`, and manage
-   orientation keys under `/projects/{id}/camera/orientation/keyframes`:
+1. Create a project with `POST /api/v1/projects` and restore project metadata with
+   `GET /api/v1/projects`.
+2. Load anchors, scene points, editable trajectory, each timeline, and chat messages with separate
+   requests. All project resource responses carry the same project-level `ETag`.
+3. Add lifted path anchors with `POST /api/v1/projects/{id}/anchors`.
+4. Add spline or spiral segments, or delete one under `/api/v1/projects/{id}/segments`.
+5. Manage look targets under `/api/v1/projects/{id}/scene-points`.
+6. Manage speed, aim, orientation, and depth-of-field through their separate timeline resources.
+7. Set baseline yaw, pitch and roll with
+   `PATCH /api/v1/projects/{id}/camera/orientation`:
 
    ```json
    {
@@ -144,27 +166,28 @@ quaternion.
    }
    ```
 
-8. Fetch `/projects/{id}/trajectory/compiled` for Bézier geometry, duration and sorted control keys.
-9. Rename a project with `PATCH /projects/{id}` or delete it with `DELETE /projects/{id}`.
-10. Start a new chat with `DELETE /projects/{id}/chat`. This preserves scene and trajectory data.
-11. Clear only generated trajectory segments and control graphs with `DELETE
-    /projects/{id}/trajectory`; anchors and scene points remain available.
-12. Reset all scene, trajectory, and chat state while preserving the project id and name with
-    `POST /projects/{id}/reset`.
+8. Fetch `/api/v1/projects/{id}/trajectory/compiled` for derived playback geometry.
+9. Rename or delete the project through `/api/v1/projects/{id}`.
+10. Clear chat with `DELETE /api/v1/projects/{id}/chat`.
+11. Clear trajectory and timeline resources with
+    `DELETE /api/v1/projects/{id}/trajectory`.
+12. Reset all resources while preserving project identity with
+    `POST /api/v1/projects/{id}/reset`.
 
 Deleting a referenced scene point returns `409` unless `?cascade=true` is supplied; cascade also
-deletes its camera keys. All mutations participate in the existing revision history and undo/redo.
-SQLite stores each project revision as a validated JSON snapshot behind the repository boundary.
+deletes its camera keys. Mutations advance one shared project revision. Undo/redo is intentionally
+absent from CP-40.
 
 ## Streaming chat
 
-`POST /projects/{id}/chat/messages/stream` accepts the same JSON body as the regular chat endpoint
+`POST /api/v1/projects/{id}/chat/messages/stream` accepts the same JSON body as the regular chat endpoint
 and returns `text/event-stream`. It is intended to be consumed with streaming `fetch()` because
 native `EventSource` cannot send a POST body.
 
 - `delta` events contain `{ "text": "..." }` as model tokens arrive;
-- the final `result` event contains the complete `ChatResult`, including the committed project and
-  compiled trajectory;
+- the final `result` event contains the answer and compiled trajectory; clients refetch invalidated
+  resources through the shared project revision;
 - an `error` event reports failures that happen after streaming response headers were sent.
 
-The existing non-streaming `POST /projects/{id}/chat/messages` remains available.
+The non-streaming `/api/v1/projects/{id}/chat/messages` returns the same resource-oriented result.
+Unversioned aggregate chat endpoints remain temporarily available for CP-39 migration.
