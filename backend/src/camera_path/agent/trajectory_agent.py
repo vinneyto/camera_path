@@ -6,7 +6,6 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from camera_path.geometry import validate_project
 from camera_path.models import (
     CameraKeyframe,
     CameraOrientation,
@@ -24,7 +23,8 @@ from camera_path.models import (
     SpiralSegment,
     SplineSegment,
 )
-from camera_path.service import TrajectoryService
+from camera_path.services import TrajectoryService
+from camera_path.trajectory import validate_project
 
 SYSTEM_PROMPT = """You incrementally edit a semantic 3D camera trajectory.
 The project state is durable and earlier user/assistant messages are included as context.

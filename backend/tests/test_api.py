@@ -60,9 +60,7 @@ async def test_depth_of_field_timeline_is_persisted(app) -> None:
         )
         assert updated.status_code == 200
         keys = updated.json()["camera_track"]["depth_of_field_keyframes"]
-        compiled = (
-            await client.get(f"/projects/{project['id']}/trajectory/compiled")
-        ).json()
+        compiled = (await client.get(f"/projects/{project['id']}/trajectory/compiled")).json()
         assert compiled["camera_track"]["depth_of_field_keyframes"][0]["focus"] == {
             "kind": "scene_point",
             "scene_point_id": point_id,
@@ -226,9 +224,7 @@ async def test_client_can_edit_speed_and_camera_graphs(app) -> None:
         assert camera_response.status_code == 200
         camera_id = next(
             keyframe_id
-            for keyframe_id, keyframe in camera_response.json()["camera_track"][
-                "keyframes"
-            ].items()
+            for keyframe_id, keyframe in camera_response.json()["camera_track"]["keyframes"].items()
             if keyframe["path_position"] == 0.5
         )
 

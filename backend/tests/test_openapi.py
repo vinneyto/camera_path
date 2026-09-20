@@ -61,14 +61,10 @@ async def test_openapi_describes_concurrency_errors_unions_and_sse(app) -> None:
 
     aim = schema["components"]["schemas"]["CameraKeyframeCreate"]["properties"]["aim"]
     assert aim["discriminator"]["propertyName"] == "kind"
-    focus = schema["components"]["schemas"]["DepthOfFieldKeyframeCreate"]["properties"][
-        "focus"
-    ]
+    focus = schema["components"]["schemas"]["DepthOfFieldKeyframeCreate"]["properties"]["focus"]
     assert focus["discriminator"]["propertyName"] == "kind"
 
-    stream = schema["paths"]["/api/v1/projects/{project_id}/chat/messages/stream"][
-        "post"
-    ]
+    stream = schema["paths"]["/api/v1/projects/{project_id}/chat/messages/stream"]["post"]
     assert "text/event-stream" in stream["responses"]["200"]["content"]
     assert all(event in stream["description"] for event in ("delta", "result", "error"))
 

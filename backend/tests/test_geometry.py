@@ -3,13 +3,6 @@ import math
 import numpy as np
 import pytest
 
-from camera_path.geometry import (
-    GeometryError,
-    anchor_position,
-    compile_project,
-    compile_spiral,
-    validate_project,
-)
 from camera_path.models import (
     Anchor,
     CameraKeyframe,
@@ -23,6 +16,13 @@ from camera_path.models import (
     SpeedKeyframe,
     SpiralSegment,
     SplineSegment,
+)
+from camera_path.trajectory import (
+    GeometryError,
+    anchor_position,
+    compile_project,
+    compile_spiral,
+    validate_project,
 )
 
 

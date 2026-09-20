@@ -9,7 +9,7 @@ from fastapi import Depends, Header, Request
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.repository import RevisionConflictError
-from camera_path.service import TrajectoryService
+from camera_path.services import TrajectoryService
 
 _ETAG_PATTERN = re.compile(r'^(?:W/)?"(?P<revision>\d+)"$')
 
@@ -37,8 +37,8 @@ def project_etag(revision: int) -> str:
 def _parse_if_match(value: str) -> int:
     match = _ETAG_PATTERN.fullmatch(value.strip())
     if match is None:
-        raise RevisionConflictError('If-Match must contain a project revision ETag')
-    return int(match.group('revision'))
+        raise RevisionConflictError("If-Match must contain a project revision ETag")
+    return int(match.group("revision"))
 
 
 async def guard_project_mutation(

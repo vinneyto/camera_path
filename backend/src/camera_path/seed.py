@@ -19,7 +19,7 @@ from camera_path.models import (
     SplineSegmentCreate,
 )
 from camera_path.repository import SQLiteProjectRepository
-from camera_path.service import TrajectoryService
+from camera_path.services import TrajectoryService
 
 
 @dataclass(frozen=True)
@@ -245,13 +245,9 @@ async def _create_inertial_project(service: TrajectoryService, name: str) -> Pro
     ]
     anchor_ids: list[str] = []
     for index, position in enumerate(coordinates, start=1):
-        project, anchor_id = await _add_anchor(
-            service, project, f"Inertial {index}", position
-        )
+        project, anchor_id = await _add_anchor(service, project, f"Inertial {index}", position)
         anchor_ids.append(anchor_id)
-    return await service.add_spline(
-        project.id, SplineSegmentCreate(anchor_ids=anchor_ids)
-    )
+    return await service.add_spline(project.id, SplineSegmentCreate(anchor_ids=anchor_ids))
 
 
 async def populate_demo_projects(

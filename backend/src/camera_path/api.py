@@ -14,7 +14,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.config import Settings, settings
-from camera_path.geometry import GeometryError
 from camera_path.repository import (
     ProjectNotFoundError,
     ProjectRepository,
@@ -23,7 +22,8 @@ from camera_path.repository import (
 )
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
-from camera_path.service import ChatMessageConflictError, TrajectoryService
+from camera_path.services import ChatMessageConflictError, TrajectoryService
+from camera_path.trajectory import GeometryError
 
 API_PREFIX = "/api/v1"
 OPENAPI_URL = f"{API_PREFIX}/openapi.json"
@@ -183,9 +183,7 @@ def create_app(
         )
 
     @application.exception_handler(RequestValidationError)
-    async def validation_error(
-        request: Request, error: RequestValidationError
-    ) -> JSONResponse:
+    async def validation_error(request: Request, error: RequestValidationError) -> JSONResponse:
         if not _is_versioned(request):
             return JSONResponse(
                 status_code=422,

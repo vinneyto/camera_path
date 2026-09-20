@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from camera_path.agent import TrajectoryAgent
 from camera_path.models import LookAtPointAim, Project, ScenePoint
 from camera_path.repository import SQLiteProjectRepository
-from camera_path.service import TrajectoryService
+from camera_path.services import TrajectoryService
 
 
 async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> None:
@@ -15,7 +15,7 @@ async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> Non
             return SimpleNamespace(output=[], output_text=f"answer {len(calls)}")
 
     monkeypatch.setattr(
-        "camera_path.agent.AsyncOpenAI",
+        "camera_path.agent.trajectory_agent.AsyncOpenAI",
         lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
@@ -56,7 +56,7 @@ async def test_agent_returns_tool_errors_to_model(monkeypatch, tmp_path) -> None
             return SimpleNamespace(output=[], output_text="Nothing was deleted")
 
     monkeypatch.setattr(
-        "camera_path.agent.AsyncOpenAI",
+        "camera_path.agent.trajectory_agent.AsyncOpenAI",
         lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
@@ -89,7 +89,7 @@ async def test_agent_streams_text_and_persists_result(monkeypatch, tmp_path) -> 
             return Stream()
 
     monkeypatch.setattr(
-        "camera_path.agent.AsyncOpenAI",
+        "camera_path.agent.trajectory_agent.AsyncOpenAI",
         lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")

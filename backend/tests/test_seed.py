@@ -1,7 +1,7 @@
 from camera_path.models import SpiralSegment, SplineSegment
 from camera_path.repository import SQLiteProjectRepository
 from camera_path.seed import populate_demo_projects
-from camera_path.service import TrajectoryService
+from camera_path.services import TrajectoryService
 
 
 async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> None:

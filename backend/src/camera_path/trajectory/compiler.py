@@ -6,7 +6,6 @@ from math import ceil, cos, pi, sin
 import numpy as np
 from numpy.typing import NDArray
 
-from camera_path.bezier_compile import approximate_quintic
 from camera_path.models import (
     Anchor,
     ArcLengthSample,
@@ -31,7 +30,8 @@ from camera_path.models import (
     SplineSegment,
     Vec3,
 )
-from camera_path.trajectory_planner import QuinticPiece, plan_minimum_jerk
+from camera_path.trajectory.bezier import approximate_quintic
+from camera_path.trajectory.planner import QuinticPiece, plan_minimum_jerk
 
 Vector = NDArray[np.float64]
 
@@ -142,9 +142,7 @@ def _plan_spline(
     end_tangent: Vector | None = None,
 ) -> list[QuinticPiece]:
     try:
-        return plan_minimum_jerk(
-            points, start_tangent=start_tangent, end_tangent=end_tangent
-        )
+        return plan_minimum_jerk(points, start_tangent=start_tangent, end_tangent=end_tangent)
     except ValueError as error:
         raise GeometryError(f"cannot compile minimum-jerk spline: {error}") from error
 
@@ -158,9 +156,7 @@ def compile_spline(
     end_tangent: Vector | None = None,
 ) -> list[CubicBezier3D]:
     points = np.vstack([anchor_position(project.anchors[item]) for item in segment.anchor_ids])
-    pieces = _plan_spline(
-        points, start_tangent=start_tangent, end_tangent=end_tangent
-    )
+    pieces = _plan_spline(points, start_tangent=start_tangent, end_tangent=end_tangent)
     return _compile_quintics(pieces, [segment.id] * len(pieces), tolerance)
 
 
@@ -261,9 +257,7 @@ def validate_project(project: Project) -> list[str]:
         if missing:
             raise GeometryError(f"segment {segment.id} references missing anchors: {missing}")
         if isinstance(segment, SplineSegment) and segment.tension != 0.0:
-            warnings.append(
-                f"spline {segment.id} tension is ignored by the minimum-jerk planner"
-            )
+            warnings.append(f"spline {segment.id} tension is ignored by the minimum-jerk planner")
     for first, second in zip(project.segments, project.segments[1:], strict=False):
         first_end = (
             first.anchor_ids[-1] if isinstance(first, SplineSegment) else first.end_anchor_id
@@ -362,23 +356,17 @@ def _compile_positions(project: Project, tolerance: float) -> list[CubicBezier3D
         start_tangent = None
         if index > 0:
             previous = project.segments[index - 1]
-            if (
-                isinstance(previous, SpiralSegment)
-                and _segment_end_id(previous) == anchor_ids[0]
-            ):
+            if isinstance(previous, SpiralSegment) and _segment_end_id(previous) == anchor_ids[0]:
                 start_tangent = spiral_tangent(project, previous, at_start=False)
         end_tangent = None
         if end < len(project.segments):
             following = project.segments[end]
-            if (
-                isinstance(following, SpiralSegment)
-                and anchor_ids[-1] == _segment_start_id(following)
+            if isinstance(following, SpiralSegment) and anchor_ids[-1] == _segment_start_id(
+                following
             ):
                 end_tangent = spiral_tangent(project, following, at_start=True)
 
-        pieces = _plan_spline(
-            points, start_tangent=start_tangent, end_tangent=end_tangent
-        )
+        pieces = _plan_spline(points, start_tangent=start_tangent, end_tangent=end_tangent)
         curves.extend(_compile_quintics(pieces, source_ids, tolerance))
         index = end
     return curves
