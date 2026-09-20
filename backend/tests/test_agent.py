@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.models import LookAtPointAim, Project, ScenePoint
-from camera_path.repositories import ProjectRepository
+from camera_path.repositories import SQLAlchemyProjectRepository
 from camera_path.services import ChatService, TrajectoryService
 
 
@@ -28,7 +28,7 @@ async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> Non
         "camera_path.agent.trajectory_agent.AsyncOpenAI",
         lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
-    repository = ProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'state.sqlite3'}")
+    repository = SQLAlchemyProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'state.sqlite3'}")
     project = await repository.create(Project())
     agent = _agent(repository)
 
@@ -69,7 +69,7 @@ async def test_agent_returns_tool_errors_to_model(monkeypatch, tmp_path) -> None
         "camera_path.agent.trajectory_agent.AsyncOpenAI",
         lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
-    repository = ProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'state.sqlite3'}")
+    repository = SQLAlchemyProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'state.sqlite3'}")
     project = await repository.create(Project())
     agent = _agent(repository)
 
@@ -102,7 +102,7 @@ async def test_agent_streams_text_and_persists_result(monkeypatch, tmp_path) -> 
         "camera_path.agent.trajectory_agent.AsyncOpenAI",
         lambda **kwargs: SimpleNamespace(responses=Responses()),
     )
-    repository = ProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'state.sqlite3'}")
+    repository = SQLAlchemyProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'state.sqlite3'}")
     project = await repository.create(Project())
     agent = _agent(repository)
 

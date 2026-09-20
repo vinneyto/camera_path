@@ -15,7 +15,7 @@ JSON snapshots through SQLAlchemy's async API. Development uses SQLite at
 `CAMERA_PATH_DATABASE_URL` to another async SQLAlchemy URL.
 
 The HTTP routers depend on domain-specific services. Persistence is typed through the
-`ProjectRepositoryProtocol`; its current SQLAlchemy implementation is `ProjectRepository`.
+`ProjectRepository` protocol; its current implementation is `SQLAlchemyProjectRepository`.
 Declarative ORM records live separately from the Pydantic domain/API models. Tests inject a
 repository backed by a temporary database through `create_app()`.
 

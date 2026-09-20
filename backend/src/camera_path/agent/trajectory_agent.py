@@ -23,7 +23,7 @@ from camera_path.models import (
     SpiralSegment,
     SplineSegment,
 )
-from camera_path.repositories import ProjectRepositoryProtocol
+from camera_path.repositories import ProjectRepository
 from camera_path.services import ChatService, TrajectoryService
 from camera_path.trajectory import validate_project
 
@@ -411,7 +411,7 @@ class AgentUnavailableError(RuntimeError):
 class TrajectoryAgent:
     def __init__(
         self,
-        repository: ProjectRepositoryProtocol,
+        repository: ProjectRepository,
         trajectory_service: TrajectoryService,
         chat_service: ChatService,
         model: str,

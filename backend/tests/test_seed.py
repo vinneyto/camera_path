@@ -1,11 +1,11 @@
 from camera_path.models import SpiralSegment, SplineSegment
-from camera_path.repositories import ProjectRepository
+from camera_path.repositories import SQLAlchemyProjectRepository
 from camera_path.seed import create_seed_services, populate_demo_projects
 
 
 async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> None:
     services = create_seed_services(
-        ProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'seed.sqlite3'}")
+        SQLAlchemyProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'seed.sqlite3'}")
     )
 
     results = await populate_demo_projects(services, seed=7)
@@ -50,7 +50,7 @@ async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> No
 
 async def test_populate_is_idempotent_for_the_same_seed(tmp_path) -> None:
     services = create_seed_services(
-        ProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'seed.sqlite3'}")
+        SQLAlchemyProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'seed.sqlite3'}")
     )
 
     first = await populate_demo_projects(services, seed=11)

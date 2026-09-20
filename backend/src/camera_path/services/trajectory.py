@@ -8,15 +8,13 @@ from camera_path.models import (
     SplineSegment,
     SplineSegmentCreate,
 )
-from camera_path.repositories import ProjectRepositoryProtocol
+from camera_path.repositories import ProjectRepository
 from camera_path.services.base import ServiceBase
 from camera_path.trajectory import compile_project
 
 
 class TrajectoryService(ServiceBase):
-    def __init__(
-        self, repository: ProjectRepositoryProtocol, compile_tolerance: float = 1e-3
-    ) -> None:
+    def __init__(self, repository: ProjectRepository, compile_tolerance: float = 1e-3) -> None:
         super().__init__(repository)
         self.compile_tolerance = compile_tolerance
 
