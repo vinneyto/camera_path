@@ -5,11 +5,14 @@ description = "Async backend for AI-assisted 3D camera path authoring"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiosqlite>=0.21,<1",
+    "alembic>=1.16,<2",
     "fastapi>=0.116,<1",
     "numpy>=2.0,<3",
     "openai>=1.100,<3",
     "pydantic-settings>=2.10,<3",
     "scalar-fastapi>=1.4,<2",
+    "sqlalchemy[asyncio]>=2.0,<3",
     "uvicorn[standard]>=0.35,<1",
 ]
 
