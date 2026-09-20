@@ -7,13 +7,14 @@ from httpx import ASGITransport, AsyncClient
 from camera_path.api import create_app
 from camera_path.config import Settings
 from camera_path.export_openapi import export_schema
-from camera_path.repositories import SQLiteProjectRepository
+from camera_path.repositories import SQLAlchemyProjectRepository
 
 
 @pytest.fixture
 def app(tmp_path):
-    settings = Settings(_env_file=None, database_path=tmp_path / "openapi.sqlite3")
-    return create_app(settings, SQLiteProjectRepository(settings.database_path))
+    database_url = f"sqlite+aiosqlite:///{tmp_path / 'openapi.sqlite3'}"
+    settings = Settings(_env_file=None, database_url=database_url)
+    return create_app(settings, SQLAlchemyProjectRepository(database_url))
 
 
 async def test_scalar_replaces_builtin_documentation(app) -> None:

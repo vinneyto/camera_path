@@ -9,14 +9,15 @@ MCP is intentionally not part of this version. The model calls narrow in-process
 the OpenAI Responses API. The agent receives saved conversation history and current project state,
 then atomically creates, updates or deletes individual objects.
 
-Projects, scene data, trajectory controls, chat history, and undo/redo snapshots are stored in
-SQLite at `~/.camera-path/camera_path.sqlite3` by default. Set `CAMERA_PATH_DATABASE_PATH` to use
-another file. Projects therefore survive backend restarts during development.
+Projects, scene data, trajectory controls, chat history, and undo/redo snapshots are stored as
+JSON snapshots through SQLAlchemy's async API. Development uses SQLite at
+`~/.camera-path/camera_path.sqlite3` by default, preserving the previous backend location. Set
+`CAMERA_PATH_DATABASE_URL` to another async SQLAlchemy URL.
 
-The HTTP layer depends only on `TrajectoryService`. Persistence is hidden behind the
-`ProjectRepository` protocol, whose current implementation is `SQLiteProjectRepository`. This
-keeps database choices and transactions out of controllers and the trajectory agent. Tests inject
-a repository backed by a temporary database through `create_app()`.
+The HTTP routers depend on domain-specific services. Persistence is typed through the
+`ProjectRepository` protocol; its current implementation is `SQLAlchemyProjectRepository`.
+Declarative ORM records live separately from the Pydantic domain/API models. Tests inject a
+repository backed by a temporary database through `create_app()`.
 
 ## Run
 
@@ -24,8 +25,19 @@ a repository backed by a temporary database through `create_app()`.
 cd backend
 cp .env.example .env
 uv sync
+uv run alembic upgrade head
 uv run uvicorn camera_path.api:app --reload
 ```
+
+For a different development database:
+
+```bash
+CAMERA_PATH_DATABASE_URL=sqlite+aiosqlite:////absolute/path/camera_path.sqlite3 \
+  uv run alembic upgrade head
+```
+
+The initial migration recognizes the previous `projects` / `project_snapshots` SQLite schema at
+the same default path and adopts it without rewriting snapshots or undo/redo history.
 
 Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
 served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from

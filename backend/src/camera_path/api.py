@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -18,7 +19,7 @@ from camera_path.repositories import (
     ProjectNotFoundError,
     ProjectRepository,
     RevisionConflictError,
-    SQLiteProjectRepository,
+    SQLAlchemyProjectRepository,
 )
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
@@ -100,7 +101,8 @@ def create_app(
     repository: ProjectRepository | None = None,
 ) -> FastAPI:
     configured = app_settings or settings
-    project_repository = repository or SQLiteProjectRepository(configured.database_path)
+    owns_repository = repository is None
+    project_repository = repository or SQLAlchemyProjectRepository(configured.database_url)
     project_service = ProjectService(project_repository)
     anchor_service = AnchorService(project_repository)
     scene_point_service = ScenePointService(project_repository)
@@ -116,6 +118,15 @@ def create_app(
         configured.openai_api_key.get_secret_value() if configured.openai_api_key else None,
     )
 
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        initialize = getattr(project_repository, "initialize", None)
+        if initialize is not None:
+            await initialize()
+        yield
+        if owns_repository:
+            await project_repository.close()
+
     application = FastAPI(
         title="Camera Path API",
         summary="Semantic 3D camera trajectory authoring API",
@@ -125,6 +136,7 @@ def create_app(
             "ETags for optimistic concurrency."
         ),
         version="1.0.0",
+        lifespan=lifespan,
         openapi_url=OPENAPI_URL,
         docs_url=None,
         redoc_url=None,

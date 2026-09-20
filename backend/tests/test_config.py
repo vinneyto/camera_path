@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from camera_path.config import Settings
 
 
@@ -10,3 +12,12 @@ def test_openai_api_key_is_loaded_from_dotenv(monkeypatch, tmp_path) -> None:
 
     assert settings.openai_api_key is not None
     assert settings.openai_api_key.get_secret_value() == "from-dotenv"
+
+
+def test_default_database_url_preserves_previous_location(monkeypatch) -> None:
+    monkeypatch.delenv("CAMERA_PATH_DATABASE_URL", raising=False)
+    settings = Settings(_env_file=None)
+
+    assert settings.database_url == (
+        f"sqlite+aiosqlite:///{Path.home() / '.camera-path' / 'camera_path.sqlite3'}"
+    )
