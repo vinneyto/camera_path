@@ -1,0 +1,5841 @@
+{
+  "components": {
+    "schemas": {
+      "Anchor": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "lift": {
+            "default": 0.0,
+            "title": "Lift",
+            "type": "number"
+          },
+          "lift_axis": {
+            "default": "world_up",
+            "enum": [
+              "world_up",
+              "surface_normal"
+            ],
+            "title": "Lift Axis",
+            "type": "string"
+          },
+          "surface_normal": {
+            "default": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Normal",
+            "type": "array"
+          },
+          "surface_position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Position",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "surface_position"
+        ],
+        "title": "Anchor",
+        "type": "object"
+      },
+      "AnchorCreate": {
+        "properties": {
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "lift": {
+            "default": 0.0,
+            "title": "Lift",
+            "type": "number"
+          },
+          "lift_axis": {
+            "default": "world_up",
+            "enum": [
+              "world_up",
+              "surface_normal"
+            ],
+            "title": "Lift Axis",
+            "type": "string"
+          },
+          "surface_normal": {
+            "default": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Normal",
+            "type": "array"
+          },
+          "surface_position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Position",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "surface_position"
+        ],
+        "title": "AnchorCreate",
+        "type": "object"
+      },
+      "AnchorUpdate": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lift": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lift"
+          },
+          "lift_axis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "world_up",
+                  "surface_normal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lift Axis"
+          },
+          "surface_normal": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Normal"
+          },
+          "surface_position": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Position"
+          }
+        },
+        "title": "AnchorUpdate",
+        "type": "object"
+      },
+      "ArcLengthSample": {
+        "properties": {
+          "distance": {
+            "title": "Distance",
+            "type": "number"
+          },
+          "segment_index": {
+            "title": "Segment Index",
+            "type": "integer"
+          },
+          "t": {
+            "title": "T",
+            "type": "number"
+          }
+        },
+        "required": [
+          "segment_index",
+          "t",
+          "distance"
+        ],
+        "title": "ArcLengthSample",
+        "type": "object"
+      },
+      "CameraKeyframe": {
+        "properties": {
+          "aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Aim"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position",
+          "aim"
+        ],
+        "title": "CameraKeyframe",
+        "type": "object"
+      },
+      "CameraKeyframeCreate": {
+        "properties": {
+          "aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Aim"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position",
+          "aim"
+        ],
+        "title": "CameraKeyframeCreate",
+        "type": "object"
+      },
+      "CameraKeyframeUpdate": {
+        "properties": {
+          "aim": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "follow_path": "#/components/schemas/FollowPathAim",
+                    "look_at_point": "#/components/schemas/LookAtPointAim"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FollowPathAim"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LookAtPointAim"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aim"
+          },
+          "interpolation_to_next": {
+            "anyOf": [
+              {
+                "enum": [
+                  "smoothstep",
+                  "linear",
+                  "hold"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpolation To Next"
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          }
+        },
+        "title": "CameraKeyframeUpdate",
+        "type": "object"
+      },
+      "CameraOrientation": {
+        "properties": {
+          "pitch_deg": {
+            "default": 0.0,
+            "title": "Pitch Deg",
+            "type": "number"
+          },
+          "roll_deg": {
+            "default": 0.0,
+            "title": "Roll Deg",
+            "type": "number"
+          },
+          "yaw_deg": {
+            "default": 0.0,
+            "title": "Yaw Deg",
+            "type": "number"
+          }
+        },
+        "title": "CameraOrientation",
+        "type": "object"
+      },
+      "CameraOrientationKeyframe": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position",
+          "orientation"
+        ],
+        "title": "CameraOrientationKeyframe",
+        "type": "object"
+      },
+      "CameraOrientationKeyframeCreate": {
+        "properties": {
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position",
+          "orientation"
+        ],
+        "title": "CameraOrientationKeyframeCreate",
+        "type": "object"
+      },
+      "CameraOrientationKeyframeUpdate": {
+        "properties": {
+          "interpolation_to_next": {
+            "anyOf": [
+              {
+                "enum": [
+                  "smoothstep",
+                  "linear",
+                  "hold"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpolation To Next"
+          },
+          "orientation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CameraOrientation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          }
+        },
+        "title": "CameraOrientationKeyframeUpdate",
+        "type": "object"
+      },
+      "CameraTrack": {
+        "properties": {
+          "default_aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "default_orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "depth_of_field_keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DepthOfFieldKeyframe"
+            },
+            "title": "Depth Of Field Keyframes",
+            "type": "object"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CameraKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          },
+          "orientation_keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CameraOrientationKeyframe"
+            },
+            "title": "Orientation Keyframes",
+            "type": "object"
+          },
+          "world_up": {
+            "default": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "World Up",
+            "type": "array"
+          }
+        },
+        "title": "CameraTrack",
+        "type": "object"
+      },
+      "CameraTrackUpdate": {
+        "properties": {
+          "default_aim": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "follow_path": "#/components/schemas/FollowPathAim",
+                    "look_at_point": "#/components/schemas/LookAtPointAim"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FollowPathAim"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LookAtPointAim"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "world_up": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "World Up"
+          }
+        },
+        "title": "CameraTrackUpdate",
+        "type": "object"
+      },
+      "CenterWeightedDepthOfFieldFocus": {
+        "properties": {
+          "kind": {
+            "const": "center_weighted_9",
+            "default": "center_weighted_9",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "CenterWeightedDepthOfFieldFocus",
+        "type": "object"
+      },
+      "ChatHistoryMessage": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatHistoryMessage",
+        "type": "object"
+      },
+      "ChatMessage": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ChatMessage",
+        "type": "object"
+      },
+      "ChatResult": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "compiled": {
+            "$ref": "#/components/schemas/CompiledTrajectory"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "required": [
+          "answer",
+          "project",
+          "compiled"
+        ],
+        "title": "ChatResult",
+        "type": "object"
+      },
+      "CompiledCameraKeyframe": {
+        "properties": {
+          "aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/ResolvedLookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/ResolvedLookAtPointAim"
+              }
+            ],
+            "title": "Aim"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "path_position",
+          "aim",
+          "interpolation_to_next"
+        ],
+        "title": "CompiledCameraKeyframe",
+        "type": "object"
+      },
+      "CompiledCameraTrack": {
+        "properties": {
+          "default_aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/ResolvedLookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/ResolvedLookAtPointAim"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "default_orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "depth_of_field_keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/CompiledDepthOfFieldKeyframe"
+            },
+            "title": "Depth Of Field Keyframes",
+            "type": "array"
+          },
+          "keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/CompiledCameraKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "array"
+          },
+          "orientation_keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/CameraOrientationKeyframe"
+            },
+            "title": "Orientation Keyframes",
+            "type": "array"
+          },
+          "world_up": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "World Up",
+            "type": "array"
+          }
+        },
+        "required": [
+          "default_aim",
+          "keyframes",
+          "default_orientation",
+          "orientation_keyframes",
+          "depth_of_field_keyframes",
+          "world_up"
+        ],
+        "title": "CompiledCameraTrack",
+        "type": "object"
+      },
+      "CompiledDepthOfFieldKeyframe": {
+        "properties": {
+          "bokeh_scale": {
+            "title": "Bokeh Scale",
+            "type": "number"
+          },
+          "focus": {
+            "discriminator": {
+              "mapping": {
+                "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                "scene_point": "#/components/schemas/ResolvedScenePointDepthOfFieldFocus"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+              },
+              {
+                "$ref": "#/components/schemas/ResolvedScenePointDepthOfFieldFocus"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "title": "Focus Range Scale",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path_position": {
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "path_position",
+          "focus",
+          "focus_range_scale",
+          "bokeh_scale"
+        ],
+        "title": "CompiledDepthOfFieldKeyframe",
+        "type": "object"
+      },
+      "CompiledMotionProfile": {
+        "properties": {
+          "default_speed": {
+            "title": "Default Speed",
+            "type": "number"
+          },
+          "keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/SpeedKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "default_speed",
+          "keyframes"
+        ],
+        "title": "CompiledMotionProfile",
+        "type": "object"
+      },
+      "CompiledTrajectory": {
+        "properties": {
+          "arc_length_table": {
+            "items": {
+              "$ref": "#/components/schemas/ArcLengthSample"
+            },
+            "title": "Arc Length Table",
+            "type": "array"
+          },
+          "camera_track": {
+            "$ref": "#/components/schemas/CompiledCameraTrack"
+          },
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "motion_profile": {
+            "$ref": "#/components/schemas/CompiledMotionProfile"
+          },
+          "position_segments": {
+            "items": {
+              "$ref": "#/components/schemas/CubicBezier3D"
+            },
+            "title": "Position Segments",
+            "type": "array"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "total_length": {
+            "title": "Total Length",
+            "type": "number"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "project_id",
+          "revision",
+          "position_segments",
+          "arc_length_table",
+          "total_length",
+          "duration_seconds",
+          "motion_profile",
+          "camera_track"
+        ],
+        "title": "CompiledTrajectory",
+        "type": "object"
+      },
+      "CubicBezier3D": {
+        "properties": {
+          "length": {
+            "title": "Length",
+            "type": "number"
+          },
+          "p0": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P0",
+            "type": "array"
+          },
+          "p1": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P1",
+            "type": "array"
+          },
+          "p2": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P2",
+            "type": "array"
+          },
+          "p3": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P3",
+            "type": "array"
+          },
+          "source_segment_id": {
+            "title": "Source Segment Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_segment_id",
+          "p0",
+          "p1",
+          "p2",
+          "p3",
+          "length"
+        ],
+        "title": "CubicBezier3D",
+        "type": "object"
+      },
+      "DepthOfFieldKeyframe": {
+        "properties": {
+          "bokeh_scale": {
+            "default": 6.0,
+            "minimum": 0.0,
+            "title": "Bokeh Scale",
+            "type": "number"
+          },
+          "focus": {
+            "discriminator": {
+              "mapping": {
+                "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                "scene_point": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+              },
+              {
+                "$ref": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "default": 0.25,
+            "exclusiveMinimum": 0.0,
+            "title": "Focus Range Scale",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position"
+        ],
+        "title": "DepthOfFieldKeyframe",
+        "type": "object"
+      },
+      "DepthOfFieldKeyframeCreate": {
+        "properties": {
+          "bokeh_scale": {
+            "default": 6.0,
+            "minimum": 0.0,
+            "title": "Bokeh Scale",
+            "type": "number"
+          },
+          "focus": {
+            "discriminator": {
+              "mapping": {
+                "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                "scene_point": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+              },
+              {
+                "$ref": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "default": 0.25,
+            "exclusiveMinimum": 0.0,
+            "title": "Focus Range Scale",
+            "type": "number"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position"
+        ],
+        "title": "DepthOfFieldKeyframeCreate",
+        "type": "object"
+      },
+      "DepthOfFieldKeyframeUpdate": {
+        "properties": {
+          "bokeh_scale": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bokeh Scale"
+          },
+          "focus": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                    "scene_point": "#/components/schemas/ScenePointDepthOfFieldFocus"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ScenePointDepthOfFieldFocus"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus Range Scale"
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          }
+        },
+        "title": "DepthOfFieldKeyframeUpdate",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "field_errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FieldError"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Errors"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "FieldError": {
+        "properties": {
+          "location": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message",
+          "type"
+        ],
+        "title": "FieldError",
+        "type": "object"
+      },
+      "FollowPathAim": {
+        "properties": {
+          "direction": {
+            "default": "forward",
+            "enum": [
+              "forward",
+              "backward"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "kind": {
+            "const": "follow_path",
+            "default": "follow_path",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "FollowPathAim",
+        "type": "object"
+      },
+      "LookAtPointAim": {
+        "properties": {
+          "kind": {
+            "const": "look_at_point",
+            "default": "look_at_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_point_id"
+        ],
+        "title": "LookAtPointAim",
+        "type": "object"
+      },
+      "MotionProfile": {
+        "properties": {
+          "default_speed": {
+            "default": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Default Speed",
+            "type": "number"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SpeedKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          }
+        },
+        "title": "MotionProfile",
+        "type": "object"
+      },
+      "MotionProfileUpdate": {
+        "properties": {
+          "default_speed": {
+            "exclusiveMinimum": 0.0,
+            "title": "Default Speed",
+            "type": "number"
+          }
+        },
+        "required": [
+          "default_speed"
+        ],
+        "title": "MotionProfileUpdate",
+        "type": "object"
+      },
+      "Project": {
+        "properties": {
+          "anchors": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Anchor"
+            },
+            "title": "Anchors",
+            "type": "object"
+          },
+          "camera_track": {
+            "$ref": "#/components/schemas/CameraTrack"
+          },
+          "chat_history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatHistoryMessage"
+            },
+            "title": "Chat History",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "motion_profile": {
+            "$ref": "#/components/schemas/MotionProfile"
+          },
+          "name": {
+            "default": "Untitled camera path",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "revision": {
+            "default": 0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "scene_points": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ScenePoint"
+            },
+            "title": "Scene Points",
+            "type": "object"
+          },
+          "segments": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "spiral": "#/components/schemas/SpiralSegment",
+                  "spline": "#/components/schemas/SplineSegment"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SplineSegment"
+                },
+                {
+                  "$ref": "#/components/schemas/SpiralSegment"
+                }
+              ]
+            },
+            "title": "Segments",
+            "type": "array"
+          }
+        },
+        "title": "Project",
+        "type": "object"
+      },
+      "ProjectCreate": {
+        "properties": {
+          "name": {
+            "default": "Untitled camera path",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "ProjectCreate",
+        "type": "object"
+      },
+      "ProjectUpdate": {
+        "properties": {
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProjectUpdate",
+        "type": "object"
+      },
+      "ResolvedLookAtPointAim": {
+        "properties": {
+          "kind": {
+            "const": "look_at_point",
+            "default": "look_at_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_point_id",
+          "position"
+        ],
+        "title": "ResolvedLookAtPointAim",
+        "type": "object"
+      },
+      "ResolvedScenePointDepthOfFieldFocus": {
+        "properties": {
+          "kind": {
+            "const": "scene_point",
+            "default": "scene_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_point_id",
+          "position"
+        ],
+        "title": "ResolvedScenePointDepthOfFieldFocus",
+        "type": "object"
+      },
+      "ScenePoint": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "position"
+        ],
+        "title": "ScenePoint",
+        "type": "object"
+      },
+      "ScenePointCreate": {
+        "properties": {
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "position"
+        ],
+        "title": "ScenePointCreate",
+        "type": "object"
+      },
+      "ScenePointDepthOfFieldFocus": {
+        "properties": {
+          "kind": {
+            "const": "scene_point",
+            "default": "scene_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_point_id"
+        ],
+        "title": "ScenePointDepthOfFieldFocus",
+        "type": "object"
+      },
+      "ScenePointUpdate": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "title": "ScenePointUpdate",
+        "type": "object"
+      },
+      "SpeedKeyframe": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          },
+          "speed": {
+            "exclusiveMinimum": 0.0,
+            "title": "Speed",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position",
+          "speed"
+        ],
+        "title": "SpeedKeyframe",
+        "type": "object"
+      },
+      "SpeedKeyframeCreate": {
+        "properties": {
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": [
+              "smoothstep",
+              "linear",
+              "hold"
+            ],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          },
+          "speed": {
+            "exclusiveMinimum": 0.0,
+            "title": "Speed",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path_position",
+          "speed"
+        ],
+        "title": "SpeedKeyframeCreate",
+        "type": "object"
+      },
+      "SpeedKeyframeUpdate": {
+        "properties": {
+          "interpolation_to_next": {
+            "anyOf": [
+              {
+                "enum": [
+                  "smoothstep",
+                  "linear",
+                  "hold"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpolation To Next"
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          }
+        },
+        "title": "SpeedKeyframeUpdate",
+        "type": "object"
+      },
+      "SpiralSegment": {
+        "properties": {
+          "axial_law": {
+            "default": "smoothstep",
+            "enum": [
+              "linear",
+              "smoothstep"
+            ],
+            "title": "Axial Law",
+            "type": "string"
+          },
+          "center_anchor_id": {
+            "title": "Center Anchor Id",
+            "type": "string"
+          },
+          "direction": {
+            "default": "ccw",
+            "enum": [
+              "cw",
+              "ccw"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "end_anchor_id": {
+            "title": "End Anchor Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "spiral",
+            "default": "spiral",
+            "title": "Kind",
+            "type": "string"
+          },
+          "radial_law": {
+            "default": "smoothstep",
+            "enum": [
+              "linear",
+              "smoothstep"
+            ],
+            "title": "Radial Law",
+            "type": "string"
+          },
+          "start_anchor_id": {
+            "title": "Start Anchor Id",
+            "type": "string"
+          },
+          "turns": {
+            "default": 1.0,
+            "exclusiveMinimum": 0.0,
+            "maximum": 100.0,
+            "title": "Turns",
+            "type": "number"
+          }
+        },
+        "required": [
+          "start_anchor_id",
+          "center_anchor_id",
+          "end_anchor_id"
+        ],
+        "title": "SpiralSegment",
+        "type": "object"
+      },
+      "SpiralSegmentCreate": {
+        "properties": {
+          "axial_law": {
+            "default": "smoothstep",
+            "enum": [
+              "linear",
+              "smoothstep"
+            ],
+            "title": "Axial Law",
+            "type": "string"
+          },
+          "center_anchor_id": {
+            "title": "Center Anchor Id",
+            "type": "string"
+          },
+          "direction": {
+            "default": "ccw",
+            "enum": [
+              "cw",
+              "ccw"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "end_anchor_id": {
+            "title": "End Anchor Id",
+            "type": "string"
+          },
+          "radial_law": {
+            "default": "smoothstep",
+            "enum": [
+              "linear",
+              "smoothstep"
+            ],
+            "title": "Radial Law",
+            "type": "string"
+          },
+          "start_anchor_id": {
+            "title": "Start Anchor Id",
+            "type": "string"
+          },
+          "turns": {
+            "default": 1.0,
+            "exclusiveMinimum": 0.0,
+            "maximum": 100.0,
+            "title": "Turns",
+            "type": "number"
+          }
+        },
+        "required": [
+          "start_anchor_id",
+          "center_anchor_id",
+          "end_anchor_id"
+        ],
+        "title": "SpiralSegmentCreate",
+        "type": "object"
+      },
+      "SplineSegment": {
+        "properties": {
+          "anchor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "title": "Anchor Ids",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "spline",
+            "default": "spline",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tension": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Tension",
+            "type": "number"
+          }
+        },
+        "required": [
+          "anchor_ids"
+        ],
+        "title": "SplineSegment",
+        "type": "object"
+      },
+      "SplineSegmentCreate": {
+        "properties": {
+          "anchor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "title": "Anchor Ids",
+            "type": "array"
+          },
+          "tension": {
+            "default": 0.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Tension",
+            "type": "number"
+          }
+        },
+        "required": [
+          "anchor_ids"
+        ],
+        "title": "SplineSegmentCreate",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Create camera-path projects, author scene and trajectory data, edit playback timelines, and run the trajectory agent. Canonical operations use project revision ETags for optimistic concurrency.",
+    "summary": "Semantic 3D camera trajectory authoring API",
+    "title": "Camera Path API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/projects": {
+      "get": {
+        "description": "Return the current snapshot of every project.",
+        "operationId": "listProjects",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  },
+                  "title": "Response Listprojects",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List projects",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "post": {
+        "description": "Create an empty camera-path project.",
+        "operationId": "createProject",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          }
+        },
+        "summary": "Create a project",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}": {
+      "delete": {
+        "description": "Delete a project and all of its snapshots.",
+        "operationId": "deleteProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete a project",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "get": {
+        "description": "Return the current project snapshot and its revision ETag.",
+        "operationId": "getProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          }
+        },
+        "summary": "Get a project",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "patch": {
+        "description": "Change a project name using optimistic concurrency.",
+        "operationId": "updateProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Rename a project",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/anchors": {
+      "post": {
+        "description": "Add a lifted surface anchor to the project.",
+        "operationId": "createAnchor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add an anchor",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/anchors/{anchor_id}": {
+      "delete": {
+        "description": "Delete an unreferenced path anchor.",
+        "operationId": "deleteAnchor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "anchor_id",
+            "required": true,
+            "schema": {
+              "title": "Anchor Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete an anchor",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "patch": {
+        "description": "Update an existing path anchor.",
+        "operationId": "updateAnchor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "anchor_id",
+            "required": true,
+            "schema": {
+              "title": "Anchor Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update an anchor",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera": {
+      "patch": {
+        "description": "Set default camera aim and world-up values.",
+        "operationId": "updateCameraTrack",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraTrackUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update the camera aim track",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/depth-of-field/keyframes": {
+      "post": {
+        "description": "Add a focus target and lens parameters to the depth-of-field timeline.",
+        "operationId": "createDepthOfFieldKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepthOfFieldKeyframeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add a depth-of-field keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}": {
+      "delete": {
+        "description": "Delete a keyframe from the depth-of-field timeline.",
+        "operationId": "deleteDepthOfFieldKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete a depth-of-field keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      },
+      "patch": {
+        "description": "Update focus or lens parameters on a depth-of-field keyframe.",
+        "operationId": "updateDepthOfFieldKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepthOfFieldKeyframeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update a depth-of-field keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/keyframes": {
+      "post": {
+        "description": "Add a keyframe to the camera aim timeline.",
+        "operationId": "createCameraAimKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraKeyframeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add a camera aim keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/keyframes/{keyframe_id}": {
+      "delete": {
+        "description": "Delete a keyframe from the camera aim timeline.",
+        "operationId": "deleteCameraAimKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete a camera aim keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      },
+      "patch": {
+        "description": "Update a keyframe on the camera aim timeline.",
+        "operationId": "updateCameraAimKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraKeyframeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update a camera aim keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/orientation": {
+      "patch": {
+        "description": "Set the default local yaw, pitch, and roll offsets.",
+        "operationId": "updateCameraOrientation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraOrientation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update default camera orientation",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/orientation/keyframes": {
+      "post": {
+        "description": "Add a keyframe to the local camera orientation timeline.",
+        "operationId": "createCameraOrientationKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraOrientationKeyframeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add an orientation keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}": {
+      "delete": {
+        "description": "Delete a keyframe from the local camera orientation timeline.",
+        "operationId": "deleteCameraOrientationKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete an orientation keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      },
+      "patch": {
+        "description": "Update a keyframe on the local camera orientation timeline.",
+        "operationId": "updateCameraOrientationKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraOrientationKeyframeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update an orientation keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat": {
+      "delete": {
+        "description": "Remove chat messages while preserving the scene and trajectory.",
+        "operationId": "clearProjectChat",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The OpenAI request failed."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The trajectory agent is unavailable."
+          }
+        },
+        "summary": "Clear chat history",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/messages": {
+      "post": {
+        "description": "Run the trajectory agent and return its complete response.",
+        "operationId": "createChatMessage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMessage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResult"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The OpenAI request failed."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The trajectory agent is unavailable."
+          }
+        },
+        "summary": "Send a chat message",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/messages/stream": {
+      "post": {
+        "description": "Run the trajectory agent as an SSE stream. `delta` events contain incremental text, `result` contains the final ChatResult, and `error` reports a failure after streaming has started.",
+        "operationId": "streamChatMessage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMessage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Server-sent events named delta, result, or error."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The OpenAI request failed."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The trajectory agent is unavailable."
+          }
+        },
+        "summary": "Stream a chat response",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/user-messages": {
+      "post": {
+        "description": "Persist a user message idempotently without running the agent.",
+        "operationId": "saveUserChatMessage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMessage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The OpenAI request failed."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The trajectory agent is unavailable."
+          }
+        },
+        "summary": "Save a user chat message",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/motion": {
+      "patch": {
+        "description": "Set the default playback speed.",
+        "operationId": "updateMotionProfile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MotionProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update the motion profile",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/motion/keyframes": {
+      "post": {
+        "description": "Add a keyframe to the speed timeline.",
+        "operationId": "createSpeedKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeedKeyframeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add a speed keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/motion/keyframes/{keyframe_id}": {
+      "delete": {
+        "description": "Delete a keyframe from the speed timeline.",
+        "operationId": "deleteSpeedKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete a speed keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      },
+      "patch": {
+        "description": "Update a keyframe on the speed timeline.",
+        "operationId": "updateSpeedKeyframe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "keyframe_id",
+            "required": true,
+            "schema": {
+              "title": "Keyframe Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeedKeyframeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update a speed keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/redo": {
+      "post": {
+        "description": "Move the project history cursor to the following snapshot.",
+        "operationId": "redoProjectChange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Redo the next change",
+        "tags": [
+          "History"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/reset": {
+      "post": {
+        "description": "Clear scene, trajectory, and chat state while preserving project identity.",
+        "operationId": "resetProject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Reset a project",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/scene-points": {
+      "post": {
+        "description": "Add a named world-space point that camera controls can reference.",
+        "operationId": "createScenePoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenePointCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add a scene point",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/scene-points/{point_id}": {
+      "delete": {
+        "description": "Delete a scene point, optionally cascading to controls that reference it.",
+        "operationId": "deleteScenePoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "point_id",
+            "required": true,
+            "schema": {
+              "title": "Point Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cascade",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Cascade",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete a scene point",
+        "tags": [
+          "Projects"
+        ]
+      },
+      "patch": {
+        "description": "Update a named world-space point.",
+        "operationId": "updateScenePoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "point_id",
+            "required": true,
+            "schema": {
+              "title": "Point Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenePointUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Update a scene point",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/segments/spiral": {
+      "post": {
+        "description": "Append a semantic spiral segment.",
+        "operationId": "createSpiralSegment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpiralSegmentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add a spiral segment",
+        "tags": [
+          "Trajectory"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/segments/spline": {
+      "post": {
+        "description": "Append a Catmull\u2013Rom-derived spline segment.",
+        "operationId": "createSplineSegment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplineSegmentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Add a spline segment",
+        "tags": [
+          "Trajectory"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/segments/{segment_id}": {
+      "delete": {
+        "description": "Delete one authored trajectory segment.",
+        "operationId": "deleteTrajectorySegment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "segment_id",
+            "required": true,
+            "schema": {
+              "title": "Segment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Delete a segment",
+        "tags": [
+          "Trajectory"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/trajectory": {
+      "delete": {
+        "description": "Remove trajectory segments and control keyframes while preserving scene setup.",
+        "operationId": "clearTrajectory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Clear a trajectory",
+        "tags": [
+          "Trajectory"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/trajectory/compiled": {
+      "get": {
+        "description": "Compile the current semantic project snapshot for runtime playback.",
+        "operationId": "getCompiledTrajectory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompiledTrajectory"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          }
+        },
+        "summary": "Compile a trajectory",
+        "tags": [
+          "Trajectory"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/undo": {
+      "post": {
+        "description": "Move the project history cursor to the preceding snapshot.",
+        "operationId": "undoProjectChange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "summary": "Undo the latest change",
+        "tags": [
+          "History"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Project lifecycle and scene resources.",
+      "name": "Projects"
+    },
+    {
+      "description": "Trajectory segments and compilation.",
+      "name": "Trajectory"
+    },
+    {
+      "description": "Motion and camera control timelines.",
+      "name": "Timelines"
+    },
+    {
+      "description": "Project undo and redo history.",
+      "name": "History"
+    },
+    {
+      "description": "Trajectory-agent chat operations.",
+      "name": "Chat"
+    }
+  ]
+}

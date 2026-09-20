@@ -8,7 +8,7 @@ from camera_path.models import (
     Project,
     ScenePoint,
 )
-from camera_path.repository import SQLiteProjectRepository
+from camera_path.repositories import SQLiteProjectRepository
 
 
 async def test_projects_and_chat_survive_repository_restart(tmp_path: Path) -> None:

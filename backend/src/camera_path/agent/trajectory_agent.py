@@ -6,7 +6,6 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from camera_path.geometry import validate_project
 from camera_path.models import (
     CameraKeyframe,
     CameraOrientation,
@@ -24,7 +23,9 @@ from camera_path.models import (
     SpiralSegment,
     SplineSegment,
 )
-from camera_path.service import TrajectoryService
+from camera_path.repositories import ProjectRepository
+from camera_path.services import ChatService, TrajectoryService
+from camera_path.trajectory import validate_project
 
 SYSTEM_PROMPT = """You incrementally edit a semantic 3D camera trajectory.
 The project state is durable and earlier user/assistant messages are included as context.
@@ -408,8 +409,17 @@ class AgentUnavailableError(RuntimeError):
 
 
 class TrajectoryAgent:
-    def __init__(self, service: TrajectoryService, model: str, api_key: str | None = None) -> None:
-        self.service = service
+    def __init__(
+        self,
+        repository: ProjectRepository,
+        trajectory_service: TrajectoryService,
+        chat_service: ChatService,
+        model: str,
+        api_key: str | None = None,
+    ) -> None:
+        self.repository = repository
+        self.trajectory_service = trajectory_service
+        self.chat_service = chat_service
         self.model = model
         self.api_key = api_key
 
@@ -419,11 +429,12 @@ class TrajectoryAgent:
 
     async def _finish(self, draft: Project, expected_revision: int, answer: str) -> ChatResult:
         draft.chat_history.append(ChatHistoryMessage(role="assistant", content=answer))
-        draft = await self.service.commit_draft(draft, expected_revision)
+        self.trajectory_service.compile_draft(draft)
+        draft = await self.repository.commit(draft, expected_revision)
         return ChatResult(
             answer=answer,
             project=draft,
-            compiled=self.service.compile_draft(draft),
+            compiled=self.trajectory_service.compile_draft(draft),
         )
 
     @classmethod
@@ -439,7 +450,7 @@ class TrajectoryAgent:
         return candidate, output
 
     async def handle(self, project_id: str, message: str, message_id: str) -> ChatResult:
-        draft = await self.service.save_user_message(project_id, message_id, message)
+        draft = await self.chat_service.save_user_message(project_id, message_id, message)
         self.ensure_available()
         expected_revision = draft.revision
         client = AsyncOpenAI(api_key=self.api_key)
@@ -474,7 +485,7 @@ class TrajectoryAgent:
     async def handle_stream(
         self, project_id: str, message: str, message_id: str
     ) -> AsyncIterator[dict[str, Any]]:
-        draft = await self.service.save_user_message(project_id, message_id, message)
+        draft = await self.chat_service.save_user_message(project_id, message_id, message)
         self.ensure_available()
         expected_revision = draft.revision
         client = AsyncOpenAI(api_key=self.api_key)

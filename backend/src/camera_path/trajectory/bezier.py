@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from camera_path.trajectory_planner import QuinticPiece
+from camera_path.trajectory.planner import QuinticPiece
 
 Vector = NDArray[np.float64]
 BezierPoints = tuple[Vector, Vector, Vector, Vector]

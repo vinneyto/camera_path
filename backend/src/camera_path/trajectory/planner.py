@@ -208,9 +208,7 @@ def plan_minimum_jerk(
             continue
         unit = np.asarray(tangent, dtype=np.float64)
         unit /= np.linalg.norm(unit)
-        velocity = np.array(
-            [solution[_velocity_index(knot, dimension)] for dimension in range(3)]
-        )
+        velocity = np.array([solution[_velocity_index(knot, dimension)] for dimension in range(3)])
         if float(np.dot(velocity, unit)) <= 1e-9:
             extra_constraints.append((knot, unit))
     if extra_constraints:

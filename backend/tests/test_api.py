@@ -4,7 +4,7 @@ from httpx import ASGITransport, AsyncClient
 from camera_path.api import create_app
 from camera_path.config import Settings
 from camera_path.models import CameraOrientation, ChatHistoryMessage, ChatResult, ProjectCreate
-from camera_path.repository import SQLiteProjectRepository
+from camera_path.repositories import SQLiteProjectRepository
 
 
 @pytest.fixture
@@ -60,9 +60,7 @@ async def test_depth_of_field_timeline_is_persisted(app) -> None:
         )
         assert updated.status_code == 200
         keys = updated.json()["camera_track"]["depth_of_field_keyframes"]
-        compiled = (
-            await client.get(f"/projects/{project['id']}/trajectory/compiled")
-        ).json()
+        compiled = (await client.get(f"/projects/{project['id']}/trajectory/compiled")).json()
         assert compiled["camera_track"]["depth_of_field_keyframes"][0]["focus"] == {
             "kind": "scene_point",
             "scene_point_id": point_id,
@@ -226,9 +224,7 @@ async def test_client_can_edit_speed_and_camera_graphs(app) -> None:
         assert camera_response.status_code == 200
         camera_id = next(
             keyframe_id
-            for keyframe_id, keyframe in camera_response.json()["camera_track"][
-                "keyframes"
-            ].items()
+            for keyframe_id, keyframe in camera_response.json()["camera_track"]["keyframes"].items()
             if keyframe["path_position"] == 0.5
         )
 
@@ -387,9 +383,9 @@ async def test_project_lifecycle_endpoints(app) -> None:
         assert renamed.status_code == 200
         assert renamed.json()["name"] == "After"
 
-        draft = await app.state.trajectory_service.get_project(project_id)
+        draft = await app.state.project_service.get_project(project_id)
         draft.chat_history.append(ChatHistoryMessage(role="user", content="Old context"))
-        await app.state.trajectory_service.commit_draft(draft, draft.revision)
+        await app.state.project_repository.commit(draft, draft.revision)
         cleared_chat = await client.delete(f"/projects/{project_id}/chat")
         assert cleared_chat.status_code == 200
         assert cleared_chat.json()["chat_history"] == []
@@ -450,12 +446,11 @@ async def test_clear_trajectory_preserves_scene_setup(app) -> None:
 
 
 async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:
-    service = app.state.trajectory_service
-    project = await service.create_project(ProjectCreate(name="Streaming"))
+    project = await app.state.project_service.create_project(ProjectCreate(name="Streaming"))
     result = ChatResult(
         answer="hello",
         project=project,
-        compiled=service.compile_draft(project),
+        compiled=app.state.trajectory_service.compile_draft(project),
     )
 
     class FakeAgent:

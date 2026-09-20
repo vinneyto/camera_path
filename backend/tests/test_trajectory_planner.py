@@ -1,19 +1,14 @@
 import numpy as np
 
-from camera_path.bezier_compile import approximate_quintic
-from camera_path.trajectory_planner import plan_minimum_jerk
+from camera_path.trajectory import approximate_quintic, plan_minimum_jerk
 
 
 def _curvature(first: np.ndarray, second: np.ndarray) -> float:
-    return float(
-        np.linalg.norm(np.cross(first, second)) / max(np.linalg.norm(first) ** 3, 1e-15)
-    )
+    return float(np.linalg.norm(np.cross(first, second)) / max(np.linalg.norm(first) ** 3, 1e-15))
 
 
 def test_planner_hits_anchors_and_is_c2() -> None:
-    points = np.array(
-        [[0.0, 0.0, 0.0], [1.0, 0.3, 0.0], [2.0, 2.0, -1.0], [5.0, 2.5, 1.0]]
-    )
+    points = np.array([[0.0, 0.0, 0.0], [1.0, 0.3, 0.0], [2.0, 2.0, -1.0], [5.0, 2.5, 1.0]])
     pieces = plan_minimum_jerk(points)
 
     for index, piece in enumerate(pieces):
@@ -39,9 +34,7 @@ def test_tangent_constraints_preserve_direction_with_free_speed() -> None:
     start_tangent = np.array([0.0, 0.0, -2.0])
     end_tangent = np.array([1.0, 0.0, 0.0])
 
-    pieces = plan_minimum_jerk(
-        points, start_tangent=start_tangent, end_tangent=end_tangent
-    )
+    pieces = plan_minimum_jerk(points, start_tangent=start_tangent, end_tangent=end_tangent)
 
     for actual, expected in (
         (pieces[0].time_derivative(0.0, 1), start_tangent),
@@ -86,9 +79,7 @@ def test_adaptive_cubic_approximation_stays_within_tolerance() -> None:
 
 
 def test_uneven_short_segments_do_not_backtrack_or_stop() -> None:
-    points = np.array(
-        [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.01, 5.0, 0.0], [10.0, 5.0, 0.0]]
-    )
+    points = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.01, 5.0, 0.0], [10.0, 5.0, 0.0]])
 
     for index, piece in enumerate(plan_minimum_jerk(points)):
         chord = points[index + 1] - points[index]
@@ -143,8 +134,6 @@ def test_sparse_path_spreads_curvature_beyond_short_anchor_peaks() -> None:
 
     old = np.asarray(old_curvature)
     old_broad_fraction = np.mean(old > 0.25 * np.max(old))
-    new_broad_fraction = np.mean(
-        minimum_jerk_curvature > 0.25 * np.max(minimum_jerk_curvature)
-    )
+    new_broad_fraction = np.mean(minimum_jerk_curvature > 0.25 * np.max(minimum_jerk_curvature))
     assert new_broad_fraction > old_broad_fraction * 1.5
     assert np.max(minimum_jerk_curvature) < np.max(old)

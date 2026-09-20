@@ -9,6 +9,7 @@ dependencies = [
     "numpy>=2.0,<3",
     "openai>=1.100,<3",
     "pydantic-settings>=2.10,<3",
+    "scalar-fastapi>=1.4,<2",
     "uvicorn[standard]>=0.35,<1",
 ]
 
@@ -23,6 +24,7 @@ dev = [
 [project.scripts]
 camera-path = "camera_path.main:run"
 db-populate = "camera_path.seed:run"
+openapi-export = "camera_path.export_openapi:run"
 
 [build-system]
 requires = ["hatchling"]

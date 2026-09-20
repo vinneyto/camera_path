@@ -1,13 +1,12 @@
 from camera_path.models import SpiralSegment, SplineSegment
-from camera_path.repository import SQLiteProjectRepository
-from camera_path.seed import populate_demo_projects
-from camera_path.service import TrajectoryService
+from camera_path.repositories import SQLiteProjectRepository
+from camera_path.seed import create_seed_services, populate_demo_projects
 
 
 async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> None:
-    service = TrajectoryService(SQLiteProjectRepository(tmp_path / "seed.sqlite3"))
+    services = create_seed_services(SQLiteProjectRepository(tmp_path / "seed.sqlite3"))
 
-    results = await populate_demo_projects(service, seed=7)
+    results = await populate_demo_projects(services, seed=7)
 
     assert len(results) == 4
     assert all(result.created for result in results)
@@ -23,9 +22,9 @@ async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> No
         SpiralSegment,
         SplineSegment,
     ]
-    assert service.compile_draft(spline).position_segments
-    assert service.compile_draft(spiral).position_segments
-    mixed_curves = service.compile_draft(mixed).position_segments
+    assert services.trajectories.compile_draft(spline).position_segments
+    assert services.trajectories.compile_draft(spiral).position_segments
+    mixed_curves = services.trajectories.compile_draft(mixed).position_segments
     junctions = [
         (left, right)
         for left, right in zip(mixed_curves, mixed_curves[1:], strict=False)
@@ -44,16 +43,16 @@ async def test_populate_creates_spline_spiral_and_mixed_projects(tmp_path) -> No
         assert cosine > 1.0 - 1e-10
     assert len(inertial.anchors) == 5
     assert isinstance(inertial.segments[0], SplineSegment)
-    assert service.compile_draft(inertial).position_segments
+    assert services.trajectories.compile_draft(inertial).position_segments
 
 
 async def test_populate_is_idempotent_for_the_same_seed(tmp_path) -> None:
-    service = TrajectoryService(SQLiteProjectRepository(tmp_path / "seed.sqlite3"))
+    services = create_seed_services(SQLiteProjectRepository(tmp_path / "seed.sqlite3"))
 
-    first = await populate_demo_projects(service, seed=11)
-    second = await populate_demo_projects(service, seed=11)
+    first = await populate_demo_projects(services, seed=11)
+    second = await populate_demo_projects(services, seed=11)
 
     assert all(result.created for result in first)
     assert not any(result.created for result in second)
     assert [result.project.id for result in first] == [result.project.id for result in second]
-    assert len(await service.list_projects()) == 4
+    assert len(await services.projects.list_projects()) == 4

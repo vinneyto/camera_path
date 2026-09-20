@@ -5,33 +5,9 @@ import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Protocol
 
 from camera_path.models import Project
-
-
-class ProjectNotFoundError(KeyError):
-    pass
-
-
-class RevisionConflictError(RuntimeError):
-    pass
-
-
-class ProjectRepository(Protocol):
-    async def create(self, project: Project) -> Project: ...
-
-    async def get(self, project_id: str) -> Project: ...
-
-    async def list(self) -> list[Project]: ...
-
-    async def commit(self, draft: Project, expected_revision: int) -> Project: ...
-
-    async def delete(self, project_id: str) -> None: ...
-
-    async def undo(self, project_id: str) -> Project: ...
-
-    async def redo(self, project_id: str) -> Project: ...
+from camera_path.repositories.exceptions import ProjectNotFoundError, RevisionConflictError
 
 
 class SQLiteProjectRepository:

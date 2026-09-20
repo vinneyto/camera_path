@@ -27,9 +27,24 @@ uv sync
 uv run uvicorn camera_path.api:app --reload
 ```
 
-Open <http://127.0.0.1:8000/docs> for the interactive API. The backend loads configuration from
+Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
+served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from
 `backend/.env`. Geometry and REST endpoints work without an API key. Set `OPENAI_API_KEY` in that
 file only for the chat endpoints.
+
+The canonical API is mounted at `/api/v1`. Existing unversioned URLs remain available as legacy
+aliases but are hidden from OpenAPI. Read responses for one project include an `ETag` containing
+its revision, for example `"4"`. Send that value in `If-Match` when mutating the canonical API;
+a stale value returns `409`, and an omitted value returns `428`. Legacy aliases do not require
+`If-Match`.
+
+FastAPI route declarations and Pydantic models are the source of truth. Regenerate the checked-in
+schema artifact after changing the API contract:
+
+```bash
+cd backend
+uv run openapi-export openapi.json
+```
 
 ## Test
 

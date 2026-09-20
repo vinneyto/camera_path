@@ -18,8 +18,14 @@ from camera_path.models import (
     SpiralSegmentCreate,
     SplineSegmentCreate,
 )
-from camera_path.repository import SQLiteProjectRepository
-from camera_path.service import TrajectoryService
+from camera_path.repositories import ProjectRepository, SQLiteProjectRepository
+from camera_path.services import (
+    AnchorService,
+    ProjectService,
+    ScenePointService,
+    TimelineService,
+    TrajectoryService,
+)
 
 
 @dataclass(frozen=True)
@@ -28,18 +34,39 @@ class PopulatedProject:
     created: bool
 
 
+@dataclass(frozen=True)
+class SeedServices:
+    projects: ProjectService
+    anchors: AnchorService
+    scene_points: ScenePointService
+    trajectories: TrajectoryService
+    timelines: TimelineService
+
+
+def create_seed_services(
+    repository: ProjectRepository, compile_tolerance: float = 1e-3
+) -> SeedServices:
+    return SeedServices(
+        projects=ProjectService(repository),
+        anchors=AnchorService(repository),
+        scene_points=ScenePointService(repository),
+        trajectories=TrajectoryService(repository, compile_tolerance),
+        timelines=TimelineService(repository),
+    )
+
+
 def _rounded(value: float) -> float:
     return round(value, 3)
 
 
 async def _add_anchor(
-    service: TrajectoryService,
+    services: SeedServices,
     project: Project,
     label: str,
     position: tuple[float, float, float],
 ) -> tuple[Project, str]:
     previous_ids = set(project.anchors)
-    project = await service.add_anchor(
+    project = await services.anchors.add_anchor(
         project.id,
         AnchorCreate(label=label, surface_position=position),
     )
@@ -47,23 +74,21 @@ async def _add_anchor(
 
 
 async def _add_scene_point(
-    service: TrajectoryService,
+    services: SeedServices,
     project: Project,
     label: str,
     position: tuple[float, float, float],
 ) -> tuple[Project, str]:
     previous_ids = set(project.scene_points)
-    project = await service.add_scene_point(
+    project = await services.scene_points.add_scene_point(
         project.id,
         ScenePointCreate(label=label, position=position),
     )
     return project, (set(project.scene_points) - previous_ids).pop()
 
 
-async def _create_spline_project(
-    service: TrajectoryService, rng: random.Random, name: str
-) -> Project:
-    project = await service.create_project(ProjectCreate(name=name))
+async def _create_spline_project(services: SeedServices, rng: random.Random, name: str) -> Project:
+    project = await services.projects.create_project(ProjectCreate(name=name))
     anchor_ids: list[str] = []
     for index in range(6):
         position = (
@@ -71,28 +96,28 @@ async def _create_spline_project(
             _rounded(1.0 + rng.uniform(-0.35, 1.25)),
             _rounded(rng.uniform(-2.5, 2.5)),
         )
-        project, anchor_id = await _add_anchor(service, project, f"Spline {index + 1}", position)
+        project, anchor_id = await _add_anchor(services, project, f"Spline {index + 1}", position)
         anchor_ids.append(anchor_id)
 
-    project = await service.add_spline(
+    project = await services.trajectories.add_spline(
         project.id,
         SplineSegmentCreate(anchor_ids=anchor_ids, tension=0.15),
     )
     project, target_id = await _add_scene_point(
-        service,
+        services,
         project,
         "Spline subject",
         (_rounded(rng.uniform(-1.0, 1.0)), 0.75, _rounded(rng.uniform(-0.75, 0.75))),
     )
-    project = await service.add_speed_keyframe(
+    project = await services.timelines.add_speed_keyframe(
         project.id,
         SpeedKeyframeCreate(path_position=0.0, speed=1.2, interpolation_to_next="smoothstep"),
     )
-    project = await service.add_speed_keyframe(
+    project = await services.timelines.add_speed_keyframe(
         project.id,
         SpeedKeyframeCreate(path_position=0.55, speed=0.45, interpolation_to_next="linear"),
     )
-    return await service.add_camera_keyframe(
+    return await services.timelines.add_camera_keyframe(
         project.id,
         CameraKeyframeCreate(
             path_position=0.45,
@@ -102,10 +127,8 @@ async def _create_spline_project(
     )
 
 
-async def _create_spiral_project(
-    service: TrajectoryService, rng: random.Random, name: str
-) -> Project:
-    project = await service.create_project(ProjectCreate(name=name))
+async def _create_spiral_project(services: SeedServices, rng: random.Random, name: str) -> Project:
+    project = await services.projects.create_project(ProjectCreate(name=name))
     center = (
         _rounded(rng.uniform(-0.5, 0.5)),
         _rounded(rng.uniform(0.4, 0.9)),
@@ -126,10 +149,10 @@ async def _create_spiral_project(
         _rounded(center[2] - end_radius * sin(end_angle)),
     )
 
-    project, center_id = await _add_anchor(service, project, "Spiral center", center)
-    project, start_id = await _add_anchor(service, project, "Spiral start", start)
-    project, end_id = await _add_anchor(service, project, "Spiral end", end)
-    project = await service.add_spiral(
+    project, center_id = await _add_anchor(services, project, "Spiral center", center)
+    project, start_id = await _add_anchor(services, project, "Spiral start", start)
+    project, end_id = await _add_anchor(services, project, "Spiral end", end)
+    project = await services.trajectories.add_spiral(
         project.id,
         SpiralSegmentCreate(
             start_anchor_id=start_id,
@@ -142,20 +165,20 @@ async def _create_spiral_project(
         ),
     )
     project, target_id = await _add_scene_point(
-        service,
+        services,
         project,
         "Spiral subject",
         (center[0], _rounded(center[1] + 0.8), center[2]),
     )
-    project = await service.add_speed_keyframe(
+    project = await services.timelines.add_speed_keyframe(
         project.id,
         SpeedKeyframeCreate(path_position=0.0, speed=0.8, interpolation_to_next="smoothstep"),
     )
-    project = await service.add_speed_keyframe(
+    project = await services.timelines.add_speed_keyframe(
         project.id,
         SpeedKeyframeCreate(path_position=0.7, speed=0.3, interpolation_to_next="hold"),
     )
-    return await service.add_camera_keyframe(
+    return await services.timelines.add_camera_keyframe(
         project.id,
         CameraKeyframeCreate(
             path_position=0.0,
@@ -165,10 +188,8 @@ async def _create_spiral_project(
     )
 
 
-async def _create_mixed_project(
-    service: TrajectoryService, rng: random.Random, name: str
-) -> Project:
-    project = await service.create_project(ProjectCreate(name=name))
+async def _create_mixed_project(services: SeedServices, rng: random.Random, name: str) -> Project:
+    project = await services.projects.create_project(ProjectCreate(name=name))
     coordinates = {
         "Spline entry": (-4.0, 0.8, _rounded(rng.uniform(-0.4, 0.4))),
         "Spline bend": (-1.0, 1.5, _rounded(rng.uniform(-0.8, 0.8))),
@@ -180,16 +201,16 @@ async def _create_mixed_project(
     }
     ids: dict[str, str] = {}
     for label, position in coordinates.items():
-        project, ids[label] = await _add_anchor(service, project, label, position)
+        project, ids[label] = await _add_anchor(services, project, label, position)
 
-    project = await service.add_spline(
+    project = await services.trajectories.add_spline(
         project.id,
         SplineSegmentCreate(
             anchor_ids=[ids["Spline entry"], ids["Spline bend"], ids["First junction"]],
             tension=0.1,
         ),
     )
-    project = await service.add_spiral(
+    project = await services.trajectories.add_spiral(
         project.id,
         SpiralSegmentCreate(
             start_anchor_id=ids["First junction"],
@@ -201,7 +222,7 @@ async def _create_mixed_project(
             axial_law="smoothstep",
         ),
     )
-    project = await service.add_spline(
+    project = await services.trajectories.add_spline(
         project.id,
         SplineSegmentCreate(
             anchor_ids=[
@@ -213,17 +234,17 @@ async def _create_mixed_project(
         ),
     )
     project, target_id = await _add_scene_point(
-        service, project, "Mixed path subject", (0.0, 1.8, 0.0)
+        services, project, "Mixed path subject", (0.0, 1.8, 0.0)
     )
-    project = await service.add_speed_keyframe(
+    project = await services.timelines.add_speed_keyframe(
         project.id,
         SpeedKeyframeCreate(path_position=0.0, speed=1.0, interpolation_to_next="smoothstep"),
     )
-    project = await service.add_speed_keyframe(
+    project = await services.timelines.add_speed_keyframe(
         project.id,
         SpeedKeyframeCreate(path_position=0.65, speed=0.4, interpolation_to_next="linear"),
     )
-    return await service.add_camera_keyframe(
+    return await services.timelines.add_camera_keyframe(
         project.id,
         CameraKeyframeCreate(
             path_position=0.35,
@@ -233,9 +254,9 @@ async def _create_mixed_project(
     )
 
 
-async def _create_inertial_project(service: TrajectoryService, name: str) -> Project:
+async def _create_inertial_project(services: SeedServices, name: str) -> Project:
     """Sparse, deterministic path that exposes locally smoothed rail-like motion."""
-    project = await service.create_project(ProjectCreate(name=name))
+    project = await services.projects.create_project(ProjectCreate(name=name))
     coordinates = [
         (-6.0, 1.0, -1.0),
         (-2.0, 1.2, -0.8),
@@ -245,31 +266,27 @@ async def _create_inertial_project(service: TrajectoryService, name: str) -> Pro
     ]
     anchor_ids: list[str] = []
     for index, position in enumerate(coordinates, start=1):
-        project, anchor_id = await _add_anchor(
-            service, project, f"Inertial {index}", position
-        )
+        project, anchor_id = await _add_anchor(services, project, f"Inertial {index}", position)
         anchor_ids.append(anchor_id)
-    return await service.add_spline(
+    return await services.trajectories.add_spline(
         project.id, SplineSegmentCreate(anchor_ids=anchor_ids)
     )
 
 
-async def populate_demo_projects(
-    service: TrajectoryService, seed: int = 42
-) -> list[PopulatedProject]:
+async def populate_demo_projects(services: SeedServices, seed: int = 42) -> list[PopulatedProject]:
     names = {
         "spline": f"[Demo {seed}] Random spline",
         "spiral": f"[Demo {seed}] Random spiral",
         "mixed": f"[Demo {seed}] Smooth spline + spiral",
         "inertial": f"[Demo {seed}] Sparse inertial path",
     }
-    existing = {project.name: project for project in await service.list_projects()}
+    existing = {project.name: project for project in await services.projects.list_projects()}
     results: list[PopulatedProject] = []
 
     spline = existing.get(names["spline"])
     if spline is None:
         spline = await _create_spline_project(
-            service, random.Random(seed ^ 0x5A17), names["spline"]
+            services, random.Random(seed ^ 0x5A17), names["spline"]
         )
         results.append(PopulatedProject(project=spline, created=True))
     else:
@@ -278,7 +295,7 @@ async def populate_demo_projects(
     spiral = existing.get(names["spiral"])
     if spiral is None:
         spiral = await _create_spiral_project(
-            service, random.Random(seed ^ 0x5A18), names["spiral"]
+            services, random.Random(seed ^ 0x5A18), names["spiral"]
         )
         results.append(PopulatedProject(project=spiral, created=True))
     else:
@@ -286,14 +303,14 @@ async def populate_demo_projects(
 
     mixed = existing.get(names["mixed"])
     if mixed is None:
-        mixed = await _create_mixed_project(service, random.Random(seed ^ 0x5A19), names["mixed"])
+        mixed = await _create_mixed_project(services, random.Random(seed ^ 0x5A19), names["mixed"])
         results.append(PopulatedProject(project=mixed, created=True))
     else:
         results.append(PopulatedProject(project=mixed, created=False))
 
     inertial = existing.get(names["inertial"])
     if inertial is None:
-        inertial = await _create_inertial_project(service, names["inertial"])
+        inertial = await _create_inertial_project(services, names["inertial"])
         results.append(PopulatedProject(project=inertial, created=True))
     else:
         results.append(PopulatedProject(project=inertial, created=False))
@@ -302,8 +319,8 @@ async def populate_demo_projects(
 
 async def _populate(seed: int) -> None:
     repository = SQLiteProjectRepository(settings.database_path)
-    service = TrajectoryService(repository, settings.compile_tolerance)
-    for result in await populate_demo_projects(service, seed):
+    services = create_seed_services(repository, settings.compile_tolerance)
+    for result in await populate_demo_projects(services, seed):
         status = "created" if result.created else "already exists"
         print(f"{result.project.name}: {status} ({result.project.id})")
 
