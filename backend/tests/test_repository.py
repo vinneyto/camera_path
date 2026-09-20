@@ -8,7 +8,7 @@ from camera_path.models import (
     Project,
     ScenePoint,
 )
-from camera_path.repositories import SQLAlchemyProjectRepository
+from camera_path.repositories import ProjectRepository
 
 
 def sqlite_url(path: Path) -> str:
@@ -17,7 +17,7 @@ def sqlite_url(path: Path) -> str:
 
 async def test_projects_and_chat_survive_repository_restart(tmp_path: Path) -> None:
     database_path = tmp_path / "camera_path.sqlite3"
-    repository = SQLAlchemyProjectRepository(sqlite_url(database_path))
+    repository = ProjectRepository(sqlite_url(database_path))
     first = await repository.create(Project(name="First"))
     second = await repository.create(Project(name="Second"))
 
@@ -41,7 +41,7 @@ async def test_projects_and_chat_survive_repository_restart(tmp_path: Path) -> N
     saved = await repository.commit(first, first.revision)
 
     await repository.close()
-    restarted = SQLAlchemyProjectRepository(sqlite_url(database_path))
+    restarted = ProjectRepository(sqlite_url(database_path))
 
     assert await restarted.get(first.id) == saved
     assert (await restarted.get(second.id)).name == "Second"
@@ -97,7 +97,7 @@ def test_empty_camera_track_stays_empty_after_round_trip() -> None:
 
 async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:
     database_path = tmp_path / "camera_path.sqlite3"
-    repository = SQLAlchemyProjectRepository(sqlite_url(database_path))
+    repository = ProjectRepository(sqlite_url(database_path))
     project = await repository.create(Project())
     first = Anchor(label="A", surface_position=(0, 0, 0))
     project.anchors[first.id] = first
@@ -108,7 +108,7 @@ async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:
     await repository.undo(project.id)
 
     await repository.close()
-    restarted = SQLAlchemyProjectRepository(sqlite_url(database_path))
+    restarted = ProjectRepository(sqlite_url(database_path))
     undone = await restarted.get(project.id)
 
     assert first.id in undone.anchors
@@ -118,7 +118,7 @@ async def test_undo_and_redo_survive_repository_restart(tmp_path: Path) -> None:
 
 
 async def test_commit_after_undo_discards_redo_branch(tmp_path: Path) -> None:
-    repository = SQLAlchemyProjectRepository(sqlite_url(tmp_path / "camera_path.sqlite3"))
+    repository = ProjectRepository(sqlite_url(tmp_path / "camera_path.sqlite3"))
     project = await repository.create(Project())
     project.name = "revision one"
     project = await repository.commit(project, project.revision)
