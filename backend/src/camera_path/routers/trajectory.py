@@ -7,7 +7,7 @@ from camera_path.routers.contract import (
     set_revision_etag,
     with_project_etag,
 )
-from camera_path.routers.dependencies import MutationGuard, Service
+from camera_path.routers.dependencies import MutationGuard, TrajectoryServiceDep
 
 router = APIRouter(tags=["Trajectory"])
 
@@ -21,7 +21,7 @@ router = APIRouter(tags=["Trajectory"])
     responses=MUTATION_ERROR_RESPONSES,
 )
 async def clear_trajectory(
-    project_id: str, service: Service, response: Response, _guard: MutationGuard
+    project_id: str, service: TrajectoryServiceDep, response: Response, _guard: MutationGuard
 ) -> Project:
     return with_project_etag(response, await service.clear_trajectory(project_id))
 
@@ -37,7 +37,7 @@ async def clear_trajectory(
 async def add_spline(
     project_id: str,
     data: SplineSegmentCreate,
-    service: Service,
+    service: TrajectoryServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -55,7 +55,7 @@ async def add_spline(
 async def add_spiral(
     project_id: str,
     data: SpiralSegmentCreate,
-    service: Service,
+    service: TrajectoryServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -73,7 +73,7 @@ async def add_spiral(
 async def delete_segment(
     project_id: str,
     segment_id: str,
-    service: Service,
+    service: TrajectoryServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -93,7 +93,7 @@ async def delete_segment(
     responses=ERROR_RESPONSES,
 )
 async def compiled_trajectory(
-    project_id: str, service: Service, response: Response
+    project_id: str, service: TrajectoryServiceDep, response: Response
 ) -> CompiledTrajectory:
     compiled = await service.compile(project_id)
     set_revision_etag(response, compiled.revision)

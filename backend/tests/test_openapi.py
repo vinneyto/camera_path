@@ -7,7 +7,7 @@ from httpx import ASGITransport, AsyncClient
 from camera_path.api import create_app
 from camera_path.config import Settings
 from camera_path.export_openapi import export_schema
-from camera_path.repository import SQLiteProjectRepository
+from camera_path.repositories import SQLiteProjectRepository
 
 
 @pytest.fixture

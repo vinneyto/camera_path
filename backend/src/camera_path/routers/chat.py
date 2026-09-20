@@ -10,9 +10,9 @@ from openai import OpenAIError
 
 from camera_path.agent import AgentUnavailableError
 from camera_path.models import ChatMessage, ChatResult, Project
-from camera_path.repository import ProjectNotFoundError
+from camera_path.repositories import ProjectNotFoundError
 from camera_path.routers.contract import CHAT_ERROR_RESPONSES, with_project_etag
-from camera_path.routers.dependencies import Agent, MutationGuard, Service
+from camera_path.routers.dependencies import Agent, ChatServiceDep, MutationGuard
 
 router = APIRouter(tags=["Chat"])
 
@@ -26,7 +26,7 @@ router = APIRouter(tags=["Chat"])
     responses=CHAT_ERROR_RESPONSES,
 )
 async def clear_chat(
-    project_id: str, service: Service, response: Response, _guard: MutationGuard
+    project_id: str, service: ChatServiceDep, response: Response, _guard: MutationGuard
 ) -> Project:
     return with_project_etag(response, await service.clear_chat(project_id))
 
@@ -67,7 +67,7 @@ async def chat(
 async def save_user_message(
     project_id: str,
     data: ChatMessage,
-    service: Service,
+    service: ChatServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -101,7 +101,7 @@ async def stream_chat(
     project_id: str,
     data: ChatMessage,
     agent: Agent,
-    service: Service,
+    service: ChatServiceDep,
     _guard: MutationGuard,
 ) -> StreamingResponse:
     await service.save_user_message(project_id, data.id, data.message)

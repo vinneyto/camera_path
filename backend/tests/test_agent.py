@@ -2,8 +2,18 @@ from types import SimpleNamespace
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.models import LookAtPointAim, Project, ScenePoint
-from camera_path.repository import SQLiteProjectRepository
-from camera_path.services import TrajectoryService
+from camera_path.repositories import SQLiteProjectRepository
+from camera_path.services import ChatService, TrajectoryService
+
+
+def _agent(repository, *, api_key: str = "test") -> TrajectoryAgent:
+    return TrajectoryAgent(
+        repository,
+        TrajectoryService(repository),
+        ChatService(repository),
+        "test-model",
+        api_key=api_key,
+    )
 
 
 async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> None:
@@ -20,7 +30,7 @@ async def test_agent_persists_conversation_context(monkeypatch, tmp_path) -> Non
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
     project = await repository.create(Project())
-    agent = TrajectoryAgent(TrajectoryService(repository), "test-model", api_key="test")
+    agent = _agent(repository)
 
     first = await agent.handle(project.id, "first request", "message-1")
     second = await agent.handle(project.id, "second request", "message-2")
@@ -61,7 +71,7 @@ async def test_agent_returns_tool_errors_to_model(monkeypatch, tmp_path) -> None
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
     project = await repository.create(Project())
-    agent = TrajectoryAgent(TrajectoryService(repository), "test-model", api_key="test")
+    agent = _agent(repository)
 
     result = await agent.handle(project.id, "Delete the missing segment", "message-1")
 
@@ -94,7 +104,7 @@ async def test_agent_streams_text_and_persists_result(monkeypatch, tmp_path) -> 
     )
     repository = SQLiteProjectRepository(tmp_path / "state.sqlite3")
     project = await repository.create(Project())
-    agent = TrajectoryAgent(TrajectoryService(repository), "test-model", api_key="test")
+    agent = _agent(repository)
 
     events = [event async for event in agent.handle_stream(project.id, "Say hello", "message-1")]
 

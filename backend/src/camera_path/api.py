@@ -14,7 +14,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.config import Settings, settings
-from camera_path.repository import (
+from camera_path.repositories import (
     ProjectNotFoundError,
     ProjectRepository,
     RevisionConflictError,
@@ -22,7 +22,16 @@ from camera_path.repository import (
 )
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
-from camera_path.services import ChatMessageConflictError, TrajectoryService
+from camera_path.services import (
+    AnchorService,
+    ChatMessageConflictError,
+    ChatService,
+    HistoryService,
+    ProjectService,
+    ScenePointService,
+    TimelineService,
+    TrajectoryService,
+)
 from camera_path.trajectory import GeometryError
 
 API_PREFIX = "/api/v1"
@@ -92,9 +101,17 @@ def create_app(
 ) -> FastAPI:
     configured = app_settings or settings
     project_repository = repository or SQLiteProjectRepository(configured.database_path)
-    service = TrajectoryService(project_repository, configured.compile_tolerance)
+    project_service = ProjectService(project_repository)
+    anchor_service = AnchorService(project_repository)
+    scene_point_service = ScenePointService(project_repository)
+    trajectory_service = TrajectoryService(project_repository, configured.compile_tolerance)
+    timeline_service = TimelineService(project_repository)
+    chat_service = ChatService(project_repository)
+    history_service = HistoryService(project_repository)
     agent = TrajectoryAgent(
-        service,
+        project_repository,
+        trajectory_service,
+        chat_service,
         configured.openai_model,
         configured.openai_api_key.get_secret_value() if configured.openai_api_key else None,
     )
@@ -119,7 +136,14 @@ def create_app(
             {"name": "Chat", "description": "Trajectory-agent chat operations."},
         ],
     )
-    application.state.trajectory_service = service
+    application.state.project_service = project_service
+    application.state.project_repository = project_repository
+    application.state.anchor_service = anchor_service
+    application.state.scene_point_service = scene_point_service
+    application.state.trajectory_service = trajectory_service
+    application.state.timeline_service = timeline_service
+    application.state.chat_service = chat_service
+    application.state.history_service = history_service
     application.state.trajectory_agent = agent
     application.state.project_mutation_locks: dict[str, asyncio.Lock] = {}
     application.add_middleware(

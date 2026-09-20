@@ -8,10 +8,19 @@ from camera_path.models import (
     SplineSegment,
     SplineSegmentCreate,
 )
+from camera_path.repositories import ProjectRepository
 from camera_path.services.base import ServiceBase
+from camera_path.trajectory import compile_project
 
 
-class TrajectoryEditingService(ServiceBase):
+class TrajectoryService(ServiceBase):
+    def __init__(self, repository: ProjectRepository, compile_tolerance: float = 1e-3) -> None:
+        super().__init__(repository)
+        self.compile_tolerance = compile_tolerance
+
+    def compile_draft(self, project: Project) -> CompiledTrajectory:
+        return compile_project(project, tolerance=self.compile_tolerance)
+
     async def clear_trajectory(self, project_id: str) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Response
 
 from camera_path.models import Project
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
-from camera_path.routers.dependencies import MutationGuard, Service
+from camera_path.routers.dependencies import HistoryServiceDep, MutationGuard
 
 router = APIRouter(tags=["History"])
 
@@ -16,7 +16,7 @@ router = APIRouter(tags=["History"])
     responses=MUTATION_ERROR_RESPONSES,
 )
 async def undo(
-    project_id: str, service: Service, response: Response, _guard: MutationGuard
+    project_id: str, service: HistoryServiceDep, response: Response, _guard: MutationGuard
 ) -> Project:
     return with_project_etag(response, await service.undo(project_id))
 
@@ -30,6 +30,6 @@ async def undo(
     responses=MUTATION_ERROR_RESPONSES,
 )
 async def redo(
-    project_id: str, service: Service, response: Response, _guard: MutationGuard
+    project_id: str, service: HistoryServiceDep, response: Response, _guard: MutationGuard
 ) -> Project:
     return with_project_etag(response, await service.redo(project_id))

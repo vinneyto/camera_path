@@ -15,7 +15,7 @@ from camera_path.models import (
     SpeedKeyframeUpdate,
 )
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
-from camera_path.routers.dependencies import MutationGuard, Service
+from camera_path.routers.dependencies import MutationGuard, TimelineServiceDep
 
 router = APIRouter(tags=["Timelines"])
 
@@ -35,7 +35,7 @@ def _not_found(error: KeyError) -> HTTPException:
 async def update_motion_profile(
     project_id: str,
     data: MotionProfileUpdate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -53,7 +53,7 @@ async def update_motion_profile(
 async def add_speed_keyframe(
     project_id: str,
     data: SpeedKeyframeCreate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -72,7 +72,7 @@ async def update_speed_keyframe(
     project_id: str,
     keyframe_id: str,
     data: SpeedKeyframeUpdate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -94,7 +94,7 @@ async def update_speed_keyframe(
 async def delete_speed_keyframe(
     project_id: str,
     keyframe_id: str,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -116,7 +116,7 @@ async def delete_speed_keyframe(
 async def update_camera_track(
     project_id: str,
     data: CameraTrackUpdate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -134,7 +134,7 @@ async def update_camera_track(
 async def add_camera_keyframe(
     project_id: str,
     data: CameraKeyframeCreate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -153,7 +153,7 @@ async def update_camera_keyframe(
     project_id: str,
     keyframe_id: str,
     data: CameraKeyframeUpdate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -175,7 +175,7 @@ async def update_camera_keyframe(
 async def delete_camera_keyframe(
     project_id: str,
     keyframe_id: str,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -197,7 +197,7 @@ async def delete_camera_keyframe(
 async def update_default_camera_orientation(
     project_id: str,
     data: CameraOrientation,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -216,7 +216,7 @@ async def update_default_camera_orientation(
 async def add_camera_orientation_keyframe(
     project_id: str,
     data: CameraOrientationKeyframeCreate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -236,7 +236,7 @@ async def update_camera_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
     data: CameraOrientationKeyframeUpdate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -258,7 +258,7 @@ async def update_camera_orientation_keyframe(
 async def delete_camera_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -280,7 +280,7 @@ async def delete_camera_orientation_keyframe(
 async def add_depth_of_field_keyframe(
     project_id: str,
     data: DepthOfFieldKeyframeCreate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -300,7 +300,7 @@ async def update_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
     data: DepthOfFieldKeyframeUpdate,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
@@ -322,7 +322,7 @@ async def update_depth_of_field_keyframe(
 async def delete_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
-    service: Service,
+    service: TimelineServiceDep,
     response: Response,
     _guard: MutationGuard,
 ) -> Project:
