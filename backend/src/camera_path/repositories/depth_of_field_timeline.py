@@ -3,7 +3,12 @@ from __future__ import annotations
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from camera_path.models import DepthOfFieldKeyframe, DepthOfFieldTimeline
+from camera_path.models import (
+    CenterWeightedDepthOfFieldFocus,
+    DepthOfFieldKeyframe,
+    DepthOfFieldTimeline,
+    ScenePointDepthOfFieldFocus,
+)
 from camera_path.persistence.models import DepthOfFieldKeyframeRecord
 
 
@@ -19,7 +24,17 @@ class DepthOfFieldTimelineRepository:
         )
         return DepthOfFieldTimeline(
             keyframes={
-                record.id: DepthOfFieldKeyframe.model_validate_json(record.payload)
+                record.id: DepthOfFieldKeyframe(
+                    id=record.id,
+                    path_position=record.path_position,
+                    focus=(
+                        ScenePointDepthOfFieldFocus(scene_point_id=record.focus_scene_point_id)
+                        if record.focus_kind == "scene_point"
+                        else CenterWeightedDepthOfFieldFocus()
+                    ),
+                    focus_range_scale=record.focus_range_scale,
+                    bokeh_scale=record.bokeh_scale,
+                )
                 for record in records
             }
         )
@@ -32,7 +47,17 @@ class DepthOfFieldTimelineRepository:
         )
         self.session.add_all(
             DepthOfFieldKeyframeRecord(
-                id=item.id, project_id=project_id, payload=item.model_dump_json()
+                id=item.id,
+                project_id=project_id,
+                path_position=item.path_position,
+                focus_kind=item.focus.kind,
+                focus_scene_point_id=(
+                    item.focus.scene_point_id
+                    if isinstance(item.focus, ScenePointDepthOfFieldFocus)
+                    else None
+                ),
+                focus_range_scale=item.focus_range_scale,
+                bokeh_scale=item.bokeh_scale,
             )
             for item in timeline.keyframes.values()
         )

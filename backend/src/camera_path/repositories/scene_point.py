@@ -15,13 +15,27 @@ class ScenePointRepository:
         records = await self.session.scalars(
             select(ScenePointRecord).where(ScenePointRecord.project_id == project_id)
         )
-        return {record.id: ScenePoint.model_validate_json(record.payload) for record in records}
+        return {
+            record.id: ScenePoint(
+                id=record.id,
+                label=record.label,
+                position=(record.position_x, record.position_y, record.position_z),
+            )
+            for record in records
+        }
 
     async def replace(self, project_id: str, points: dict[str, ScenePoint]) -> None:
         await self.session.execute(
             delete(ScenePointRecord).where(ScenePointRecord.project_id == project_id)
         )
         self.session.add_all(
-            ScenePointRecord(id=item.id, project_id=project_id, payload=item.model_dump_json())
+            ScenePointRecord(
+                id=item.id,
+                project_id=project_id,
+                label=item.label,
+                position_x=item.position[0],
+                position_y=item.position[1],
+                position_z=item.position[2],
+            )
             for item in points.values()
         )

@@ -19,7 +19,13 @@ class SpeedTimelineRepository:
             select(SpeedKeyframeRecord).where(SpeedKeyframeRecord.project_id == project_id)
         )
         keyframes = {
-            record.id: SpeedKeyframe.model_validate_json(record.payload) for record in records
+            record.id: SpeedKeyframe(
+                id=record.id,
+                path_position=record.path_position,
+                speed=record.speed,
+                interpolation_to_next=record.interpolation_to_next,
+            )
+            for record in records
         }
         return MotionProfile(default_speed=profile.default_speed, keyframes=keyframes)
 
@@ -35,6 +41,12 @@ class SpeedTimelineRepository:
             delete(SpeedKeyframeRecord).where(SpeedKeyframeRecord.project_id == project_id)
         )
         self.session.add_all(
-            SpeedKeyframeRecord(id=item.id, project_id=project_id, payload=item.model_dump_json())
+            SpeedKeyframeRecord(
+                id=item.id,
+                project_id=project_id,
+                path_position=item.path_position,
+                speed=item.speed,
+                interpolation_to_next=item.interpolation_to_next,
+            )
             for item in timeline.keyframes.values()
         )

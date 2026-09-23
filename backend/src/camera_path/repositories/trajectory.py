@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import json
-
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from camera_path.models import SpiralSegment, SplineSegment, TrajectorySegment
 from camera_path.persistence.models import SegmentAnchorRecord, TrajectorySegmentRecord
@@ -18,19 +17,35 @@ class TrajectoryRepository:
             select(TrajectorySegmentRecord)
             .where(TrajectorySegmentRecord.project_id == project_id)
             .order_by(TrajectorySegmentRecord.position)
+            .options(selectinload(TrajectorySegmentRecord.anchors))
         )
         result: list[TrajectorySegment] = []
         for record in records:
-            payload = json.loads(record.payload)
-            model = SplineSegment if payload["kind"] == "spline" else SpiralSegment
-            result.append(model.model_validate(payload))
+            anchor_ids = [
+                anchor.anchor_id for anchor in sorted(record.anchors, key=lambda a: a.position)
+            ]
+            if record.kind == "spline":
+                result.append(
+                    SplineSegment(id=record.id, anchor_ids=anchor_ids, tension=record.tension)
+                )
+            else:
+                result.append(
+                    SpiralSegment(
+                        id=record.id,
+                        start_anchor_id=anchor_ids[0],
+                        center_anchor_id=anchor_ids[1],
+                        end_anchor_id=anchor_ids[2],
+                        turns=record.turns,
+                        direction=record.direction,
+                        radial_law=record.radial_law,
+                        axial_law=record.axial_law,
+                    )
+                )
         return result
 
     async def replace(self, project_id: str, segments: list[TrajectorySegment]) -> None:
         await self.session.execute(
-            delete(TrajectorySegmentRecord).where(
-                TrajectorySegmentRecord.project_id == project_id
-            )
+            delete(TrajectorySegmentRecord).where(TrajectorySegmentRecord.project_id == project_id)
         )
         for position, segment in enumerate(segments):
             self.session.add(
@@ -38,7 +53,12 @@ class TrajectoryRepository:
                     id=segment.id,
                     project_id=project_id,
                     position=position,
-                    payload=segment.model_dump_json(),
+                    kind=segment.kind,
+                    tension=segment.tension if isinstance(segment, SplineSegment) else None,
+                    turns=segment.turns if isinstance(segment, SpiralSegment) else None,
+                    direction=segment.direction if isinstance(segment, SpiralSegment) else None,
+                    radial_law=segment.radial_law if isinstance(segment, SpiralSegment) else None,
+                    axial_law=segment.axial_law if isinstance(segment, SpiralSegment) else None,
                 )
             )
             anchor_ids = (
