@@ -3,74 +3,44 @@ import type {
   CameraOrientationKeyframe,
   CenterWeightedDepthOfFieldFocus,
   FollowPathAim,
-  Interpolation,
   SpeedKeyframe,
-  Vec3,
 } from "@/entities/project/model/types";
+import type * as Api from "@/shared/api/generated/model";
 
-export interface ResolvedLookAtPointAim {
-  kind: "look_at_point";
-  scene_point_id: string;
-  position: Vec3;
-}
-
+// The renderer expects the defaults which Pydantic includes in serialized responses.
+export type ResolvedLookAtPointAim = Required<Api.ResolvedLookAtPointAim>;
 export type ResolvedCameraAim = FollowPathAim | ResolvedLookAtPointAim;
-
-export interface ResolvedScenePointDepthOfFieldFocus {
-  kind: "scene_point";
-  scene_point_id: string;
-  position: Vec3;
-}
-
+export type ResolvedScenePointDepthOfFieldFocus =
+  Required<Api.ResolvedScenePointDepthOfFieldFocus>;
 export type ResolvedDepthOfFieldFocus =
   CenterWeightedDepthOfFieldFocus | ResolvedScenePointDepthOfFieldFocus;
-
-export interface CompiledDepthOfFieldKeyframe {
-  id: string;
-  path_position: number;
-  focus: ResolvedDepthOfFieldFocus;
-  focus_range_scale: number;
-  bokeh_scale: number;
-}
-
-export interface CubicBezier3D {
-  source_segment_id: string;
-  p0: Vec3;
-  p1: Vec3;
-  p2: Vec3;
-  p3: Vec3;
-  length: number;
-}
-
-export interface CompiledCameraKeyframe {
-  id: string;
-  path_position: number;
+export type CubicBezier3D = Api.CubicBezier3D;
+export type CompiledDepthOfFieldKeyframe = Omit<
+  Api.CompiledDepthOfFieldKeyframe,
+  "focus"
+> & { focus: ResolvedDepthOfFieldFocus };
+export type CompiledCameraKeyframe = Omit<Api.CompiledCameraKeyframe, "aim"> & {
   aim: ResolvedCameraAim;
-  interpolation_to_next: Interpolation;
-}
-
-export interface CompiledTrajectory {
-  project_id: string;
-  revision: number;
-  position_segments: CubicBezier3D[];
-  arc_length_table: Array<{
-    segment_index: number;
-    t: number;
-    distance: number;
-  }>;
-  total_length: number;
-  duration_seconds: number;
-  motion_profile: {
-    default_speed: number;
+};
+export type CompiledTrajectory = Omit<
+  Required<Api.CompiledTrajectory>,
+  "camera_track" | "motion_profile"
+> & {
+  motion_profile: Omit<Api.CompiledMotionProfile, "keyframes"> & {
     keyframes: SpeedKeyframe[];
   };
-  camera_track: {
-    default_aim: FollowPathAim;
-    keyframes: CompiledCameraKeyframe[];
+  camera_track: Omit<
+    Api.CompiledCameraTrack,
+    | "default_aim"
+    | "default_orientation"
+    | "keyframes"
+    | "orientation_keyframes"
+    | "depth_of_field_keyframes"
+  > & {
+    default_aim: ResolvedCameraAim;
     default_orientation: CameraOrientation;
+    keyframes: CompiledCameraKeyframe[];
     orientation_keyframes: CameraOrientationKeyframe[];
     depth_of_field_keyframes: CompiledDepthOfFieldKeyframe[];
-    world_up: Vec3;
   };
-  warnings: string[];
-}
+};
