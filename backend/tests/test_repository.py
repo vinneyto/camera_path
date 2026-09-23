@@ -9,11 +9,33 @@ from camera_path.models import (
     Project,
     ScenePoint,
 )
+from camera_path.persistence.models import AnchorRecord, CameraTrackRecord, Vector3
 from camera_path.repositories import ProjectRepository
 
 
 def sqlite_url(path: Path) -> str:
     return f"sqlite+aiosqlite:///{path}"
+
+
+async def test_vectors_are_composites_over_numeric_columns(tmp_path: Path) -> None:
+    repository = ProjectRepository(sqlite_url(tmp_path / "vectors.sqlite3"))
+    project = Project()
+    anchor = Anchor(label="Point", surface_position=(1, 2, 3))
+    project.anchors[anchor.id] = anchor
+    project.camera_track.world_up = (0, 0, 1)
+    await repository.create(project)
+
+    async with repository.session_factory.begin() as session:
+        record = await session.get(CameraTrackRecord, project.id)
+        assert record is not None
+        assert record.world_up == Vector3(0, 0, 1)
+        record.world_up = Vector3(0, 1, 0)
+        anchor_record = await session.get(AnchorRecord, anchor.id)
+        assert anchor_record is not None
+        assert anchor_record.surface_position == Vector3(1, 2, 3)
+
+    assert (await repository.get(project.id)).camera_track.world_up == (0, 1, 0)
+    await repository.close()
 
 
 async def test_projects_and_chat_survive_repository_restart(tmp_path: Path) -> None:

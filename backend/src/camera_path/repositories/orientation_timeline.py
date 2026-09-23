@@ -3,8 +3,9 @@ from __future__ import annotations
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from camera_path.models import CameraOrientation, CameraOrientationKeyframe, OrientationTimeline
+from camera_path.models import CameraOrientationKeyframe, OrientationTimeline
 from camera_path.persistence.models import OrientationKeyframeRecord
+from camera_path.repositories.camera_fields import orientation_columns, orientation_from_record
 from camera_path.repositories.camera_track import get_or_create_camera_track
 
 
@@ -20,16 +21,24 @@ class OrientationTimelineRepository:
             )
         )
         return OrientationTimeline(
-            default_orientation=CameraOrientation.model_validate_json(track.default_orientation),
+            default_orientation=orientation_from_record(track, "default_orientation_"),
             keyframes={
-                record.id: CameraOrientationKeyframe.model_validate_json(record.payload)
+                record.id: CameraOrientationKeyframe(
+                    id=record.id,
+                    path_position=record.path_position,
+                    orientation=orientation_from_record(record, ""),
+                    interpolation_to_next=record.interpolation_to_next,
+                )
                 for record in records
             },
         )
 
     async def replace(self, project_id: str, timeline: OrientationTimeline) -> None:
         track = await get_or_create_camera_track(self.session, project_id)
-        track.default_orientation = timeline.default_orientation.model_dump_json()
+        for name, value in orientation_columns(
+            "default_orientation_", timeline.default_orientation
+        ).items():
+            setattr(track, name, value)
         await self.session.execute(
             delete(OrientationKeyframeRecord).where(
                 OrientationKeyframeRecord.project_id == project_id
@@ -37,7 +46,11 @@ class OrientationTimelineRepository:
         )
         self.session.add_all(
             OrientationKeyframeRecord(
-                id=item.id, project_id=project_id, payload=item.model_dump_json()
+                id=item.id,
+                project_id=project_id,
+                path_position=item.path_position,
+                interpolation_to_next=item.interpolation_to_next,
+                **orientation_columns("", item.orientation),
             )
             for item in timeline.keyframes.values()
         )

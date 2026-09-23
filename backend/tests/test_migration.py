@@ -1,3 +1,4 @@
+import asyncio
 import sqlite3
 
 import pytest
@@ -8,13 +9,20 @@ from camera_path.config import settings
 from camera_path.models import (
     Anchor,
     CameraKeyframe,
+    CameraOrientation,
+    CameraOrientationKeyframe,
     ChatHistoryMessage,
+    DepthOfFieldKeyframe,
     FollowPathAim,
+    LookAtPointAim,
     Project,
     ScenePoint,
+    ScenePointDepthOfFieldFocus,
     SpeedKeyframe,
+    SpiralSegment,
     SplineSegment,
 )
+from camera_path.repositories import ProjectRepository
 
 
 @pytest.mark.parametrize("unnamed_check", [False, True])
@@ -75,9 +83,7 @@ def test_legacy_snapshot_is_migrated_to_normalized_tables(
         assert connection.execute("SELECT content FROM chat_messages").fetchone() == ("Keep me",)
         table_names = {
             row[0]
-            for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table'"
-            )
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
         }
         assert "project_snapshots" not in table_names
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
@@ -109,8 +115,7 @@ def test_shared_aim_keyframe_id_is_scoped_to_project(tmp_path, monkeypatch) -> N
         for project in projects:
             connection.execute("INSERT INTO projects (id, cursor) VALUES (?, 0)", (project.id,))
             connection.execute(
-                "INSERT INTO project_snapshots (project_id, position, payload) "
-                "VALUES (?, 0, ?)",
+                "INSERT INTO project_snapshots (project_id, position, payload) VALUES (?, 0, ?)",
                 (project.id, project.model_dump_json()),
             )
 
@@ -120,4 +125,89 @@ def test_shared_aim_keyframe_id_is_scoped_to_project(tmp_path, monkeypatch) -> N
         assert connection.execute(
             "SELECT project_id, id FROM aim_keyframes ORDER BY project_id"
         ).fetchall() == [(project.id, "shared") for project in sorted(projects, key=lambda p: p.id)]
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_existing_normalized_data_moves_to_columns(tmp_path, monkeypatch) -> None:
+    database_path = tmp_path / "normalized.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20260920_0001")
+
+    project = Project(name="Typed", revision=8)
+    anchors = [
+        Anchor(
+            label=f"Anchor {i}",
+            surface_position=(i, 2, 3),
+            surface_normal=(0, 0, 1),
+            lift=0.5,
+            lift_axis="surface_normal",
+        )
+        for i in range(3)
+    ]
+    project.anchors = {anchor.id: anchor for anchor in anchors}
+    point = ScenePoint(label="Focus", position=(4, 5, 6))
+    project.scene_points = {point.id: point}
+    project.segments = [
+        SplineSegment(anchor_ids=[anchors[0].id, anchors[1].id], tension=0.25),
+        SpiralSegment(
+            start_anchor_id=anchors[0].id,
+            center_anchor_id=anchors[1].id,
+            end_anchor_id=anchors[2].id,
+            turns=2.5,
+            direction="cw",
+            radial_law="linear",
+            axial_law="linear",
+        ),
+    ]
+    speed = SpeedKeyframe(path_position=0.3, speed=2, interpolation_to_next="linear")
+    project.motion_profile.keyframes[speed.id] = speed
+    project.camera_track.default_aim = LookAtPointAim(scene_point_id=point.id)
+    project.camera_track.world_up = (0, 0, 1)
+    aim = CameraKeyframe(path_position=0.5, aim=LookAtPointAim(scene_point_id=point.id))
+    project.camera_track.keyframes[aim.id] = aim
+    orientation = CameraOrientationKeyframe(
+        path_position=0.6, orientation=CameraOrientation(yaw_deg=1, pitch_deg=2, roll_deg=3)
+    )
+    project.camera_track.default_orientation = CameraOrientation(yaw_deg=4)
+    project.camera_track.orientation_keyframes[orientation.id] = orientation
+    focus = DepthOfFieldKeyframe(
+        path_position=0.8,
+        focus=ScenePointDepthOfFieldFocus(scene_point_id=point.id),
+        focus_range_scale=0.4,
+        bokeh_scale=3.5,
+    )
+    project.camera_track.depth_of_field_keyframes[focus.id] = focus
+    project.chat_history = [ChatHistoryMessage(role="user", content="Preserve")]
+
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO projects (id, cursor) VALUES (?, 0)", (project.id,))
+        connection.execute(
+            "INSERT INTO project_snapshots (project_id, position, payload) VALUES (?, 0, ?)",
+            (project.id, project.model_dump_json()),
+        )
+    command.upgrade(config, "20260920_0002")
+    command.upgrade(config, "head")
+
+    async def check_project() -> None:
+        repository = ProjectRepository(settings.database_url)
+        try:
+            assert await repository.get(project.id) == project
+        finally:
+            await repository.close()
+
+    asyncio.run(check_project())
+    with sqlite3.connect(database_path) as connection:
+        for table in (
+            "anchors",
+            "scene_points",
+            "trajectory_segments",
+            "speed_keyframes",
+            "camera_tracks",
+            "aim_keyframes",
+            "orientation_keyframes",
+            "depth_of_field_keyframes",
+        ):
+            columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+            assert "payload" not in columns
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
