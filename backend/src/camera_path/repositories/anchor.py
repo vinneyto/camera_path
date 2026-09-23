@@ -4,7 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import Anchor
-from camera_path.persistence.models import AnchorRecord
+from camera_path.persistence.models import AnchorRecord, Vector3
 
 
 class AnchorRepository:
@@ -19,16 +19,8 @@ class AnchorRepository:
             record.id: Anchor(
                 id=record.id,
                 label=record.label,
-                surface_position=(
-                    record.surface_position_x,
-                    record.surface_position_y,
-                    record.surface_position_z,
-                ),
-                surface_normal=(
-                    record.surface_normal_x,
-                    record.surface_normal_y,
-                    record.surface_normal_z,
-                ),
+                surface_position=record.surface_position.as_tuple(),
+                surface_normal=record.surface_normal.as_tuple(),
                 lift=record.lift,
                 lift_axis=record.lift_axis,
             )
@@ -44,12 +36,8 @@ class AnchorRepository:
                 id=item.id,
                 project_id=project_id,
                 label=item.label,
-                surface_position_x=item.surface_position[0],
-                surface_position_y=item.surface_position[1],
-                surface_position_z=item.surface_position[2],
-                surface_normal_x=item.surface_normal[0],
-                surface_normal_y=item.surface_normal[1],
-                surface_normal_z=item.surface_normal[2],
+                surface_position=Vector3(*item.surface_position),
+                surface_normal=Vector3(*item.surface_normal),
                 lift=item.lift,
                 lift_axis=item.lift_axis,
             )

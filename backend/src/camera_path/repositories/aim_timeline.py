@@ -4,7 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import AimTimeline, CameraKeyframe
-from camera_path.persistence.models import AimKeyframeRecord
+from camera_path.persistence.models import AimKeyframeRecord, Vector3
 from camera_path.repositories.camera_fields import aim_columns, aim_from_record
 from camera_path.repositories.camera_track import get_or_create_camera_track
 
@@ -20,7 +20,7 @@ class AimTimelineRepository:
         )
         return AimTimeline(
             default_aim=aim_from_record(track, "default_aim"),
-            world_up=(track.world_up_x, track.world_up_y, track.world_up_z),
+            world_up=track.world_up.as_tuple(),
             keyframes={
                 record.id: CameraKeyframe(
                     id=record.id,
@@ -36,7 +36,7 @@ class AimTimelineRepository:
         track = await get_or_create_camera_track(self.session, project_id)
         for name, value in aim_columns("default_aim", timeline.default_aim).items():
             setattr(track, name, value)
-        track.world_up_x, track.world_up_y, track.world_up_z = timeline.world_up
+        track.world_up = Vector3(*timeline.world_up)
         await self.session.execute(
             delete(AimKeyframeRecord).where(AimKeyframeRecord.project_id == project_id)
         )

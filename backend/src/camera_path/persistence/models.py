@@ -1,7 +1,19 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from sqlalchemy import Float, ForeignKey, Integer, Text, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, composite, mapped_column, relationship
+
+
+@dataclass(frozen=True)
+class Vector3:
+    x: float
+    y: float
+    z: float
+
+    def as_tuple(self) -> tuple[float, float, float]:
+        return self.x, self.y, self.z
 
 
 class Base(DeclarativeBase):
@@ -33,12 +45,16 @@ class AnchorRecord(ProjectChildRecord, Base):
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     label: Mapped[str] = mapped_column(Text, nullable=False)
-    surface_position_x: Mapped[float] = mapped_column(Float, nullable=False)
-    surface_position_y: Mapped[float] = mapped_column(Float, nullable=False)
-    surface_position_z: Mapped[float] = mapped_column(Float, nullable=False)
-    surface_normal_x: Mapped[float] = mapped_column(Float, nullable=False)
-    surface_normal_y: Mapped[float] = mapped_column(Float, nullable=False)
-    surface_normal_z: Mapped[float] = mapped_column(Float, nullable=False)
+    surface_position: Mapped[Vector3] = composite(
+        mapped_column("surface_position_x", Float, nullable=False),
+        mapped_column("surface_position_y", Float, nullable=False),
+        mapped_column("surface_position_z", Float, nullable=False),
+    )
+    surface_normal: Mapped[Vector3] = composite(
+        mapped_column("surface_normal_x", Float, nullable=False),
+        mapped_column("surface_normal_y", Float, nullable=False),
+        mapped_column("surface_normal_z", Float, nullable=False),
+    )
     lift: Mapped[float] = mapped_column(Float, nullable=False)
     lift_axis: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -48,9 +64,11 @@ class ScenePointRecord(ProjectChildRecord, Base):
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     label: Mapped[str] = mapped_column(Text, nullable=False)
-    position_x: Mapped[float] = mapped_column(Float, nullable=False)
-    position_y: Mapped[float] = mapped_column(Float, nullable=False)
-    position_z: Mapped[float] = mapped_column(Float, nullable=False)
+    position: Mapped[Vector3] = composite(
+        mapped_column("position_x", Float, nullable=False),
+        mapped_column("position_y", Float, nullable=False),
+        mapped_column("position_z", Float, nullable=False),
+    )
 
 
 class TrajectorySegmentRecord(ProjectChildRecord, Base):
@@ -111,9 +129,11 @@ class CameraTrackRecord(Base):
     default_aim_kind: Mapped[str] = mapped_column(Text, nullable=False)
     default_aim_direction: Mapped[str | None] = mapped_column(Text)
     default_aim_scene_point_id: Mapped[str | None] = mapped_column(Text)
-    world_up_x: Mapped[float] = mapped_column(Float, nullable=False)
-    world_up_y: Mapped[float] = mapped_column(Float, nullable=False)
-    world_up_z: Mapped[float] = mapped_column(Float, nullable=False)
+    world_up: Mapped[Vector3] = composite(
+        mapped_column("world_up_x", Float, nullable=False),
+        mapped_column("world_up_y", Float, nullable=False),
+        mapped_column("world_up_z", Float, nullable=False),
+    )
     default_orientation_yaw_deg: Mapped[float] = mapped_column(Float, nullable=False)
     default_orientation_pitch_deg: Mapped[float] = mapped_column(Float, nullable=False)
     default_orientation_roll_deg: Mapped[float] = mapped_column(Float, nullable=False)

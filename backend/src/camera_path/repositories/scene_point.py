@@ -4,7 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import ScenePoint
-from camera_path.persistence.models import ScenePointRecord
+from camera_path.persistence.models import ScenePointRecord, Vector3
 
 
 class ScenePointRepository:
@@ -19,7 +19,7 @@ class ScenePointRepository:
             record.id: ScenePoint(
                 id=record.id,
                 label=record.label,
-                position=(record.position_x, record.position_y, record.position_z),
+                position=record.position.as_tuple(),
             )
             for record in records
         }
@@ -33,9 +33,7 @@ class ScenePointRepository:
                 id=item.id,
                 project_id=project_id,
                 label=item.label,
-                position_x=item.position[0],
-                position_y=item.position[1],
-                position_z=item.position[2],
+                position=Vector3(*item.position),
             )
             for item in points.values()
         )
