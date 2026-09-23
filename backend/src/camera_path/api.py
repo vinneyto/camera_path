@@ -19,7 +19,6 @@ from camera_path.repositories import (
     ProjectNotFoundError,
     ProjectRepository,
     RevisionConflictError,
-    SQLAlchemyProjectRepository,
 )
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
@@ -108,7 +107,7 @@ def create_app(
 ) -> FastAPI:
     configured = app_settings or settings
     owns_repository = repository is None
-    project_repository = repository or SQLAlchemyProjectRepository(configured.database_url)
+    project_repository = repository or ProjectRepository(configured.database_url)
     project_service = ProjectService(project_repository)
     anchor_service = AnchorService(project_repository)
     scene_point_service = ScenePointService(project_repository)

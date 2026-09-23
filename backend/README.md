@@ -15,9 +15,9 @@ own rows, while ownership, order, and references are relational. Development use
 `~/.camera-path/camera_path.sqlite3` by default, preserving the previous backend location. Set
 `CAMERA_PATH_DATABASE_URL` to another async SQLAlchemy URL.
 
-The HTTP routers depend on domain-specific services. Persistence is typed through resource-specific
-repository protocols. The compatibility `SQLAlchemyProjectRepository` assembles the legacy
-aggregate from those repositories while the frontend migrates to resource requests.
+The HTTP routers depend on domain-specific services. Each resource repository combines its
+contract and SQLAlchemy implementation in one class. The compatibility `ProjectRepository`
+assembles the legacy aggregate while the frontend migrates to resource requests.
 Declarative ORM records live separately from the Pydantic domain/API models. Tests inject a
 repository backed by a temporary database through `create_app()`.
 
