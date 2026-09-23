@@ -1,7 +1,5 @@
 "use client";
 
-import { Suspense } from "react";
-
 import type { Anchor } from "@/entities/project";
 import {
   GaussianHighlightVolume,
@@ -53,11 +51,7 @@ export function AnchorPlacementPreview({
       {ANCHOR_GAUSSIAN_HIGHLIGHT_ENABLED && (
         <GaussianHighlightVolume backend={backend} options={highlight} />
       )}
-      {/* The first marker loads its texture through Suspense. Keep the cloud
-          visible while that texture is fetched in an empty project. */}
-      <Suspense fallback={null}>
-        <AnchorMarker anchor={anchor} />
-      </Suspense>
+      <AnchorMarker anchor={anchor} />
     </>
   );
 }
