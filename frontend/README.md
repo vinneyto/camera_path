@@ -8,9 +8,9 @@ models in `entities`, large interface blocks in `widgets`, and reusable code in 
 
 The state is intentionally split by ownership instead of being placed in one global store:
 
-- TanStack Query owns server state: project lists, projects, compiled trajectories, request status,
-  cache updates, and optimistic chat messages. Query hooks live in `entities/project`; mutations live
-  beside the user action in `features`.
+- TanStack Query owns server state: project metadata, anchors, scene points, editable and compiled
+  trajectories, timelines, and chat messages are cached under separate resource keys. Query hooks
+  live in `entities/project`; mutations live beside the user action in `features`.
 - Zustand owns synchronous editor state shared by several interface blocks: playback position,
   elapsed time, play/pause, and trajectory selection. It lives in `features/project-editor` and does
   not copy project data from the query cache.
@@ -49,11 +49,19 @@ npm run dev
 Open <http://localhost:3000>. `NEXT_PUBLIC_API_URL` points the browser at the FastAPI server.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
 
+The frontend API client, types, and TanStack Query hooks are generated from
+`backend/openapi.json` with Orval and committed under `src/shared/api/generated`.
+After changing the backend contract, run `npm run api:generate` in `frontend` and commit the
+result. The normal build never regenerates code. `api:check` verifies the committed output.
+Mutations send the latest project revision as `If-Match`; the backend exposes revision ETags
+to the browser. A revision conflict requires refetching the affected resources.
+
 ## Checks
 
 ```bash
 npm run test
 npm run lint
+npm run api:check
 npm run build
 ```
 

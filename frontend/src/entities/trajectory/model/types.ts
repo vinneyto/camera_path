@@ -74,9 +74,3 @@ export interface CompiledTrajectory {
   };
   warnings: string[];
 }
-
-export interface ChatResult {
-  answer: string;
-  project: import("@/entities/project/model/types").Project;
-  compiled: CompiledTrajectory;
-}

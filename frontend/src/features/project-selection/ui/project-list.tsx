@@ -4,18 +4,19 @@ import Link from "next/link";
 import { ArrowRight, Box, LoaderCircle } from "lucide-react";
 import { useState } from "react";
 
-import type { Project } from "@/entities/project";
+import type { ProjectMetadata } from "@/shared/api/generated/model";
 import { Card, ContextMenu, type ContextMenuPosition } from "@/shared/ui";
+import { ProjectListResources } from "./project-list-resources";
 
 interface ProjectListProps {
   deletingProjectId?: string;
   loading: boolean;
-  onDelete: (project: Project) => void;
-  projects: Project[];
+  onDelete: (project: ProjectMetadata) => void;
+  projects: ProjectMetadata[];
 }
 
 interface ProjectMenuState extends ContextMenuPosition {
-  project: Project;
+  project: ProjectMetadata;
 }
 
 export function ProjectList({
@@ -62,10 +63,7 @@ export function ProjectList({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium">{project.name}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {Object.keys(project.anchors).length} anchors ·{" "}
-                  {project.segments.length} segments
-                </p>
+                <ProjectListResources projectId={project.id} />
               </div>
               <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </Card>

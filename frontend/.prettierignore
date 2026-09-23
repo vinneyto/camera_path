@@ -6,3 +6,4 @@ dist
 build
 next-env.d.ts
 package-lock.json
+src/shared/api/generated

@@ -11,7 +11,6 @@ export { pathPositionAtTime } from "./lib/path-position-at-time";
 export { sampleTrajectory } from "./lib/sample-trajectory";
 export { timeAtPathPosition } from "./lib/time-at-path-position";
 export type {
-  ChatResult,
   CompiledTrajectory,
   ResolvedDepthOfFieldFocus,
 } from "./model/types";

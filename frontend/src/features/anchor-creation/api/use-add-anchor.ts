@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { projectApi, projectKeys, type AnchorCreate } from "@/entities/project";
+import { projectApi, type AnchorCreate } from "@/entities/project";
+
+import { invalidateProjectResource } from "@/entities/project/api/invalidate-project-resource";
 
 export function useAddAnchor(projectId: string) {
   const queryClient = useQueryClient();
@@ -10,11 +12,8 @@ export function useAddAnchor(projectId: string) {
   return useMutation({
     mutationFn: (anchor: AnchorCreate) =>
       projectApi.addAnchor(projectId, anchor),
-    onSuccess: (project) => {
-      queryClient.setQueryData(projectKeys.detail(projectId), project);
-      void queryClient.invalidateQueries({
-        queryKey: projectKeys.trajectory(projectId),
-      });
-    },
+    onSuccess: () =>
+      invalidateProjectResource(queryClient, projectId, "anchors"),
+    onError: () => invalidateProjectResource(queryClient, projectId, "anchors"),
   });
 }
