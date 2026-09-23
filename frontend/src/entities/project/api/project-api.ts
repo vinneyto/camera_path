@@ -1,3 +1,4 @@
+import * as api from "@/shared/api/generated/client";
 import type {
   AnchorCreate,
   AnchorUpdate,
@@ -6,119 +7,83 @@ import type {
   CameraOrientationKeyframeUpdate,
   DepthOfFieldKeyframeCreate,
   DepthOfFieldKeyframeUpdate,
-  Project,
-} from "@/entities/project/model/types";
-import type {
-  ChatResult,
-  CompiledTrajectory,
-} from "@/entities/trajectory/model/types";
-import { apiRequest } from "@/shared/api/http";
+  ChatResponse,
+} from "@/shared/api/generated/model";
+import {
+  rememberProjectRevision,
+  forgetProjectRevision,
+} from "@/shared/api/orval-fetch";
 
+// The generated client owns all HTTP paths and payloads. These small wrappers expose
+// successful response bodies to the editor's existing feature hooks.
 export const projectApi = {
-  list: () => apiRequest<Project[]>("/projects"),
-  get: (projectId: string) => apiRequest<Project>(`/projects/${projectId}`),
-  create: (name: string) =>
-    apiRequest<Project>("/projects", {
-      method: "POST",
-      body: JSON.stringify({ name }),
-    }),
-  delete: (projectId: string) =>
-    apiRequest<void>(`/projects/${projectId}`, { method: "DELETE" }),
-  addAnchor: (projectId: string, anchor: AnchorCreate) =>
-    apiRequest<Project>(`/projects/${projectId}/anchors`, {
-      method: "POST",
-      body: JSON.stringify(anchor),
-    }),
-  updateAnchor: (projectId: string, anchorId: string, anchor: AnchorUpdate) =>
-    apiRequest<Project>(`/projects/${projectId}/anchors/${anchorId}`, {
-      method: "PATCH",
-      body: JSON.stringify(anchor),
-    }),
-  deleteAnchor: (projectId: string, anchorId: string) =>
-    apiRequest<Project>(`/projects/${projectId}/anchors/${anchorId}`, {
-      method: "DELETE",
-    }),
-  deleteSpeedKeyframe: (projectId: string, keyframeId: string) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/motion/keyframes/${keyframeId}`,
-      { method: "DELETE" },
-    ),
-  deleteCameraKeyframe: (projectId: string, keyframeId: string) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/camera/keyframes/${keyframeId}`,
-      { method: "DELETE" },
-    ),
-  updateDefaultCameraOrientation: (
-    projectId: string,
+  create: async (name: string) => {
+    const response = await api.createProject({ name });
+    if (response.status !== 201) throw new Error("Could not create project");
+    rememberProjectRevision(response.data.id, response.data.revision);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    await api.deleteProject(id);
+    forgetProjectRevision(id);
+  },
+  addAnchor: async (id: string, anchor: AnchorCreate) =>
+    (await api.createAnchor(id, anchor)).data,
+  updateAnchor: async (id: string, anchorId: string, anchor: AnchorUpdate) =>
+    (await api.updateAnchor(id, anchorId, anchor)).data,
+  deleteAnchor: async (id: string, anchorId: string) => {
+    await api.deleteAnchor(id, anchorId);
+  },
+  deleteSpeedKeyframe: async (id: string, keyframeId: string) => {
+    await api.deleteSpeedKeyframe(id, keyframeId);
+  },
+  deleteCameraKeyframe: async (id: string, keyframeId: string) => {
+    await api.deleteCameraAimKeyframe(id, keyframeId);
+  },
+  updateDefaultCameraOrientation: async (
+    id: string,
     orientation: CameraOrientation,
-  ) =>
-    apiRequest<Project>(`/projects/${projectId}/camera/orientation`, {
-      method: "PATCH",
-      body: JSON.stringify(orientation),
-    }),
-  addCameraOrientationKeyframe: (
-    projectId: string,
+  ) => (await api.updateCameraOrientation(id, orientation)).data,
+  addCameraOrientationKeyframe: async (
+    id: string,
     keyframe: CameraOrientationKeyframeCreate,
-  ) =>
-    apiRequest<Project>(`/projects/${projectId}/camera/orientation/keyframes`, {
-      method: "POST",
-      body: JSON.stringify(keyframe),
-    }),
-  updateCameraOrientationKeyframe: (
-    projectId: string,
+  ) => (await api.createCameraOrientationKeyframe(id, keyframe)).data,
+  updateCameraOrientationKeyframe: async (
+    id: string,
     keyframeId: string,
     keyframe: CameraOrientationKeyframeUpdate,
   ) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/camera/orientation/keyframes/${keyframeId}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify(keyframe),
-      },
-    ),
-  deleteCameraOrientationKeyframe: (projectId: string, keyframeId: string) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/camera/orientation/keyframes/${keyframeId}`,
-      { method: "DELETE" },
-    ),
-  addDepthOfFieldKeyframe: (
-    projectId: string,
+    (await api.updateCameraOrientationKeyframe(id, keyframeId, keyframe)).data,
+  deleteCameraOrientationKeyframe: async (id: string, keyframeId: string) => {
+    await api.deleteCameraOrientationKeyframe(id, keyframeId);
+  },
+  addDepthOfFieldKeyframe: async (
+    id: string,
     keyframe: DepthOfFieldKeyframeCreate,
-  ) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/camera/depth-of-field/keyframes`,
-      { method: "POST", body: JSON.stringify(keyframe) },
-    ),
-  updateDepthOfFieldKeyframe: (
-    projectId: string,
+  ) => (await api.createDepthOfFieldKeyframe(id, keyframe)).data,
+  updateDepthOfFieldKeyframe: async (
+    id: string,
     keyframeId: string,
     keyframe: DepthOfFieldKeyframeUpdate,
-  ) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/camera/depth-of-field/keyframes/${keyframeId}`,
-      { method: "PATCH", body: JSON.stringify(keyframe) },
-    ),
-  deleteDepthOfFieldKeyframe: (projectId: string, keyframeId: string) =>
-    apiRequest<Project>(
-      `/projects/${projectId}/camera/depth-of-field/keyframes/${keyframeId}`,
-      { method: "DELETE" },
-    ),
-  clearTrajectory: (projectId: string) =>
-    apiRequest<Project>(`/projects/${projectId}/trajectory`, {
-      method: "DELETE",
-    }),
-  compile: (projectId: string) =>
-    apiRequest<CompiledTrajectory>(
-      `/projects/${projectId}/trajectory/compiled`,
-    ),
-  saveUserMessage: (projectId: string, id: string, message: string) =>
-    apiRequest<Project>(`/projects/${projectId}/chat/user-messages`, {
-      method: "POST",
-      body: JSON.stringify({ id, message }),
-    }),
-  chat: (projectId: string, id: string, message: string) =>
-    apiRequest<ChatResult>(`/projects/${projectId}/chat/messages`, {
-      method: "POST",
-      body: JSON.stringify({ id, message }),
-    }),
+  ) => (await api.updateDepthOfFieldKeyframe(id, keyframeId, keyframe)).data,
+  deleteDepthOfFieldKeyframe: async (id: string, keyframeId: string) => {
+    await api.deleteDepthOfFieldKeyframe(id, keyframeId);
+  },
+  clearTrajectory: async (id: string) => {
+    await api.clearTrajectory(id);
+  },
+  saveUserMessage: async (id: string, messageId: string, message: string) =>
+    (await api.saveUserChatMessage(id, { id: messageId, message })).data,
+  chat: async (
+    id: string,
+    messageId: string,
+    message: string,
+  ): Promise<ChatResponse> => {
+    const response = await api.createChatMessage(id, {
+      id: messageId,
+      message,
+    });
+    if (response.status !== 200) throw new Error("Could not send message");
+    return response.data;
+  },
 };

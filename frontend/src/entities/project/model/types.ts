@@ -1,121 +1,49 @@
-export type Vec3 = [number, number, number];
-export type Interpolation = "smoothstep" | "linear" | "hold";
+import type * as Api from "@/shared/api/generated/model";
 
-export interface Anchor {
-  id: string;
-  label: string;
-  surface_position: Vec3;
-  surface_normal: Vec3;
-  lift: number;
-  lift_axis: "world_up" | "surface_normal";
-}
-
-export interface ScenePoint {
-  id: string;
-  label: string;
-  position: Vec3;
-}
-
-export interface FollowPathAim {
-  kind: "follow_path";
-  direction: "forward" | "backward";
-}
-
-export interface LookAtPointAim {
-  kind: "look_at_point";
-  scene_point_id: string;
-}
-
+// The editor composes a Project view from the separately fetched API resources.
+// Required reflects values filled by Pydantic when serializing response models.
+export type Vec3 = Api.Anchor["surface_position"];
+export type Interpolation = Api.CameraKeyframeInterpolationToNext;
+export type Anchor = Required<Api.Anchor>;
+export type ScenePoint = Required<Api.ScenePoint>;
+export type FollowPathAim = Required<Api.FollowPathAim>;
+export type LookAtPointAim = Required<Api.LookAtPointAim>;
 export type CameraAim = FollowPathAim | LookAtPointAim;
-
-export interface CameraOrientation {
-  yaw_deg: number;
-  pitch_deg: number;
-  roll_deg: number;
-}
-
-export interface SpeedKeyframe {
-  id: string;
-  path_position: number;
-  speed: number;
-  interpolation_to_next: Interpolation;
-}
-
-export interface CameraKeyframe {
-  id: string;
-  path_position: number;
+export type CameraOrientation = Required<Api.CameraOrientation>;
+export type SpeedKeyframe = Required<Api.SpeedKeyframe>;
+export type CameraKeyframe = Omit<Required<Api.CameraKeyframe>, "aim"> & {
   aim: CameraAim;
-  interpolation_to_next: Interpolation;
-}
-
-export interface CameraOrientationKeyframe {
-  id: string;
-  path_position: number;
-  orientation: CameraOrientation;
-  interpolation_to_next: Interpolation;
-}
-
-export interface CameraOrientationKeyframeCreate {
-  path_position: number;
-  orientation: CameraOrientation;
-  interpolation_to_next?: Interpolation;
-}
-
-export interface CameraOrientationKeyframeUpdate {
-  path_position?: number;
-  orientation?: CameraOrientation;
-  interpolation_to_next?: Interpolation;
-}
-
-export interface CenterWeightedDepthOfFieldFocus {
-  kind: "center_weighted_9";
-}
-
-export interface ScenePointDepthOfFieldFocus {
-  kind: "scene_point";
-  scene_point_id: string;
-}
-
+};
+export type CameraOrientationKeyframe = Omit<
+  Required<Api.CameraOrientationKeyframe>,
+  "orientation"
+> & { orientation: CameraOrientation };
+export type CameraOrientationKeyframeCreate =
+  Api.CameraOrientationKeyframeCreate;
+export type CameraOrientationKeyframeUpdate =
+  Api.CameraOrientationKeyframeUpdate;
+export type CenterWeightedDepthOfFieldFocus =
+  Api.CenterWeightedDepthOfFieldFocus;
+export type ScenePointDepthOfFieldFocus =
+  Required<Api.ScenePointDepthOfFieldFocus>;
 export type DepthOfFieldFocus =
   CenterWeightedDepthOfFieldFocus | ScenePointDepthOfFieldFocus;
+export type DepthOfFieldKeyframe = Omit<
+  Required<Api.DepthOfFieldKeyframe>,
+  "focus"
+> & { focus: DepthOfFieldFocus };
+export type DepthOfFieldKeyframeCreate = Api.DepthOfFieldKeyframeCreate;
+export type DepthOfFieldKeyframeUpdate = Api.DepthOfFieldKeyframeUpdate;
+export type ChatHistoryMessage = Required<Api.ChatHistoryMessage>;
+export type AnchorCreate = Api.AnchorCreate;
+export type AnchorUpdate = Api.AnchorUpdate;
 
-export interface DepthOfFieldKeyframe {
-  id: string;
-  path_position: number;
-  focus: DepthOfFieldFocus;
-  focus_range_scale: number;
-  bokeh_scale: number;
-}
-
-export interface DepthOfFieldKeyframeCreate {
-  path_position: number;
-  focus: DepthOfFieldFocus;
-  focus_range_scale?: number;
-  bokeh_scale?: number;
-}
-
-export interface DepthOfFieldKeyframeUpdate {
-  path_position?: number;
-  focus?: DepthOfFieldFocus;
-  focus_range_scale?: number;
-  bokeh_scale?: number;
-}
-
-export interface ChatHistoryMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  revision: number;
+export interface Project extends Api.ProjectMetadata {
   anchors: Record<string, Anchor>;
   scene_points: Record<string, ScenePoint>;
-  segments: Array<{ id: string; kind: "spline" | "spiral" }>;
+  segments: Array<Api.SplineSegment | Api.SpiralSegment>;
   camera_track: {
-    default_aim: FollowPathAim;
+    default_aim: CameraAim;
     keyframes: Record<string, CameraKeyframe>;
     default_orientation: CameraOrientation;
     orientation_keyframes: Record<string, CameraOrientationKeyframe>;
@@ -127,16 +55,4 @@ export interface Project {
     keyframes: Record<string, SpeedKeyframe>;
   };
   chat_history: ChatHistoryMessage[];
-}
-
-export interface AnchorCreate {
-  label: string;
-  surface_position: Vec3;
-  surface_normal: Vec3;
-  lift?: number;
-  lift_axis?: "world_up" | "surface_normal";
-}
-
-export interface AnchorUpdate {
-  lift?: number;
 }

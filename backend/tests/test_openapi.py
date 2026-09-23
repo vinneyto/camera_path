@@ -7,14 +7,14 @@ from httpx import ASGITransport, AsyncClient
 from camera_path.api import create_app
 from camera_path.config import Settings
 from camera_path.export_openapi import export_schema
-from camera_path.repositories import SQLAlchemyProjectRepository
+from camera_path.repositories import ProjectRepository
 
 
 @pytest.fixture
 def app(tmp_path):
     database_url = f"sqlite+aiosqlite:///{tmp_path / 'openapi.sqlite3'}"
     settings = Settings(_env_file=None, database_url=database_url)
-    return create_app(settings, SQLAlchemyProjectRepository(database_url))
+    return create_app(settings, ProjectRepository(database_url))
 
 
 async def test_scalar_replaces_builtin_documentation(app) -> None:
@@ -55,7 +55,7 @@ async def test_openapi_describes_concurrency_errors_unions_and_sse(app) -> None:
     mutation = schema["paths"]["/api/v1/projects/{project_id}/anchors"]["post"]
     if_match = next(item for item in mutation["parameters"] if item["name"] == "If-Match")
     assert if_match["required"] is True
-    assert mutation["responses"]["200"]["headers"]["ETag"]
+    assert mutation["responses"]["201"]["headers"]["ETag"]
     assert mutation["responses"]["409"]["content"]["application/json"]["schema"] == {
         "$ref": "#/components/schemas/ErrorResponse"
     }
@@ -88,8 +88,14 @@ async def test_versioned_routes_use_etag_and_if_match_while_legacy_routes_do_not
             headers={"If-Match": created.headers["etag"]},
             json={"label": "A", "surface_position": [0, 0, 0]},
         )
-        assert updated.status_code == 200
+        assert updated.status_code == 201
         assert updated.headers["etag"] == '"1"'
+        assert updated.json()["label"] == "A"
+        assert "anchors" not in updated.json()
+
+        anchors = await client.get(f"/api/v1/projects/{project_id}/anchors")
+        assert anchors.json() == [updated.json()]
+        assert anchors.headers["etag"] == '"1"'
 
         stale = await client.patch(
             f"/api/v1/projects/{project_id}",

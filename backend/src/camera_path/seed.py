@@ -18,7 +18,7 @@ from camera_path.models import (
     SpiralSegmentCreate,
     SplineSegmentCreate,
 )
-from camera_path.repositories import ProjectRepository, SQLAlchemyProjectRepository
+from camera_path.repositories import ProjectRepository
 from camera_path.services import (
     AnchorService,
     ProjectService,
@@ -318,7 +318,7 @@ async def populate_demo_projects(services: SeedServices, seed: int = 42) -> list
 
 
 async def _populate(seed: int) -> None:
-    repository = SQLAlchemyProjectRepository(settings.database_url)
+    repository = ProjectRepository(settings.database_url)
     try:
         services = create_seed_services(repository, settings.compile_tolerance)
         for result in await populate_demo_projects(services, seed):

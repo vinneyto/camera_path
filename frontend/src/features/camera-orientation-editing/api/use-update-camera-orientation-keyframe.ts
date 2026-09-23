@@ -7,12 +7,12 @@ import {
   type CameraOrientationKeyframeUpdate,
 } from "@/entities/project";
 
-import { applyOrientationMutationResult } from "../lib/apply-orientation-mutation-result";
-
 interface UpdateCameraOrientationKeyframeVariables {
   keyframe: CameraOrientationKeyframeUpdate;
   keyframeId: string;
 }
+
+import { invalidateProjectResource } from "@/entities/project/api/invalidate-project-resource";
 
 export function useUpdateCameraOrientationKeyframe(projectId: string) {
   const queryClient = useQueryClient();
@@ -26,7 +26,9 @@ export function useUpdateCameraOrientationKeyframe(projectId: string) {
         keyframeId,
         keyframe,
       ),
-    onSuccess: (project) =>
-      applyOrientationMutationResult(queryClient, projectId, project),
+    onSuccess: () =>
+      invalidateProjectResource(queryClient, projectId, "orientation"),
+    onError: () =>
+      invalidateProjectResource(queryClient, projectId, "orientation"),
   });
 }

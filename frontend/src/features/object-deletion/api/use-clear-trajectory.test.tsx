@@ -50,28 +50,31 @@ describe("useClearTrajectory", () => {
     };
   }
 
-  it("updates the project and invalidates project and trajectory queries", async () => {
-    vi.spyOn(projectApi, "clearTrajectory").mockResolvedValue(project);
+  it("invalidates editable and compiled trajectory after deletion", async () => {
+    vi.spyOn(projectApi, "clearTrajectory").mockResolvedValue(undefined);
     const { queryClient, result } = setup();
-    queryClient.setQueryData(projectKeys.list(), [project]);
+    queryClient.setQueryData(projectKeys.segments(project.id), {
+      segments: [{}],
+    });
     queryClient.setQueryData(projectKeys.trajectory(project.id), {
       position_segments: [{}],
     });
+    queryClient.setQueryData(projectKeys.anchors(project.id), []);
 
     await act(() => result.current.mutateAsync());
 
-    expect(projectApi.clearTrajectory).toHaveBeenCalledOnce();
     expect(projectApi.clearTrajectory).toHaveBeenCalledWith(project.id);
-    expect(queryClient.getQueryData(projectKeys.detail(project.id))).toBe(
-      project,
-    );
-    expect(queryClient.getQueryState(projectKeys.list())?.isInvalidated).toBe(
-      true,
-    );
+    expect(
+      queryClient.getQueryState(projectKeys.segments(project.id))
+        ?.isInvalidated,
+    ).toBe(true);
     expect(
       queryClient.getQueryState(projectKeys.trajectory(project.id))
         ?.isInvalidated,
     ).toBe(true);
+    expect(
+      queryClient.getQueryState(projectKeys.anchors(project.id))?.isInvalidated,
+    ).toBe(false);
   });
 
   it("keeps cached data when the request fails", async () => {

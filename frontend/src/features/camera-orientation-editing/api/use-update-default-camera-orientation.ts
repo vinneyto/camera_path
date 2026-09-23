@@ -4,14 +4,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { projectApi, type CameraOrientation } from "@/entities/project";
 
-import { applyOrientationMutationResult } from "../lib/apply-orientation-mutation-result";
+import { invalidateProjectResource } from "@/entities/project/api/invalidate-project-resource";
 
 export function useUpdateDefaultCameraOrientation(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (orientation: CameraOrientation) =>
       projectApi.updateDefaultCameraOrientation(projectId, orientation),
-    onSuccess: (project) =>
-      applyOrientationMutationResult(queryClient, projectId, project),
+    onSuccess: () =>
+      invalidateProjectResource(queryClient, projectId, "orientation"),
+    onError: () =>
+      invalidateProjectResource(queryClient, projectId, "orientation"),
   });
 }

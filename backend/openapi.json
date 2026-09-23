@@ -1,6 +1,59 @@
 {
   "components": {
     "schemas": {
+      "AimTimeline": {
+        "properties": {
+          "default_aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CameraKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          },
+          "world_up": {
+            "default": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "World Up",
+            "type": "array"
+          }
+        },
+        "title": "AimTimeline",
+        "type": "object"
+      },
       "Anchor": {
         "properties": {
           "id": {
@@ -539,76 +592,6 @@
         "title": "CameraOrientationKeyframeUpdate",
         "type": "object"
       },
-      "CameraTrack": {
-        "properties": {
-          "default_aim": {
-            "discriminator": {
-              "mapping": {
-                "follow_path": "#/components/schemas/FollowPathAim",
-                "look_at_point": "#/components/schemas/LookAtPointAim"
-              },
-              "propertyName": "kind"
-            },
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/FollowPathAim"
-              },
-              {
-                "$ref": "#/components/schemas/LookAtPointAim"
-              }
-            ],
-            "title": "Default Aim"
-          },
-          "default_orientation": {
-            "$ref": "#/components/schemas/CameraOrientation"
-          },
-          "depth_of_field_keyframes": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/DepthOfFieldKeyframe"
-            },
-            "title": "Depth Of Field Keyframes",
-            "type": "object"
-          },
-          "keyframes": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/CameraKeyframe"
-            },
-            "title": "Keyframes",
-            "type": "object"
-          },
-          "orientation_keyframes": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/CameraOrientationKeyframe"
-            },
-            "title": "Orientation Keyframes",
-            "type": "object"
-          },
-          "world_up": {
-            "default": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "maxItems": 3,
-            "minItems": 3,
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
-            "title": "World Up",
-            "type": "array"
-          }
-        },
-        "title": "CameraTrack",
-        "type": "object"
-      },
       "CameraTrackUpdate": {
         "properties": {
           "default_aim": {
@@ -721,7 +704,7 @@
         "title": "ChatMessage",
         "type": "object"
       },
-      "ChatResult": {
+      "ChatResponse": {
         "properties": {
           "answer": {
             "title": "Answer",
@@ -729,17 +712,13 @@
           },
           "compiled": {
             "$ref": "#/components/schemas/CompiledTrajectory"
-          },
-          "project": {
-            "$ref": "#/components/schemas/Project"
           }
         },
         "required": [
           "answer",
-          "project",
           "compiled"
         ],
-        "title": "ChatResult",
+        "title": "ChatResponse",
         "type": "object"
       },
       "CompiledCameraKeyframe": {
@@ -1241,6 +1220,19 @@
         "title": "DepthOfFieldKeyframeUpdate",
         "type": "object"
       },
+      "DepthOfFieldTimeline": {
+        "properties": {
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DepthOfFieldKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          }
+        },
+        "title": "DepthOfFieldTimeline",
+        "type": "object"
+      },
       "ErrorResponse": {
         "properties": {
           "code": {
@@ -1327,6 +1319,19 @@
         "title": "FollowPathAim",
         "type": "object"
       },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "LookAtPointAim": {
         "properties": {
           "kind": {
@@ -1379,74 +1384,20 @@
         "title": "MotionProfileUpdate",
         "type": "object"
       },
-      "Project": {
+      "OrientationTimeline": {
         "properties": {
-          "anchors": {
+          "default_orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "keyframes": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/Anchor"
+              "$ref": "#/components/schemas/CameraOrientationKeyframe"
             },
-            "title": "Anchors",
+            "title": "Keyframes",
             "type": "object"
-          },
-          "camera_track": {
-            "$ref": "#/components/schemas/CameraTrack"
-          },
-          "chat_history": {
-            "items": {
-              "$ref": "#/components/schemas/ChatHistoryMessage"
-            },
-            "title": "Chat History",
-            "type": "array"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "motion_profile": {
-            "$ref": "#/components/schemas/MotionProfile"
-          },
-          "name": {
-            "default": "Untitled camera path",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "revision": {
-            "default": 0,
-            "title": "Revision",
-            "type": "integer"
-          },
-          "scene_points": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ScenePoint"
-            },
-            "title": "Scene Points",
-            "type": "object"
-          },
-          "segments": {
-            "items": {
-              "discriminator": {
-                "mapping": {
-                  "spiral": "#/components/schemas/SpiralSegment",
-                  "spline": "#/components/schemas/SplineSegment"
-                },
-                "propertyName": "kind"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/SplineSegment"
-                },
-                {
-                  "$ref": "#/components/schemas/SpiralSegment"
-                }
-              ]
-            },
-            "title": "Segments",
-            "type": "array"
           }
         },
-        "title": "Project",
+        "title": "OrientationTimeline",
         "type": "object"
       },
       "ProjectCreate": {
@@ -1460,6 +1411,29 @@
           }
         },
         "title": "ProjectCreate",
+        "type": "object"
+      },
+      "ProjectMetadata": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "revision"
+        ],
+        "title": "ProjectMetadata",
         "type": "object"
       },
       "ProjectUpdate": {
@@ -1977,6 +1951,73 @@
         ],
         "title": "SplineSegmentCreate",
         "type": "object"
+      },
+      "Trajectory": {
+        "properties": {
+          "segments": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "spiral": "#/components/schemas/SpiralSegment",
+                  "spline": "#/components/schemas/SplineSegment"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SplineSegment"
+                },
+                {
+                  "$ref": "#/components/schemas/SpiralSegment"
+                }
+              ]
+            },
+            "title": "Segments",
+            "type": "array"
+          }
+        },
+        "title": "Trajectory",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
       }
     }
   },
@@ -1990,7 +2031,7 @@
   "paths": {
     "/api/v1/projects": {
       "get": {
-        "description": "Return the current snapshot of every project.",
+        "description": "Return project metadata without nested resources.",
         "operationId": "listProjects",
         "responses": {
           "200": {
@@ -1998,7 +2039,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Project"
+                    "$ref": "#/components/schemas/ProjectMetadata"
                   },
                   "title": "Response Listprojects",
                   "type": "array"
@@ -2014,7 +2055,7 @@
         ]
       },
       "post": {
-        "description": "Create an empty camera-path project.",
+        "description": "Create an empty project and return only project metadata.",
         "operationId": "createProject",
         "requestBody": {
           "content": {
@@ -2031,7 +2072,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ProjectMetadata"
                 }
               }
             },
@@ -2052,11 +2093,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             },
-            "description": "Invalid request or trajectory geometry."
+            "description": "Validation Error"
           }
         },
         "summary": "Create a project",
@@ -2067,7 +2108,7 @@
     },
     "/api/v1/projects/{project_id}": {
       "delete": {
-        "description": "Delete a project and all of its snapshots.",
+        "description": "Delete a project and all normalized resources.",
         "operationId": "deleteProject",
         "parameters": [
           {
@@ -2142,7 +2183,7 @@
         ]
       },
       "get": {
-        "description": "Return the current project snapshot and its revision ETag.",
+        "description": "Return project metadata and its project-level revision ETag.",
         "operationId": "getProject",
         "parameters": [
           {
@@ -2160,7 +2201,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ProjectMetadata"
                 }
               }
             },
@@ -2208,13 +2249,13 @@
             "description": "Invalid request or trajectory geometry."
           }
         },
-        "summary": "Get a project",
+        "summary": "Get project metadata",
         "tags": [
           "Projects"
         ]
       },
       "patch": {
-        "description": "Change a project name using optimistic concurrency.",
+        "description": "Rename a project and return the changed metadata resource.",
         "operationId": "updateProject",
         "parameters": [
           {
@@ -2253,7 +2294,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ProjectMetadata"
                 }
               }
             },
@@ -2318,8 +2359,64 @@
       }
     },
     "/api/v1/projects/{project_id}/anchors": {
+      "get": {
+        "description": "Return the project's path anchors.",
+        "operationId": "listAnchors",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Anchor"
+                  },
+                  "title": "Response Listanchors",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List anchors",
+        "tags": [
+          "Anchors"
+        ]
+      },
       "post": {
-        "description": "Add a lifted surface anchor to the project.",
+        "description": "Create an anchor and return only the changed resource.",
         "operationId": "createAnchor",
         "parameters": [
           {
@@ -2354,11 +2451,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/Anchor"
                 }
               }
             },
@@ -2416,15 +2513,15 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add an anchor",
+        "summary": "Create an anchor",
         "tags": [
-          "Projects"
+          "Anchors"
         ]
       }
     },
     "/api/v1/projects/{project_id}/anchors/{anchor_id}": {
       "delete": {
-        "description": "Delete an unreferenced path anchor.",
+        "description": "Delete an unreferenced anchor.",
         "operationId": "deleteAnchor",
         "parameters": [
           {
@@ -2458,15 +2555,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -2478,16 +2578,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -2522,11 +2612,11 @@
         },
         "summary": "Delete an anchor",
         "tags": [
-          "Projects"
+          "Anchors"
         ]
       },
       "patch": {
-        "description": "Update an existing path anchor.",
+        "description": "Update an anchor and return only the changed resource.",
         "operationId": "updateAnchor",
         "parameters": [
           {
@@ -2574,7 +2664,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/Anchor"
                 }
               }
             },
@@ -2634,13 +2724,65 @@
         },
         "summary": "Update an anchor",
         "tags": [
-          "Projects"
+          "Anchors"
         ]
       }
     },
     "/api/v1/projects/{project_id}/camera": {
+      "get": {
+        "description": "Return camera aim defaults and keyframes.",
+        "operationId": "getAimTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AimTimeline"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the aim timeline",
+        "tags": [
+          "Timelines"
+        ]
+      },
       "patch": {
-        "description": "Set default camera aim and world-up values.",
+        "description": "Update aim defaults and return the changed timeline.",
         "operationId": "updateCameraTrack",
         "parameters": [
           {
@@ -2679,7 +2821,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/AimTimeline"
                 }
               }
             },
@@ -2737,7 +2879,61 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Update the camera aim track",
+        "summary": "Update the aim timeline",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/depth-of-field": {
+      "get": {
+        "description": "Return depth-of-field keyframes.",
+        "operationId": "getDepthOfFieldTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepthOfFieldTimeline"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the depth-of-field timeline",
         "tags": [
           "Timelines"
         ]
@@ -2745,7 +2941,7 @@
     },
     "/api/v1/projects/{project_id}/camera/depth-of-field/keyframes": {
       "post": {
-        "description": "Add a focus target and lens parameters to the depth-of-field timeline.",
+        "description": "Create and return a depth-of-field keyframe.",
         "operationId": "createDepthOfFieldKeyframe",
         "parameters": [
           {
@@ -2780,11 +2976,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/DepthOfFieldKeyframe"
                 }
               }
             },
@@ -2842,7 +3038,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add a depth-of-field keyframe",
+        "summary": "Create a depth-of-field keyframe",
         "tags": [
           "Timelines"
         ]
@@ -2850,7 +3046,7 @@
     },
     "/api/v1/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}": {
       "delete": {
-        "description": "Delete a keyframe from the depth-of-field timeline.",
+        "description": "Delete a depth-of-field keyframe.",
         "operationId": "deleteDepthOfFieldKeyframe",
         "parameters": [
           {
@@ -2884,15 +3080,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -2904,16 +3103,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -2952,7 +3141,7 @@
         ]
       },
       "patch": {
-        "description": "Update focus or lens parameters on a depth-of-field keyframe.",
+        "description": "Update and return a depth-of-field keyframe.",
         "operationId": "updateDepthOfFieldKeyframe",
         "parameters": [
           {
@@ -3000,7 +3189,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/DepthOfFieldKeyframe"
                 }
               }
             },
@@ -3066,7 +3255,7 @@
     },
     "/api/v1/projects/{project_id}/camera/keyframes": {
       "post": {
-        "description": "Add a keyframe to the camera aim timeline.",
+        "description": "Create and return a camera aim keyframe.",
         "operationId": "createCameraAimKeyframe",
         "parameters": [
           {
@@ -3101,11 +3290,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/CameraKeyframe"
                 }
               }
             },
@@ -3163,7 +3352,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add a camera aim keyframe",
+        "summary": "Create an aim keyframe",
         "tags": [
           "Timelines"
         ]
@@ -3171,7 +3360,7 @@
     },
     "/api/v1/projects/{project_id}/camera/keyframes/{keyframe_id}": {
       "delete": {
-        "description": "Delete a keyframe from the camera aim timeline.",
+        "description": "Delete a camera aim keyframe.",
         "operationId": "deleteCameraAimKeyframe",
         "parameters": [
           {
@@ -3205,15 +3394,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -3225,16 +3417,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -3267,13 +3449,13 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Delete a camera aim keyframe",
+        "summary": "Delete an aim keyframe",
         "tags": [
           "Timelines"
         ]
       },
       "patch": {
-        "description": "Update a keyframe on the camera aim timeline.",
+        "description": "Update and return a camera aim keyframe.",
         "operationId": "updateCameraAimKeyframe",
         "parameters": [
           {
@@ -3321,7 +3503,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/CameraKeyframe"
                 }
               }
             },
@@ -3379,15 +3561,67 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Update a camera aim keyframe",
+        "summary": "Update an aim keyframe",
         "tags": [
           "Timelines"
         ]
       }
     },
     "/api/v1/projects/{project_id}/camera/orientation": {
+      "get": {
+        "description": "Return default camera orientation and orientation keyframes.",
+        "operationId": "getOrientationTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrientationTimeline"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the orientation timeline",
+        "tags": [
+          "Timelines"
+        ]
+      },
       "patch": {
-        "description": "Set the default local yaw, pitch, and roll offsets.",
+        "description": "Update default orientation and return the changed timeline.",
         "operationId": "updateCameraOrientation",
         "parameters": [
           {
@@ -3426,7 +3660,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/OrientationTimeline"
                 }
               }
             },
@@ -3484,7 +3718,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Update default camera orientation",
+        "summary": "Update default orientation",
         "tags": [
           "Timelines"
         ]
@@ -3492,7 +3726,7 @@
     },
     "/api/v1/projects/{project_id}/camera/orientation/keyframes": {
       "post": {
-        "description": "Add a keyframe to the local camera orientation timeline.",
+        "description": "Create and return an orientation keyframe.",
         "operationId": "createCameraOrientationKeyframe",
         "parameters": [
           {
@@ -3527,11 +3761,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/CameraOrientationKeyframe"
                 }
               }
             },
@@ -3589,7 +3823,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add an orientation keyframe",
+        "summary": "Create an orientation keyframe",
         "tags": [
           "Timelines"
         ]
@@ -3597,7 +3831,7 @@
     },
     "/api/v1/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}": {
       "delete": {
-        "description": "Delete a keyframe from the local camera orientation timeline.",
+        "description": "Delete a camera orientation keyframe.",
         "operationId": "deleteCameraOrientationKeyframe",
         "parameters": [
           {
@@ -3631,15 +3865,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -3651,16 +3888,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -3699,7 +3926,7 @@
         ]
       },
       "patch": {
-        "description": "Update a keyframe on the local camera orientation timeline.",
+        "description": "Update and return an orientation keyframe.",
         "operationId": "updateCameraOrientationKeyframe",
         "parameters": [
           {
@@ -3747,7 +3974,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/CameraOrientationKeyframe"
                 }
               }
             },
@@ -3813,7 +4040,7 @@
     },
     "/api/v1/projects/{project_id}/chat": {
       "delete": {
-        "description": "Remove chat messages while preserving the scene and trajectory.",
+        "description": "Delete all chat messages for the project.",
         "operationId": "clearProjectChat",
         "parameters": [
           {
@@ -3838,15 +4065,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -3858,16 +4088,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -3898,26 +4118,6 @@
               }
             },
             "description": "The If-Match header is required."
-          },
-          "502": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The OpenAI request failed."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The trajectory agent is unavailable."
           }
         },
         "summary": "Clear chat history",
@@ -3927,8 +4127,64 @@
       }
     },
     "/api/v1/projects/{project_id}/chat/messages": {
+      "get": {
+        "description": "Return the complete chat history for the first API version.",
+        "operationId": "listChatMessages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChatHistoryMessage"
+                  },
+                  "title": "Response Listchatmessages",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List chat messages",
+        "tags": [
+          "Chat"
+        ]
+      },
       "post": {
-        "description": "Run the trajectory agent and return its complete response.",
+        "description": "Run the agent and return its answer plus derived compiled trajectory.",
         "operationId": "createChatMessage",
         "parameters": [
           {
@@ -3967,7 +4223,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ChatResult"
+                  "$ref": "#/components/schemas/ChatResponse"
                 }
               }
             },
@@ -4023,26 +4279,6 @@
               }
             },
             "description": "The If-Match header is required."
-          },
-          "502": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The OpenAI request failed."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The trajectory agent is unavailable."
           }
         },
         "summary": "Send a chat message",
@@ -4053,7 +4289,7 @@
     },
     "/api/v1/projects/{project_id}/chat/messages/stream": {
       "post": {
-        "description": "Run the trajectory agent as an SSE stream. `delta` events contain incremental text, `result` contains the final ChatResult, and `error` reports a failure after streaming has started.",
+        "description": "Run the agent as SSE. `delta` events contain text, `result` contains the final answer and compiled trajectory without a full Project snapshot, and `error` reports failure.",
         "operationId": "streamChatMessage",
         "parameters": [
           {
@@ -4098,65 +4334,15 @@
             },
             "description": "Server-sent events named delta, result, or error."
           },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Revision or reference conflict."
-          },
           "422": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             },
-            "description": "Invalid request or trajectory geometry."
-          },
-          "428": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The If-Match header is required."
-          },
-          "502": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The OpenAI request failed."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The trajectory agent is unavailable."
+            "description": "Validation Error"
           }
         },
         "summary": "Stream a chat response",
@@ -4167,7 +4353,7 @@
     },
     "/api/v1/projects/{project_id}/chat/user-messages": {
       "post": {
-        "description": "Persist a user message idempotently without running the agent.",
+        "description": "Persist and return one idempotent user message.",
         "operationId": "saveUserChatMessage",
         "parameters": [
           {
@@ -4202,11 +4388,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ChatHistoryMessage"
                 }
               }
             },
@@ -4262,26 +4448,6 @@
               }
             },
             "description": "The If-Match header is required."
-          },
-          "502": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The OpenAI request failed."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The trajectory agent is unavailable."
           }
         },
         "summary": "Save a user chat message",
@@ -4291,8 +4457,60 @@
       }
     },
     "/api/v1/projects/{project_id}/motion": {
+      "get": {
+        "description": "Return default speed and speed keyframes.",
+        "operationId": "getSpeedTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MotionProfile"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the speed timeline",
+        "tags": [
+          "Timelines"
+        ]
+      },
       "patch": {
-        "description": "Set the default playback speed.",
+        "description": "Update default speed and return the changed timeline.",
         "operationId": "updateMotionProfile",
         "parameters": [
           {
@@ -4331,7 +4549,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/MotionProfile"
                 }
               }
             },
@@ -4389,7 +4607,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Update the motion profile",
+        "summary": "Update the speed timeline",
         "tags": [
           "Timelines"
         ]
@@ -4397,7 +4615,7 @@
     },
     "/api/v1/projects/{project_id}/motion/keyframes": {
       "post": {
-        "description": "Add a keyframe to the speed timeline.",
+        "description": "Create and return a speed keyframe.",
         "operationId": "createSpeedKeyframe",
         "parameters": [
           {
@@ -4432,11 +4650,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/SpeedKeyframe"
                 }
               }
             },
@@ -4494,7 +4712,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add a speed keyframe",
+        "summary": "Create a speed keyframe",
         "tags": [
           "Timelines"
         ]
@@ -4502,7 +4720,7 @@
     },
     "/api/v1/projects/{project_id}/motion/keyframes/{keyframe_id}": {
       "delete": {
-        "description": "Delete a keyframe from the speed timeline.",
+        "description": "Delete a speed keyframe.",
         "operationId": "deleteSpeedKeyframe",
         "parameters": [
           {
@@ -4536,15 +4754,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -4556,16 +4777,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -4604,7 +4815,7 @@
         ]
       },
       "patch": {
-        "description": "Update a keyframe on the speed timeline.",
+        "description": "Update and return a speed keyframe.",
         "operationId": "updateSpeedKeyframe",
         "parameters": [
           {
@@ -4652,7 +4863,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/SpeedKeyframe"
                 }
               }
             },
@@ -4716,104 +4927,9 @@
         ]
       }
     },
-    "/api/v1/projects/{project_id}/redo": {
-      "post": {
-        "description": "Move the project history cursor to the following snapshot.",
-        "operationId": "redoProjectChange",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "If-Match",
-            "required": true,
-            "schema": {
-              "examples": [
-                "\"4\""
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Project"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "ETag": {
-                "description": "Revision of the returned project snapshot.",
-                "schema": {
-                  "examples": [
-                    "\"4\""
-                  ],
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Revision or reference conflict."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid request or trajectory geometry."
-          },
-          "428": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The If-Match header is required."
-          }
-        },
-        "summary": "Redo the next change",
-        "tags": [
-          "History"
-        ]
-      }
-    },
     "/api/v1/projects/{project_id}/reset": {
       "post": {
-        "description": "Clear scene, trajectory, and chat state while preserving project identity.",
+        "description": "Clear resource state while preserving project identity and metadata.",
         "operationId": "resetProject",
         "parameters": [
           {
@@ -4842,7 +4958,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ProjectMetadata"
                 }
               }
             },
@@ -4907,8 +5023,64 @@
       }
     },
     "/api/v1/projects/{project_id}/scene-points": {
+      "get": {
+        "description": "Return named world-space scene points.",
+        "operationId": "listScenePoints",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenePoint"
+                  },
+                  "title": "Response Listscenepoints",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List scene points",
+        "tags": [
+          "Scene points"
+        ]
+      },
       "post": {
-        "description": "Add a named world-space point that camera controls can reference.",
+        "description": "Create a scene point and return only the changed resource.",
         "operationId": "createScenePoint",
         "parameters": [
           {
@@ -4943,11 +5115,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ScenePoint"
                 }
               }
             },
@@ -5005,15 +5177,15 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add a scene point",
+        "summary": "Create a scene point",
         "tags": [
-          "Projects"
+          "Scene points"
         ]
       }
     },
     "/api/v1/projects/{project_id}/scene-points/{point_id}": {
       "delete": {
-        "description": "Delete a scene point, optionally cascading to controls that reference it.",
+        "description": "Delete a scene point and optionally its referencing keyframes.",
         "operationId": "deleteScenePoint",
         "parameters": [
           {
@@ -5057,15 +5229,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -5077,16 +5252,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -5121,11 +5286,11 @@
         },
         "summary": "Delete a scene point",
         "tags": [
-          "Projects"
+          "Scene points"
         ]
       },
       "patch": {
-        "description": "Update a named world-space point.",
+        "description": "Update a scene point and return only the changed resource.",
         "operationId": "updateScenePoint",
         "parameters": [
           {
@@ -5173,7 +5338,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ScenePoint"
                 }
               }
             },
@@ -5233,13 +5398,13 @@
         },
         "summary": "Update a scene point",
         "tags": [
-          "Projects"
+          "Scene points"
         ]
       }
     },
     "/api/v1/projects/{project_id}/segments/spiral": {
       "post": {
-        "description": "Append a semantic spiral segment.",
+        "description": "Append a spiral segment and return it.",
         "operationId": "createSpiralSegment",
         "parameters": [
           {
@@ -5274,11 +5439,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/SpiralSegment"
                 }
               }
             },
@@ -5336,7 +5501,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add a spiral segment",
+        "summary": "Create a spiral segment",
         "tags": [
           "Trajectory"
         ]
@@ -5344,7 +5509,7 @@
     },
     "/api/v1/projects/{project_id}/segments/spline": {
       "post": {
-        "description": "Append a Catmull\u2013Rom-derived spline segment.",
+        "description": "Append a spline segment and return it.",
         "operationId": "createSplineSegment",
         "parameters": [
           {
@@ -5379,11 +5544,11 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/SplineSegment"
                 }
               }
             },
@@ -5441,7 +5606,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Add a spline segment",
+        "summary": "Create a spline segment",
         "tags": [
           "Trajectory"
         ]
@@ -5449,7 +5614,7 @@
     },
     "/api/v1/projects/{project_id}/segments/{segment_id}": {
       "delete": {
-        "description": "Delete one authored trajectory segment.",
+        "description": "Delete one authored segment.",
         "operationId": "deleteTrajectorySegment",
         "parameters": [
           {
@@ -5483,15 +5648,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -5503,16 +5671,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -5545,7 +5703,7 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Delete a segment",
+        "summary": "Delete a trajectory segment",
         "tags": [
           "Trajectory"
         ]
@@ -5553,7 +5711,7 @@
     },
     "/api/v1/projects/{project_id}/trajectory": {
       "delete": {
-        "description": "Remove trajectory segments and control keyframes while preserving scene setup.",
+        "description": "Clear trajectory and timeline resources.",
         "operationId": "clearTrajectory",
         "parameters": [
           {
@@ -5578,15 +5736,18 @@
           }
         ],
         "responses": {
-          "200": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Successful Response",
+            "description": "The requested resource was not found.",
             "headers": {
               "ETag": {
                 "description": "Revision of the returned project snapshot.",
@@ -5598,16 +5759,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
           },
           "409": {
             "content": {
@@ -5640,7 +5791,59 @@
             "description": "The If-Match header is required."
           }
         },
-        "summary": "Clear a trajectory",
+        "summary": "Clear the trajectory",
+        "tags": [
+          "Trajectory"
+        ]
+      },
+      "get": {
+        "description": "Return authored trajectory segments; compiled geometry is a separate resource.",
+        "operationId": "getTrajectory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trajectory"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the editable trajectory",
         "tags": [
           "Trajectory"
         ]
@@ -5648,7 +5851,7 @@
     },
     "/api/v1/projects/{project_id}/trajectory/compiled": {
       "get": {
-        "description": "Compile the current semantic project snapshot for runtime playback.",
+        "description": "Return derived playback geometry without persisting it.",
         "operationId": "getCompiledTrajectory",
         "parameters": [
           {
@@ -5719,107 +5922,20 @@
           "Trajectory"
         ]
       }
-    },
-    "/api/v1/projects/{project_id}/undo": {
-      "post": {
-        "description": "Move the project history cursor to the preceding snapshot.",
-        "operationId": "undoProjectChange",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "If-Match",
-            "required": true,
-            "schema": {
-              "examples": [
-                "\"4\""
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Project"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "ETag": {
-                "description": "Revision of the returned project snapshot.",
-                "schema": {
-                  "examples": [
-                    "\"4\""
-                  ],
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Revision or reference conflict."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid request or trajectory geometry."
-          },
-          "428": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The If-Match header is required."
-          }
-        },
-        "summary": "Undo the latest change",
-        "tags": [
-          "History"
-        ]
-      }
     }
   },
   "tags": [
     {
-      "description": "Project lifecycle and scene resources.",
+      "description": "Project lifecycle and metadata.",
       "name": "Projects"
+    },
+    {
+      "description": "Lifted trajectory anchors.",
+      "name": "Anchors"
+    },
+    {
+      "description": "Named world-space reference points.",
+      "name": "Scene points"
     },
     {
       "description": "Trajectory segments and compilation.",
@@ -5828,10 +5944,6 @@
     {
       "description": "Motion and camera control timelines.",
       "name": "Timelines"
-    },
-    {
-      "description": "Project undo and redo history.",
-      "name": "History"
     },
     {
       "description": "Trajectory-agent chat operations.",

@@ -19,15 +19,14 @@ from camera_path.repositories import (
     ProjectNotFoundError,
     ProjectRepository,
     RevisionConflictError,
-    SQLAlchemyProjectRepository,
 )
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
+from camera_path.routers.resources import router as resource_router
 from camera_path.services import (
     AnchorService,
     ChatMessageConflictError,
     ChatService,
-    HistoryService,
     ProjectService,
     ScenePointService,
     TimelineService,
@@ -40,27 +39,33 @@ OPENAPI_URL = f"{API_PREFIX}/openapi.json"
 ETAG_OPERATION_IDS = {
     "createProject",
     "getProject",
+    "listAnchors",
     "updateProject",
     "resetProject",
     "createAnchor",
     "updateAnchor",
     "deleteAnchor",
+    "listScenePoints",
     "createScenePoint",
     "updateScenePoint",
     "deleteScenePoint",
+    "getTrajectory",
     "clearTrajectory",
     "createSplineSegment",
     "createSpiralSegment",
     "deleteTrajectorySegment",
     "getCompiledTrajectory",
+    "getSpeedTimeline",
     "updateMotionProfile",
     "createSpeedKeyframe",
     "updateSpeedKeyframe",
     "deleteSpeedKeyframe",
+    "getAimTimeline",
     "updateCameraTrack",
     "createCameraAimKeyframe",
     "updateCameraAimKeyframe",
     "deleteCameraAimKeyframe",
+    "getOrientationTimeline",
     "updateCameraOrientation",
     "createCameraOrientationKeyframe",
     "updateCameraOrientationKeyframe",
@@ -68,8 +73,8 @@ ETAG_OPERATION_IDS = {
     "createDepthOfFieldKeyframe",
     "updateDepthOfFieldKeyframe",
     "deleteDepthOfFieldKeyframe",
-    "undoProjectChange",
-    "redoProjectChange",
+    "getDepthOfFieldTimeline",
+    "listChatMessages",
     "clearProjectChat",
     "createChatMessage",
     "saveUserChatMessage",
@@ -102,14 +107,13 @@ def create_app(
 ) -> FastAPI:
     configured = app_settings or settings
     owns_repository = repository is None
-    project_repository = repository or SQLAlchemyProjectRepository(configured.database_url)
+    project_repository = repository or ProjectRepository(configured.database_url)
     project_service = ProjectService(project_repository)
     anchor_service = AnchorService(project_repository)
     scene_point_service = ScenePointService(project_repository)
     trajectory_service = TrajectoryService(project_repository, configured.compile_tolerance)
     timeline_service = TimelineService(project_repository)
     chat_service = ChatService(project_repository)
-    history_service = HistoryService(project_repository)
     agent = TrajectoryAgent(
         project_repository,
         trajectory_service,
@@ -141,10 +145,11 @@ def create_app(
         docs_url=None,
         redoc_url=None,
         openapi_tags=[
-            {"name": "Projects", "description": "Project lifecycle and scene resources."},
+            {"name": "Projects", "description": "Project lifecycle and metadata."},
+            {"name": "Anchors", "description": "Lifted trajectory anchors."},
+            {"name": "Scene points", "description": "Named world-space reference points."},
             {"name": "Trajectory", "description": "Trajectory segments and compilation."},
             {"name": "Timelines", "description": "Motion and camera control timelines."},
-            {"name": "History", "description": "Project undo and redo history."},
             {"name": "Chat", "description": "Trajectory-agent chat operations."},
         ],
     )
@@ -155,7 +160,6 @@ def create_app(
     application.state.trajectory_service = trajectory_service
     application.state.timeline_service = timeline_service
     application.state.chat_service = chat_service
-    application.state.history_service = history_service
     application.state.trajectory_agent = agent
     application.state.project_mutation_locks: dict[str, asyncio.Lock] = {}
     application.add_middleware(
@@ -256,7 +260,7 @@ def create_app(
             headers=error.headers,
         )
 
-    application.include_router(business_router, prefix=API_PREFIX)
+    application.include_router(resource_router, prefix=API_PREFIX)
     application.include_router(business_router, include_in_schema=False)
 
     def versioned_openapi() -> dict[str, Any]:
