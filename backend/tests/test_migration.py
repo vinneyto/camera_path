@@ -7,7 +7,9 @@ from alembic import command
 from camera_path.config import settings
 from camera_path.models import (
     Anchor,
+    CameraKeyframe,
     ChatHistoryMessage,
+    FollowPathAim,
     Project,
     ScenePoint,
     SpeedKeyframe,
@@ -91,3 +93,31 @@ def test_missing_snapshots_requires_restore(tmp_path, monkeypatch) -> None:
 
     with pytest.raises(RuntimeError, match="restore a pre-migration backup"):
         command.upgrade(config, "head")
+
+
+def test_shared_aim_keyframe_id_is_scoped_to_project(tmp_path, monkeypatch) -> None:
+    database_path = tmp_path / "shared-aim.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20260920_0001")
+    projects = [Project(name=f"Project {index}") for index in range(2)]
+    for project in projects:
+        keyframe = CameraKeyframe(id="shared", path_position=0, aim=FollowPathAim())
+        project.camera_track.keyframes = {keyframe.id: keyframe}
+
+    with sqlite3.connect(database_path) as connection:
+        for project in projects:
+            connection.execute("INSERT INTO projects (id, cursor) VALUES (?, 0)", (project.id,))
+            connection.execute(
+                "INSERT INTO project_snapshots (project_id, position, payload) "
+                "VALUES (?, 0, ?)",
+                (project.id, project.model_dump_json()),
+            )
+
+    command.upgrade(config, "head")
+
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute(
+            "SELECT project_id, id FROM aim_keyframes ORDER BY project_id"
+        ).fetchall() == [(project.id, "shared") for project in sorted(projects, key=lambda p: p.id)]
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
