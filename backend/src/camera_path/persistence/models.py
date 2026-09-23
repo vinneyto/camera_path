@@ -22,6 +22,12 @@ class ProjectChildRecord:
     )
 
 
+class ProjectScopedKeyframeRecord:
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+
+
 class AnchorRecord(ProjectChildRecord, Base):
     __tablename__ = "anchors"
 
@@ -71,7 +77,7 @@ class MotionProfileRecord(Base):
     default_speed: Mapped[float] = mapped_column(Float, nullable=False)
 
 
-class SpeedKeyframeRecord(ProjectChildRecord, Base):
+class SpeedKeyframeRecord(ProjectScopedKeyframeRecord, Base):
     __tablename__ = "speed_keyframes"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
@@ -89,21 +95,21 @@ class CameraTrackRecord(Base):
     default_orientation: Mapped[str] = mapped_column(Text, nullable=False)
 
 
-class AimKeyframeRecord(ProjectChildRecord, Base):
+class AimKeyframeRecord(ProjectScopedKeyframeRecord, Base):
     __tablename__ = "aim_keyframes"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     payload: Mapped[str] = mapped_column(Text, nullable=False)
 
 
-class OrientationKeyframeRecord(ProjectChildRecord, Base):
+class OrientationKeyframeRecord(ProjectScopedKeyframeRecord, Base):
     __tablename__ = "orientation_keyframes"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     payload: Mapped[str] = mapped_column(Text, nullable=False)
 
 
-class DepthOfFieldKeyframeRecord(ProjectChildRecord, Base):
+class DepthOfFieldKeyframeRecord(ProjectScopedKeyframeRecord, Base):
     __tablename__ = "depth_of_field_keyframes"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)

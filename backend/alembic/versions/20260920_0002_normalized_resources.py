@@ -81,7 +81,7 @@ def _create_resource_tables() -> None:
         sa.Column("payload", sa.Text(), nullable=False),
         sa.Column("project_id", sa.Text(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("project_id", "id"),
     )
     op.create_index("ix_speed_keyframes_project_id", "speed_keyframes", ["project_id"])
     op.create_table(
@@ -104,7 +104,7 @@ def _create_resource_tables() -> None:
             sa.Column("payload", sa.Text(), nullable=False),
             sa.Column("project_id", sa.Text(), nullable=False),
             sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-            sa.PrimaryKeyConstraint("id"),
+            sa.PrimaryKeyConstraint("project_id", "id"),
         )
         op.create_index(f"ix_{table_name}_project_id", table_name, ["project_id"])
     op.create_table(
@@ -124,9 +124,15 @@ def _create_resource_tables() -> None:
 def upgrade() -> None:
     bind = op.get_bind()
     columns = {column["name"] for column in sa.inspect(bind).get_columns("projects")}
+    snapshots_present = "project_snapshots" in sa.inspect(bind).get_table_names()
     if {"name", "revision"}.issubset(columns):
+        if snapshots_present:
+            raise RuntimeError(
+                "projects was partially migrated while project_snapshots still exists; "
+                "restore a pre-migration backup before retrying"
+            )
         return
-    if "project_snapshots" not in sa.inspect(bind).get_table_names():
+    if not snapshots_present:
         raise RuntimeError(
             "project_snapshots is missing from the legacy database; "
             "restore a pre-migration backup before retrying"
