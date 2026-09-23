@@ -126,6 +126,11 @@ def upgrade() -> None:
     columns = {column["name"] for column in sa.inspect(bind).get_columns("projects")}
     if {"name", "revision"}.issubset(columns):
         return
+    if "project_snapshots" not in sa.inspect(bind).get_table_names():
+        raise RuntimeError(
+            "project_snapshots is missing from the legacy database; "
+            "restore a pre-migration backup before retrying"
+        )
 
     rows = bind.execute(
         sa.text(
@@ -135,11 +140,18 @@ def upgrade() -> None:
     ).scalars()
     projects = [json.loads(payload) for payload in rows]
 
-    op.drop_table("project_snapshots")
-    with op.batch_alter_table("projects") as batch:
+    # SQLite reflection cannot reliably recover the name of the legacy CHECK
+    # constraint. Supply the known columns so the batch copy omits the CHECK
+    # alongside the cursor it references, whether it was named or unnamed.
+    legacy_projects = sa.Table(
+        "projects",
+        sa.MetaData(),
+        sa.Column("id", sa.Text(), primary_key=True),
+        sa.Column("cursor", sa.Integer(), nullable=False),
+    )
+    with op.batch_alter_table("projects", copy_from=legacy_projects) as batch:
         batch.add_column(sa.Column("name", sa.Text(), nullable=True))
         batch.add_column(sa.Column("revision", sa.Integer(), nullable=True))
-        batch.drop_constraint("ck_projects_cursor_non_negative", type_="check")
         batch.drop_column("cursor")
     _create_resource_tables()
 
@@ -270,6 +282,8 @@ def upgrade() -> None:
     with op.batch_alter_table("projects") as batch:
         batch.alter_column("name", nullable=False)
         batch.alter_column("revision", nullable=False)
+
+    op.drop_table("project_snapshots")
 
 
 def downgrade() -> None:

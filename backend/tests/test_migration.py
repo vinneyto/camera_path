@@ -1,5 +1,6 @@
 import sqlite3
 
+import pytest
 from alembic.config import Config
 
 from alembic import command
@@ -14,12 +15,30 @@ from camera_path.models import (
 )
 
 
-def test_legacy_snapshot_is_migrated_to_normalized_tables(tmp_path, monkeypatch) -> None:
+@pytest.mark.parametrize("unnamed_check", [False, True])
+def test_legacy_snapshot_is_migrated_to_normalized_tables(
+    tmp_path, monkeypatch, unnamed_check
+) -> None:
     database_path = tmp_path / "legacy.sqlite3"
     database_url = f"sqlite+aiosqlite:///{database_path}"
     monkeypatch.setattr(settings, "database_url", database_url)
     config = Config("alembic.ini")
     command.upgrade(config, "20260920_0001")
+
+    if unnamed_check:
+        with sqlite3.connect(database_path) as connection:
+            connection.execute("DROP TABLE project_snapshots")
+            connection.execute("DROP TABLE projects")
+            connection.execute(
+                "CREATE TABLE projects (id TEXT PRIMARY KEY NOT NULL, "
+                "cursor INTEGER NOT NULL CHECK (cursor >= 0))"
+            )
+            connection.execute(
+                "CREATE TABLE project_snapshots (project_id TEXT NOT NULL, "
+                "position INTEGER NOT NULL, payload TEXT NOT NULL, "
+                "PRIMARY KEY (project_id, position), "
+                "FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE)"
+            )
 
     project = Project(name="Legacy project", revision=7)
     first = Anchor(label="First", surface_position=(0, 0, 0))
@@ -59,3 +78,16 @@ def test_legacy_snapshot_is_migrated_to_normalized_tables(tmp_path, monkeypatch)
             )
         }
         assert "project_snapshots" not in table_names
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_missing_snapshots_requires_restore(tmp_path, monkeypatch) -> None:
+    database_path = tmp_path / "interrupted.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20260920_0001")
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("DROP TABLE project_snapshots")
+
+    with pytest.raises(RuntimeError, match="restore a pre-migration backup"):
+        command.upgrade(config, "head")
