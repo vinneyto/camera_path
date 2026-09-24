@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from camera_path.models import SpiralSegment, SplineSegment, TrajectorySegment
 from camera_path.persistence.models import SegmentAnchorRecord, TrajectorySegmentRecord
+from camera_path.repositories.sync import sync_rows
 
 
 class TrajectoryRepository:
@@ -44,12 +45,12 @@ class TrajectoryRepository:
         return result
 
     async def replace(self, project_id: str, segments: list[TrajectorySegment]) -> None:
-        await self.session.execute(
-            delete(TrajectorySegmentRecord).where(TrajectorySegmentRecord.project_id == project_id)
-        )
-        for position, segment in enumerate(segments):
-            self.session.add(
-                TrajectorySegmentRecord(
+        await sync_rows(
+            self.session,
+            TrajectorySegmentRecord,
+            project_id,
+            [
+                dict(
                     id=segment.id,
                     project_id=project_id,
                     position=position,
@@ -60,13 +61,29 @@ class TrajectoryRepository:
                     radial_law=segment.radial_law if isinstance(segment, SpiralSegment) else None,
                     axial_law=segment.axial_law if isinstance(segment, SpiralSegment) else None,
                 )
-            )
+                for position, segment in enumerate(segments)
+            ],
+            ordered=True,
+        )
+        await self.session.flush()
+        for segment in segments:
             anchor_ids = (
                 segment.anchor_ids
                 if isinstance(segment, SplineSegment)
                 else [segment.start_anchor_id, segment.center_anchor_id, segment.end_anchor_id]
             )
-            self.session.add_all(
-                SegmentAnchorRecord(segment_id=segment.id, position=index, anchor_id=anchor_id)
-                for index, anchor_id in enumerate(anchor_ids)
+            existing = list(
+                await self.session.scalars(
+                    select(SegmentAnchorRecord)
+                    .where(SegmentAnchorRecord.segment_id == segment.id)
+                    .order_by(SegmentAnchorRecord.position)
+                )
             )
+            if [record.anchor_id for record in existing] != anchor_ids:
+                await self.session.execute(
+                    delete(SegmentAnchorRecord).where(SegmentAnchorRecord.segment_id == segment.id)
+                )
+                self.session.add_all(
+                    SegmentAnchorRecord(segment_id=segment.id, position=index, anchor_id=anchor_id)
+                    for index, anchor_id in enumerate(anchor_ids)
+                )

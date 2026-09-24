@@ -3,9 +3,11 @@ from __future__ import annotations
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field, model_validator
 
+from camera_path.persistence.models import LibraryAssetRecord
 from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.project_cloud import ProjectCloudRepository
 from camera_path.services.library_storage import LibraryStorage
+from camera_path.services.revisions import advance_project_revision
 
 
 class ProjectCloud(BaseModel):
@@ -66,7 +68,12 @@ class ProjectCloudService:
         self, project_id: str, asset_id: str, expected: int, request: Request
     ) -> tuple[ProjectCloud, int]:
         try:
-            record, revision = await self.repository.add(project_id, asset_id, expected)
+            async with self.repository.sessions.begin() as session:
+                asset = await session.get(LibraryAssetRecord, asset_id)
+                if asset is None or asset.status != "ready":
+                    raise KeyError("Library asset not found or not ready")
+                revision = await advance_project_revision(session, project_id, expected)
+                record = await self.repository.add(session, project_id, asset_id)
         except KeyError as error:
             raise HTTPException(404, str(error)) from error
         return await self._model(record, request), revision
@@ -80,9 +87,11 @@ class ProjectCloudService:
         request: Request,
     ) -> tuple[ProjectCloud, int]:
         try:
-            record, revision = await self.repository.update(
-                project_id, cloud_id, expected, data.position, data.visible
-            )
+            async with self.repository.sessions.begin() as session:
+                revision = await advance_project_revision(session, project_id, expected)
+                record = await self.repository.update(
+                    session, project_id, cloud_id, data.position, data.visible
+                )
         except KeyError as error:
             raise HTTPException(404, str(error)) from error
         except ValueError as error:
@@ -91,6 +100,9 @@ class ProjectCloudService:
 
     async def remove(self, project_id: str, cloud_id: str, expected: int) -> int:
         try:
-            return await self.repository.remove(project_id, cloud_id, expected)
+            async with self.repository.sessions.begin() as session:
+                revision = await advance_project_revision(session, project_id, expected)
+                await self.repository.remove(session, project_id, cloud_id)
+            return revision
         except KeyError as error:
             raise HTTPException(404, str(error)) from error

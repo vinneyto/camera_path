@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import ScenePoint
 from camera_path.persistence.models import ScenePointRecord, Vector3
+from camera_path.repositories.sync import sync_rows
 
 
 class ScenePointRepository:
@@ -25,15 +26,17 @@ class ScenePointRepository:
         }
 
     async def replace(self, project_id: str, points: dict[str, ScenePoint]) -> None:
-        await self.session.execute(
-            delete(ScenePointRecord).where(ScenePointRecord.project_id == project_id)
-        )
-        self.session.add_all(
-            ScenePointRecord(
-                id=item.id,
-                project_id=project_id,
-                label=item.label,
-                position=Vector3(*item.position),
-            )
-            for item in points.values()
+        await sync_rows(
+            self.session,
+            ScenePointRecord,
+            project_id,
+            [
+                dict(
+                    id=item.id,
+                    project_id=project_id,
+                    label=item.label,
+                    position=Vector3(*item.position),
+                )
+                for item in points.values()
+            ],
         )
