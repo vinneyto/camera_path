@@ -1,4 +1,5 @@
 from camera_path.models import ChatHistoryMessage, Project
+from camera_path.repositories.chat_message import ChatMessageRepository
 from camera_path.services.base import ServiceBase
 
 
@@ -7,11 +8,16 @@ class ChatMessageConflictError(RuntimeError):
 
 
 class ChatService(ServiceBase):
+    async def _save_chat(self, draft: Project, expected: int) -> Project:
+        async with self._transaction(draft, expected) as session:
+            await ChatMessageRepository(session).replace(draft.id, draft.chat_history)
+        return draft
+
     async def clear_chat(self, project_id: str) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
         draft.chat_history.clear()
-        return await self._commit(draft, expected)
+        return await self._save_chat(draft, expected)
 
     async def save_user_message(self, project_id: str, message_id: str, content: str) -> Project:
         draft = await self.repository.get(project_id)
@@ -25,4 +31,4 @@ class ChatService(ServiceBase):
             return draft
         expected = draft.revision
         draft.chat_history.append(ChatHistoryMessage(id=message_id, role="user", content=content))
-        return await self._commit(draft, expected)
+        return await self._save_chat(draft, expected)

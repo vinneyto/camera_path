@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import Anchor
 from camera_path.persistence.models import AnchorRecord, Vector3
+from camera_path.repositories.sync import sync_rows
 
 
 class AnchorRepository:
@@ -28,18 +29,20 @@ class AnchorRepository:
         }
 
     async def replace(self, project_id: str, anchors: dict[str, Anchor]) -> None:
-        await self.session.execute(
-            delete(AnchorRecord).where(AnchorRecord.project_id == project_id)
-        )
-        self.session.add_all(
-            AnchorRecord(
-                id=item.id,
-                project_id=project_id,
-                label=item.label,
-                surface_position=Vector3(*item.surface_position),
-                surface_normal=Vector3(*item.surface_normal),
-                lift=item.lift,
-                lift_axis=item.lift_axis,
-            )
-            for item in anchors.values()
+        await sync_rows(
+            self.session,
+            AnchorRecord,
+            project_id,
+            [
+                dict(
+                    id=item.id,
+                    project_id=project_id,
+                    label=item.label,
+                    surface_position=Vector3(*item.surface_position),
+                    surface_normal=Vector3(*item.surface_normal),
+                    lift=item.lift,
+                    lift_axis=item.lift_axis,
+                )
+                for item in anchors.values()
+            ],
         )

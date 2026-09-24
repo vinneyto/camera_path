@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import MotionProfile, SpeedKeyframe
 from camera_path.persistence.models import MotionProfileRecord, SpeedKeyframeRecord
+from camera_path.repositories.sync import sync_rows
 
 
 class SpeedTimelineRepository:
@@ -14,7 +15,7 @@ class SpeedTimelineRepository:
     async def get(self, project_id: str) -> MotionProfile:
         profile = await self.session.get(MotionProfileRecord, project_id)
         if profile is None:
-            return MotionProfile()
+            raise LookupError(f"motion profile missing for project {project_id}")
         records = await self.session.scalars(
             select(SpeedKeyframeRecord).where(SpeedKeyframeRecord.project_id == project_id)
         )
@@ -37,16 +38,18 @@ class SpeedTimelineRepository:
             )
         else:
             profile.default_speed = timeline.default_speed
-        await self.session.execute(
-            delete(SpeedKeyframeRecord).where(SpeedKeyframeRecord.project_id == project_id)
-        )
-        self.session.add_all(
-            SpeedKeyframeRecord(
-                id=item.id,
-                project_id=project_id,
-                path_position=item.path_position,
-                speed=item.speed,
-                interpolation_to_next=item.interpolation_to_next,
-            )
-            for item in timeline.keyframes.values()
+        await sync_rows(
+            self.session,
+            SpeedKeyframeRecord,
+            project_id,
+            [
+                dict(
+                    id=item.id,
+                    project_id=project_id,
+                    path_position=item.path_position,
+                    speed=item.speed,
+                    interpolation_to_next=item.interpolation_to_next,
+                )
+                for item in timeline.keyframes.values()
+            ],
         )
