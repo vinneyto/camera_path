@@ -6,6 +6,7 @@ from camera_path.models import (
     OrientationTimeline,
     Project,
     ProjectCreate,
+    ProjectMetadata,
     ProjectUpdate,
     new_id,
 )
@@ -35,6 +36,12 @@ class ProjectService(ServiceBase):
 
     async def list_projects(self) -> list[Project]:
         return await self.repository.list()
+
+    async def list_project_metadata(self) -> list[ProjectMetadata]:
+        return await self.repository.list_metadata()
+
+    async def get_project_metadata(self, project_id: str) -> ProjectMetadata:
+        return await self.repository.get_metadata(project_id)
 
     async def get_project(self, project_id: str) -> Project:
         return await self.repository.get(project_id)

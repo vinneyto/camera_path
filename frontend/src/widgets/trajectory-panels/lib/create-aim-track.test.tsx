@@ -6,6 +6,7 @@ import type { CompiledTrajectory } from "@/entities/trajectory";
 import { createAimTrack } from "./create-aim-track";
 
 const project: Project = {
+  anchor_count: 0,
   anchors: {},
   camera_track: {
     depth_of_field_keyframes: {},
@@ -24,6 +25,7 @@ const project: Project = {
     target: { id: "target", label: "Subject", position: [0, 1, 0] },
   },
   segments: [],
+  segment_count: 0,
 };
 
 function createTrajectory(

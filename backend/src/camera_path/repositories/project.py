@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import (
@@ -11,12 +11,15 @@ from camera_path.models import (
     DepthOfFieldTimeline,
     OrientationTimeline,
     Project,
+    ProjectMetadata,
 )
 from camera_path.persistence.database import create_engine_and_session_factory
 from camera_path.persistence.models import (
+    AnchorRecord,
     Base,
     ProjectCloudRecord,
     ProjectRecord,
+    TrajectorySegmentRecord,
 )
 from camera_path.repositories.aim_timeline import AimTimelineRepository
 from camera_path.repositories.anchor import AnchorRepository
@@ -73,6 +76,46 @@ class ProjectRepository:
         async with self.session_factory() as session:
             ids = list(await session.scalars(select(ProjectRecord.id).order_by(ProjectRecord.id)))
             return [await self._load(session, project_id) for project_id in ids]
+
+    async def list_metadata(self) -> list[ProjectMetadata]:
+        await self.initialize()
+        async with self.session_factory() as session:
+            rows = (await session.execute(self._metadata_query().order_by(ProjectRecord.id))).all()
+            return [ProjectMetadata.model_validate(dict(row._mapping)) for row in rows]
+
+    async def get_metadata(self, project_id: str) -> ProjectMetadata:
+        await self.initialize()
+        async with self.session_factory() as session:
+            row = (
+                await session.execute(self._metadata_query().where(ProjectRecord.id == project_id))
+            ).one_or_none()
+            if row is None:
+                raise ProjectNotFoundError(project_id)
+            return ProjectMetadata.model_validate(dict(row._mapping))
+
+    @staticmethod
+    def _metadata_query():
+        anchors = (
+            select(AnchorRecord.project_id, func.count().label("anchor_count"))
+            .group_by(AnchorRecord.project_id)
+            .subquery()
+        )
+        segments = (
+            select(TrajectorySegmentRecord.project_id, func.count().label("segment_count"))
+            .group_by(TrajectorySegmentRecord.project_id)
+            .subquery()
+        )
+        return (
+            select(
+                ProjectRecord.id,
+                ProjectRecord.name,
+                ProjectRecord.revision,
+                func.coalesce(anchors.c.anchor_count, 0).label("anchor_count"),
+                func.coalesce(segments.c.segment_count, 0).label("segment_count"),
+            )
+            .outerjoin(anchors, anchors.c.project_id == ProjectRecord.id)
+            .outerjoin(segments, segments.c.project_id == ProjectRecord.id)
+        )
 
     async def delete(self, project_id: str) -> None:
         await self.initialize()
