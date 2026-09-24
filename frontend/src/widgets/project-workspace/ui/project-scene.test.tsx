@@ -40,7 +40,7 @@ vi.mock("./playback-controls-container", () => ({
 }));
 
 vi.mock("@/features/project-clouds", () => ({
-  ProjectCloudPanel: () => null,
+  ProjectCloudControls: () => null,
 }));
 
 vi.mock("./trajectory-inspector-container", () => ({
