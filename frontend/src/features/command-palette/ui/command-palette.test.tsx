@@ -8,6 +8,33 @@ import { CommandPalette, type CommandPaletteCommand } from "./command-palette";
 afterEach(cleanup);
 
 describe("CommandPalette", () => {
+  it("selects the first command whenever the list opens again", () => {
+    render(
+      <CommandPalette
+        commands={[
+          { id: "add", label: "Add cloud", onSelect: vi.fn() },
+          { id: "remove", label: "Remove cloud", onSelect: vi.fn() },
+        ]}
+      />,
+    );
+    const search = screen.getByRole("combobox");
+    fireEvent.focus(search);
+    fireEvent.keyDown(search, { key: "ArrowDown" });
+    expect(
+      screen
+        .getByRole("option", { name: "Remove cloud" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+
+    fireEvent.blur(search);
+    fireEvent.focus(search);
+    expect(
+      screen
+        .getByRole("option", { name: "Add cloud" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+  });
+
   it("searches commands and cloud instances, then sends only the selected ID", () => {
     const add = vi.fn();
     const remove = vi.fn();

@@ -83,12 +83,13 @@ export function CommandPalette({
 
   return (
     <div
-      className="relative rounded-lg border bg-background/95 text-xs shadow-lg transition-colors hover:border-foreground/30 focus-within:border-foreground/40"
+      className="relative rounded-lg border bg-background/95 text-xs shadow-lg transition-colors hover:border-foreground/30 hover:bg-accent/40 focus-within:border-foreground/40"
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
           setOpen(false);
           setCommandId(null);
           setQuery("");
+          setActiveIndex(0);
         }
       }}
     >
@@ -113,13 +114,16 @@ export function CommandPalette({
               ? `Search ${command?.label ?? "items"}`
               : "Search commands"
           }
-          className="h-9 min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+          className="h-8 min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
           disabled={disabled}
           onChange={(event) => {
             setQuery(event.target.value);
             setActiveIndex(0);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setActiveIndex(0);
+            setOpen(true);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.preventDefault();
@@ -131,18 +135,23 @@ export function CommandPalette({
               }
             } else if (event.key === "ArrowDown" && filtered.length) {
               event.preventDefault();
-              setActiveIndex((index) => (index + 1) % filtered.length);
+              setActiveIndex((index) =>
+                open ? (index + 1) % filtered.length : 0,
+              );
               setOpen(true);
             } else if (event.key === "ArrowUp" && filtered.length) {
               event.preventDefault();
-              setActiveIndex(
-                (index) => (index - 1 + filtered.length) % filtered.length,
+              setActiveIndex((index) =>
+                open ? (index - 1 + filtered.length) % filtered.length : 0,
               );
               setOpen(true);
             } else if (event.key === "Enter") {
               event.preventDefault();
               if (open) choose(activeIndex);
-              else setOpen(true);
+              else {
+                setActiveIndex(0);
+                setOpen(true);
+              }
             }
           }}
           placeholder={
