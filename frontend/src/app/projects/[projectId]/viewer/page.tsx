@@ -1,5 +1,4 @@
-import { EditorStoreProvider } from "@/features/project-editor";
-import { ProjectWorkspace } from "@/widgets/project-workspace";
+import { redirect } from "next/navigation";
 
 interface ViewerPageProps {
   params: Promise<{ projectId: string }>;
@@ -12,12 +11,6 @@ export default async function ViewerPage({
 }: ViewerPageProps) {
   const { projectId } = await params;
   const { renderer } = await searchParams;
-  return (
-    <EditorStoreProvider key={projectId}>
-      <ProjectWorkspace
-        projectId={projectId}
-        rendererBackend={renderer === "webgl" ? "webgl" : "webgpu"}
-      />
-    </EditorStoreProvider>
-  );
+  const query = renderer === "webgl" ? "?renderer=webgl" : "";
+  redirect(`/projects/${encodeURIComponent(projectId)}${query}`);
 }
