@@ -3,6 +3,8 @@
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 
 import { type Project, type Vec3 } from "@/entities/project";
+import { useListProjectClouds } from "@/shared/api/generated/client";
+import type { ProjectCloud } from "@/shared/api/generated/model";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { getAnchorLabel, useAddAnchor } from "@/features/anchor-creation";
 import { useUpdateAnchor } from "@/features/anchor-editing";
@@ -45,6 +47,8 @@ export function SceneViewportContainer({
   const { cameraMode } = useCameraMode();
   const playback = useTrajectoryPlayback(trajectory);
   const anchors = Object.values(project.anchors);
+  const cloudsQuery = useListProjectClouds(projectId);
+  const clouds = (cloudsQuery.data?.data ?? []) as ProjectCloud[];
   const mutating =
     addAnchorMutation.isPending ||
     updateAnchorMutation.isPending ||
@@ -78,6 +82,7 @@ export function SceneViewportContainer({
     <>
       <Viewport
         anchors={anchors}
+        clouds={clouds}
         bottomOverlayHeight={bottomOverlayHeight}
         deletingTrajectory={deletingTrajectory}
         onAddAnchor={(position, normal) => void addAnchor(position, normal)}

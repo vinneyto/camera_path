@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import (
@@ -10,6 +10,7 @@ from camera_path.models import (
     ScenePointDepthOfFieldFocus,
 )
 from camera_path.persistence.models import DepthOfFieldKeyframeRecord
+from camera_path.repositories.sync import sync_rows
 
 
 class DepthOfFieldTimelineRepository:
@@ -40,24 +41,24 @@ class DepthOfFieldTimelineRepository:
         )
 
     async def replace(self, project_id: str, timeline: DepthOfFieldTimeline) -> None:
-        await self.session.execute(
-            delete(DepthOfFieldKeyframeRecord).where(
-                DepthOfFieldKeyframeRecord.project_id == project_id
-            )
-        )
-        self.session.add_all(
-            DepthOfFieldKeyframeRecord(
-                id=item.id,
-                project_id=project_id,
-                path_position=item.path_position,
-                focus_kind=item.focus.kind,
-                focus_scene_point_id=(
-                    item.focus.scene_point_id
-                    if isinstance(item.focus, ScenePointDepthOfFieldFocus)
-                    else None
-                ),
-                focus_range_scale=item.focus_range_scale,
-                bokeh_scale=item.bokeh_scale,
-            )
-            for item in timeline.keyframes.values()
+        await sync_rows(
+            self.session,
+            DepthOfFieldKeyframeRecord,
+            project_id,
+            [
+                dict(
+                    id=item.id,
+                    project_id=project_id,
+                    path_position=item.path_position,
+                    focus_kind=item.focus.kind,
+                    focus_scene_point_id=(
+                        item.focus.scene_point_id
+                        if isinstance(item.focus, ScenePointDepthOfFieldFocus)
+                        else None
+                    ),
+                    focus_range_scale=item.focus_range_scale,
+                    bokeh_scale=item.bokeh_scale,
+                )
+                for item in timeline.keyframes.values()
+            ],
         )

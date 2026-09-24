@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
+import type { ProjectCloud } from "@/shared/api/generated/model";
 import {
   evaluateDepthOfFieldKeyframe,
   type CompiledTrajectory,
@@ -16,7 +17,6 @@ import {
   useEditorHoverCursor,
 } from "@/features/project-editor";
 import {
-  SceneSurface,
   SceneSurfaceProvider,
   type SceneSurfaceReady,
   type SceneSurfaceBackground,
@@ -32,24 +32,25 @@ import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { PlaybackCamera } from "./playback-camera";
+import { ProjectCloudSurface } from "./project-cloud-surface";
 import { TrajectoryLine } from "./trajectory-line";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
 import { useAnchorPlacement } from "./use-anchor-placement";
 import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 
-const SCENE_SURFACE_SOURCE = { kind: "url", url: "/mug.ply" } as const;
 const GAUSSIAN_CLOUD_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 
 interface SceneContentsProps {
   anchors: Anchor[];
+  clouds: ProjectCloud[];
   background: SceneSurfaceBackground;
   dark: boolean;
   depthOfFieldSupported?: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
-  onSurfaceError: (error: Error) => void;
-  onSurfaceLoading: () => void;
-  onSurfaceReady: () => void;
+  onSurfaceError: (cloudId: string, error: Error) => void;
+  onSurfaceLoading: (cloudId: string) => void;
+  onSurfaceReady: (cloudId: string) => void;
   onUpdateAnchorLift: (anchorId: string, lift: number) => Promise<void>;
   onOpenAnchorMenu: (anchor: Anchor, position: ContextMenuPosition) => void;
   onOpenTrajectoryMenu: (position: ContextMenuPosition) => void;
@@ -61,6 +62,7 @@ interface SceneContentsProps {
 
 export function SceneContents({
   anchors,
+  clouds,
   background,
   dark,
   depthOfFieldSupported = false,
@@ -106,9 +108,13 @@ export function SceneContents({
     onCommit: onUpdateAnchorLift,
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
+  const framedFirstCloud = useRef(false);
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   const [surfaceRadius, setSurfaceRadius] = useState<number | null>(null);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
+  useEffect(() => {
+    if (clouds.length === 0) framedFirstCloud.current = false;
+  }, [clouds.length]);
   useStopOrbitControlsInertia(
     orbitControlsRef,
     cameraMode === "orbit" && activeTool !== null,
@@ -123,15 +129,13 @@ export function SceneContents({
     renderingBackend.invalidate();
   }, [anchors, renderingBackend]);
 
-  function handleSurfaceReady(surface: SceneSurfaceReady) {
-    setSurfaceRadius(surface.bounds.radius);
-    frameSurface(camera, surface.bounds, setOrbitTarget);
-    onSurfaceReady();
-  }
-
-  function handleSurfaceLoading() {
-    setSurfaceRadius(null);
-    onSurfaceLoading();
+  function handleSurfaceReady(cloudId: string, surface: SceneSurfaceReady) {
+    setSurfaceRadius((radius) => Math.max(radius ?? 0, surface.bounds.radius));
+    if (!framedFirstCloud.current) {
+      framedFirstCloud.current = true;
+      frameSurface(camera, surface.bounds, setOrbitTarget);
+    }
+    onSurfaceReady(cloudId);
   }
 
   function handleOrbitEnd() {
@@ -146,15 +150,17 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
-      <SceneSurface
-        name="Mug Gaussian cloud"
-        onError={onSurfaceError}
-        onReady={handleSurfaceReady}
-        onLoading={handleSurfaceLoading}
-        raycastable={isGaussianSurfacePickActive(activeTool)}
-        {...(editorVisible ? placement.surfaceEventProps : {})}
-        source={SCENE_SURFACE_SOURCE}
-      />
+      {clouds.map((cloud) => (
+        <ProjectCloudSurface
+          cloud={cloud}
+          key={cloud.id}
+          onError={(error) => onSurfaceError(cloud.id, error)}
+          onLoading={() => onSurfaceLoading(cloud.id)}
+          onReady={(surface) => handleSurfaceReady(cloud.id, surface)}
+          raycastable={cloud.visible && isGaussianSurfacePickActive(activeTool)}
+          {...(editorVisible ? placement.surfaceEventProps : {})}
+        />
+      ))}
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight
         castShadow

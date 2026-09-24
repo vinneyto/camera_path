@@ -72,7 +72,7 @@ def project_etag(revision: int) -> str:
     return f'"{revision}"'
 
 
-def _parse_if_match(value: str) -> int:
+def parse_if_match(value: str) -> int:
     match = _ETAG_PATTERN.fullmatch(value.strip())
     if match is None:
         raise RevisionConflictError("If-Match must contain a project revision ETag")
@@ -92,7 +92,7 @@ async def guard_project_mutation(
             if if_match is None:
                 raise PreconditionRequiredError("If-Match is required for this mutation")
             project = await service.get_project(project_id)
-            expected_revision = _parse_if_match(if_match)
+            expected_revision = parse_if_match(if_match)
             if expected_revision != project.revision:
                 raise RevisionConflictError(
                     f"expected revision {expected_revision}, current revision is {project.revision}"

@@ -1,6 +1,12 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SceneViewportFrame } from "./scene-viewport-frame";
@@ -22,12 +28,12 @@ describe("SceneViewportFrame trajectory context menu", () => {
     render(
       <SceneViewportFrame
         available
+        clouds={[]}
         deletingTrajectory={false}
         onDeleteAnchor={vi.fn()}
         onDeleteTrajectory={onDeleteTrajectory}
         renderScene={(context) => (
           <button
-            onClick={() => context.onSurfaceReady()}
             onContextMenu={(event) => {
               event.preventDefault();
               context.onOpenTrajectoryMenu({ x: 40, y: 60 });
@@ -59,6 +65,7 @@ describe("SceneViewportFrame trajectory context menu", () => {
     render(
       <SceneViewportFrame
         available
+        clouds={[]}
         deletingTrajectory
         onDeleteAnchor={vi.fn()}
         onDeleteTrajectory={vi.fn()}
@@ -80,5 +87,51 @@ describe("SceneViewportFrame trajectory context menu", () => {
         name: "Delete trajectory",
       }).disabled,
     ).toBe(true);
+  });
+
+  it("keeps an empty scene usable and reports loading errors per cloud", () => {
+    const cloud = {
+      id: "one",
+      name: "First PLY",
+      download_url: "http://test/one.ply",
+      library_asset_id: "asset",
+      project_id: "project",
+      position: 0,
+      visible: true,
+    };
+    const shared = {
+      available: true,
+      deletingTrajectory: false,
+      onDeleteAnchor: vi.fn(),
+      onDeleteTrajectory: vi.fn(),
+      trajectoryAvailable: false,
+    };
+    let reportError: ((id: string, error: Error) => void) | undefined;
+    const renderScene = (context: {
+      onSurfaceError: (id: string, error: Error) => void;
+    }) => {
+      reportError = context.onSurfaceError;
+      return null;
+    };
+    const { rerender } = render(
+      <SceneViewportFrame {...shared} clouds={[]} renderScene={renderScene} />,
+    );
+    expect(screen.queryByText(/Loading mug/)).toBeNull();
+    rerender(
+      <SceneViewportFrame
+        {...shared}
+        clouds={[cloud]}
+        renderScene={renderScene}
+      />,
+    );
+    expect(screen.getByText("First PLY: Loading…")).not.toBeNull();
+    act(() => reportError?.(cloud.id, new Error("Network error")));
+    expect(screen.getByRole("alert").textContent).toContain(
+      "First PLY: Network error",
+    );
+    rerender(
+      <SceneViewportFrame {...shared} clouds={[]} renderScene={renderScene} />,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

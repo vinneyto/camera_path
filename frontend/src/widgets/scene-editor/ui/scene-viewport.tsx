@@ -11,6 +11,7 @@ export function SceneViewport(props: SceneViewportProps) {
   return (
     <SceneViewportFrame
       available
+      clouds={props.clouds}
       deletingTrajectory={props.deletingTrajectory}
       onDeleteAnchor={props.onDeleteAnchor}
       onDeleteTrajectory={props.onDeleteTrajectory}
@@ -25,6 +26,7 @@ export function SceneViewport(props: SceneViewportProps) {
           <CameraViewOffset bottomInset={props.bottomOverlayHeight ?? 0} />
           <SceneContents
             anchors={props.anchors}
+            clouds={props.clouds}
             background={context.background}
             dark={context.dark}
             onAddAnchor={props.onAddAnchor}

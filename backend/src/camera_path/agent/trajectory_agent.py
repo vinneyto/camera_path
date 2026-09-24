@@ -430,7 +430,7 @@ class TrajectoryAgent:
     async def _finish(self, draft: Project, expected_revision: int, answer: str) -> ChatResult:
         draft.chat_history.append(ChatHistoryMessage(role="assistant", content=answer))
         self.trajectory_service.compile_draft(draft)
-        draft = await self.repository.commit(draft, expected_revision)
+        draft = await self.trajectory_service.save_agent_draft(draft, expected_revision)
         return ChatResult(
             answer=answer,
             project=draft,

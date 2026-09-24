@@ -14,6 +14,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
   return (
     <SceneViewportFrame
       available={webGpuAvailable}
+      clouds={props.clouds}
       deletingTrajectory={props.deletingTrajectory}
       onDeleteAnchor={props.onDeleteAnchor}
       onDeleteTrajectory={props.onDeleteTrajectory}
@@ -34,6 +35,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
           <CameraViewOffset bottomInset={props.bottomOverlayHeight ?? 0} />
           <SceneContents
             anchors={props.anchors}
+            clouds={props.clouds}
             background={context.background}
             dark={context.dark}
             depthOfFieldSupported
