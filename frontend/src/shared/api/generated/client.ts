@@ -54,6 +54,9 @@ import type {
   MotionProfile,
   MotionProfileUpdate,
   OrientationTimeline,
+  ProjectCloud,
+  ProjectCloudCreate,
+  ProjectCloudUpdate,
   ProjectCreate,
   ProjectMetadata,
   ProjectUpdate,
@@ -3753,6 +3756,488 @@ export const useSaveUserChatMessage = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getSaveUserChatMessageMutationOptions(options), queryClient);
+    }
+
+export type listProjectCloudsResponse200 = {
+  data: ProjectCloud[]
+  status: 200
+}
+
+export type listProjectCloudsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type listProjectCloudsResponseSuccess = (listProjectCloudsResponse200) & {
+  headers: Headers;
+};
+export type listProjectCloudsResponseError = (listProjectCloudsResponse422) & {
+  headers: Headers;
+};
+
+export type listProjectCloudsResponse = (listProjectCloudsResponseSuccess | listProjectCloudsResponseError)
+
+export const getListProjectCloudsUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/clouds`
+}
+
+/**
+ * List instances and resolve library download URLs.
+ * @summary List project clouds
+ */
+export const listProjectClouds = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<listProjectCloudsResponse> => {
+
+  return orvalFetch<listProjectCloudsResponse>(getListProjectCloudsUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectCloudsQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/clouds`
+    ] as const;
+    }
+
+
+export const getListProjectCloudsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectCloudsQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectClouds>>> = ({ signal }) => listProjectClouds(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProjectCloudsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectClouds>>>
+export type ListProjectCloudsQueryError = HTTPValidationError
+
+
+export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectClouds>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectClouds>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectClouds>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectClouds>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List project clouds
+ */
+
+export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProjectCloudsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createProjectCloudResponse201 = {
+  data: ProjectCloud
+  status: 201
+}
+
+export type createProjectCloudResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createProjectCloudResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createProjectCloudResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type createProjectCloudResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type createProjectCloudResponseSuccess = (createProjectCloudResponse201) & {
+  headers: Headers;
+};
+export type createProjectCloudResponseError = (createProjectCloudResponse404 | createProjectCloudResponse409 | createProjectCloudResponse422 | createProjectCloudResponse428) & {
+  headers: Headers;
+};
+
+export type createProjectCloudResponse = (createProjectCloudResponseSuccess | createProjectCloudResponseError)
+
+export const getCreateProjectCloudUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/clouds`
+}
+
+/**
+ * Attach a ready library asset to the project.
+ * @summary Add a library cloud
+ */
+export const createProjectCloud = async (projectId: string,
+    projectCloudCreate: ProjectCloudCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createProjectCloudResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<createProjectCloudResponse>(getCreateProjectCloudUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectCloudCreate)
+  }
+);}
+
+
+
+
+
+export const getCreateProjectCloudMutationKey = () => ['createProjectCloud'] as const;
+
+export const getCreateProjectCloudMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext> => {
+
+const mutationKey = getCreateProjectCloudMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectCloud>>, CreateProjectCloudMutationVariables> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createProjectCloud(projectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectCloud>>>
+    export type CreateProjectCloudMutationBody = ProjectCloudCreate
+    export type CreateProjectCloudMutationError = ErrorResponse
+    export type CreateProjectCloudMutationVariables = {projectId: string;data: ProjectCloudCreate}
+
+    /**
+ * @summary Add a library cloud
+ */
+export const useCreateProjectCloud = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectCloud>>,
+        TError,
+        CreateProjectCloudMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateProjectCloudMutationOptions(options), queryClient);
+    }
+
+export type deleteProjectCloudResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteProjectCloudResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteProjectCloudResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteProjectCloudResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteProjectCloudResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteProjectCloudResponseSuccess = (deleteProjectCloudResponse204) & {
+  headers: Headers;
+};
+export type deleteProjectCloudResponseError = (deleteProjectCloudResponse404 | deleteProjectCloudResponse409 | deleteProjectCloudResponse422 | deleteProjectCloudResponse428) & {
+  headers: Headers;
+};
+
+export type deleteProjectCloudResponse = (deleteProjectCloudResponseSuccess | deleteProjectCloudResponseError)
+
+export const getDeleteProjectCloudUrl = (projectId: string,
+    cloudId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/clouds/${cloudId}`
+}
+
+/**
+ * Detach an instance without deleting its library file.
+ * @summary Remove a project cloud
+ */
+export const deleteProjectCloud = async (projectId: string,
+    cloudId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteProjectCloudResponse> => {
+
+  return orvalFetch<deleteProjectCloudResponse>(getDeleteProjectCloudUrl(projectId,cloudId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteProjectCloudMutationKey = () => ['deleteProjectCloud'] as const;
+
+export const getDeleteProjectCloudMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext> => {
+
+const mutationKey = getDeleteProjectCloudMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectCloud>>, DeleteProjectCloudMutationVariables> = (props) => {
+          const {projectId,cloudId} = props ?? {};
+
+          return  deleteProjectCloud(projectId,cloudId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectCloud>>>
+
+    export type DeleteProjectCloudMutationError = ErrorResponse
+    export type DeleteProjectCloudMutationVariables = {projectId: string;cloudId: string}
+
+    /**
+ * @summary Remove a project cloud
+ */
+export const useDeleteProjectCloud = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProjectCloud>>,
+        TError,
+        DeleteProjectCloudMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteProjectCloudMutationOptions(options), queryClient);
+    }
+
+export type updateProjectCloudResponse200 = {
+  data: ProjectCloud
+  status: 200
+}
+
+export type updateProjectCloudResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProjectCloudResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type updateProjectCloudResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type updateProjectCloudResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type updateProjectCloudResponseSuccess = (updateProjectCloudResponse200) & {
+  headers: Headers;
+};
+export type updateProjectCloudResponseError = (updateProjectCloudResponse404 | updateProjectCloudResponse409 | updateProjectCloudResponse422 | updateProjectCloudResponse428) & {
+  headers: Headers;
+};
+
+export type updateProjectCloudResponse = (updateProjectCloudResponseSuccess | updateProjectCloudResponseError)
+
+export const getUpdateProjectCloudUrl = (projectId: string,
+    cloudId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/clouds/${cloudId}`
+}
+
+/**
+ * Change visibility or ordering of an instance.
+ * @summary Update a project cloud
+ */
+export const updateProjectCloud = async (projectId: string,
+    cloudId: string,
+    projectCloudUpdate: ProjectCloudUpdate, options?: Parameters<typeof orvalFetch>[1]): Promise<updateProjectCloudResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<updateProjectCloudResponse>(getUpdateProjectCloudUrl(projectId,cloudId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectCloudUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateProjectCloudMutationKey = () => ['updateProjectCloud'] as const;
+
+export const getUpdateProjectCloudMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext> => {
+
+const mutationKey = getUpdateProjectCloudMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectCloud>>, UpdateProjectCloudMutationVariables> = (props) => {
+          const {projectId,cloudId,data} = props ?? {};
+
+          return  updateProjectCloud(projectId,cloudId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectCloud>>>
+    export type UpdateProjectCloudMutationBody = ProjectCloudUpdate
+    export type UpdateProjectCloudMutationError = ErrorResponse
+    export type UpdateProjectCloudMutationVariables = {projectId: string;cloudId: string;data: ProjectCloudUpdate}
+
+    /**
+ * @summary Update a project cloud
+ */
+export const useUpdateProjectCloud = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProjectCloud>>,
+        TError,
+        UpdateProjectCloudMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateProjectCloudMutationOptions(options), queryClient);
     }
 
 export type getSpeedTimelineResponse200 = {

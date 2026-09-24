@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
 
 import type { Anchor, Vec3 } from "@/entities/project";
+import type { ProjectCloud } from "@/shared/api/generated/model";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import type { SceneSurfaceBackground } from "@/shared/scene-surface";
 import type { ContextMenuPosition } from "@/shared/ui";
 
 export interface SceneViewportProps {
   anchors: Anchor[];
+  clouds: ProjectCloud[];
   bottomOverlayHeight?: number;
   deletingTrajectory: boolean;
   pathPosition: number;
@@ -24,9 +26,9 @@ export interface SceneViewportRenderContext {
   dark: boolean;
   onOpenAnchorMenu: (anchor: Anchor, position: ContextMenuPosition) => void;
   onOpenTrajectoryMenu: (position: ContextMenuPosition) => void;
-  onSurfaceError: (error: Error) => void;
-  onSurfaceLoading: () => void;
-  onSurfaceReady: () => void;
+  onSurfaceError: (cloudId: string, error: Error) => void;
+  onSurfaceLoading: (cloudId: string) => void;
+  onSurfaceReady: (cloudId: string) => void;
 }
 
 export interface SceneViewportFrameProps {
@@ -34,6 +36,7 @@ export interface SceneViewportFrameProps {
   onDeleteAnchor: (anchor: Anchor) => void;
   onDeleteTrajectory: () => void;
   deletingTrajectory: boolean;
+  clouds: ProjectCloud[];
   trajectoryAvailable: boolean;
   unavailableMessage?: string;
   renderScene: (context: SceneViewportRenderContext) => ReactNode;

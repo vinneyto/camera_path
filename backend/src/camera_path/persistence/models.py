@@ -41,6 +41,21 @@ class LibraryAssetRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ProjectCloudRecord(Base):
+    __tablename__ = "project_clouds"
+    __table_args__ = (UniqueConstraint("project_id", "position", name="uq_project_cloud_position"),)
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    library_asset_id: Mapped[str] = mapped_column(
+        ForeignKey("library_assets.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    visible: Mapped[bool] = mapped_column(nullable=False, default=True)
+
+
 class ProjectChildRecord:
     project_id: Mapped[str] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True

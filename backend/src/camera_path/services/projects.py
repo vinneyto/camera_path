@@ -24,4 +24,4 @@ class ProjectService(ServiceBase):
     async def reset_project(self, project_id: str) -> Project:
         current = await self.repository.get(project_id)
         draft = Project(id=current.id, name=current.name, revision=current.revision)
-        return await self._commit(draft, current.revision)
+        return await self.repository.commit(draft, current.revision, clear_clouds=True)

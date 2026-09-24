@@ -58,6 +58,17 @@ the uploaded size and PLY signature before the asset appears in `GET /api/v1/lib
 tracked separately. Upload permissions depend on the pending CP-49 authentication work, so the
 current development endpoints must not be exposed publicly.
 
+### Project clouds
+
+Each project can reference several ready library PLY files through `project_clouds`. The project
+cloud record stores the library asset ID, order and visibility; it never stores a download URL or
+copies the file. `GET /api/v1/projects/{id}/clouds` resolves URLs through `LibraryStorage`.
+`POST` to that path with `{"library_asset_id": "..."}` attaches a file, `PATCH /{cloud_id}` changes
+`position` or `visible`, and `DELETE /{cloud_id}` removes only the project instance. Mutations
+require the current project revision in `If-Match` and return a new project ETag. Resetting a
+project clears its cloud instances but keeps the library files. Projects created before this
+migration remain intact, with an initially empty cloud list.
+
 Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
 served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from
 `backend/.env`. Geometry and REST endpoints work without an API key. Set `OPENAI_API_KEY` in that

@@ -21,6 +21,7 @@ from camera_path.persistence.models import (
     DepthOfFieldKeyframeRecord,
     MotionProfileRecord,
     OrientationKeyframeRecord,
+    ProjectCloudRecord,
     ProjectRecord,
     ScenePointRecord,
     SpeedKeyframeRecord,
@@ -65,9 +66,7 @@ class ProjectRepository:
     async def create(self, project: Project) -> Project:
         await self.initialize()
         async with self.session_factory.begin() as session:
-            session.add(
-                ProjectRecord(id=project.id, name=project.name, revision=project.revision)
-            )
+            session.add(ProjectRecord(id=project.id, name=project.name, revision=project.revision))
             await session.flush()
             await self._replace_resources(session, project)
         return project.model_copy(deep=True)
@@ -92,7 +91,9 @@ class ProjectRepository:
             if result.rowcount == 0:
                 raise ProjectNotFoundError(project_id)
 
-    async def commit(self, draft: Project, expected_revision: int) -> Project:
+    async def commit(
+        self, draft: Project, expected_revision: int, *, clear_clouds: bool = False
+    ) -> Project:
         await self.initialize()
         async with self.session_factory.begin() as session:
             next_revision = expected_revision + 1
@@ -115,6 +116,10 @@ class ProjectRepository:
                 )
             committed = draft.model_copy(deep=True)
             committed.revision = next_revision
+            if clear_clouds:
+                await session.execute(
+                    delete(ProjectCloudRecord).where(ProjectCloudRecord.project_id == draft.id)
+                )
             await self._replace_resources(session, committed)
         return committed.model_copy(deep=True)
 
@@ -173,9 +178,7 @@ class ProjectRepository:
         await AnchorRepository(session).replace(project.id, project.anchors)
         await ScenePointRepository(session).replace(project.id, project.scene_points)
         await TrajectoryRepository(session).replace(project.id, project.segments)
-        await SpeedTimelineRepository(session).replace(
-            project.id, project.motion_profile
-        )
+        await SpeedTimelineRepository(session).replace(project.id, project.motion_profile)
         await AimTimelineRepository(session).replace(
             project.id,
             AimTimeline(

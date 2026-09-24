@@ -13,8 +13,12 @@ interface ProjectHeaderProps {
 export function ProjectHeader({ project }: ProjectHeaderProps) {
   return (
     <header className="flex h-11 shrink-0 items-center gap-2 border-b bg-background px-2.5">
-      <Link href="/">
-        <Button aria-label="Back to projects" size="icon" variant="ghost">
+      <Link href={`/projects/${project.id}`}>
+        <Button
+          aria-label="Back to project details"
+          size="icon"
+          variant="ghost"
+        >
           <ArrowLeft className="size-3.5" />
         </Button>
       </Link>

@@ -22,9 +22,11 @@ from camera_path.repositories import (
     RevisionConflictError,
 )
 from camera_path.repositories.library import LibraryRepository
+from camera_path.repositories.project_cloud import ProjectCloudRepository
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.routers.library import router as library_router
+from camera_path.routers.project_clouds import router as project_cloud_router
 from camera_path.routers.resources import router as resource_router
 from camera_path.services import (
     AnchorService,
@@ -37,6 +39,7 @@ from camera_path.services import (
 )
 from camera_path.services.library import LibraryService
 from camera_path.services.library_storage import LibraryStorage
+from camera_path.services.project_clouds import ProjectCloudService
 from camera_path.trajectory import GeometryError
 
 API_PREFIX = "/api/v1"
@@ -80,6 +83,10 @@ ETAG_OPERATION_IDS = {
     "deleteDepthOfFieldKeyframe",
     "getDepthOfFieldTimeline",
     "listChatMessages",
+    "listProjectClouds",
+    "createProjectCloud",
+    "updateProjectCloud",
+    "deleteProjectCloud",
     "clearProjectChat",
     "createChatMessage",
     "saveUserChatMessage",
@@ -116,6 +123,11 @@ def create_app(
     project_repository = repository or ProjectRepository(configured.database_url)
     storage = library_storage or LocalLibraryStorage(configured.library_directory)
     library_service = LibraryService(LibraryRepository(project_repository.session_factory), storage)
+    project_cloud_service = ProjectCloudService(
+        ProjectCloudRepository(project_repository.session_factory),
+        library_service.repository,
+        storage,
+    )
     project_service = ProjectService(project_repository)
     anchor_service = AnchorService(project_repository)
     scene_point_service = ScenePointService(project_repository)
@@ -160,10 +172,12 @@ def create_app(
             {"name": "Timelines", "description": "Motion and camera control timelines."},
             {"name": "Chat", "description": "Trajectory-agent chat operations."},
             {"name": "Library", "description": "Uploaded 3DGS assets, independent of projects."},
+            {"name": "Clouds", "description": "Library cloud instances in projects."},
         ],
     )
     application.state.project_service = project_service
     application.state.library_service = library_service
+    application.state.project_cloud_service = project_cloud_service
     application.state.project_repository = project_repository
     application.state.anchor_service = anchor_service
     application.state.scene_point_service = scene_point_service
@@ -272,6 +286,7 @@ def create_app(
 
     application.include_router(resource_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
+    application.include_router(project_cloud_router, prefix=API_PREFIX)
     if isinstance(storage, LocalLibraryStorage):
         from camera_path.dev.library_routes import router as local_library_router
 

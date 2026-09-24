@@ -28,6 +28,7 @@ type SceneContextMenu =
 
 export function SceneViewportFrame({
   available,
+  clouds,
   deletingTrajectory,
   onDeleteAnchor,
   onDeleteTrajectory,
@@ -39,19 +40,22 @@ export function SceneViewportFrame({
   const { cameraMode } = useCameraMode();
   const dark = theme === "dark";
   const [contextMenu, setContextMenu] = useState<SceneContextMenu | null>(null);
-  const [surfaceState, setSurfaceState] = useState<SurfaceState>({
-    status: "loading",
-  });
-  function handleSurfaceLoading() {
-    setSurfaceState({ status: "loading" });
+  const [surfaceStates, setSurfaceStates] = useState<
+    Record<string, SurfaceState>
+  >({});
+  function handleSurfaceLoading(id: string) {
+    setSurfaceStates((states) => ({ ...states, [id]: { status: "loading" } }));
   }
 
-  function handleSurfaceReady() {
-    setSurfaceState({ status: "ready" });
+  function handleSurfaceReady(id: string) {
+    setSurfaceStates((states) => ({ ...states, [id]: { status: "ready" } }));
   }
 
-  function handleSurfaceError(error: Error) {
-    setSurfaceState({ status: "error", message: error.message });
+  function handleSurfaceError(id: string, error: Error) {
+    setSurfaceStates((states) => ({
+      ...states,
+      [id]: { status: "error", message: error.message },
+    }));
   }
 
   return (
@@ -69,13 +73,23 @@ export function SceneViewportFrame({
           onSurfaceReady: handleSurfaceReady,
         })}
       {available === false && <SceneMessage message={unavailableMessage} />}
-      {available !== false && surfaceState.status === "loading" && (
-        <SceneMessage message="Loading mug.ply…" />
-      )}
-      {available !== false && surfaceState.status === "error" && (
-        <SceneMessage
-          message={`Could not load mug.ply: ${surfaceState.message}`}
-        />
+      {available !== false && clouds.length > 0 && (
+        <div className="pointer-events-none absolute bottom-3 left-3 z-10 space-y-1">
+          {clouds.map((cloud) => {
+            const state = surfaceStates[cloud.id];
+            if (state?.status === "ready") return null;
+            return (
+              <p
+                className="rounded bg-background/90 px-2 py-1 text-xs"
+                key={cloud.id}
+                role={state?.status === "error" ? "alert" : "status"}
+              >
+                {cloud.name}:{" "}
+                {state?.status === "error" ? state.message : "Loading…"}
+              </p>
+            );
+          })}
+        </div>
       )}
       {available && (
         <div
@@ -88,9 +102,7 @@ export function SceneViewportFrame({
                 setContextMenu(null);
               }
             }}
-            trajectoryAvailable={
-              trajectoryAvailable && surfaceState.status === "ready"
-            }
+            trajectoryAvailable={trajectoryAvailable}
           />
         </div>
       )}
