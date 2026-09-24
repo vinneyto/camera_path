@@ -1332,6 +1332,149 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "LibraryAsset": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "format": {
+            "const": "ply",
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "size_bytes",
+          "status",
+          "created_at"
+        ],
+        "title": "LibraryAsset",
+        "type": "object"
+      },
+      "LibraryUpload": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "format": {
+            "const": "ply",
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "upload_url": {
+            "title": "Upload Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "size_bytes",
+          "status",
+          "created_at",
+          "upload_url"
+        ],
+        "title": "LibraryUpload",
+        "type": "object"
+      },
+      "LibraryUploadCreate": {
+        "properties": {
+          "format": {
+            "const": "ply",
+            "default": "ply",
+            "title": "Format",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 2147483648.0,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "size_bytes"
+        ],
+        "title": "LibraryUploadCreate",
+        "type": "object"
+      },
       "LookAtPointAim": {
         "properties": {
           "kind": {
@@ -2029,6 +2172,117 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/library": {
+      "get": {
+        "description": "List ready 3DGS files in the reusable library.",
+        "operationId": "listLibraryAssets",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LibraryAsset"
+                  },
+                  "title": "Response Listlibraryassets",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Library Assets",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
+    "/api/v1/library/uploads": {
+      "post": {
+        "description": "Create a pending file and obtain an upload URL.",
+        "operationId": "createLibraryUpload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryUploadCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryUpload"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Library Upload",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
+    "/api/v1/library/{asset_id}/complete": {
+      "post": {
+        "description": "Validate the uploaded PLY and publish it in the library.",
+        "operationId": "completeLibraryUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "title": "Asset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryAsset"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Library Upload",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
     "/api/v1/projects": {
       "get": {
         "description": "Return project metadata without nested resources.",
@@ -5948,6 +6202,10 @@
     {
       "description": "Trajectory-agent chat operations.",
       "name": "Chat"
+    },
+    {
+      "description": "Uploaded 3DGS assets, independent of projects.",
+      "name": "Library"
     }
   ]
 }

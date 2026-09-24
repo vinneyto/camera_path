@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     compile_tolerance: float = Field(default=1e-3, gt=0.0)
     database_url: str = DEFAULT_DATABASE_URL
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    library_directory: Path = Path.home() / ".camera-path" / "library"
 
     @property
     def cors_origin_list(self) -> list[str]:

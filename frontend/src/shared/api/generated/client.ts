@@ -48,6 +48,9 @@ import type {
   DepthOfFieldTimeline,
   ErrorResponse,
   HTTPValidationError,
+  LibraryAsset,
+  LibraryUpload,
+  LibraryUploadCreate,
   MotionProfile,
   MotionProfileUpdate,
   OrientationTimeline,
@@ -86,6 +89,322 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export type listLibraryAssetsResponse200 = {
+  data: LibraryAsset[]
+  status: 200
+}
+
+export type listLibraryAssetsResponseSuccess = (listLibraryAssetsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listLibraryAssetsResponse = (listLibraryAssetsResponseSuccess)
+
+export const getListLibraryAssetsUrl = () => {
+
+
+
+
+  return `/api/v1/library`
+}
+
+/**
+ * List ready 3DGS files in the reusable library.
+ * @summary List Library Assets
+ */
+export const listLibraryAssets = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<listLibraryAssetsResponse> => {
+
+  return orvalFetch<listLibraryAssetsResponse>(getListLibraryAssetsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLibraryAssetsQueryKey = () => {
+    return [
+    `/api/v1/library`
+    ] as const;
+    }
+
+
+export const getListLibraryAssetsQueryOptions = <TData = Awaited<ReturnType<typeof listLibraryAssets>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLibraryAssets>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLibraryAssetsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLibraryAssets>>> = ({ signal }) => listLibraryAssets({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLibraryAssets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLibraryAssetsQueryResult = NonNullable<Awaited<ReturnType<typeof listLibraryAssets>>>
+export type ListLibraryAssetsQueryError = unknown
+
+
+export function useListLibraryAssets<TData = Awaited<ReturnType<typeof listLibraryAssets>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLibraryAssets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLibraryAssets>>,
+          TError,
+          Awaited<ReturnType<typeof listLibraryAssets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLibraryAssets<TData = Awaited<ReturnType<typeof listLibraryAssets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLibraryAssets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLibraryAssets>>,
+          TError,
+          Awaited<ReturnType<typeof listLibraryAssets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLibraryAssets<TData = Awaited<ReturnType<typeof listLibraryAssets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLibraryAssets>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Library Assets
+ */
+
+export function useListLibraryAssets<TData = Awaited<ReturnType<typeof listLibraryAssets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLibraryAssets>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLibraryAssetsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createLibraryUploadResponse201 = {
+  data: LibraryUpload
+  status: 201
+}
+
+export type createLibraryUploadResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type createLibraryUploadResponseSuccess = (createLibraryUploadResponse201) & {
+  headers: Headers;
+};
+export type createLibraryUploadResponseError = (createLibraryUploadResponse422) & {
+  headers: Headers;
+};
+
+export type createLibraryUploadResponse = (createLibraryUploadResponseSuccess | createLibraryUploadResponseError)
+
+export const getCreateLibraryUploadUrl = () => {
+
+
+
+
+  return `/api/v1/library/uploads`
+}
+
+/**
+ * Create a pending file and obtain an upload URL.
+ * @summary Create Library Upload
+ */
+export const createLibraryUpload = async (libraryUploadCreate: LibraryUploadCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createLibraryUploadResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<createLibraryUploadResponse>(getCreateLibraryUploadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(libraryUploadCreate)
+  }
+);}
+
+
+
+
+
+export const getCreateLibraryUploadMutationKey = () => ['createLibraryUpload'] as const;
+
+export const getCreateLibraryUploadMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLibraryUpload>>, TError,CreateLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createLibraryUpload>>, TError,CreateLibraryUploadMutationVariables, TContext> => {
+
+const mutationKey = getCreateLibraryUploadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createLibraryUpload>>, CreateLibraryUploadMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createLibraryUpload(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateLibraryUploadMutationResult = NonNullable<Awaited<ReturnType<typeof createLibraryUpload>>>
+    export type CreateLibraryUploadMutationBody = LibraryUploadCreate
+    export type CreateLibraryUploadMutationError = HTTPValidationError
+    export type CreateLibraryUploadMutationVariables = {data: LibraryUploadCreate}
+
+    /**
+ * @summary Create Library Upload
+ */
+export const useCreateLibraryUpload = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLibraryUpload>>, TError,CreateLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createLibraryUpload>>,
+        TError,
+        CreateLibraryUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateLibraryUploadMutationOptions(options), queryClient);
+    }
+
+export type completeLibraryUploadResponse200 = {
+  data: LibraryAsset
+  status: 200
+}
+
+export type completeLibraryUploadResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type completeLibraryUploadResponseSuccess = (completeLibraryUploadResponse200) & {
+  headers: Headers;
+};
+export type completeLibraryUploadResponseError = (completeLibraryUploadResponse422) & {
+  headers: Headers;
+};
+
+export type completeLibraryUploadResponse = (completeLibraryUploadResponseSuccess | completeLibraryUploadResponseError)
+
+export const getCompleteLibraryUploadUrl = (assetId: string,) => {
+
+
+
+
+  return `/api/v1/library/${assetId}/complete`
+}
+
+/**
+ * Validate the uploaded PLY and publish it in the library.
+ * @summary Complete Library Upload
+ */
+export const completeLibraryUpload = async (assetId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<completeLibraryUploadResponse> => {
+
+  return orvalFetch<completeLibraryUploadResponse>(getCompleteLibraryUploadUrl(assetId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCompleteLibraryUploadMutationKey = () => ['completeLibraryUpload'] as const;
+
+export const getCompleteLibraryUploadMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeLibraryUpload>>, TError,CompleteLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeLibraryUpload>>, TError,CompleteLibraryUploadMutationVariables, TContext> => {
+
+const mutationKey = getCompleteLibraryUploadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeLibraryUpload>>, CompleteLibraryUploadMutationVariables> = (props) => {
+          const {assetId} = props ?? {};
+
+          return  completeLibraryUpload(assetId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteLibraryUploadMutationResult = NonNullable<Awaited<ReturnType<typeof completeLibraryUpload>>>
+
+    export type CompleteLibraryUploadMutationError = HTTPValidationError
+    export type CompleteLibraryUploadMutationVariables = {assetId: string}
+
+    /**
+ * @summary Complete Library Upload
+ */
+export const useCompleteLibraryUpload = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeLibraryUpload>>, TError,CompleteLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof completeLibraryUpload>>,
+        TError,
+        CompleteLibraryUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompleteLibraryUploadMutationOptions(options), queryClient);
+    }
 
 export type listProjectsResponse200 = {
   data: ProjectMetadata[]

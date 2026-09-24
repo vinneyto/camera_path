@@ -42,6 +42,22 @@ The second migration reads the current snapshot from the previous `projects` /
 `project_snapshots` schema and writes it into normalized resource tables. Older undo/redo stacks
 are intentionally discarded; CP-41 and CP-42 introduce the replacement command-based history.
 
+### Local 3DGS library
+
+The library stores file metadata in the database and PLY bytes in
+`~/.camera-path/library` by default. Set `CAMERA_PATH_LIBRARY_DIRECTORY` to choose another
+directory. Keep this directory persistent across backend restarts. The local storage adapter
+provides development upload and download routes; production S3 storage is tracked separately in
+CP-61. Storage access is behind `LibraryStorage`, so API and library service code do not depend on
+the storage implementation.
+
+To upload a file, call `POST /api/v1/library/uploads` with its name and byte size, PUT the bytes
+to the returned `upload_url`, then call `POST /api/v1/library/{id}/complete`. The final step checks
+the uploaded size and PLY signature before the asset appears in `GET /api/v1/library` with a
+`download_url`. Library assets are independent of projects; associating clouds with projects is
+tracked separately. Upload permissions depend on the pending CP-49 authentication work, so the
+current development endpoints must not be exposed publicly.
+
 Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
 served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from
 `backend/.env`. Geometry and REST endpoints work without an API key. Set `OPENAI_API_KEY` in that

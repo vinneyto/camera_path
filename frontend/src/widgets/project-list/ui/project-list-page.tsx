@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useProjectsQuery } from "@/entities/project";
@@ -51,7 +52,15 @@ export function ProjectListPage() {
             Choose a saved scene or start a new trajectory.
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <Link
+            className="text-xs text-muted-foreground hover:underline"
+            href="/library"
+          >
+            Library
+          </Link>
+          <ThemeToggle />
+        </div>
       </div>
       <div className="mb-4">
         <ProjectCreateForm
