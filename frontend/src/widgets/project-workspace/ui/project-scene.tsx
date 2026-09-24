@@ -3,7 +3,6 @@
 import type { Project } from "@/entities/project";
 import type { CompiledTrajectory } from "@/entities/trajectory";
 import { useTrajectorySelection } from "@/features/project-editor";
-import { ProjectCloudControls } from "@/features/project-clouds";
 import { FLOATING_PANEL_Z_INDEX } from "@/shared/ui";
 
 import { PlaybackControlsContainer } from "./playback-controls-container";
@@ -58,9 +57,6 @@ export function ProjectScene({
         selected={trajectorySelected}
         trajectory={trajectory}
       />
-      <div className="absolute left-3 top-12 z-20 w-[min(360px,calc(100%-24px))]">
-        <ProjectCloudControls projectId={projectId} />
-      </div>
       {trajectoryControlsAvailable && trajectory && (
         <div
           className="absolute left-3 right-3 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"

@@ -39,10 +39,6 @@ vi.mock("./playback-controls-container", () => ({
   PlaybackControlsContainer: () => null,
 }));
 
-vi.mock("@/features/project-clouds", () => ({
-  ProjectCloudControls: () => null,
-}));
-
 vi.mock("./trajectory-inspector-container", () => ({
   TrajectoryInspectorContainer: () => null,
 }));

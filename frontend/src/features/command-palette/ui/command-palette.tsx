@@ -83,7 +83,7 @@ export function CommandPalette({
 
   return (
     <div
-      className="relative rounded-lg border bg-background/95 text-xs shadow-lg"
+      className="relative rounded-lg border bg-background/95 text-xs shadow-lg transition-colors hover:border-foreground/30 focus-within:border-foreground/40"
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
           setOpen(false);

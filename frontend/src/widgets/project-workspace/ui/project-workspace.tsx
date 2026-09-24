@@ -72,7 +72,7 @@ export function ProjectWorkspace({
     <main className="grid h-screen min-h-0 grid-cols-[minmax(0,1fr)_320px] overflow-hidden">
       <TrajectoryPlaybackLoop trajectory={trajectory} />
       <div className="flex min-h-0 min-w-0 flex-col">
-        <ProjectHeader project={project} />
+        <ProjectHeader project={project} projectId={projectId} />
         <ProjectScene
           deletingTrajectory={clearTrajectoryMutation.isPending}
           onDeleteTrajectory={() => void clearTrajectory()}
