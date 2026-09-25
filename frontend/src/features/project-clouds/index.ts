@@ -1,1 +1,1 @@
-export { ProjectCloudPanel } from "./ui/project-cloud-panel";
+export { ProjectCloudControls } from "./ui/project-cloud-controls";
