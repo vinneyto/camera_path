@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import ChatHistoryMessage
+from camera_path.persistence.enums import ChatRole
 from camera_path.persistence.models import ChatMessageRecord
 from camera_path.repositories.sync import sync_rows
 
@@ -19,7 +20,8 @@ class ChatMessageRepository:
             .order_by(ChatMessageRecord.position)
         )
         return [
-            ChatHistoryMessage(id=item.id, role=item.role, content=item.content) for item in records
+            ChatHistoryMessage(id=item.id, role=item.role.value, content=item.content)
+            for item in records
         ]
 
     async def replace(self, project_id: str, messages: list[ChatHistoryMessage]) -> None:
@@ -32,7 +34,7 @@ class ChatMessageRepository:
                     id=item.id,
                     project_id=project_id,
                     position=position,
-                    role=item.role,
+                    role=ChatRole(item.role),
                     content=item.content,
                 )
                 for position, item in enumerate(messages)

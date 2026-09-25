@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from camera_path.models import SpiralSegment, SplineSegment, TrajectorySegment
+from camera_path.persistence.enums import CurveLaw, SegmentKind, SpiralDirection
 from camera_path.persistence.models import SegmentAnchorRecord, TrajectorySegmentRecord
 from camera_path.repositories.sync import sync_rows
 
@@ -37,9 +38,9 @@ class TrajectoryRepository:
                         center_anchor_id=anchor_ids[1],
                         end_anchor_id=anchor_ids[2],
                         turns=record.turns,
-                        direction=record.direction,
-                        radial_law=record.radial_law,
-                        axial_law=record.axial_law,
+                        direction=record.direction.value,
+                        radial_law=record.radial_law.value,
+                        axial_law=record.axial_law.value,
                     )
                 )
         return result
@@ -54,12 +55,18 @@ class TrajectoryRepository:
                     id=segment.id,
                     project_id=project_id,
                     position=position,
-                    kind=segment.kind,
+                    kind=SegmentKind(segment.kind),
                     tension=segment.tension if isinstance(segment, SplineSegment) else None,
                     turns=segment.turns if isinstance(segment, SpiralSegment) else None,
-                    direction=segment.direction if isinstance(segment, SpiralSegment) else None,
-                    radial_law=segment.radial_law if isinstance(segment, SpiralSegment) else None,
-                    axial_law=segment.axial_law if isinstance(segment, SpiralSegment) else None,
+                    direction=SpiralDirection(segment.direction)
+                    if isinstance(segment, SpiralSegment)
+                    else None,
+                    radial_law=CurveLaw(segment.radial_law)
+                    if isinstance(segment, SpiralSegment)
+                    else None,
+                    axial_law=CurveLaw(segment.axial_law)
+                    if isinstance(segment, SpiralSegment)
+                    else None,
                 )
                 for position, segment in enumerate(segments)
             ],

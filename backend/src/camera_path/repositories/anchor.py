@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import Anchor
+from camera_path.persistence.enums import LiftAxis
 from camera_path.persistence.models import AnchorRecord, Vector3
 from camera_path.repositories.sync import sync_rows
 
@@ -23,7 +24,7 @@ class AnchorRepository:
                 surface_position=record.surface_position.as_tuple(),
                 surface_normal=record.surface_normal.as_tuple(),
                 lift=record.lift,
-                lift_axis=record.lift_axis,
+                lift_axis=record.lift_axis.value,
             )
             for record in records
         }
@@ -41,7 +42,7 @@ class AnchorRepository:
                     surface_position=Vector3(*item.surface_position),
                     surface_normal=Vector3(*item.surface_normal),
                     lift=item.lift,
-                    lift_axis=item.lift_axis,
+                    lift_axis=LiftAxis(item.lift_axis),
                 )
                 for item in anchors.values()
             ],
