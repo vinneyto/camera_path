@@ -2446,6 +2446,49 @@
         ]
       }
     },
+    "/api/v1/library/{asset_id}": {
+      "get": {
+        "description": "Get one ready library asset and its current transform defaults.",
+        "operationId": "getLibraryAsset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "title": "Asset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryAsset"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Library Asset",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
     "/api/v1/library/{asset_id}/complete": {
       "post": {
         "description": "Validate the uploaded PLY and publish it in the library.",

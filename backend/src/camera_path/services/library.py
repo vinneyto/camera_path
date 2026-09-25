@@ -78,6 +78,14 @@ class LibraryService:
             raise HTTPException(404, "Library file not found")
         return record
 
+    async def get(self, asset_id: str, request: Request) -> LibraryAsset:
+        record = await self.get_record(asset_id)
+        if record.status != "ready":
+            raise HTTPException(404, "Library file not found")
+        return self._model(
+            record, await self.storage.download_url(record.id, record.object_key, request)
+        )
+
     async def update_defaults(
         self, asset_id: str, data: LibraryAssetDefaultsUpdate, request: Request
     ) -> LibraryAsset:

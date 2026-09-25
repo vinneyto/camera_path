@@ -30,6 +30,16 @@ async def list_library_assets(request: Request, service: Library) -> list[Librar
     return await service.list(request)
 
 
+@router.get(
+    "/{asset_id}",
+    response_model=LibraryAsset,
+    operation_id="getLibraryAsset",
+    description="Get one ready library asset and its current transform defaults.",
+)
+async def get_library_asset(asset_id: str, request: Request, service: Library) -> LibraryAsset:
+    return await service.get(asset_id, request)
+
+
 @router.patch(
     "/{asset_id}/defaults",
     response_model=LibraryAsset,

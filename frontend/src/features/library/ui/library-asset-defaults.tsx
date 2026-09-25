@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
+  getGetLibraryAssetQueryKey,
   getListLibraryAssetsQueryKey,
   updateLibraryAssetDefaults,
 } from "@/shared/api/generated/client";
@@ -26,10 +27,16 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
         default_rotation_deg: angles.map(Number) as [number, number, number],
         default_scale: Number(scale),
       }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: getListLibraryAssetsQueryKey(),
-      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: getListLibraryAssetsQueryKey(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getGetLibraryAssetQueryKey(asset.id),
+        }),
+      ]);
+    },
   });
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -38,7 +45,8 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
   }
 
   return (
-    <form className="mt-3 space-y-2 border-t pt-3" onSubmit={submit}>
+    <form className="space-y-4 rounded-lg border p-5" onSubmit={submit}>
+      <h2 className="text-sm font-semibold">Defaults for new project clouds</h2>
       <p className="text-xs text-muted-foreground">
         Default rotation: local X → Y → Z (Euler XYZ), degrees
       </p>

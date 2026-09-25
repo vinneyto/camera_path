@@ -316,6 +316,127 @@ export const useCreateLibraryUpload = <TError = HTTPValidationError,
       return useMutation(getCreateLibraryUploadMutationOptions(options), queryClient);
     }
 
+export type getLibraryAssetResponse200 = {
+  data: LibraryAsset
+  status: 200
+}
+
+export type getLibraryAssetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getLibraryAssetResponseSuccess = (getLibraryAssetResponse200) & {
+  headers: Headers;
+};
+export type getLibraryAssetResponseError = (getLibraryAssetResponse422) & {
+  headers: Headers;
+};
+
+export type getLibraryAssetResponse = (getLibraryAssetResponseSuccess | getLibraryAssetResponseError)
+
+export const getGetLibraryAssetUrl = (assetId: string,) => {
+
+
+
+
+  return `/api/v1/library/${assetId}`
+}
+
+/**
+ * Get one ready library asset and its current transform defaults.
+ * @summary Get Library Asset
+ */
+export const getLibraryAsset = async (assetId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getLibraryAssetResponse> => {
+
+  return orvalFetch<getLibraryAssetResponse>(getGetLibraryAssetUrl(assetId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLibraryAssetQueryKey = (assetId: string,) => {
+    return [
+    `/api/v1/library/${assetId}`
+    ] as const;
+    }
+
+
+export const getGetLibraryAssetQueryOptions = <TData = Awaited<ReturnType<typeof getLibraryAsset>>, TError = HTTPValidationError>(assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAsset>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLibraryAssetQueryKey(assetId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLibraryAsset>>> = ({ signal }) => getLibraryAsset(assetId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: assetId !== null && assetId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLibraryAsset>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLibraryAssetQueryResult = NonNullable<Awaited<ReturnType<typeof getLibraryAsset>>>
+export type GetLibraryAssetQueryError = HTTPValidationError
+
+
+export function useGetLibraryAsset<TData = Awaited<ReturnType<typeof getLibraryAsset>>, TError = HTTPValidationError>(
+ assetId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAsset>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLibraryAsset>>,
+          TError,
+          Awaited<ReturnType<typeof getLibraryAsset>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLibraryAsset<TData = Awaited<ReturnType<typeof getLibraryAsset>>, TError = HTTPValidationError>(
+ assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAsset>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLibraryAsset>>,
+          TError,
+          Awaited<ReturnType<typeof getLibraryAsset>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLibraryAsset<TData = Awaited<ReturnType<typeof getLibraryAsset>>, TError = HTTPValidationError>(
+ assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAsset>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Library Asset
+ */
+
+export function useGetLibraryAsset<TData = Awaited<ReturnType<typeof getLibraryAsset>>, TError = HTTPValidationError>(
+ assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAsset>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLibraryAssetQueryOptions(assetId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type completeLibraryUploadResponse200 = {
   data: LibraryAsset
   status: 200
