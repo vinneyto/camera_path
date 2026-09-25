@@ -9,6 +9,7 @@ from camera_path.models import (
     DepthOfFieldTimeline,
     ScenePointDepthOfFieldFocus,
 )
+from camera_path.persistence.enums import FocusKind
 from camera_path.persistence.models import DepthOfFieldKeyframeRecord
 from camera_path.repositories.sync import sync_rows
 
@@ -50,7 +51,7 @@ class DepthOfFieldTimelineRepository:
                     id=item.id,
                     project_id=project_id,
                     path_position=item.path_position,
-                    focus_kind=item.focus.kind,
+                    focus_kind=FocusKind(item.focus.kind),
                     focus_scene_point_id=(
                         item.focus.scene_point_id
                         if isinstance(item.focus, ScenePointDepthOfFieldFocus)

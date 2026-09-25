@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import CameraOrientationKeyframe, OrientationTimeline
+from camera_path.persistence.enums import Interpolation
 from camera_path.persistence.models import OrientationKeyframeRecord
 from camera_path.repositories.camera_track import CameraTrackRepository
 from camera_path.repositories.sync import sync_rows
@@ -27,7 +28,7 @@ class OrientationTimelineRepository:
                     id=record.id,
                     path_position=record.path_position,
                     orientation=record.get_orientation(),
-                    interpolation_to_next=record.interpolation_to_next,
+                    interpolation_to_next=record.interpolation_to_next.value,
                 )
                 for record in records
             },
@@ -40,7 +41,7 @@ class OrientationTimelineRepository:
                 id=item.id,
                 project_id=project_id,
                 path_position=item.path_position,
-                interpolation_to_next=item.interpolation_to_next,
+                interpolation_to_next=Interpolation(item.interpolation_to_next),
             )
             record.set_orientation(item.orientation)
             records.append(record)

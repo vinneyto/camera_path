@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import MotionProfile, SpeedKeyframe
+from camera_path.persistence.enums import Interpolation
 from camera_path.persistence.models import MotionProfileRecord, SpeedKeyframeRecord
 from camera_path.repositories.sync import sync_rows
 
@@ -24,7 +25,7 @@ class SpeedTimelineRepository:
                 id=record.id,
                 path_position=record.path_position,
                 speed=record.speed,
-                interpolation_to_next=record.interpolation_to_next,
+                interpolation_to_next=record.interpolation_to_next.value,
             )
             for record in records
         }
@@ -48,7 +49,7 @@ class SpeedTimelineRepository:
                     project_id=project_id,
                     path_position=item.path_position,
                     speed=item.speed,
-                    interpolation_to_next=item.interpolation_to_next,
+                    interpolation_to_next=Interpolation(item.interpolation_to_next),
                 )
                 for item in timeline.keyframes.values()
             ],

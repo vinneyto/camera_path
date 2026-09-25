@@ -7,6 +7,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field, FiniteFloat
 
+from camera_path.persistence.enums import LibraryAssetStatus
 from camera_path.persistence.models import LibraryAssetRecord
 from camera_path.repositories.library import LibraryRepository
 from camera_path.services.library_storage import LibraryStorage
@@ -54,7 +55,7 @@ class LibraryService:
             name=record.name,
             format="ply",
             size_bytes=record.size_bytes,
-            status=record.status,
+            status=record.status.value,
             created_at=record.created_at,
             download_url=download_url,
             default_rotation_deg=(
@@ -107,7 +108,7 @@ class LibraryService:
             format=data.format,
             object_key=key,
             size_bytes=data.size_bytes,
-            status="pending",
+            status=LibraryAssetStatus.PENDING,
             created_at=datetime.now(UTC),
         )
         if not record.name:
