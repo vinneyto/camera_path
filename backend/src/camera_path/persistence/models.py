@@ -63,6 +63,10 @@ class LibraryAssetRecord(Base):
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     status: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    default_rotation_x_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    default_rotation_y_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    default_rotation_z_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    default_scale: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
 
 
 class ProjectCloudRecord(Base):
@@ -78,6 +82,13 @@ class ProjectCloudRecord(Base):
     )
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     visible: Mapped[bool] = mapped_column(nullable=False, default=True)
+    translation_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    translation_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    translation_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    rotation_x_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    rotation_y_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    rotation_z_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    scale: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
 
 
 class ProjectChildRecord:

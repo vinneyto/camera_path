@@ -5,7 +5,7 @@ from uuid import uuid4
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from camera_path.persistence.models import ProjectCloudRecord, ProjectRecord
+from camera_path.persistence.models import LibraryAssetRecord, ProjectCloudRecord, ProjectRecord
 from camera_path.repositories.exceptions import ProjectNotFoundError
 
 
@@ -40,15 +40,19 @@ class ProjectCloudRepository:
             return await self._list(session, project_id), revision
 
     async def add(
-        self, session: AsyncSession, project_id: str, asset_id: str
+        self, session: AsyncSession, project_id: str, asset: LibraryAssetRecord
     ) -> ProjectCloudRecord:
         position = len(await self._list(session, project_id))
         cloud = ProjectCloudRecord(
             id=str(uuid4()),
             project_id=project_id,
-            library_asset_id=asset_id,
+            library_asset_id=asset.id,
             position=position,
             visible=True,
+            rotation_x_deg=asset.default_rotation_x_deg,
+            rotation_y_deg=asset.default_rotation_y_deg,
+            rotation_z_deg=asset.default_rotation_z_deg,
+            scale=asset.default_scale,
         )
         session.add(cloud)
         await session.flush()

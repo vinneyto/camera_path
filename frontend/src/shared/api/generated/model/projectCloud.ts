@@ -13,5 +13,16 @@ export interface ProjectCloud {
   name: string;
   position: number;
   project_id: string;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  rotation_deg: [number, number, number];
+  scale: number;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  translation: [number, number, number];
   visible: boolean;
 }

@@ -25,12 +25,17 @@ async def test_library_upload_is_independent_of_projects_and_persists(tmp_path: 
             asset = created.json()
             assert asset["status"] == "pending"
             assert (await client.get("/api/v1/library")).json() == []
+            assert (await client.get(f"/api/v1/library/{asset['id']}")).status_code == 404
             assert (await client.post(f"/api/v1/library/{asset['id']}/complete")).status_code == 422
             uploaded = await client.put(asset["upload_url"], content=contents)
             assert uploaded.status_code == 204
             ready = await client.post(f"/api/v1/library/{asset['id']}/complete")
             assert ready.status_code == 200
             assert ready.json()["status"] == "ready"
+            details = await client.get(f"/api/v1/library/{asset['id']}")
+            assert details.status_code == 200
+            assert details.json()["default_rotation_deg"] == [0, 0, 0]
+            assert details.json()["default_scale"] == 1
             listed = (await client.get("/api/v1/library")).json()
             assert len(listed) == 1
             assert listed[0]["name"] == "Test cloud"

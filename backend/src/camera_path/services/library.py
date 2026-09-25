@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, FiniteFloat
 
 from camera_path.persistence.models import LibraryAssetRecord
 from camera_path.repositories.library import LibraryRepository
@@ -22,6 +22,14 @@ class LibraryAsset(BaseModel):
     status: Literal["pending", "ready"]
     created_at: datetime
     download_url: str | None = None
+    default_rotation_deg: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
+    default_scale: FiniteFloat = Field(gt=0)
+
+
+class LibraryAssetDefaultsUpdate(BaseModel):
+    # Three.js Euler XYZ: angles about local X, Y and Z, in degrees.
+    default_rotation_deg: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
+    default_scale: FiniteFloat = Field(gt=0)
 
 
 class LibraryUploadCreate(BaseModel):
@@ -49,6 +57,12 @@ class LibraryService:
             status=record.status,
             created_at=record.created_at,
             download_url=download_url,
+            default_rotation_deg=(
+                record.default_rotation_x_deg,
+                record.default_rotation_y_deg,
+                record.default_rotation_z_deg,
+            ),
+            default_scale=record.default_scale,
         )
 
     async def list(self, request: Request) -> list[LibraryAsset]:
@@ -63,6 +77,26 @@ class LibraryService:
         if record is None:
             raise HTTPException(404, "Library file not found")
         return record
+
+    async def get(self, asset_id: str, request: Request) -> LibraryAsset:
+        record = await self.get_record(asset_id)
+        if record.status != "ready":
+            raise HTTPException(404, "Library file not found")
+        return self._model(
+            record, await self.storage.download_url(record.id, record.object_key, request)
+        )
+
+    async def update_defaults(
+        self, asset_id: str, data: LibraryAssetDefaultsUpdate, request: Request
+    ) -> LibraryAsset:
+        record = await self.repository.update_defaults(
+            asset_id, data.default_rotation_deg, data.default_scale
+        )
+        if record is None:
+            raise HTTPException(404, "Library file not found")
+        return self._model(
+            record, await self.storage.download_url(record.id, record.object_key, request)
+        )
 
     async def create(self, data: LibraryUploadCreate, request: Request) -> LibraryUpload:
         asset_id = str(uuid4())

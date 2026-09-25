@@ -1339,6 +1339,28 @@
             "title": "Created At",
             "type": "string"
           },
+          "default_rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Rotation Deg",
+            "type": "array"
+          },
+          "default_scale": {
+            "exclusiveMinimum": 0.0,
+            "title": "Default Scale",
+            "type": "number"
+          },
           "download_url": {
             "anyOf": [
               {
@@ -1382,9 +1404,43 @@
           "format",
           "size_bytes",
           "status",
-          "created_at"
+          "created_at",
+          "default_rotation_deg",
+          "default_scale"
         ],
         "title": "LibraryAsset",
+        "type": "object"
+      },
+      "LibraryAssetDefaultsUpdate": {
+        "properties": {
+          "default_rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Rotation Deg",
+            "type": "array"
+          },
+          "default_scale": {
+            "exclusiveMinimum": 0.0,
+            "title": "Default Scale",
+            "type": "number"
+          }
+        },
+        "required": [
+          "default_rotation_deg",
+          "default_scale"
+        ],
+        "title": "LibraryAssetDefaultsUpdate",
         "type": "object"
       },
       "LibraryUpload": {
@@ -1393,6 +1449,28 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "default_rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Rotation Deg",
+            "type": "array"
+          },
+          "default_scale": {
+            "exclusiveMinimum": 0.0,
+            "title": "Default Scale",
+            "type": "number"
           },
           "download_url": {
             "anyOf": [
@@ -1442,6 +1520,8 @@
           "size_bytes",
           "status",
           "created_at",
+          "default_rotation_deg",
+          "default_scale",
           "upload_url"
         ],
         "title": "LibraryUpload",
@@ -1569,6 +1649,44 @@
             "title": "Project Id",
             "type": "string"
           },
+          "rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Rotation Deg",
+            "type": "array"
+          },
+          "scale": {
+            "title": "Scale",
+            "type": "number"
+          },
+          "translation": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Translation",
+            "type": "array"
+          },
           "visible": {
             "title": "Visible",
             "type": "boolean"
@@ -1581,7 +1699,10 @@
           "name",
           "position",
           "visible",
-          "download_url"
+          "download_url",
+          "translation",
+          "rotation_deg",
+          "scale"
         ],
         "title": "ProjectCloud",
         "type": "object"
@@ -2325,6 +2446,49 @@
         ]
       }
     },
+    "/api/v1/library/{asset_id}": {
+      "get": {
+        "description": "Get one ready library asset and its current transform defaults.",
+        "operationId": "getLibraryAsset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "title": "Asset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryAsset"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Library Asset",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
     "/api/v1/library/{asset_id}/complete": {
       "post": {
         "description": "Validate the uploaded PLY and publish it in the library.",
@@ -2363,6 +2527,59 @@
           }
         },
         "summary": "Complete Library Upload",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
+    "/api/v1/library/{asset_id}/defaults": {
+      "patch": {
+        "description": "Set XYZ Euler angles in degrees (Three.js XYZ order) and uniform scale.",
+        "operationId": "updateLibraryAssetDefaults",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "title": "Asset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryAssetDefaultsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryAsset"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Library Asset Defaults",
         "tags": [
           "Library"
         ]

@@ -37,3 +37,18 @@ class LibraryRepository:
                 .where(LibraryAssetRecord.id == asset_id, LibraryAssetRecord.status == "pending")
                 .values(status="ready")
             )
+
+    async def update_defaults(
+        self, asset_id: str, rotation: tuple[float, float, float], scale: float
+    ) -> LibraryAssetRecord | None:
+        async with self.sessions.begin() as session:
+            record = await session.get(LibraryAssetRecord, asset_id)
+            if record is None or record.status != "ready":
+                return None
+            (
+                record.default_rotation_x_deg,
+                record.default_rotation_y_deg,
+                record.default_rotation_z_deg,
+            ) = rotation
+            record.default_scale = scale
+            return record
