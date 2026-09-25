@@ -41,8 +41,13 @@ class LibraryRepository:
                 )
                 .values(status=LibraryAssetStatus.READY)
             )
+
     async def update_defaults(
-        self, asset_id: str, rotation: tuple[float, float, float], scale: float
+        self,
+        asset_id: str,
+        rotation: tuple[float, float, float],
+        scale: float,
+        offset: tuple[float, float, float] | None,
     ) -> LibraryAssetRecord | None:
         async with self.sessions.begin() as session:
             record = await session.get(LibraryAssetRecord, asset_id)
@@ -54,4 +59,6 @@ class LibraryRepository:
                 record.default_rotation_z_deg,
             ) = rotation
             record.default_scale = scale
+            if offset is not None:
+                (record.default_offset_x, record.default_offset_y, record.default_offset_z) = offset
             return record

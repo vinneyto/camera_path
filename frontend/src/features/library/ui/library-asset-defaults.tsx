@@ -20,12 +20,14 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
     asset.default_rotation_deg.map(String),
   );
   const [scale, setScale] = useState(() => String(asset.default_scale));
+  const [offset, setOffset] = useState(() => asset.default_offset.map(String));
   const queryClient = useQueryClient();
   const save = useMutation({
     mutationFn: () =>
       updateLibraryAssetDefaults(asset.id, {
         default_rotation_deg: angles.map(Number) as [number, number, number],
         default_scale: Number(scale),
+        default_offset: offset.map(Number) as [number, number, number],
       }),
     onSuccess: async () => {
       await Promise.all([
@@ -82,6 +84,25 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
             onChange={(event) => setScale(event.target.value)}
           />
         </label>
+        {(["X", "Y", "Z"] as const).map((axis, index) => (
+          <label className="w-24 text-xs" key={`offset-${axis}`}>
+            Offset {axis}
+            <Input
+              aria-label={`${asset.name} offset ${axis}`}
+              required
+              step="any"
+              type="number"
+              value={offset[index]}
+              onChange={(event) =>
+                setOffset((current) =>
+                  current.map((value, i) =>
+                    i === index ? event.target.value : value,
+                  ),
+                )
+              }
+            />
+          </label>
+        ))}
         <Button disabled={save.isPending} size="sm" type="submit">
           {save.isPending ? "Saving…" : "Save defaults"}
         </Button>

@@ -14,7 +14,8 @@ export function useAnchorToolShortcut() {
     function handleKeyDown(event: KeyboardEvent) {
       if (
         event.key === getAnchorToolModifier(event).key &&
-        store.getState().tool.activeTool !== "anchor-height"
+        store.getState().tool.activeTool !== "anchor-height" &&
+        store.getState().tool.activeTool !== "cloud"
       )
         setActiveTool("anchor");
       if (event.key === "Escape") setActiveTool(null);

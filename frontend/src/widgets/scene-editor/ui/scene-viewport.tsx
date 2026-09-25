@@ -30,6 +30,7 @@ export function SceneViewport(props: SceneViewportProps) {
             background={context.background}
             dark={context.dark}
             onAddAnchor={props.onAddAnchor}
+            onAddCloud={props.onAddCloud}
             onOpenAnchorMenu={context.onOpenAnchorMenu}
             onOpenTrajectoryMenu={context.onOpenTrajectoryMenu}
             onSelectTrajectory={props.onSelectTrajectory}

@@ -1,11 +1,11 @@
-import { Html, useTexture } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import type { ThreeElements } from "@react-three/fiber";
 import { MapPin } from "lucide-react";
-import { DoubleSide } from "three";
 
 import type { Anchor } from "@/entities/project";
 import { cn } from "@/shared/lib/cn";
 import { ANCHOR_ICON_Z_INDEX_RANGE } from "@/shared/ui";
+import { SurfaceTargetRing } from "./surface-target-ring";
 
 const ANCHOR_MARKER_HIT_RADIUS = 0.13;
 
@@ -22,7 +22,6 @@ export function AnchorMarkerContent({
   hovered = false,
   ...groupProps
 }: AnchorMarkerProps) {
-  const supportMarkerTexture = useTexture("/anchor-target.png");
   const axis =
     anchor.lift_axis === "surface_normal" ? anchor.surface_normal : [0, 1, 0];
   const position = anchor.surface_position.map(
@@ -41,22 +40,7 @@ export function AnchorMarkerContent({
 
   return (
     <group {...groupProps} position={position}>
-      <mesh
-        position={surfaceOffset}
-        raycast={() => undefined}
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={[0.12, 0.12]} />
-        <meshBasicMaterial
-          depthWrite={false}
-          map={supportMarkerTexture}
-          opacity={highlighted ? 0.65 : 0.45}
-          polygonOffset
-          polygonOffsetFactor={-1}
-          side={DoubleSide}
-          transparent
-        />
-      </mesh>
+      <SurfaceTargetRing highlighted={highlighted} position={surfaceOffset} />
       {interactive && (
         <mesh position={[0, 0.1, 0]}>
           <sphereGeometry args={[ANCHOR_MARKER_HIT_RADIUS, 12, 12]} />

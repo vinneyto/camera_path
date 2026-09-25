@@ -5,6 +5,7 @@ import {
   useListProjectClouds,
 } from "@/shared/api/generated/client";
 import type { LibraryAsset, ProjectCloud } from "@/shared/api/generated/model";
+import { useCloudPlacement } from "@/features/project-editor";
 import {
   CommandPalette,
   type CommandPaletteCommand,
@@ -16,6 +17,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const library = useListLibraryAssets();
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
+  const placement = useCloudPlacement();
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
     (asset) => asset.status === "ready",
   );
@@ -25,7 +27,12 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       id: "add-cloud",
       label: "Add cloud",
       items: assets.map((asset) => ({ id: asset.id, label: asset.name })),
-      onSelectItem: (assetId) => actions.mutate({ type: "add", assetId }),
+      onSelectItem: (assetId) => {
+        const asset = assets.find((item) => item.id === assetId);
+        if (!asset) return;
+        if (clouds.length === 0) actions.mutate({ type: "add", assetId });
+        else placement.start(asset);
+      },
       loading: library.isPending,
       error: library.error ? "Could not load library clouds." : undefined,
       emptyMessage: "Upload a PLY to the library first.",
