@@ -3,11 +3,63 @@ from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event
 
 from camera_path.api import create_app
 from camera_path.config import Settings
 from camera_path.export_openapi import export_schema
 from camera_path.repositories import ProjectRepository
+
+
+async def test_project_metadata_counts_use_one_query_for_any_list_size(app) -> None:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        first = (await client.post("/api/v1/projects", json={"name": "First"})).json()
+        second = (await client.post("/api/v1/projects", json={"name": "Second"})).json()
+        assert (first["anchor_count"], first["segment_count"]) == (0, 0)
+
+        project_id = first["id"]
+        for label, position in (("A", [0, 0, 0]), ("B", [1, 0, 0])):
+            await client.post(
+                f"/projects/{project_id}/anchors",
+                json={"label": label, "surface_position": position},
+            )
+        project = (await client.get(f"/projects/{project_id}")).json()
+        anchor_ids = list(project["anchors"])
+        await client.post(
+            f"/projects/{project_id}/segments/spline", json={"anchor_ids": anchor_ids}
+        )
+
+        statements = []
+
+        def record_query(_conn, _cursor, statement, _parameters, _context, _executemany):
+            if statement.lstrip().upper().startswith("SELECT"):
+                statements.append(statement)
+
+        engine = app.state.project_repository.engine
+        event.listen(engine.sync_engine, "before_cursor_execute", record_query)
+        try:
+            response = await client.get("/api/v1/projects")
+            assert len(statements) == 1
+        finally:
+            event.remove(engine.sync_engine, "before_cursor_execute", record_query)
+
+        projects = {item["id"]: item for item in response.json()}
+        assert (projects[project_id]["anchor_count"], projects[project_id]["segment_count"]) == (
+            2,
+            1,
+        )
+        assert (
+            projects[second["id"]]["anchor_count"],
+            projects[second["id"]]["segment_count"],
+        ) == (
+            0,
+            0,
+        )
+        assert (await client.get(f"/api/v1/projects/{project_id}")).json() == projects[project_id]
+
+        await client.delete(f"/projects/{project_id}/trajectory")
+        after_clear = (await client.get("/api/v1/projects")).json()
+        assert next(item for item in after_clear if item["id"] == project_id)["segment_count"] == 0
 
 
 @pytest.fixture

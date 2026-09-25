@@ -242,6 +242,8 @@ class ProjectMetadata(BaseModel):
     id: str
     name: str
     revision: int
+    anchor_count: int
+    segment_count: int
 
 
 class Trajectory(BaseModel):

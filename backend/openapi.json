@@ -1764,6 +1764,10 @@
       },
       "ProjectMetadata": {
         "properties": {
+          "anchor_count": {
+            "title": "Anchor Count",
+            "type": "integer"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1775,12 +1779,18 @@
           "revision": {
             "title": "Revision",
             "type": "integer"
+          },
+          "segment_count": {
+            "title": "Segment Count",
+            "type": "integer"
           }
         },
         "required": [
           "id",
           "name",
-          "revision"
+          "revision",
+          "anchor_count",
+          "segment_count"
         ],
         "title": "ProjectMetadata",
         "type": "object"

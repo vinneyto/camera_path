@@ -10,6 +10,7 @@ import { projectApi, projectKeys, type Project } from "@/entities/project";
 import { useClearTrajectory } from "./use-clear-trajectory";
 
 const project: Project = {
+  anchor_count: 0,
   anchors: {},
   camera_track: {
     depth_of_field_keyframes: {},
@@ -26,6 +27,7 @@ const project: Project = {
   revision: 2,
   scene_points: {},
   segments: [],
+  segment_count: 0,
 };
 
 describe("useClearTrajectory", () => {

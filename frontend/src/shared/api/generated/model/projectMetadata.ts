@@ -7,7 +7,9 @@
  */
 
 export interface ProjectMetadata {
+  anchor_count: number;
   id: string;
   name: string;
   revision: number;
+  segment_count: number;
 }
