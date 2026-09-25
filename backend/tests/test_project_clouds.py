@@ -37,10 +37,31 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
             assert (
                 await client.post(f"/api/v1/library/{upload['id']}/complete")
             ).status_code == 200
+            defaults_url = f"/api/v1/library/{upload['id']}/defaults"
+            assert (
+                await client.patch(
+                    defaults_url, json={"default_rotation_deg": [0, 0, 0], "default_scale": 0}
+                )
+            ).status_code == 422
+            assert (
+                await client.patch(
+                    defaults_url, json={"default_rotation_deg": [0, "NaN", 0], "default_scale": 1}
+                )
+            ).status_code == 422
+            defaults = {"default_rotation_deg": [15, -30, 90], "default_scale": 1.5}
+            assert (await client.patch(defaults_url, json=defaults)).status_code == 200
             first = await client.post(
                 url, json={"library_asset_id": upload["id"]}, headers={"If-Match": '"0"'}
             )
             assert first.status_code == 201
+            assert first.json()["rotation_deg"] == defaults["default_rotation_deg"]
+            assert first.json()["scale"] == defaults["default_scale"]
+            assert first.json()["translation"] == [0, 0, 0]
+            changed_defaults = {"default_rotation_deg": [0, 45, 0], "default_scale": 2}
+            assert (await client.patch(defaults_url, json=changed_defaults)).status_code == 200
+            assert (await client.get(url)).json()[0]["rotation_deg"] == defaults[
+                "default_rotation_deg"
+            ]
             assert first.headers["etag"] == '"1"'
             assert (
                 await client.post(
@@ -52,6 +73,8 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
             )
             assert second.status_code == 201
             assert second.json()["id"] != first.json()["id"]
+            assert second.json()["rotation_deg"] == changed_defaults["default_rotation_deg"]
+            assert second.json()["scale"] == changed_defaults["default_scale"]
             changed = await client.patch(
                 f"{url}/{second.json()['id']}",
                 json={"position": 0, "visible": False},
@@ -84,6 +107,8 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
             transport=ASGITransport(app=reopened), base_url="http://test"
         ) as client:
             assert len((await client.get(url)).json()) == 2
+            assert (await client.get("/api/v1/library")).json()[0]["default_scale"] == 2
+            assert (await client.get(url)).json()[1]["scale"] == 1.5
             removed = await client.delete(
                 f"{url}/{second.json()['id']}", headers={"If-Match": '"3"'}
             )

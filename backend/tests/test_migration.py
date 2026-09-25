@@ -25,6 +25,34 @@ from camera_path.models import (
 from camera_path.repositories import ProjectRepository
 
 
+def test_cloud_defaults_migration_preserves_existing_rows(tmp_path, monkeypatch) -> None:
+    database_path = tmp_path / "clouds.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20260924_0006")
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO projects (id, name, revision) VALUES ('p', 'P', 0)")
+        connection.execute(
+            "INSERT INTO library_assets "
+            "(id, name, format, object_key, size_bytes, status, created_at) "
+            "VALUES ('a', 'A', 'ply', 'a.ply', 1, 'ready', '2026-09-24')"
+        )
+        connection.execute(
+            "INSERT INTO project_clouds (id, project_id, library_asset_id, position, visible) "
+            "VALUES ('c', 'p', 'a', 0, 1)"
+        )
+    command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute(
+            "SELECT default_rotation_x_deg, default_rotation_y_deg, "
+            "default_rotation_z_deg, default_scale FROM library_assets"
+        ).fetchone() == (0, 0, 0, 1)
+        assert connection.execute(
+            "SELECT translation_x, translation_y, translation_z, "
+            "rotation_x_deg, rotation_y_deg, rotation_z_deg, scale FROM project_clouds"
+        ).fetchone() == (0, 0, 0, 0, 0, 0, 1)
+
+
 @pytest.mark.parametrize("unnamed_check", [False, True])
 def test_legacy_snapshot_is_migrated_to_normalized_tables(
     tmp_path, monkeypatch, unnamed_check

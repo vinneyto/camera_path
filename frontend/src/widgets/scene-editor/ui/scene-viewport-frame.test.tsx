@@ -98,6 +98,9 @@ describe("SceneViewportFrame trajectory context menu", () => {
       project_id: "project",
       position: 0,
       visible: true,
+      translation: [0, 0, 0] as [number, number, number],
+      rotation_deg: [0, 0, 0] as [number, number, number],
+      scale: 1,
     };
     const shared = {
       available: true,

@@ -49,6 +49,7 @@ import type {
   ErrorResponse,
   HTTPValidationError,
   LibraryAsset,
+  LibraryAssetDefaultsUpdate,
   LibraryUpload,
   LibraryUploadCreate,
   MotionProfile,
@@ -407,6 +408,115 @@ export const useCompleteLibraryUpload = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getCompleteLibraryUploadMutationOptions(options), queryClient);
+    }
+
+export type updateLibraryAssetDefaultsResponse200 = {
+  data: LibraryAsset
+  status: 200
+}
+
+export type updateLibraryAssetDefaultsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type updateLibraryAssetDefaultsResponseSuccess = (updateLibraryAssetDefaultsResponse200) & {
+  headers: Headers;
+};
+export type updateLibraryAssetDefaultsResponseError = (updateLibraryAssetDefaultsResponse422) & {
+  headers: Headers;
+};
+
+export type updateLibraryAssetDefaultsResponse = (updateLibraryAssetDefaultsResponseSuccess | updateLibraryAssetDefaultsResponseError)
+
+export const getUpdateLibraryAssetDefaultsUrl = (assetId: string,) => {
+
+
+
+
+  return `/api/v1/library/${assetId}/defaults`
+}
+
+/**
+ * Set XYZ Euler angles in degrees (Three.js XYZ order) and uniform scale.
+ * @summary Update Library Asset Defaults
+ */
+export const updateLibraryAssetDefaults = async (assetId: string,
+    libraryAssetDefaultsUpdate: LibraryAssetDefaultsUpdate, options?: Parameters<typeof orvalFetch>[1]): Promise<updateLibraryAssetDefaultsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<updateLibraryAssetDefaultsResponse>(getUpdateLibraryAssetDefaultsUrl(assetId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(libraryAssetDefaultsUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateLibraryAssetDefaultsMutationKey = () => ['updateLibraryAssetDefaults'] as const;
+
+export const getUpdateLibraryAssetDefaultsMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, TError,UpdateLibraryAssetDefaultsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, TError,UpdateLibraryAssetDefaultsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateLibraryAssetDefaultsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, UpdateLibraryAssetDefaultsMutationVariables> = (props) => {
+          const {assetId,data} = props ?? {};
+
+          return  updateLibraryAssetDefaults(assetId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateLibraryAssetDefaultsMutationResult = NonNullable<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>>
+    export type UpdateLibraryAssetDefaultsMutationBody = LibraryAssetDefaultsUpdate
+    export type UpdateLibraryAssetDefaultsMutationError = HTTPValidationError
+    export type UpdateLibraryAssetDefaultsMutationVariables = {assetId: string;data: LibraryAssetDefaultsUpdate}
+
+    /**
+ * @summary Update Library Asset Defaults
+ */
+export const useUpdateLibraryAssetDefaults = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, TError,UpdateLibraryAssetDefaultsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateLibraryAssetDefaults>>,
+        TError,
+        UpdateLibraryAssetDefaultsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateLibraryAssetDefaultsMutationOptions(options), queryClient);
     }
 
 export type listProjectsResponse200 = {

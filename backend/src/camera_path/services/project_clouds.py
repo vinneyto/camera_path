@@ -18,6 +18,9 @@ class ProjectCloud(BaseModel):
     position: int
     visible: bool
     download_url: str
+    translation: tuple[float, float, float]
+    rotation_deg: tuple[float, float, float]
+    scale: float
 
 
 class ProjectCloudCreate(BaseModel):
@@ -58,6 +61,9 @@ class ProjectCloudService:
             position=record.position,
             visible=record.visible,
             download_url=await self.storage.download_url(asset.id, asset.object_key, request),
+            translation=(record.translation_x, record.translation_y, record.translation_z),
+            rotation_deg=(record.rotation_x_deg, record.rotation_y_deg, record.rotation_z_deg),
+            scale=record.scale,
         )
 
     async def list(self, project_id: str, request: Request) -> tuple[list[ProjectCloud], int]:
@@ -73,7 +79,7 @@ class ProjectCloudService:
                 if asset is None or asset.status != "ready":
                     raise KeyError("Library asset not found or not ready")
                 revision = await advance_project_revision(session, project_id, expected)
-                record = await self.repository.add(session, project_id, asset_id)
+                record = await self.repository.add(session, project_id, asset)
         except KeyError as error:
             raise HTTPException(404, str(error)) from error
         return await self._model(record, request), revision

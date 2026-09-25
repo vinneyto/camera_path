@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { MathUtils } from "three";
 
 import type { ProjectCloud } from "@/shared/api/generated/model";
 import { SceneSurface } from "@/shared/scene-surface";
@@ -23,6 +24,11 @@ export function ProjectCloudSurface({
       name={cloud.id}
       source={source}
       visible={cloud.visible}
+      position={cloud.translation}
+      rotation={
+        cloud.rotation_deg.map(MathUtils.degToRad) as [number, number, number]
+      }
+      scale={cloud.scale}
     />
   );
 }

@@ -9,6 +9,13 @@ import type { LibraryUploadStatus } from './libraryUploadStatus';
 
 export interface LibraryUpload {
   created_at: string;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  default_rotation_deg: [number, number, number];
+  /** @exclusiveMinimum 0 */
+  default_scale: number;
   download_url?: string | null;
   format: 'ply';
   id: string;

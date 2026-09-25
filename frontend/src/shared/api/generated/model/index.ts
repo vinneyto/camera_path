@@ -53,6 +53,7 @@ export * from './followPathAim';
 export * from './followPathAimDirection';
 export * from './hTTPValidationError';
 export * from './libraryAsset';
+export * from './libraryAssetDefaultsUpdate';
 export * from './libraryAssetStatus';
 export * from './libraryUpload';
 export * from './libraryUploadCreate';
