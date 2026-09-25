@@ -48,15 +48,16 @@ export function LibraryAssetList() {
                   Scale: {asset.default_scale}
                 </p>
               </div>
-              {asset.download_url && (
-                <a
-                  className="shrink-0 text-xs underline"
-                  download
-                  href={asset.download_url}
-                >
-                  Download
-                </a>
-              )}
+              <div className="flex shrink-0 gap-3 text-xs">
+                <Link className="underline" href={`/library/${asset.id}`}>
+                  Details
+                </Link>
+                {asset.download_url && (
+                  <a className="underline" download href={asset.download_url}>
+                    Download
+                  </a>
+                )}
+              </div>
             </div>
           </Card>
         </li>
