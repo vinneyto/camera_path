@@ -33,15 +33,17 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private disposed = false;
   private highlightVolume: TileGaussianHighlightVolume | null = null;
   private pass: GaussianPass | null = null;
-  private readonly store =
+  private readonly debugEnabled =
     typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).has("gaussianBackendDebug")
-      ? new GaussianStore(
-          new LoggingGaussianBackend(
-            new WorkerStreamingGaussianBackend({ maxGaussians: "auto" }),
-          ),
-        )
-      : new GaussianStore();
+    new URLSearchParams(window.location.search).has("gaussianBackendDebug");
+  private readonly store = this.debugEnabled
+    ? new GaussianStore(
+        new LoggingGaussianBackend(
+          new WorkerStreamingGaussianBackend({ maxGaussians: "auto" }),
+        ),
+      )
+    : new GaussianStore();
+  private lastDebugSnapshotAt = 0;
   private unregisterPass: (() => void) | null = null;
   private dprMode: GaussianDprMode = "1x";
   private readonly additionalCloudLayers: readonly number[];
@@ -149,6 +151,19 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   syncResolutionScale(dprMode: GaussianDprMode): void {
     if (this.disposed) return;
     this.dprMode = dprMode;
+    const now = Date.now();
+    if (this.debugEnabled && now - this.lastDebugSnapshotAt >= 1000) {
+      this.lastDebugSnapshotAt = now;
+      console.log("[3DGS pass]", {
+        hasPackedData: this.store.hasPackedData,
+        layoutVersion: this.store.layoutVersion,
+        contentVersion: this.store.contentVersion,
+        passActive: this.pass !== null,
+        renderCount: this.pass?.renderCount ?? null,
+        cacheHitCount: this.pass?.cacheHitCount ?? null,
+        lastCommandError: this.store.lastCommandError?.message ?? null,
+      });
+    }
     if (this.pass === null) return;
     const resolutionScale = getGaussianResolutionScale(
       dprMode,
