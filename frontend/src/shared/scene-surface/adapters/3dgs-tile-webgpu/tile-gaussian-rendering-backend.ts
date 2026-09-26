@@ -2,6 +2,7 @@ import {
   type GaussianCloud,
   type GaussianPass,
   GaussianStore,
+  WorkerStreamingGaussianBackend,
   gaussianPass,
   rasterScreenUV,
 } from "3dgs-tile-webgpu";
@@ -21,6 +22,7 @@ import type { GaussianCloudSource } from "../../model/scene-surface-types";
 import { enableAdditionalObjectLayers } from "../../model/enable-additional-object-layers";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
+import { LoggingGaussianBackend } from "./logging-gaussian-backend";
 import { TileGaussianCloudInstance } from "./tile-gaussian-cloud-instance";
 import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 
@@ -31,7 +33,15 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private disposed = false;
   private highlightVolume: TileGaussianHighlightVolume | null = null;
   private pass: GaussianPass | null = null;
-  private readonly store = new GaussianStore();
+  private readonly store =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("gaussianBackendDebug")
+      ? new GaussianStore(
+          new LoggingGaussianBackend(
+            new WorkerStreamingGaussianBackend({ maxGaussians: "auto" }),
+          ),
+        )
+      : new GaussianStore();
   private unregisterPass: (() => void) | null = null;
   private dprMode: GaussianDprMode = "1x";
   private readonly additionalCloudLayers: readonly number[];
