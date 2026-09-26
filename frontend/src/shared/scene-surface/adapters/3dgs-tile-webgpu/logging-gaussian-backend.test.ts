@@ -45,7 +45,10 @@ describe("LoggingGaussianBackend", () => {
       };
       emit?.(event);
       expect(listener).toHaveBeenCalledWith(event);
-      expect(log).toHaveBeenCalledWith("[3DGS backend ←]", event);
+      expect(log).toHaveBeenCalledWith("[3DGS backend ←]", {
+        ...event,
+        commandType: "load-cloud-from-buffer",
+      });
       stop();
       expect(unsubscribe).toHaveBeenCalledOnce();
       decorator.dispose();
