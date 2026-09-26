@@ -13,6 +13,7 @@ import { getAnchorLabel } from "@/features/anchor-creation";
 import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
 import {
   useActiveEditorTool,
+  useCloudPlacement,
   useCameraMode,
   useEditorHoverCursor,
 } from "@/features/project-editor";
@@ -28,6 +29,7 @@ import type { ContextMenuPosition } from "@/shared/ui";
 import { AnchorMarker } from "./anchor-marker";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
+import { CloudPlacementPreview } from "./cloud-placement-preview";
 import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
@@ -36,6 +38,7 @@ import { ProjectCloudSurface } from "./project-cloud-surface";
 import { TrajectoryLine } from "./trajectory-line";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
 import { useAnchorPlacement } from "./use-anchor-placement";
+import { useCloudPlacementInteraction } from "./use-cloud-placement-interaction";
 import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 
@@ -48,6 +51,7 @@ interface SceneContentsProps {
   dark: boolean;
   depthOfFieldSupported?: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
+  onAddCloud: (assetId: string, position: Vec3) => void;
   onSurfaceError: (cloudId: string, error: Error) => void;
   onSurfaceLoading: (cloudId: string) => void;
   onSurfaceReady: (cloudId: string) => void;
@@ -67,6 +71,7 @@ export function SceneContents({
   dark,
   depthOfFieldSupported = false,
   onAddAnchor,
+  onAddCloud,
   onSurfaceError,
   onSurfaceLoading,
   onSurfaceReady,
@@ -103,6 +108,8 @@ export function SceneContents({
     GAUSSIAN_CLOUD_LAYERS,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
+  const cloudPlacement = useCloudPlacementInteraction({ onPlace: onAddCloud });
+  const { pendingCloud } = useCloudPlacement();
   const heightEditing = useAnchorHeightEditing({
     anchors,
     onCommit: onUpdateAnchorLift,
@@ -158,7 +165,11 @@ export function SceneContents({
           onLoading={() => onSurfaceLoading(cloud.id)}
           onReady={(surface) => handleSurfaceReady(cloud.id, surface)}
           raycastable={cloud.visible && isGaussianSurfacePickActive(activeTool)}
-          {...(editorVisible ? placement.surfaceEventProps : {})}
+          {...(editorVisible
+            ? activeTool === "cloud"
+              ? cloudPlacement.surfaceEventProps
+              : placement.surfaceEventProps
+            : {})}
         />
       ))}
       <ambientLight intensity={dark ? 0.8 : 1.25} />
@@ -173,6 +184,12 @@ export function SceneContents({
           backend={renderingBackend}
           hit={placement.previewHit}
           label={getAnchorLabel(anchors)}
+        />
+      )}
+      {editorVisible && pendingCloud && cloudPlacement.previewHit && (
+        <CloudPlacementPreview
+          asset={pendingCloud}
+          hit={cloudPlacement.previewHit}
         />
       )}
       {editorVisible &&
@@ -241,7 +258,10 @@ export function SceneContents({
           makeDefault
           maxDistance={Infinity}
           minDistance={0.001}
-          onChange={placement.handleControlsChange}
+          onChange={() => {
+            placement.handleControlsChange();
+            cloudPlacement.handleControlsChange();
+          }}
           onEnd={handleOrbitEnd}
           ref={orbitControlsRef}
           target={orbitTarget}

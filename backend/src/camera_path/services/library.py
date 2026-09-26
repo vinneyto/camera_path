@@ -25,12 +25,14 @@ class LibraryAsset(BaseModel):
     download_url: str | None = None
     default_rotation_deg: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
     default_scale: FiniteFloat = Field(gt=0)
+    default_offset: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
 
 
 class LibraryAssetDefaultsUpdate(BaseModel):
     # Three.js Euler XYZ: angles about local X, Y and Z, in degrees.
     default_rotation_deg: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
     default_scale: FiniteFloat = Field(gt=0)
+    default_offset: tuple[FiniteFloat, FiniteFloat, FiniteFloat] | None = None
 
 
 class LibraryUploadCreate(BaseModel):
@@ -64,6 +66,11 @@ class LibraryService:
                 record.default_rotation_z_deg,
             ),
             default_scale=record.default_scale,
+            default_offset=(
+                record.default_offset_x,
+                record.default_offset_y,
+                record.default_offset_z,
+            ),
         )
 
     async def list(self, request: Request) -> list[LibraryAsset]:
@@ -91,7 +98,7 @@ class LibraryService:
         self, asset_id: str, data: LibraryAssetDefaultsUpdate, request: Request
     ) -> LibraryAsset:
         record = await self.repository.update_defaults(
-            asset_id, data.default_rotation_deg, data.default_scale
+            asset_id, data.default_rotation_deg, data.default_scale, data.default_offset
         )
         if record is None:
             raise HTTPException(404, "Library file not found")

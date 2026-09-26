@@ -19,16 +19,20 @@ export function ProjectCloudSurface({
     [cloud.download_url],
   );
   return (
-    <SceneSurface
-      {...props}
-      name={cloud.id}
-      source={source}
-      visible={cloud.visible}
+    <group
       position={cloud.translation}
       rotation={
         cloud.rotation_deg.map(MathUtils.degToRad) as [number, number, number]
       }
       scale={cloud.scale}
-    />
+      visible={cloud.visible}
+    >
+      <SceneSurface
+        {...props}
+        name={cloud.id}
+        position={cloud.offset}
+        source={source}
+      />
+    </group>
   );
 }

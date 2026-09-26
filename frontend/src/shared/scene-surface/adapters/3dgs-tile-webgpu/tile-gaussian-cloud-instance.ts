@@ -1,6 +1,6 @@
 import type { GaussianCloud } from "3dgs-tile-webgpu";
 import type { Intersection, Object3D, Ray } from "three";
-import { Sphere } from "three/webgpu";
+import { Box3, Sphere, Vector3 } from "three/webgpu";
 
 import type { GaussianCloudInstance } from "../../model/gaussian-rendering-backend";
 import type {
@@ -15,17 +15,17 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
 
   constructor(
     cloud: GaussianCloud,
+    bounds: readonly [number, number, number, number, number, number],
     private readonly onDispose: () => void,
   ) {
     this.object = cloud;
-    if (cloud.lod === null) {
-      this.bounds = null;
-    } else {
-      cloud.updateWorldMatrix(true, false);
-      const sphere = cloud.lod.octree.bounds.getBoundingSphere(new Sphere());
-      sphere.applyMatrix4(cloud.matrixWorld);
-      this.bounds = { center: sphere.center.toArray(), radius: sphere.radius };
-    }
+    cloud.updateWorldMatrix(true, false);
+    const sphere = new Box3(
+      new Vector3(bounds[0], bounds[1], bounds[2]),
+      new Vector3(bounds[3], bounds[4], bounds[5]),
+    ).getBoundingSphere(new Sphere());
+    sphere.applyMatrix4(cloud.matrixWorld);
+    this.bounds = { center: sphere.center.toArray(), radius: sphere.radius };
   }
 
   dispose(): void {

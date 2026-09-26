@@ -8,4 +8,9 @@
 
 export interface ProjectCloudCreate {
   library_asset_id: string;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  translation?: [number, number, number];
 }

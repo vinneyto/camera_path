@@ -40,7 +40,11 @@ class ProjectCloudRepository:
             return await self._list(session, project_id), revision
 
     async def add(
-        self, session: AsyncSession, project_id: str, asset: LibraryAssetRecord
+        self,
+        session: AsyncSession,
+        project_id: str,
+        asset: LibraryAssetRecord,
+        translation: tuple[float, float, float],
     ) -> ProjectCloudRecord:
         position = len(await self._list(session, project_id))
         cloud = ProjectCloudRecord(
@@ -53,6 +57,12 @@ class ProjectCloudRepository:
             rotation_y_deg=asset.default_rotation_y_deg,
             rotation_z_deg=asset.default_rotation_z_deg,
             scale=asset.default_scale,
+            offset_x=asset.default_offset_x,
+            offset_y=asset.default_offset_y,
+            offset_z=asset.default_offset_z,
+            translation_x=translation[0],
+            translation_y=translation[1],
+            translation_z=translation[2],
         )
         session.add(cloud)
         await session.flush()

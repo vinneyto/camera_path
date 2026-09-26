@@ -1,8 +1,5 @@
 import {
-  CanonicalGaussianPlyLoader,
   type GaussianCloud,
-  GaussianLod,
-  GaussianOctree,
   type GaussianPass,
   GaussianStore,
   gaussianPass,
@@ -58,14 +55,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
     let cloud: GaussianCloud;
     if (source.kind === "url") {
-      cloud = await this.store.load(source.url, { name: options.name });
+      cloud = await this.store.load(source.url, {
+        name: options.name,
+        raycastable: true,
+      });
     } else {
-      const data = new CanonicalGaussianPlyLoader().parse(source.buffer);
-      const octree = GaussianOctree.build(data, { ownsData: true });
-      const lod = GaussianLod.build(octree, { ownsOctree: true });
-      cloud = this.store.addLod(lod, {
+      cloud = await this.store.loadBuffer(source.buffer, {
         name: options.name ?? source.name,
-        ownsLod: true,
+        raycastable: true,
       });
     }
 
@@ -76,7 +73,6 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       );
     }
 
-    cloud.raycastMode = "full";
     enableAdditionalObjectLayers(cloud, this.additionalCloudLayers);
     try {
       this.ensurePass();
@@ -84,10 +80,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       cloud.dispose();
       throw reason;
     }
-    const instance = new TileGaussianCloudInstance(cloud, () => {
-      this.clouds.delete(instance);
-      if (this.clouds.size === 0) this.disposePass();
-    });
+    const instance = new TileGaussianCloudInstance(
+      cloud,
+      this.store.getBounds(cloud),
+      () => {
+        this.clouds.delete(instance);
+        if (this.clouds.size === 0) this.disposePass();
+      },
+    );
     this.clouds.add(instance);
     return instance;
   }

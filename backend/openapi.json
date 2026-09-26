@@ -1339,6 +1339,23 @@
             "title": "Created At",
             "type": "string"
           },
+          "default_offset": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Offset",
+            "type": "array"
+          },
           "default_rotation_deg": {
             "maxItems": 3,
             "minItems": 3,
@@ -1406,13 +1423,38 @@
           "status",
           "created_at",
           "default_rotation_deg",
-          "default_scale"
+          "default_scale",
+          "default_offset"
         ],
         "title": "LibraryAsset",
         "type": "object"
       },
       "LibraryAssetDefaultsUpdate": {
         "properties": {
+          "default_offset": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Offset"
+          },
           "default_rotation_deg": {
             "maxItems": 3,
             "minItems": 3,
@@ -1449,6 +1491,23 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "default_offset": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Offset",
+            "type": "array"
           },
           "default_rotation_deg": {
             "maxItems": 3,
@@ -1522,6 +1581,7 @@
           "created_at",
           "default_rotation_deg",
           "default_scale",
+          "default_offset",
           "upload_url"
         ],
         "title": "LibraryUpload",
@@ -1641,6 +1701,23 @@
             "title": "Name",
             "type": "string"
           },
+          "offset": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Offset",
+            "type": "array"
+          },
           "position": {
             "title": "Position",
             "type": "integer"
@@ -1702,7 +1779,8 @@
           "download_url",
           "translation",
           "rotation_deg",
-          "scale"
+          "scale",
+          "offset"
         ],
         "title": "ProjectCloud",
         "type": "object"
@@ -1712,6 +1790,28 @@
           "library_asset_id": {
             "title": "Library Asset Id",
             "type": "string"
+          },
+          "translation": {
+            "default": [
+              0,
+              0,
+              0
+            ],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Translation",
+            "type": "array"
           }
         },
         "required": [
