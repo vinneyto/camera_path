@@ -80,13 +80,14 @@ export function SceneViewportContainer({
       .catch(() => undefined);
   }
 
-  function addCloud(assetId: string, position: Vec3) {
-    if (cloudActions.isPending) return;
-    cloudActions.mutate({
+  async function addCloud(assetId: string, position: Vec3): Promise<boolean> {
+    if (cloudActions.isPending) return false;
+    const response = await cloudActions.mutateAsync({
       type: "add",
       assetId,
       translation: position.map((value) => Number(value.toFixed(4))) as Vec3,
     });
+    return response.status === 201;
   }
 
   return (

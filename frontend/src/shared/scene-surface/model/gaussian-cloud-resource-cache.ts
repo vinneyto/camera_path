@@ -7,6 +7,7 @@ import type { GaussianCloudSource } from "./scene-surface-types";
 
 interface GaussianCloudResourceEntry {
   disposed: boolean;
+  resourceKey: string | undefined;
   name: string | undefined;
   promise: Promise<GaussianCloudInstance>;
   source: GaussianCloudSource;
@@ -26,18 +27,23 @@ export class GaussianCloudResourceCache {
   acquire(
     source: GaussianCloudSource,
     options: GaussianCloudOptions = {},
+    resourceKey?: string,
   ): GaussianCloudResourceLease {
     const name = options.name;
     let entry = this.entries.find(
       (candidate) =>
         !candidate.disposed &&
-        candidate.name === name &&
-        this.sourcesMatch(candidate.source, source),
+        (resourceKey === undefined
+          ? candidate.resourceKey === undefined &&
+            candidate.name === name &&
+            this.sourcesMatch(candidate.source, source)
+          : candidate.resourceKey === resourceKey),
     );
 
     if (entry === undefined) {
       entry = {
         disposed: false,
+        resourceKey,
         name,
         promise: this.backend.createCloud(source, options),
         source,

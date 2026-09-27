@@ -43,6 +43,42 @@ describe("GaussianCloudResourceCache", () => {
     expect(backend.createCloud).toHaveBeenCalledOnce();
   });
 
+  it("transfers a placement preview to a project cloud without reloading", async () => {
+    const instance = createInstance();
+    const backend = createBackend(instance);
+    const cache = new GaussianCloudResourceCache(backend);
+
+    const preview = cache.acquire(source, { name: "preview" }, "placement-1");
+    const project = cache.acquire(
+      { kind: "url", url: "/cloud.ply?fresh-signed-url" },
+      { name: "project-cloud" },
+      "placement-1",
+    );
+    expect(project.promise).toBe(preview.promise);
+    expect(backend.createCloud).toHaveBeenCalledOnce();
+
+    preview.release();
+    await Promise.resolve();
+    expect(instance.dispose).not.toHaveBeenCalled();
+    project.release();
+    await project.promise;
+    await Promise.resolve();
+    expect(instance.dispose).toHaveBeenCalledOnce();
+  });
+
+  it("keeps separate instances for two clouds using the same asset", () => {
+    const backend = createBackend(createInstance());
+    const cache = new GaussianCloudResourceCache(backend);
+
+    const first = cache.acquire(source, { name: "cloud-a" }, "placement-a");
+    const second = cache.acquire(source, { name: "cloud-b" }, "placement-b");
+
+    expect(first.promise).not.toBe(second.promise);
+    expect(backend.createCloud).toHaveBeenCalledTimes(2);
+    first.release();
+    second.release();
+  });
+
   it("keeps the cloud alive when Strict Mode immediately reacquires it", async () => {
     const instance = createInstance();
     const backend = createBackend(instance);

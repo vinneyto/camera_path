@@ -9,9 +9,11 @@ import { SurfaceTargetRing } from "./surface-target-ring";
 export function CloudPlacementPreview({
   asset,
   hit,
+  resourceKey,
 }: {
   asset: LibraryAsset;
   hit: SceneSurfaceHit;
+  resourceKey: string;
 }) {
   if (!asset.download_url) return null;
   const cloud: ProjectCloud = {
@@ -32,7 +34,11 @@ export function CloudPlacementPreview({
       <Suspense fallback={null}>
         <SurfaceTargetRing position={hit.position} />
       </Suspense>
-      <ProjectCloudSurface cloud={cloud} raycastable={false} />
+      <ProjectCloudSurface
+        cloud={cloud}
+        raycastable={false}
+        resourceKey={resourceKey}
+      />
     </>
   );
 }
