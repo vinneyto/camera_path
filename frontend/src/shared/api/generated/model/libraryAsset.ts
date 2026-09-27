@@ -13,6 +13,11 @@ export interface LibraryAsset {
      * @minItems 3
      * @maxItems 3
      */
+  default_offset: [number, number, number];
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
   default_rotation_deg: [number, number, number];
   /** @exclusiveMinimum 0 */
   default_scale: number;

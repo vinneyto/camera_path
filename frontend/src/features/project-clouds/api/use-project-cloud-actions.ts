@@ -12,7 +12,7 @@ import {
 import type { ProjectCloudUpdate } from "@/shared/api/generated/model";
 
 type Action =
-  | { type: "add"; assetId: string }
+  | { type: "add"; assetId: string; translation?: [number, number, number] }
   | { type: "remove"; cloudId: string }
   | { type: "update"; cloudId: string; changes: ProjectCloudUpdate };
 
@@ -23,6 +23,7 @@ export function useProjectCloudActions(projectId: string) {
       if (action.type === "add")
         return createProjectCloud(projectId, {
           library_asset_id: action.assetId,
+          translation: action.translation ?? [0, 0, 0],
         });
       if (action.type === "remove")
         return deleteProjectCloud(projectId, action.cloudId);

@@ -9,7 +9,6 @@ describe("TileGaussianCloudInstance raycasting", () => {
     const cloud = new Object3D() as GaussianCloud;
     Object.assign(cloud, {
       dispose: vi.fn(),
-      lod: null,
       raycast: vi.fn((_raycaster, intersections) => {
         intersections.push({
           distance: 1,
@@ -26,7 +25,7 @@ describe("TileGaussianCloudInstance raycasting", () => {
         point: new Vector3(0, 0, -2),
       });
     });
-    new TileGaussianCloudInstance(cloud, vi.fn());
+    new TileGaussianCloudInstance(cloud, [-1, -1, -1, 1, 1, 1], vi.fn());
     const raycaster = new Raycaster(new Vector3(), new Vector3(0, 0, -1));
 
     expect(raycaster.intersectObjects([cloud, trajectory])[0]?.object).toBe(

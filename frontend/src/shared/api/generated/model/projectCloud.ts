@@ -11,6 +11,11 @@ export interface ProjectCloud {
   id: string;
   library_asset_id: string;
   name: string;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  offset: [number, number, number];
   position: number;
   project_id: string;
   /**

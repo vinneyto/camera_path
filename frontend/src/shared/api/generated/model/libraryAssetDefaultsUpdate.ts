@@ -7,6 +7,7 @@
  */
 
 export interface LibraryAssetDefaultsUpdate {
+  default_offset?: [number, number, number] | null;
   /**
      * @minItems 3
      * @maxItems 3

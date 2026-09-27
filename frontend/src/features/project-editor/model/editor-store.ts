@@ -1,6 +1,7 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
+import type { LibraryAsset } from "@/shared/api/generated/model";
 
-export type EditorTool = "anchor" | "anchor-height";
+export type EditorTool = "anchor" | "anchor-height" | "cloud";
 export type CameraMode = "orbit" | "trajectory";
 export type EditorHoveredObject =
   { id: string; type: "anchor" } | { type: "trajectory" };
@@ -12,6 +13,7 @@ export interface EditorCameraState {
 export interface EditorToolState {
   activeTool: EditorTool | null;
   hoveredObject: EditorHoveredObject | null;
+  pendingCloud: LibraryAsset | null;
 }
 
 export interface TrajectorySelectionState {
@@ -34,6 +36,7 @@ interface EditorToolActions {
   hoverAnchor: (anchorId: string) => void;
   hoverTrajectory: () => void;
   setActiveTool: (tool: EditorTool | null) => void;
+  startCloudPlacement: (asset: LibraryAsset) => void;
 }
 
 interface TrajectorySelectionActions {
@@ -69,7 +72,11 @@ export function createEditorStore(): EditorStoreApi {
           cameraMode === "trajectory"
             ? {
                 camera: { cameraMode },
-                tool: { activeTool: null, hoveredObject: null },
+                tool: {
+                  activeTool: null,
+                  hoveredObject: null,
+                  pendingCloud: null,
+                },
               }
             : { camera: { cameraMode } },
         ),
@@ -101,6 +108,7 @@ export function createEditorStore(): EditorStoreApi {
     tool: {
       activeTool: null,
       hoveredObject: null,
+      pendingCloud: null,
     },
     toolActions: {
       clearHoveredAnchor: (anchorId) =>
@@ -126,7 +134,21 @@ export function createEditorStore(): EditorStoreApi {
         })),
       setActiveTool: (activeTool) =>
         set((state) => ({
-          tool: { ...state.tool, activeTool },
+          tool: {
+            ...state.tool,
+            activeTool,
+            pendingCloud:
+              activeTool === "cloud" ? state.tool.pendingCloud : null,
+          },
+        })),
+      startCloudPlacement: (pendingCloud) =>
+        set((state) => ({
+          camera: { cameraMode: "orbit" },
+          tool: {
+            ...state.tool,
+            activeTool: "cloud",
+            pendingCloud: { ...pendingCloud },
+          },
         })),
     },
   }));

@@ -15,6 +15,7 @@ import {
   useTrajectoryPlayback,
 } from "@/features/project-editor";
 import { useDeleteAnchor } from "@/features/object-deletion";
+import { useProjectCloudActions } from "@/features/project-clouds/api/use-project-cloud-actions";
 import { SceneViewport, SceneWebGpuViewport } from "@/widgets/scene-editor";
 
 interface SceneViewportContainerProps {
@@ -43,6 +44,7 @@ export function SceneViewportContainer({
   const addAnchorMutation = useAddAnchor(projectId);
   const updateAnchorMutation = useUpdateAnchor(projectId);
   const deleteAnchorMutation = useDeleteAnchor(projectId);
+  const cloudActions = useProjectCloudActions(projectId);
   const activeTool = useActiveEditorTool();
   const { cameraMode } = useCameraMode();
   const playback = useTrajectoryPlayback(trajectory);
@@ -78,6 +80,15 @@ export function SceneViewportContainer({
       .catch(() => undefined);
   }
 
+  function addCloud(assetId: string, position: Vec3) {
+    if (cloudActions.isPending) return;
+    cloudActions.mutate({
+      type: "add",
+      assetId,
+      translation: position.map((value) => Number(value.toFixed(4))) as Vec3,
+    });
+  }
+
   return (
     <>
       <Viewport
@@ -86,6 +97,7 @@ export function SceneViewportContainer({
         bottomOverlayHeight={bottomOverlayHeight}
         deletingTrajectory={deletingTrajectory}
         onAddAnchor={(position, normal) => void addAnchor(position, normal)}
+        onAddCloud={addCloud}
         onDeleteAnchor={(anchor) => deleteAnchorMutation.mutate(anchor.id)}
         onDeleteTrajectory={onDeleteTrajectory}
         onSelectTrajectory={onSelectTrajectory}
@@ -103,9 +115,19 @@ export function SceneViewportContainer({
           )}
           {activeTool === "anchor"
             ? "Anchor tool active — release the modifier key to exit"
-            : activeTool === "anchor-height"
-              ? "Drag vertically to set anchor height; press Escape to cancel"
-              : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
+            : activeTool === "cloud"
+              ? "Click to place cloud on the surface; press Escape to cancel"
+              : activeTool === "anchor-height"
+                ? "Drag vertically to set anchor height; press Escape to cancel"
+                : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
+        </div>
+      )}
+      {cloudActions.error && (
+        <div
+          className="absolute left-3 top-12 rounded border bg-background px-2 py-1 text-xs text-destructive"
+          role="alert"
+        >
+          {cloudActions.error.message}
         </div>
       )}
     </>

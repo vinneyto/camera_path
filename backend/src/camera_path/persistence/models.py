@@ -83,6 +83,9 @@ class LibraryAssetRecord(Base):
     default_rotation_y_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     default_rotation_z_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     default_scale: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    default_offset_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    default_offset_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    default_offset_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
 
 class ProjectCloudRecord(Base):
@@ -105,6 +108,9 @@ class ProjectCloudRecord(Base):
     rotation_y_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     rotation_z_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     scale: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    offset_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    offset_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    offset_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
 
 class ProjectChildRecord:

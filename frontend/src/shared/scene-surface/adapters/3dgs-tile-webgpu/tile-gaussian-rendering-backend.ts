@@ -1,10 +1,8 @@
 import {
-  CanonicalGaussianPlyLoader,
   type GaussianCloud,
-  GaussianLod,
-  GaussianOctree,
   type GaussianPass,
   GaussianStore,
+  WorkerStreamingGaussianBackend,
   gaussianPass,
   rasterScreenUV,
 } from "3dgs-tile-webgpu";
@@ -24,6 +22,7 @@ import type { GaussianCloudSource } from "../../model/scene-surface-types";
 import { enableAdditionalObjectLayers } from "../../model/enable-additional-object-layers";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
+import { LoggingGaussianBackend } from "./logging-gaussian-backend";
 import { TileGaussianCloudInstance } from "./tile-gaussian-cloud-instance";
 import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 
@@ -34,7 +33,16 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private disposed = false;
   private highlightVolume: TileGaussianHighlightVolume | null = null;
   private pass: GaussianPass | null = null;
-  private readonly store = new GaussianStore();
+  private readonly debugEnabled =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("gaussianBackendDebug");
+  private readonly store = this.debugEnabled
+    ? new GaussianStore(
+        new LoggingGaussianBackend(
+          new WorkerStreamingGaussianBackend({ maxGaussians: "auto" }),
+        ),
+      )
+    : new GaussianStore();
   private unregisterPass: (() => void) | null = null;
   private dprMode: GaussianDprMode = "1x";
   private readonly additionalCloudLayers: readonly number[];
@@ -58,14 +66,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
 
     let cloud: GaussianCloud;
     if (source.kind === "url") {
-      cloud = await this.store.load(source.url, { name: options.name });
+      cloud = await this.store.load(source.url, {
+        name: options.name,
+        raycastable: true,
+      });
     } else {
-      const data = new CanonicalGaussianPlyLoader().parse(source.buffer);
-      const octree = GaussianOctree.build(data, { ownsData: true });
-      const lod = GaussianLod.build(octree, { ownsOctree: true });
-      cloud = this.store.addLod(lod, {
+      cloud = await this.store.loadBuffer(source.buffer, {
         name: options.name ?? source.name,
-        ownsLod: true,
+        raycastable: true,
       });
     }
 
@@ -76,7 +84,6 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       );
     }
 
-    cloud.raycastMode = "full";
     enableAdditionalObjectLayers(cloud, this.additionalCloudLayers);
     try {
       this.ensurePass();
@@ -84,10 +91,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       cloud.dispose();
       throw reason;
     }
-    const instance = new TileGaussianCloudInstance(cloud, () => {
-      this.clouds.delete(instance);
-      if (this.clouds.size === 0) this.disposePass();
-    });
+    const instance = new TileGaussianCloudInstance(
+      cloud,
+      this.store.getBounds(cloud),
+      () => {
+        this.clouds.delete(instance);
+        if (this.clouds.size === 0) this.disposePass();
+      },
+    );
     this.clouds.add(instance);
     return instance;
   }

@@ -46,6 +46,8 @@ export function LibraryAssetList() {
                 <p className="text-[11px] text-muted-foreground">
                   Rotation XYZ: {asset.default_rotation_deg.join("°, ")}° ·
                   Scale: {asset.default_scale}
+                  {asset.default_offset.some((value) => value !== 0) &&
+                    ` · Offset XYZ: ${asset.default_offset.join(", ")}`}
                 </p>
               </div>
               <div className="flex shrink-0 gap-3 text-xs">

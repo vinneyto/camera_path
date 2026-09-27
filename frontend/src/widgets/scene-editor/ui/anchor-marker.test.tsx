@@ -21,7 +21,18 @@ it("keeps the scene mounted while an anchor marker texture loads", () => {
   render(
     <Suspense fallback={<span>Scene suspended</span>}>
       <span>Gaussian cloud</span>
-      <AnchorMarker anchor={{} as Anchor} />
+      <AnchorMarker
+        anchor={
+          {
+            id: "anchor",
+            label: "A",
+            lift: 0,
+            lift_axis: "world_up",
+            surface_position: [0, 0, 0],
+            surface_normal: [0, 1, 0],
+          } satisfies Anchor
+        }
+      />
     </Suspense>,
   );
 

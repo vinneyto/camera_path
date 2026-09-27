@@ -101,6 +101,7 @@ describe("SceneViewportFrame trajectory context menu", () => {
       translation: [0, 0, 0] as [number, number, number],
       rotation_deg: [0, 0, 0] as [number, number, number],
       scale: 1,
+      offset: [0, 0, 0] as [number, number, number],
     };
     const shared = {
       available: true,

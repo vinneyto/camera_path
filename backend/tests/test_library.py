@@ -36,6 +36,7 @@ async def test_library_upload_is_independent_of_projects_and_persists(tmp_path: 
             assert details.status_code == 200
             assert details.json()["default_rotation_deg"] == [0, 0, 0]
             assert details.json()["default_scale"] == 1
+            assert details.json()["default_offset"] == [0, 0, 0]
             listed = (await client.get("/api/v1/library")).json()
             assert len(listed) == 1
             assert listed[0]["name"] == "Test cloud"

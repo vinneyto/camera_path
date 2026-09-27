@@ -12,7 +12,13 @@ const { gaussianPassMock } = vi.hoisted(() => ({
 
 vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
   const actual = await importOriginal<typeof import("3dgs-tile-webgpu")>();
-  return { ...actual, gaussianPass: gaussianPassMock };
+  return {
+    ...actual,
+    GaussianStore: class {
+      dispose() {}
+    },
+    gaussianPass: gaussianPassMock,
+  };
 });
 
 vi.mock("./create-tile-raster-depth-nodes", () => ({

@@ -54,7 +54,11 @@ async def create_project_cloud(
     _guard: MutationGuard,
 ) -> ProjectCloud:
     cloud, revision = await service.add(
-        project_id, data.library_asset_id, parse_if_match(request.headers["If-Match"]), request
+        project_id,
+        data.library_asset_id,
+        data.translation,
+        parse_if_match(request.headers["If-Match"]),
+        request,
     )
     set_revision_etag(response, revision)
     return cloud

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { LibraryAsset } from "@/shared/api/generated/model";
 
 import { createEditorStore, type EditorStoreApi } from "./editor-store";
 
@@ -90,6 +91,20 @@ describe("editor store", () => {
       playback: { elapsed: 0, pathPosition: 0, playing: false },
       selection: { trajectorySelected: false },
       tool: { activeTool: null, hoveredObject: null },
+    });
+  });
+
+  it("keeps a pending cloud until cancellation, then clears it", () => {
+    const asset = { id: "asset", name: "Cloud" } as LibraryAsset;
+    store.getState().toolActions.startCloudPlacement(asset);
+    expect(store.getState().tool).toMatchObject({
+      activeTool: "cloud",
+      pendingCloud: { id: "asset" },
+    });
+    store.getState().toolActions.setActiveTool(null);
+    expect(store.getState().tool).toMatchObject({
+      activeTool: null,
+      pendingCloud: null,
     });
   });
 });
