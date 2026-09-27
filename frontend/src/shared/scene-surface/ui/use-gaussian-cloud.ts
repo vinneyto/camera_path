@@ -14,6 +14,7 @@ interface LoadedGaussianCloud {
 
 interface UseGaussianCloudOptions {
   name?: string;
+  resourceKey?: string;
   source: GaussianCloudSource;
 }
 
@@ -25,6 +26,7 @@ type UseGaussianCloudResult = readonly [
 
 export function useGaussianCloud({
   name,
+  resourceKey,
   source,
 }: UseGaussianCloudOptions): UseGaussianCloudResult {
   const cache = useGaussianCloudResourceCache();
@@ -41,7 +43,7 @@ export function useGaussianCloud({
 
   useEffect(() => {
     let active = true;
-    const lease = cache.acquire(source, { name });
+    const lease = cache.acquire(source, { name }, resourceKey);
     void lease.promise
       .then((result) => {
         if (!active) return;
@@ -59,7 +61,7 @@ export function useGaussianCloud({
       active = false;
       lease.release();
     };
-  }, [cache, name, source]);
+  }, [cache, name, resourceKey, source]);
 
   return [cloud, cloud === null && error === null, error];
 }

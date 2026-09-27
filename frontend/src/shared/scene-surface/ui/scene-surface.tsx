@@ -28,11 +28,14 @@ export function SceneSurface({
   onSurfacePointerUp,
   onWheel,
   raycastable = true,
+  renderObject = true,
+  resourceKey,
   source,
   ...objectProps
 }: SceneSurfaceProps) {
   const [cloud, loading, error] = useGaussianCloud({
     name,
+    resourceKey,
     source,
   });
   const notifyStatus = useEffectEvent(() => {
@@ -88,7 +91,7 @@ export function SceneSurface({
       }
     : {};
 
-  return cloud ? (
+  return cloud && renderObject ? (
     <primitive
       {...objectProps}
       {...interactionProps}

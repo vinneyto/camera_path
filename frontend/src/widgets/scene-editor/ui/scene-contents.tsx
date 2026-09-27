@@ -51,7 +51,7 @@ interface SceneContentsProps {
   dark: boolean;
   depthOfFieldSupported?: boolean;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
-  onAddCloud: (assetId: string, position: Vec3) => void;
+  onAddCloud: (assetId: string, position: Vec3) => Promise<boolean>;
   onSurfaceError: (cloudId: string, error: Error) => void;
   onSurfaceLoading: (cloudId: string) => void;
   onSurfaceReady: (cloudId: string) => void;
@@ -108,7 +108,10 @@ export function SceneContents({
     GAUSSIAN_CLOUD_LAYERS,
   );
   const placement = useAnchorPlacement({ onPlace: onAddAnchor });
-  const cloudPlacement = useCloudPlacementInteraction({ onPlace: onAddCloud });
+  const cloudPlacement = useCloudPlacementInteraction({
+    onPlace: onAddCloud,
+    clouds,
+  });
   const { pendingCloud } = useCloudPlacement();
   const heightEditing = useAnchorHeightEditing({
     anchors,
@@ -137,6 +140,7 @@ export function SceneContents({
   }, [anchors, renderingBackend]);
 
   function handleSurfaceReady(cloudId: string, surface: SceneSurfaceReady) {
+    cloudPlacement.finishPlacement(cloudId);
     setSurfaceRadius((radius) => Math.max(radius ?? 0, surface.bounds.radius));
     if (!framedFirstCloud.current) {
       framedFirstCloud.current = true;
@@ -161,6 +165,8 @@ export function SceneContents({
         <ProjectCloudSurface
           cloud={cloud}
           key={cloud.id}
+          resourceKey={cloudPlacement.resourceKeyForCloud(cloud.id)}
+          renderObject={cloud.id !== cloudPlacement.placedCloudId}
           onError={(error) => onSurfaceError(cloud.id, error)}
           onLoading={() => onSurfaceLoading(cloud.id)}
           onReady={(surface) => handleSurfaceReady(cloud.id, surface)}
@@ -186,10 +192,18 @@ export function SceneContents({
           label={getAnchorLabel(anchors)}
         />
       )}
-      {editorVisible && pendingCloud && cloudPlacement.previewHit && (
+      {editorVisible && pendingCloud && cloudPlacement.preview && (
         <CloudPlacementPreview
-          asset={pendingCloud}
-          hit={cloudPlacement.previewHit}
+          asset={cloudPlacement.preview.asset}
+          hit={cloudPlacement.preview.hit}
+          resourceKey={cloudPlacement.preview.resourceKey}
+        />
+      )}
+      {cloudPlacement.placed && (
+        <CloudPlacementPreview
+          asset={cloudPlacement.placed.asset}
+          hit={cloudPlacement.placed.hit}
+          resourceKey={cloudPlacement.placed.resourceKey}
         />
       )}
       {editorVisible &&

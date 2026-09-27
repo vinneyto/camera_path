@@ -37,6 +37,10 @@ export interface SceneSurfaceProps extends Omit<
   onSurfacePointerUp?: SceneSurfacePointerHandler;
   /** Controls R3F pointer events; the object remains available to scene raycasts. */
   raycastable?: boolean;
+  /** Preload and report readiness without attaching the same Object3D twice. */
+  renderObject?: boolean;
+  /** Identifies a cloud transferred between placement preview and project scene. */
+  resourceKey?: string;
   source: GaussianCloudSource;
 }
 

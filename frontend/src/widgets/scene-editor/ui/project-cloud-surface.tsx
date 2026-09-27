@@ -11,6 +11,7 @@ interface ProjectCloudSurfaceProps extends Omit<SceneSurfaceProps, "source"> {
 
 export function ProjectCloudSurface({
   cloud,
+  resourceKey,
   ...props
 }: ProjectCloudSurfaceProps) {
   // Keep the source stable so editing another part of the scene does not reload the file.
@@ -30,6 +31,7 @@ export function ProjectCloudSurface({
       <SceneSurface
         {...props}
         name={cloud.id}
+        resourceKey={resourceKey}
         position={cloud.offset}
         source={source}
       />

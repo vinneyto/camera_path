@@ -15,7 +15,7 @@ export interface SceneViewportProps {
   selected: boolean;
   trajectory: CompiledTrajectory | null;
   onAddAnchor: (position: Vec3, normal: Vec3) => void;
-  onAddCloud: (assetId: string, position: Vec3) => void;
+  onAddCloud: (assetId: string, position: Vec3) => Promise<boolean>;
   onDeleteAnchor: (anchor: Anchor) => void;
   onDeleteTrajectory: () => void;
   onSelectTrajectory: () => void;
