@@ -16,6 +16,7 @@ import {
   useCloudPlacement,
   useCameraMode,
   useEditorHoverCursor,
+  useSceneGrid,
 } from "@/features/project-editor";
 import {
   SceneSurfaceProvider,
@@ -35,6 +36,7 @@ import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { PlaybackCamera } from "./playback-camera";
 import { ProjectCloudSurface } from "./project-cloud-surface";
+import { SceneGrid } from "./scene-grid";
 import { TrajectoryLine } from "./trajectory-line";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
 import { useAnchorPlacement } from "./use-anchor-placement";
@@ -85,6 +87,7 @@ export function SceneContents({
 }: SceneContentsProps) {
   const camera = useThree((state) => state.camera);
   const activeTool = useActiveEditorTool();
+  const { showGrid } = useSceneGrid();
   const { cameraMode, setCameraMode } = useCameraMode();
   useEditorHoverCursor();
   const gaussianDprMode = useGaussianRenderingSettingsStore(
@@ -178,6 +181,17 @@ export function SceneContents({
             : {})}
         />
       ))}
+      {showGrid && (
+        <SceneGrid
+          dark={dark}
+          interactive={cameraMode === "orbit"}
+          placementEvents={
+            activeTool === "cloud"
+              ? cloudPlacement.surfaceEventProps
+              : placement.surfaceEventProps
+          }
+        />
+      )}
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight
         castShadow

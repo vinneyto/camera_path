@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Check, Search } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 export interface CommandPaletteItem {
@@ -10,7 +10,7 @@ export interface CommandPaletteItem {
 }
 
 export type CommandPaletteCommand =
-  | { id: string; label: string; onSelect: () => void }
+  | { id: string; label: string; onSelect: () => void; checked?: boolean }
   | {
       id: string;
       label: string;
@@ -192,7 +192,12 @@ export function CommandPalette({
                 role="option"
                 type="button"
               >
-                {item.label}
+                <span className="flex items-center justify-between gap-2">
+                  {item.label}
+                  {"checked" in item && item.checked && (
+                    <Check aria-hidden="true" className="size-3.5" />
+                  )}
+                </span>
               </button>
             ))
           ) : (

@@ -10,6 +10,14 @@ export interface EditorCameraState {
   cameraMode: CameraMode;
 }
 
+export interface EditorSceneState {
+  showGrid: boolean;
+}
+
+interface EditorSceneActions {
+  toggleGrid: () => void;
+}
+
 export interface EditorToolState {
   activeTool: EditorTool | null;
   hoveredObject: EditorHoveredObject | null;
@@ -53,6 +61,8 @@ interface EditorPlaybackActions {
 export interface EditorStore {
   camera: EditorCameraState;
   cameraActions: EditorCameraActions;
+  scene: EditorSceneState;
+  sceneActions: EditorSceneActions;
   playback: EditorPlaybackState;
   playbackActions: EditorPlaybackActions;
   selection: TrajectorySelectionState;
@@ -80,6 +90,11 @@ export function createEditorStore(): EditorStoreApi {
               }
             : { camera: { cameraMode } },
         ),
+    },
+    scene: { showGrid: true },
+    sceneActions: {
+      toggleGrid: () =>
+        set((state) => ({ scene: { showGrid: !state.scene.showGrid } })),
     },
     playback: {
       elapsed: 0,

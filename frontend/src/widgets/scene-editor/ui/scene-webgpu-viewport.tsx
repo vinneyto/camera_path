@@ -21,7 +21,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
       trajectoryAvailable={Boolean(props.trajectory?.position_segments.length)}
       renderScene={(context) => (
         <RenderPipelineCanvas
-          camera={{ far: 100, fov: 42, near: 0.01, position: [0, 0, 5] }}
+          camera={{ far: 100, fov: 42, near: 0.01, position: [4, 3, 6] }}
           dpr={[1, 2]}
           flat
           shadows

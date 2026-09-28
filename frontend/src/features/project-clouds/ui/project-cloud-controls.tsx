@@ -5,7 +5,7 @@ import {
   useListProjectClouds,
 } from "@/shared/api/generated/client";
 import type { LibraryAsset, ProjectCloud } from "@/shared/api/generated/model";
-import { useCloudPlacement } from "@/features/project-editor";
+import { useCloudPlacement, useSceneGrid } from "@/features/project-editor";
 import {
   CommandPalette,
   type CommandPaletteCommand,
@@ -18,6 +18,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
   const placement = useCloudPlacement();
+  const { showGrid, toggleGrid } = useSceneGrid();
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
     (asset) => asset.status === "ready",
   );
@@ -30,12 +31,19 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       onSelectItem: (assetId) => {
         const asset = assets.find((item) => item.id === assetId);
         if (!asset) return;
-        if (clouds.length === 0) actions.mutate({ type: "add", assetId });
+        if (clouds.length === 0 && !showGrid)
+          actions.mutate({ type: "add", assetId });
         else placement.start(asset);
       },
       loading: library.isPending,
       error: library.error ? "Could not load library clouds." : undefined,
       emptyMessage: "Upload a PLY to the library first.",
+    },
+    {
+      id: "toggle-grid",
+      label: showGrid ? "Hide grid" : "Show grid",
+      checked: showGrid,
+      onSelect: toggleGrid,
     },
     {
       id: "remove-cloud",

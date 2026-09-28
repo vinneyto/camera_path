@@ -13,6 +13,7 @@ export { useEditorHoverCursor } from "./model/use-editor-hover-cursor";
 export { useHoveredAnchor } from "./model/use-hovered-anchor";
 export { useHoveredTrajectory } from "./model/use-hovered-trajectory";
 export { useSetActiveEditorTool } from "./model/use-set-active-editor-tool";
+export { useSceneGrid } from "./model/use-scene-grid";
 export { useTrajectorySelection } from "./model/use-trajectory-selection";
 export { useTrajectoryPlayback } from "./model/use-trajectory-playback";
 export { CameraModeToggle } from "./ui/camera-mode-toggle";
