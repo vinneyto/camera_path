@@ -8,6 +8,8 @@ export type SceneSurfaceBackground = readonly [number, number, number, number];
 export interface SceneSurfaceBounds {
   center: SceneSurfacePoint;
   radius: number;
+  min?: SceneSurfacePoint;
+  max?: SceneSurfacePoint;
 }
 
 export interface SceneSurfaceHit {

@@ -24,3 +24,31 @@ it("fits a bounding sphere within the narrower camera FOV", () => {
   expect(camera.far).toBeGreaterThan(distance + 2);
   expect(target).toEqual([10, 2, -3]);
 });
+
+it("fits every corner of a wide box without using its larger enclosing sphere", () => {
+  const camera = new PerspectiveCamera(42, 2, 0.01, 100);
+  camera.position.set(0, 0, 6);
+  camera.lookAt(0, 0, 0);
+  frameSurface(
+    camera,
+    {
+      center: [0, 0, 0],
+      radius: Math.sqrt(102),
+      min: [-10, -1, -1],
+      max: [10, 1, 1],
+    },
+    () => undefined,
+  );
+
+  expect(camera.position.z).toBeLessThan(20);
+  camera.updateWorldMatrix(true, false);
+  for (const x of [-10, 10]) {
+    for (const y of [-1, 1]) {
+      for (const z of [-1, 1]) {
+        const projected = new Vector3(x, y, z).project(camera);
+        expect(Math.abs(projected.x)).toBeLessThan(1);
+        expect(Math.abs(projected.y)).toBeLessThan(1);
+      }
+    }
+  }
+});

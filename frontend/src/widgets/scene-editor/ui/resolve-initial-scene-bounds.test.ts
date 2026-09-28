@@ -17,10 +17,14 @@ it("waits for all initial clouds, ignoring clouds added after scene load", () =>
   expect(resolveInitialSceneBounds(initial, current, ready, failed)).toEqual({
     center: [0, 0, 0],
     radius: 6,
+    min: [-6, -1, -1],
+    max: [6, 1, 1],
   });
   current.delete("right");
   expect(resolveInitialSceneBounds(initial, current, ready, failed)).toEqual({
     center: [-5, 0, 0],
     radius: 1,
+    min: [-6, -1, -1],
+    max: [-4, 1, 1],
   });
 });

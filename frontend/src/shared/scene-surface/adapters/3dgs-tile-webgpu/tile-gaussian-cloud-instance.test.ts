@@ -25,7 +25,13 @@ describe("TileGaussianCloudInstance raycasting", () => {
         point: new Vector3(0, 0, -2),
       });
     });
-    new TileGaussianCloudInstance(cloud, [-1, -1, -1, 1, 1, 1], vi.fn());
+    const instance = new TileGaussianCloudInstance(
+      cloud,
+      [-1, -1, -1, 1, 1, 1],
+      vi.fn(),
+    );
+    expect(instance.bounds?.min).toEqual([-1, -1, -1]);
+    expect(instance.bounds?.max).toEqual([1, 1, 1]);
     const raycaster = new Raycaster(new Vector3(), new Vector3(0, 0, -1));
 
     expect(raycaster.intersectObjects([cloud, trajectory])[0]?.object).toBe(
