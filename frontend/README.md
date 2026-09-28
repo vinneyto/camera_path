@@ -32,10 +32,10 @@ Place a canonical 3DGS file at `public/mug.ply`. The same frontend-only cloud is
 project; the backend does not store or configure it yet.
 
 The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-The Spark/WebGL adapter remains in the repository only as an example of an alternative renderer
-integration. It is not a supported product path, does not need feature parity, and may throw explicit
-errors for unsupported operations. `?renderer=webgl` can still be used when working specifically
-with that reference implementation.
+The Settings panel in the project header enables the WebGPU tile renderer by default. Uncheck it
+to switch to the Spark/WebGL reference adapter. The choice is saved in this browser. Spark does not
+have feature parity with the supported WebGPU renderer and may throw explicit errors for unsupported
+operations.
 
 Start the backend first, then:
 
