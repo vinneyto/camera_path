@@ -40,12 +40,6 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       emptyMessage: "Upload a PLY to the library first.",
     },
     {
-      id: "toggle-grid",
-      label: showGrid ? "Grid: Hide" : "Grid: Show",
-      checked: showGrid,
-      onSelect: toggleGrid,
-    },
-    {
       id: "remove-cloud",
       label: "Cloud: Remove",
       items: clouds.map((cloud, index) => ({
@@ -57,6 +51,12 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       loading: projectClouds.isPending,
       error: projectClouds.error ? "Could not load project clouds." : undefined,
       emptyMessage: "This project has no clouds yet.",
+    },
+    {
+      id: "toggle-grid",
+      label: showGrid ? "Grid: Hide" : "Grid: Show",
+      checked: showGrid,
+      onSelect: toggleGrid,
     },
   ];
 

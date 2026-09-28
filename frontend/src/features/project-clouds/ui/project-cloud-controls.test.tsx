@@ -64,6 +64,9 @@ describe("project cloud controls", () => {
     );
     fireEvent.focus(screen.getByRole("combobox"));
     expect(
+      screen.getAllByRole("option").map((option) => option.textContent),
+    ).toEqual(["Cloud: Add", "Cloud: Remove", "Grid: Hide"]);
+    expect(
       screen.getByRole("option", { name: "Grid: Hide" }).querySelector("svg"),
     ).not.toBeNull();
     openAddCloud();
