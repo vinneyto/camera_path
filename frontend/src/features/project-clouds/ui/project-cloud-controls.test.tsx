@@ -45,7 +45,7 @@ function PlacementState() {
 function openAddCloud() {
   const search = screen.getByRole("combobox");
   fireEvent.focus(search);
-  fireEvent.click(screen.getByRole("option", { name: "Add cloud" }));
+  fireEvent.click(screen.getByRole("option", { name: "Cloud: Add" }));
   fireEvent.click(screen.getByRole("option", { name: "Mug" }));
 }
 
@@ -64,7 +64,7 @@ describe("project cloud controls", () => {
     );
     fireEvent.focus(screen.getByRole("combobox"));
     expect(
-      screen.getByRole("option", { name: "Hide grid" }).querySelector("svg"),
+      screen.getByRole("option", { name: "Grid: Hide" }).querySelector("svg"),
     ).not.toBeNull();
     openAddCloud();
     expect(screen.getByTestId("pending-cloud").textContent).toBe("Mug");

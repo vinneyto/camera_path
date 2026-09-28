@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 
 import { type Project, type Vec3 } from "@/entities/project";
@@ -51,6 +52,9 @@ export function SceneViewportContainer({
   const anchors = Object.values(project.anchors);
   const cloudsQuery = useListProjectClouds(projectId);
   const clouds = (cloudsQuery.data?.data ?? []) as ProjectCloud[];
+  const [initialCloudIds, setInitialCloudIds] = useState<string[] | null>(null);
+  if (cloudsQuery.isSuccess && initialCloudIds === null)
+    setInitialCloudIds(clouds.map((cloud) => cloud.id));
   const mutating =
     addAnchorMutation.isPending ||
     updateAnchorMutation.isPending ||
@@ -95,6 +99,7 @@ export function SceneViewportContainer({
       <Viewport
         anchors={anchors}
         clouds={clouds}
+        initialCloudIds={initialCloudIds}
         bottomOverlayHeight={bottomOverlayHeight}
         deletingTrajectory={deletingTrajectory}
         onAddAnchor={(position, normal) => void addAnchor(position, normal)}

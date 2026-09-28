@@ -49,6 +49,7 @@ const GAUSSIAN_CLOUD_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 interface SceneContentsProps {
   anchors: Anchor[];
   clouds: ProjectCloud[];
+  initialCloudIds: string[] | null;
   background: SceneSurfaceBackground;
   dark: boolean;
   depthOfFieldSupported?: boolean;
@@ -69,6 +70,7 @@ interface SceneContentsProps {
 export function SceneContents({
   anchors,
   clouds,
+  initialCloudIds,
   background,
   dark,
   depthOfFieldSupported = false,
@@ -125,9 +127,6 @@ export function SceneContents({
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   const [surfaceRadius, setSurfaceRadius] = useState<number | null>(null);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
-  useEffect(() => {
-    if (clouds.length === 0) framedFirstCloud.current = false;
-  }, [clouds.length]);
   useStopOrbitControlsInertia(
     orbitControlsRef,
     cameraMode === "orbit" && activeTool !== null,
@@ -145,7 +144,7 @@ export function SceneContents({
   function handleSurfaceReady(cloudId: string, surface: SceneSurfaceReady) {
     cloudPlacement.finishPlacement(cloudId);
     setSurfaceRadius((radius) => Math.max(radius ?? 0, surface.bounds.radius));
-    if (!framedFirstCloud.current) {
+    if (!framedFirstCloud.current && initialCloudIds?.includes(cloudId)) {
       framedFirstCloud.current = true;
       frameSurface(camera, surface.bounds, setOrbitTarget);
     }

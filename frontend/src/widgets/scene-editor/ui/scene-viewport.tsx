@@ -27,6 +27,7 @@ export function SceneViewport(props: SceneViewportProps) {
           <SceneContents
             anchors={props.anchors}
             clouds={props.clouds}
+            initialCloudIds={props.initialCloudIds}
             background={context.background}
             dark={context.dark}
             onAddAnchor={props.onAddAnchor}

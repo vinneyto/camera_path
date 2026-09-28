@@ -6,6 +6,10 @@ import type {
   SceneSurfaceHit,
   SceneSurfaceProps,
 } from "@/shared/scene-surface";
+import {
+  RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
+  useOptionalRenderPipeline,
+} from "@/shared/three";
 
 type PlacementEvents = Pick<
   SceneSurfaceProps,
@@ -27,6 +31,16 @@ export function SceneGrid({
   interactive,
   placementEvents,
 }: SceneGridProps) {
+  const pipeline = useOptionalRenderPipeline();
+
+  function assignRenderLayer(object: {
+    layers: { set: (layer: number) => void };
+  }) {
+    object.layers.set(
+      pipeline ? RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER : 0,
+    );
+  }
+
   function isFrontmost(event: ThreeEvent<PointerEvent>) {
     return event.intersections[0]?.object === event.object;
   }
@@ -48,17 +62,19 @@ export function SceneGrid({
             placementEvents.onSurfacePointerMove?.(hit(event), event);
         }}
         onPointerOut={placementEvents.onPointerOut}
+        onUpdate={assignRenderLayer}
         onPointerUp={(event) => {
           if (isFrontmost(event))
             placementEvents.onSurfacePointerUp?.(hit(event), event);
         }}
         raycast={interactive ? undefined : () => undefined}
+        renderOrder={0}
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[40, 40]} />
         <meshBasicMaterial
           color={dark ? "#8291aa" : "#94a3b8"}
-          depthWrite={false}
+          depthWrite={Boolean(pipeline)}
           opacity={dark ? 0.045 : 0.09}
           side={DoubleSide}
           transparent
@@ -67,11 +83,13 @@ export function SceneGrid({
       <gridHelper
         args={[40, 40]}
         position={[0, 0.002, 0]}
+        onUpdate={assignRenderLayer}
         raycast={() => undefined}
+        renderOrder={1}
       >
         <lineBasicMaterial
           color={dark ? "#9baac3" : "#526073"}
-          depthWrite={false}
+          depthWrite={Boolean(pipeline)}
           opacity={dark ? 0.28 : 0.22}
           transparent
         />

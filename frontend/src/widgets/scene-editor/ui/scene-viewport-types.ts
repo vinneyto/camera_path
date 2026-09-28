@@ -9,6 +9,7 @@ import type { ContextMenuPosition } from "@/shared/ui";
 export interface SceneViewportProps {
   anchors: Anchor[];
   clouds: ProjectCloud[];
+  initialCloudIds: string[] | null;
   bottomOverlayHeight?: number;
   deletingTrajectory: boolean;
   pathPosition: number;

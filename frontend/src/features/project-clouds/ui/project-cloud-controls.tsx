@@ -26,7 +26,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const commands: CommandPaletteCommand[] = [
     {
       id: "add-cloud",
-      label: "Add cloud",
+      label: "Cloud: Add",
       items: assets.map((asset) => ({ id: asset.id, label: asset.name })),
       onSelectItem: (assetId) => {
         const asset = assets.find((item) => item.id === assetId);
@@ -41,13 +41,13 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
     },
     {
       id: "toggle-grid",
-      label: showGrid ? "Hide grid" : "Show grid",
+      label: showGrid ? "Grid: Hide" : "Grid: Show",
       checked: showGrid,
       onSelect: toggleGrid,
     },
     {
       id: "remove-cloud",
-      label: "Remove cloud",
+      label: "Cloud: Remove",
       items: clouds.map((cloud, index) => ({
         id: cloud.id,
         label: `${cloud.name} · ${index + 1} · ${cloud.id.slice(0, 8)}`,
