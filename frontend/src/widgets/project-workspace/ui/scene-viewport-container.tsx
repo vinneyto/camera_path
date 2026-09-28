@@ -52,9 +52,19 @@ export function SceneViewportContainer({
   const anchors = Object.values(project.anchors);
   const cloudsQuery = useListProjectClouds(projectId);
   const clouds = (cloudsQuery.data?.data ?? []) as ProjectCloud[];
-  const [initialCloudIds, setInitialCloudIds] = useState<string[] | null>(null);
-  if (cloudsQuery.isSuccess && initialCloudIds === null)
-    setInitialCloudIds(clouds.map((cloud) => cloud.id));
+  const [initialCloudSnapshot, setInitialCloudSnapshot] = useState<{
+    projectId: string;
+    ids: string[];
+  } | null>(null);
+  if (cloudsQuery.isSuccess && initialCloudSnapshot?.projectId !== projectId)
+    setInitialCloudSnapshot({
+      projectId,
+      ids: clouds.map((cloud) => cloud.id),
+    });
+  const initialCloudIds =
+    initialCloudSnapshot?.projectId === projectId
+      ? initialCloudSnapshot.ids
+      : null;
   const mutating =
     addAnchorMutation.isPending ||
     updateAnchorMutation.isPending ||
@@ -97,6 +107,7 @@ export function SceneViewportContainer({
   return (
     <>
       <Viewport
+        key={projectId}
         anchors={anchors}
         clouds={clouds}
         initialCloudIds={initialCloudIds}
