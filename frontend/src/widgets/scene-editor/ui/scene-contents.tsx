@@ -125,8 +125,8 @@ export function SceneContents({
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const framedInitialScene = useRef(false);
-  const initialBounds = useRef(new Map<string, SceneSurfaceReady["bounds"]>());
-  const initialErrors = useRef(new Set<string>());
+  const cloudBounds = useRef(new Map<string, SceneSurfaceReady["bounds"]>());
+  const cloudErrors = useRef(new Set<string>());
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   const [surfaceRadius, setSurfaceRadius] = useState<number | null>(null);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
@@ -144,42 +144,43 @@ export function SceneContents({
     renderingBackend.invalidate();
   }, [anchors, renderingBackend]);
 
-  function tryFrameInitialScene() {
-    if (framedInitialScene.current || !initialCloudIds?.length) return;
+  function fitClouds(cloudIds: readonly string[]): boolean {
     const currentIds = new Set(clouds.map((cloud) => cloud.id));
     const bounds = resolveInitialSceneBounds(
-      initialCloudIds,
+      cloudIds,
       currentIds,
-      initialBounds.current,
-      initialErrors.current,
+      cloudBounds.current,
+      cloudErrors.current,
     );
-    if (bounds === undefined) return;
-    if (bounds === null) return;
-    framedInitialScene.current = true;
+    if (bounds === undefined || bounds === null) return false;
     frameSurface(camera, bounds, setOrbitTarget);
+    return true;
+  }
+
+  function tryFrameInitialScene() {
+    if (framedInitialScene.current || !initialCloudIds?.length) return;
+    if (fitClouds(initialCloudIds)) framedInitialScene.current = true;
   }
 
   function handleSurfaceReady(cloudId: string, surface: SceneSurfaceReady) {
     cloudPlacement.finishPlacement(cloudId);
     setSurfaceRadius((radius) => Math.max(radius ?? 0, surface.bounds.radius));
-    if (initialCloudIds?.includes(cloudId)) {
-      initialBounds.current.set(cloudId, surface.bounds);
-      initialErrors.current.delete(cloudId);
-      tryFrameInitialScene();
-    }
+    cloudBounds.current.set(cloudId, surface.bounds);
+    cloudErrors.current.delete(cloudId);
+    tryFrameInitialScene();
     onSurfaceReady(cloudId);
   }
 
   function handleSurfaceError(cloudId: string, error: Error) {
-    if (initialCloudIds?.includes(cloudId)) {
-      initialErrors.current.add(cloudId);
-      tryFrameInitialScene();
-    }
+    cloudBounds.current.delete(cloudId);
+    cloudErrors.current.add(cloudId);
+    tryFrameInitialScene();
     onSurfaceError(cloudId, error);
   }
 
   function handleSurfaceLoading(cloudId: string) {
-    initialErrors.current.delete(cloudId);
+    cloudBounds.current.delete(cloudId);
+    cloudErrors.current.delete(cloudId);
     onSurfaceLoading(cloudId);
   }
 
