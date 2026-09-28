@@ -82,14 +82,14 @@ export function SceneGrid({
       </mesh>
       <gridHelper
         args={[40, 40]}
-        position={[0, 0.002, 0]}
         onUpdate={assignRenderLayer}
         raycast={() => undefined}
         renderOrder={1}
       >
         <lineBasicMaterial
           color={dark ? "#9baac3" : "#526073"}
-          depthWrite={Boolean(pipeline)}
+          depthTest={false}
+          depthWrite={false}
           opacity={dark ? 0.28 : 0.22}
           transparent
         />
