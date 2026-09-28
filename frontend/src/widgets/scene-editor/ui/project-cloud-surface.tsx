@@ -5,6 +5,8 @@ import type { ProjectCloud } from "@/shared/api/generated/model";
 import { SceneSurface } from "@/shared/scene-surface";
 import type { SceneSurfaceProps } from "@/shared/scene-surface/model/scene-surface-types";
 
+import { transformProjectCloudBounds } from "./transform-project-cloud-bounds";
+
 interface ProjectCloudSurfaceProps extends Omit<SceneSurfaceProps, "source"> {
   cloud: ProjectCloud;
 }
@@ -12,6 +14,7 @@ interface ProjectCloudSurfaceProps extends Omit<SceneSurfaceProps, "source"> {
 export function ProjectCloudSurface({
   cloud,
   resourceKey,
+  onReady,
   ...props
 }: ProjectCloudSurfaceProps) {
   // Keep the source stable so editing another part of the scene does not reload the file.
@@ -19,6 +22,9 @@ export function ProjectCloudSurface({
     () => ({ kind: "url" as const, url: cloud.download_url }),
     [cloud.download_url],
   );
+  function handleReady(surface: Parameters<NonNullable<typeof onReady>>[0]) {
+    onReady?.({ bounds: transformProjectCloudBounds(surface.bounds, cloud) });
+  }
   return (
     <group
       position={cloud.translation}
@@ -33,6 +39,7 @@ export function ProjectCloudSurface({
         name={cloud.id}
         resourceKey={resourceKey}
         position={cloud.offset}
+        onReady={handleReady}
         source={source}
       />
     </group>
