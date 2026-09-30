@@ -5,7 +5,7 @@ import {
   useListProjectClouds,
 } from "@/shared/api/generated/client";
 import type { LibraryAsset, ProjectCloud } from "@/shared/api/generated/model";
-import { useCloudPlacement } from "@/features/project-editor";
+import { useCloudPlacement, useSceneGrid } from "@/features/project-editor";
 import {
   CommandPalette,
   type CommandPaletteCommand,
@@ -18,6 +18,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
   const placement = useCloudPlacement();
+  const { showGrid, toggleGrid } = useSceneGrid();
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
     (asset) => asset.status === "ready",
   );
@@ -25,12 +26,13 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const commands: CommandPaletteCommand[] = [
     {
       id: "add-cloud",
-      label: "Add cloud",
+      label: "Cloud: Add",
       items: assets.map((asset) => ({ id: asset.id, label: asset.name })),
       onSelectItem: (assetId) => {
         const asset = assets.find((item) => item.id === assetId);
         if (!asset) return;
-        if (clouds.length === 0) actions.mutate({ type: "add", assetId });
+        if (clouds.length === 0 && !showGrid)
+          actions.mutate({ type: "add", assetId });
         else placement.start(asset);
       },
       loading: library.isPending,
@@ -39,7 +41,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
     },
     {
       id: "remove-cloud",
-      label: "Remove cloud",
+      label: "Cloud: Remove",
       items: clouds.map((cloud, index) => ({
         id: cloud.id,
         label: `${cloud.name} · ${index + 1} · ${cloud.id.slice(0, 8)}`,
@@ -49,6 +51,12 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       loading: projectClouds.isPending,
       error: projectClouds.error ? "Could not load project clouds." : undefined,
       emptyMessage: "This project has no clouds yet.",
+    },
+    {
+      id: "toggle-grid",
+      label: showGrid ? "Grid: Hide" : "Grid: Show",
+      checked: showGrid,
+      onSelect: toggleGrid,
     },
   ];
 

@@ -20,12 +20,17 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
   ) {
     this.object = cloud;
     cloud.updateWorldMatrix(true, false);
-    const sphere = new Box3(
+    const box = new Box3(
       new Vector3(bounds[0], bounds[1], bounds[2]),
       new Vector3(bounds[3], bounds[4], bounds[5]),
-    ).getBoundingSphere(new Sphere());
-    sphere.applyMatrix4(cloud.matrixWorld);
-    this.bounds = { center: sphere.center.toArray(), radius: sphere.radius };
+    ).applyMatrix4(cloud.matrixWorld);
+    const sphere = box.getBoundingSphere(new Sphere());
+    this.bounds = {
+      center: sphere.center.toArray(),
+      radius: sphere.radius,
+      min: box.min.toArray(),
+      max: box.max.toArray(),
+    };
   }
 
   dispose(): void {

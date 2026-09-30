@@ -16,6 +16,7 @@ import {
   useCloudPlacement,
   useCameraMode,
   useEditorHoverCursor,
+  useSceneGrid,
 } from "@/features/project-editor";
 import {
   SceneSurfaceProvider,
@@ -33,8 +34,10 @@ import { CloudPlacementPreview } from "./cloud-placement-preview";
 import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
+import { resolveInitialSceneBounds } from "./resolve-initial-scene-bounds";
 import { PlaybackCamera } from "./playback-camera";
 import { ProjectCloudSurface } from "./project-cloud-surface";
+import { SceneGrid } from "./scene-grid";
 import { TrajectoryLine } from "./trajectory-line";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
 import { useAnchorPlacement } from "./use-anchor-placement";
@@ -47,6 +50,7 @@ const GAUSSIAN_CLOUD_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 interface SceneContentsProps {
   anchors: Anchor[];
   clouds: ProjectCloud[];
+  initialCloudIds: string[] | null;
   background: SceneSurfaceBackground;
   dark: boolean;
   depthOfFieldSupported?: boolean;
@@ -67,6 +71,7 @@ interface SceneContentsProps {
 export function SceneContents({
   anchors,
   clouds,
+  initialCloudIds,
   background,
   dark,
   depthOfFieldSupported = false,
@@ -85,6 +90,7 @@ export function SceneContents({
 }: SceneContentsProps) {
   const camera = useThree((state) => state.camera);
   const activeTool = useActiveEditorTool();
+  const { showGrid } = useSceneGrid();
   const { cameraMode, setCameraMode } = useCameraMode();
   useEditorHoverCursor();
   const gaussianDprMode = useGaussianRenderingSettingsStore(
@@ -118,13 +124,12 @@ export function SceneContents({
     onCommit: onUpdateAnchorLift,
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
-  const framedFirstCloud = useRef(false);
+  const framedInitialScene = useRef(false);
+  const cloudBounds = useRef(new Map<string, SceneSurfaceReady["bounds"]>());
+  const cloudErrors = useRef(new Set<string>());
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
   const [surfaceRadius, setSurfaceRadius] = useState<number | null>(null);
   const trajectoryAvailable = Boolean(trajectory?.position_segments.length);
-  useEffect(() => {
-    if (clouds.length === 0) framedFirstCloud.current = false;
-  }, [clouds.length]);
   useStopOrbitControlsInertia(
     orbitControlsRef,
     cameraMode === "orbit" && activeTool !== null,
@@ -139,14 +144,44 @@ export function SceneContents({
     renderingBackend.invalidate();
   }, [anchors, renderingBackend]);
 
+  function fitClouds(cloudIds: readonly string[]): boolean {
+    const currentIds = new Set(clouds.map((cloud) => cloud.id));
+    const bounds = resolveInitialSceneBounds(
+      cloudIds,
+      currentIds,
+      cloudBounds.current,
+      cloudErrors.current,
+    );
+    if (bounds === undefined || bounds === null) return false;
+    frameSurface(camera, bounds, setOrbitTarget);
+    return true;
+  }
+
+  function tryFrameInitialScene() {
+    if (framedInitialScene.current || !initialCloudIds?.length) return;
+    if (fitClouds(initialCloudIds)) framedInitialScene.current = true;
+  }
+
   function handleSurfaceReady(cloudId: string, surface: SceneSurfaceReady) {
     cloudPlacement.finishPlacement(cloudId);
     setSurfaceRadius((radius) => Math.max(radius ?? 0, surface.bounds.radius));
-    if (!framedFirstCloud.current) {
-      framedFirstCloud.current = true;
-      frameSurface(camera, surface.bounds, setOrbitTarget);
-    }
+    cloudBounds.current.set(cloudId, surface.bounds);
+    cloudErrors.current.delete(cloudId);
+    tryFrameInitialScene();
     onSurfaceReady(cloudId);
+  }
+
+  function handleSurfaceError(cloudId: string, error: Error) {
+    cloudBounds.current.delete(cloudId);
+    cloudErrors.current.add(cloudId);
+    tryFrameInitialScene();
+    onSurfaceError(cloudId, error);
+  }
+
+  function handleSurfaceLoading(cloudId: string) {
+    cloudBounds.current.delete(cloudId);
+    cloudErrors.current.delete(cloudId);
+    onSurfaceLoading(cloudId);
   }
 
   function handleOrbitEnd() {
@@ -167,8 +202,8 @@ export function SceneContents({
           key={cloud.id}
           resourceKey={cloudPlacement.resourceKeyForCloud(cloud.id)}
           renderObject={cloud.id !== cloudPlacement.placedCloudId}
-          onError={(error) => onSurfaceError(cloud.id, error)}
-          onLoading={() => onSurfaceLoading(cloud.id)}
+          onError={(error) => handleSurfaceError(cloud.id, error)}
+          onLoading={() => handleSurfaceLoading(cloud.id)}
           onReady={(surface) => handleSurfaceReady(cloud.id, surface)}
           raycastable={cloud.visible && isGaussianSurfacePickActive(activeTool)}
           {...(editorVisible
@@ -178,6 +213,17 @@ export function SceneContents({
             : {})}
         />
       ))}
+      {showGrid && (
+        <SceneGrid
+          dark={dark}
+          interactive={cameraMode === "orbit"}
+          placementEvents={
+            activeTool === "cloud"
+              ? cloudPlacement.surfaceEventProps
+              : placement.surfaceEventProps
+          }
+        />
+      )}
       <ambientLight intensity={dark ? 0.8 : 1.25} />
       <directionalLight
         castShadow

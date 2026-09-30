@@ -113,4 +113,44 @@ describe("CommandPalette", () => {
       "Could not load clouds.",
     );
   });
+
+  it("marks enabled toggle commands in the list", () => {
+    const toggleGrid = vi.fn();
+    const { rerender } = render(
+      <CommandPalette
+        commands={[
+          {
+            id: "grid",
+            label: "Hide grid",
+            checked: true,
+            onSelect: toggleGrid,
+          },
+        ]}
+      />,
+    );
+    const search = screen.getByRole("combobox");
+    fireEvent.focus(search);
+    expect(
+      screen.getByRole("option", { name: "Hide grid" }).querySelector("svg"),
+    ).not.toBeNull();
+    fireEvent.click(screen.getByRole("option", { name: "Hide grid" }));
+    expect(toggleGrid).toHaveBeenCalledOnce();
+
+    rerender(
+      <CommandPalette
+        commands={[
+          {
+            id: "grid",
+            label: "Show grid",
+            checked: false,
+            onSelect: toggleGrid,
+          },
+        ]}
+      />,
+    );
+    fireEvent.focus(search);
+    expect(
+      screen.getByRole("option", { name: "Show grid" }).querySelector("svg"),
+    ).toBeNull();
+  });
 });

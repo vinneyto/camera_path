@@ -23,6 +23,7 @@ import { compositePremultipliedOver } from "./composite-premultiplied-over";
 import { createPerspectiveViewDepthNode } from "./create-perspective-view-depth-node";
 import {
   RENDER_PIPELINE_OVERLAY_LAYER,
+  RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
 } from "./render-pipeline-scene-layers";
 import type {
@@ -38,6 +39,7 @@ interface PipelineResources {
   opaque: ReturnType<typeof scenePass>;
   overlay: ReturnType<typeof scenePass>;
   pipeline: RenderPipeline;
+  preSplatTransparent: ReturnType<typeof scenePass>;
   transparent: ReturnType<typeof scenePass>;
 }
 
@@ -69,7 +71,12 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
       (left, right) =>
         left.order - right.order || left.sequence - right.sequence,
     );
-    let output: Node<"vec4"> = resources.opaque;
+    let output: Node<"vec4"> = compositeDepthTestedPremultipliedOver(
+      resources.opaque,
+      resources.preSplatTransparent,
+      resources.opaque.getViewZNode(),
+      resources.preSplatTransparent.getViewZNode(),
+    );
     let sceneDepth: Node<"float"> = resources.opaque.getTextureNode("depth").r;
     for (const layer of layers) {
       output = compositePremultipliedOver(output, layer.node);
@@ -171,11 +178,18 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     sceneLayers.set(RENDER_PIPELINE_SCENE_LAYER);
     const overlayLayers = new Layers();
     overlayLayers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+    const preSplatLayers = new Layers();
+    preSplatLayers.set(RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER);
 
     const opaque = scenePass(scene, camera);
     opaque.opaque = true;
     opaque.transparent = false;
     opaque.setLayers(sceneLayers);
+
+    const preSplatTransparent = scenePass(scene, camera);
+    preSplatTransparent.opaque = false;
+    preSplatTransparent.transparent = true;
+    preSplatTransparent.setLayers(preSplatLayers);
 
     const transparent = scenePass(scene, camera);
     transparent.opaque = false;
@@ -188,12 +202,19 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     overlay.setLayers(overlayLayers);
 
     const pipeline = new RenderPipeline(renderer, opaque);
-    resourcesRef.current = { opaque, overlay, pipeline, transparent };
+    resourcesRef.current = {
+      opaque,
+      overlay,
+      pipeline,
+      preSplatTransparent,
+      transparent,
+    };
     rebuildOutput();
     return () => {
       resourcesRef.current = null;
       pipeline.dispose();
       opaque.dispose();
+      preSplatTransparent.dispose();
       transparent.dispose();
       overlay.dispose();
     };
