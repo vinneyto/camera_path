@@ -12,6 +12,7 @@ import {
   useTrajectoryPlayback,
   useTrajectorySelection,
 } from "@/features/project-editor";
+import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
 import { useClearTrajectory } from "@/features/object-deletion";
 
 import { ChatPanelContainer } from "./chat-panel-container";
@@ -20,13 +21,12 @@ import { ProjectScene } from "./project-scene";
 
 interface ProjectWorkspaceProps {
   projectId: string;
-  rendererBackend?: "webgl" | "webgpu";
 }
 
-export function ProjectWorkspace({
-  projectId,
-  rendererBackend = "webgpu",
-}: ProjectWorkspaceProps) {
+export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
+  const webGpuTileRenderer = useGaussianRenderingSettingsStore(
+    (state) => state.webGpuTileRenderer,
+  );
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const project = projectQuery.data;
@@ -78,7 +78,7 @@ export function ProjectWorkspace({
           onDeleteTrajectory={() => void clearTrajectory()}
           project={project}
           projectId={projectId}
-          rendererBackend={rendererBackend}
+          rendererBackend={webGpuTileRenderer ? "webgpu" : "webgl"}
           trajectory={trajectory}
         />
       </div>

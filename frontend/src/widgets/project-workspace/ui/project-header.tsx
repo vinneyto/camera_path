@@ -2,7 +2,10 @@ import Link from "next/link";
 import { ArrowLeft, Boxes, MapPin } from "lucide-react";
 
 import type { Project } from "@/entities/project";
-import { GaussianDprSelect } from "@/features/gaussian-rendering-settings";
+import {
+  GaussianDprSelect,
+  RenderingSettingsPanel,
+} from "@/features/gaussian-rendering-settings";
 import { ProjectCloudControls } from "@/features/project-clouds";
 import { ThemeToggle } from "@/features/theme-switcher";
 import { Badge, Button, FLOATING_PANEL_Z_INDEX } from "@/shared/ui";
@@ -42,6 +45,7 @@ export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
         <div className="hidden lg:block">
           <GaussianDprSelect />
         </div>
+        <RenderingSettingsPanel />
         <ThemeToggle />
         <Badge className="hidden gap-1 2xl:inline-flex">
           <MapPin className="size-2.5" />
