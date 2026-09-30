@@ -43,7 +43,10 @@ export async function invalidateProjectResource(
   if (resource !== "chat") {
     affected.push(projectKeys.trajectory(projectId));
   }
-  await Promise.all(
-    affected.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-  );
+  await Promise.all([
+    ...affected.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+    ...(resource === "anchors" || resource === "segments" || resource === "all"
+      ? [queryClient.invalidateQueries({ queryKey: projectKeys.list() })]
+      : []),
+  ]);
 }
