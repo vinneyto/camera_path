@@ -78,7 +78,9 @@ speed and camera-aim panels. Playback uses the compiled speed profile and camera
 ### Cloud placement
 
 All library clouds enter placement mode, including the first cloud in an empty scene.
-The preview follows the nearest raycast hit on an existing visible cloud or the visible grid.
+The preview follows the nearest raycast hit on an existing visible cloud. The visible grid
+is a fallback when no cloud is hit, even if it is geometrically closer: WebGPU composites
+the grid underneath splats. Anchor pointer events use the same pass ordering.
 When the ray misses, the preview stays at the origin; clicking confirms that default position.
 Escape cancels placement. The preview is excluded from placement raycasts.
 

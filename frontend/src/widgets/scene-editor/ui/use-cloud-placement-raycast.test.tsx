@@ -27,7 +27,7 @@ afterEach(cleanup);
 
 describe("cloud placement canvas raycasts", () => {
   it.each(["mouse", "touch"])(
-    "uses nearest hits and the stationary origin fallback with %s",
+    "picks splats before the grid and uses the stationary origin fallback with %s",
     (pointerType) => {
       const scene = new Scene();
       const camera = new PerspectiveCamera(60, 1, 0.1, 100);
@@ -87,9 +87,23 @@ describe("cloud placement canvas raycasts", () => {
       scene.add(preview);
       pointer("pointermove");
       expect(result.current.placement.preview?.hit.position).toEqual([0, 0, 2]);
+      // The grid is drawn under splats even when its intersection is closer.
+      grid.position.z = 4;
+      pointer("pointermove");
+      expect(result.current.placement.preview?.hit.position).toEqual([0, 0, 2]);
+      pointer("pointerdown");
+      pointer("pointerup");
+      expect(onPlace).toHaveBeenCalledExactlyOnceWith("asset", [0, 0, 2]);
+      onPlace.mockClear();
+      act(() => result.current.tool.start(asset));
       model.visible = false;
       pointer("pointermove");
-      expect(result.current.placement.preview?.hit.position).toEqual([0, 0, 0]);
+      expect(result.current.placement.preview?.hit.position).toEqual([0, 0, 4]);
+      pointer("pointerdown");
+      pointer("pointerup");
+      expect(onPlace).toHaveBeenCalledExactlyOnceWith("asset", [0, 0, 4]);
+      onPlace.mockClear();
+      act(() => result.current.tool.start(asset));
       grid.position.z = -1;
       pointer("pointermove");
       expect(result.current.placement.preview?.hit.position).toEqual([

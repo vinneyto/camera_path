@@ -1,5 +1,6 @@
 import type { Object3D, Raycaster } from "three";
 import type { SceneSurfaceHit } from "@/shared/scene-surface";
+import { sortRenderPipelineIntersections } from "@/shared/three";
 
 export function raycastPlacementSurfaces(
   scene: Object3D,
@@ -10,7 +11,9 @@ export function raycastPlacementSurfaces(
   scene.traverseVisible((object) => {
     if (object.userData.sceneSurfacePickable) targets.push(object);
   });
-  const hit = raycaster.intersectObjects(targets, false)[0];
+  const hit = sortRenderPipelineIntersections(
+    raycaster.intersectObjects(targets, false),
+  )[0];
   if (!hit) return null;
   return {
     position: hit.point.toArray(),

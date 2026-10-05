@@ -1,4 +1,5 @@
 export { RenderPipelineCanvas } from "./render-pipeline-canvas";
+export { sortRenderPipelineIntersections } from "./sort-render-pipeline-intersections";
 export { DepthOfField } from "./depth-of-field";
 export { forEachCenterWeightedAutofocusRay } from "./for-each-center-weighted-autofocus-ray";
 export {
