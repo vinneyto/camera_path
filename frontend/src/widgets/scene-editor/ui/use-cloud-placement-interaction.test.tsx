@@ -39,23 +39,11 @@ describe("cloud placement", () => {
     } as unknown as ThreeEvent<PointerEvent>;
 
     act(() => result.current.tool.start(asset));
-    act(() =>
-      result.current.placement.surfaceEventProps.onSurfacePointerMove(
-        hit,
-        event,
-      ),
-    );
+    act(() => result.current.placement.pointerEvents.onPointerMove(hit, event));
     expect(result.current.placement.preview?.hit.position).toEqual([1, 2, 3]);
     expect(onPlace).not.toHaveBeenCalled();
-    act(() =>
-      result.current.placement.surfaceEventProps.onSurfacePointerDown(
-        hit,
-        event,
-      ),
-    );
-    act(() =>
-      result.current.placement.surfaceEventProps.onSurfacePointerUp(hit, event),
-    );
+    act(() => result.current.placement.pointerEvents.onPointerDown(hit, event));
+    act(() => result.current.placement.pointerEvents.onPointerUp(hit, event));
     expect(onPlace).toHaveBeenCalledExactlyOnceWith("asset", [1, 2, 3]);
     expect(result.current.tool.pendingCloud).toBeNull();
     expect(result.current.placement.placed?.hit.position).toEqual([1, 2, 3]);
@@ -111,14 +99,9 @@ describe("cloud placement", () => {
     } as unknown as ThreeEvent<PointerEvent>;
 
     act(() => result.current.tool.start({ id: "asset" } as LibraryAsset));
-    act(() =>
-      result.current.placement.surfaceEventProps.onSurfacePointerDown(
-        hit,
-        event,
-      ),
-    );
+    act(() => result.current.placement.pointerEvents.onPointerDown(hit, event));
     await act(async () => {
-      result.current.placement.surfaceEventProps.onSurfacePointerUp(hit, event);
+      result.current.placement.pointerEvents.onPointerUp(hit, event);
       await Promise.resolve();
     });
 

@@ -8,6 +8,7 @@ import { useGaussianCloudResourceCache } from "./scene-surface-provider";
 
 interface LoadedGaussianCloud {
   instance: GaussianCloudInstance;
+  resourceKey: string | undefined;
   name: string | undefined;
   source: GaussianCloudSource;
 }
@@ -37,7 +38,14 @@ export function useGaussianCloud({
     source: GaussianCloudSource;
   } | null>(null);
   const cloud =
-    loaded?.source === source && loaded.name === name ? loaded.instance : null;
+    loaded &&
+    (resourceKey === undefined
+      ? loaded.resourceKey === undefined &&
+        loaded.source === source &&
+        loaded.name === name
+      : loaded.resourceKey === resourceKey)
+      ? loaded.instance
+      : null;
   const error =
     failed?.source === source && failed.name === name ? failed.error : null;
 
@@ -48,7 +56,7 @@ export function useGaussianCloud({
       .then((result) => {
         if (!active) return;
         setFailed(null);
-        setLoaded({ instance: result, name, source });
+        setLoaded({ instance: result, name, source, resourceKey });
       })
       .catch((reason: unknown) => {
         if (!active) return;

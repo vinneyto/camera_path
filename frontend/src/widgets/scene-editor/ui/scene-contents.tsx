@@ -1,6 +1,6 @@
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
@@ -30,13 +30,14 @@ import type { ContextMenuPosition } from "@/shared/ui";
 import { AnchorMarker } from "./anchor-marker";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
-import { CloudPlacementPreview } from "./cloud-placement-preview";
+import { SceneClouds } from "./scene-clouds";
+import { SurfaceTargetRing } from "./surface-target-ring";
+import { useCloudPlacementRaycast } from "./use-cloud-placement-raycast";
 import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { resolveInitialSceneBounds } from "./resolve-initial-scene-bounds";
 import { PlaybackCamera } from "./playback-camera";
-import { ProjectCloudSurface } from "./project-cloud-surface";
 import { SceneGrid } from "./scene-grid";
 import { TrajectoryLine } from "./trajectory-line";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
@@ -119,6 +120,10 @@ export function SceneContents({
     clouds,
   });
   const { pendingCloud } = useCloudPlacement();
+  useCloudPlacementRaycast(
+    cameraMode === "orbit" && pendingCloud !== null,
+    cloudPlacement,
+  );
   const heightEditing = useAnchorHeightEditing({
     anchors,
     onCommit: onUpdateAnchorLift,
@@ -196,31 +201,27 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
-      {clouds.map((cloud) => (
-        <ProjectCloudSurface
-          cloud={cloud}
-          key={cloud.id}
-          resourceKey={cloudPlacement.resourceKeyForCloud(cloud.id)}
-          renderObject={cloud.id !== cloudPlacement.placedCloudId}
-          onError={(error) => handleSurfaceError(cloud.id, error)}
-          onLoading={() => handleSurfaceLoading(cloud.id)}
-          onReady={(surface) => handleSurfaceReady(cloud.id, surface)}
-          raycastable={cloud.visible && isGaussianSurfacePickActive(activeTool)}
-          {...(editorVisible
-            ? activeTool === "cloud"
-              ? cloudPlacement.surfaceEventProps
-              : placement.surfaceEventProps
-            : {})}
-        />
-      ))}
+      <SceneClouds
+        clouds={clouds}
+        preview={editorVisible ? cloudPlacement.preview : null}
+        placed={cloudPlacement.placed}
+        resourceKeyForCloud={cloudPlacement.resourceKeyForCloud}
+        interactive={isGaussianSurfacePickActive(activeTool)}
+        surfaceEvents={
+          editorVisible && activeTool !== "cloud"
+            ? placement.surfaceEventProps
+            : {}
+        }
+        onReady={handleSurfaceReady}
+        onError={handleSurfaceError}
+        onLoading={handleSurfaceLoading}
+      />
       {showGrid && (
         <SceneGrid
           dark={dark}
           interactive={cameraMode === "orbit"}
           placementEvents={
-            activeTool === "cloud"
-              ? cloudPlacement.surfaceEventProps
-              : placement.surfaceEventProps
+            activeTool === "cloud" ? {} : placement.surfaceEventProps
           }
         />
       )}
@@ -238,19 +239,14 @@ export function SceneContents({
           label={getAnchorLabel(anchors)}
         />
       )}
-      {editorVisible && pendingCloud && cloudPlacement.preview && (
-        <CloudPlacementPreview
-          asset={cloudPlacement.preview.asset}
-          hit={cloudPlacement.preview.hit}
-          resourceKey={cloudPlacement.preview.resourceKey}
-        />
-      )}
-      {cloudPlacement.placed && (
-        <CloudPlacementPreview
-          asset={cloudPlacement.placed.asset}
-          hit={cloudPlacement.placed.hit}
-          resourceKey={cloudPlacement.placed.resourceKey}
-        />
+      {((editorVisible && cloudPlacement.preview) || cloudPlacement.placed) && (
+        <Suspense fallback={null}>
+          <SurfaceTargetRing
+            position={
+              (cloudPlacement.placed ?? cloudPlacement.preview)!.hit.position
+            }
+          />
+        </Suspense>
       )}
       {editorVisible &&
         orderedAnchors.map((anchor) => {

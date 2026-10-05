@@ -97,7 +97,7 @@ describe("project cloud controls", () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 
-  it("adds the first cloud at the origin when the grid is off", () => {
+  it("starts placement even when the scene is empty and the grid is off", () => {
     render(
       <EditorStoreProvider>
         <ProjectCloudControls projectId="project" />
@@ -107,10 +107,7 @@ describe("project cloud controls", () => {
     fireEvent.focus(screen.getByRole("combobox"));
     fireEvent.click(screen.getByRole("option", { name: "Grid: Hide" }));
     openAddCloud();
-    expect(screen.getByTestId("pending-cloud").textContent).toBe("none");
-    expect(mutate).toHaveBeenCalledExactlyOnceWith({
-      type: "add",
-      assetId: "asset",
-    });
+    expect(screen.getByTestId("pending-cloud").textContent).toBe("Mug");
+    expect(mutate).not.toHaveBeenCalled();
   });
 });

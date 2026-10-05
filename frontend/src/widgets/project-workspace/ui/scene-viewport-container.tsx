@@ -133,7 +133,7 @@ export function SceneViewportContainer({
           {activeTool === "anchor"
             ? "Anchor tool active — release the modifier key to exit"
             : activeTool === "cloud"
-              ? "Click to place cloud on the surface; press Escape to cancel"
+              ? "Click to place cloud on a surface (origin if no hit); press Escape to cancel"
               : activeTool === "anchor-height"
                 ? "Drag vertically to set anchor height; press Escape to cancel"
                 : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}

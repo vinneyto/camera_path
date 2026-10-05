@@ -1,7 +1,6 @@
 "use client";
 
-import type { ThreeEvent } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import type { Vec3 } from "@/entities/project";
 import { useCloudPlacement } from "@/features/project-editor";
@@ -10,8 +9,13 @@ import { usePointerTap } from "@/shared/lib/use-pointer-tap";
 import type { SceneSurfaceHit } from "@/shared/scene-surface";
 
 let nextPlacementKey = 0;
+const ORIGIN_HIT: SceneSurfaceHit = { position: [0, 0, 0], normal: [0, 1, 0] };
+type PlacementPointerEvent = Pick<
+  PointerEvent,
+  "pointerId" | "clientX" | "clientY"
+>;
 
-interface PlacementPreview {
+export interface PlacementPreview {
   asset: LibraryAsset;
   hit: SceneSurfaceHit;
   resourceKey: string;
@@ -90,17 +94,39 @@ export function useCloudPlacementInteraction({
     },
   });
 
+  const resetPreview = useEffectEvent(() => {
+    cancelTap();
+    placementIdentity.current = null;
+    setPreview(
+      pendingCloud
+        ? {
+            asset: pendingCloud,
+            hit: ORIGIN_HIT,
+            resourceKey: resourceKeyForAsset(pendingCloud),
+          }
+        : null,
+    );
+  });
   useEffect(() => {
-    if (pendingCloud === null) {
-      cancelTap();
-      placementIdentity.current = null;
-    }
-  }, [pendingCloud, cancelTap]);
+    resetPreview();
+  }, [pendingCloud]);
+
+  function updatePreview(hit: SceneSurfaceHit | null) {
+    if (!pendingCloud) return;
+    const resolved = hit ?? ORIGIN_HIT;
+    const resourceKey = resourceKeyForAsset(pendingCloud);
+    setPreview((current) =>
+      current?.asset === pendingCloud &&
+      current.hit.position.every((v, i) => v === resolved.position[i]) &&
+      current.hit.normal.every((v, i) => v === resolved.normal[i])
+        ? current
+        : { asset: pendingCloud, hit: resolved, resourceKey },
+    );
+  }
 
   return {
     preview: preview?.asset === pendingCloud ? preview : null,
     placed,
-    placedCloudId: placedCloud?.id ?? null,
     resourceKeyForCloud: (cloudId: string) =>
       transferred[cloudId] ??
       (placedCloud?.id === cloudId ? placed?.resourceKey : undefined),
@@ -115,47 +141,38 @@ export function useCloudPlacementInteraction({
     },
     handleControlsChange: () => {
       cancelTap();
-      setPreview(null);
+      updatePreview(null);
     },
-    surfaceEventProps: {
-      onSurfacePointerDown: (
-        hit: SceneSurfaceHit,
-        event: ThreeEvent<PointerEvent>,
+    updatePreview,
+    pointerEvents: {
+      onPointerDown: (
+        hit: SceneSurfaceHit | null,
+        event: PlacementPointerEvent,
       ) => {
-        handlePointerDown(hit, event);
-        if (pendingCloud)
-          setPreview({
-            asset: pendingCloud,
-            hit,
-            resourceKey: resourceKeyForAsset(pendingCloud),
-          });
-        (event.target as Element | null)?.setPointerCapture?.(event.pointerId);
+        handlePointerDown(hit ?? ORIGIN_HIT, event);
+        updatePreview(hit);
       },
-      onSurfacePointerMove: (
-        hit: SceneSurfaceHit,
-        event: ThreeEvent<PointerEvent>,
+      onPointerMove: (
+        hit: SceneSurfaceHit | null,
+        event: PlacementPointerEvent,
       ) => {
-        if (pendingCloud)
-          setPreview({
-            asset: pendingCloud,
-            hit,
-            resourceKey: resourceKeyForAsset(pendingCloud),
-          });
-        handlePointerMove(hit, event);
+        updatePreview(hit);
+        handlePointerMove(hit ?? ORIGIN_HIT, event);
       },
-      onSurfacePointerUp: (
-        _hit: SceneSurfaceHit,
-        event: ThreeEvent<PointerEvent>,
+      onPointerUp: (
+        hit: SceneSurfaceHit | null,
+        event: PlacementPointerEvent,
       ) => {
-        (event.target as Element | null)?.releasePointerCapture?.(
-          event.pointerId,
-        );
+        handlePointerMove(hit ?? ORIGIN_HIT, event);
         handlePointerUp(event);
       },
-      onPointerOut: () => setPreview(null),
+      onPointerLeave: () => {
+        cancelTap();
+        updatePreview(null);
+      },
       onPointerCancel: () => {
         cancelTap();
-        setPreview(null);
+        updatePreview(null);
       },
     },
   };
