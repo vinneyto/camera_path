@@ -1,17 +1,14 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
+import { UserSettingsProvider } from "@/features/user-settings";
 import { ThemeProvider } from "@/features/theme-switcher";
 
 export function AppProviders({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  useEffect(() => {
-    void useGaussianRenderingSettingsStore.persist.rehydrate();
-  }, []);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -27,7 +24,9 @@ export function AppProviders({
 
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <UserSettingsProvider>{children}</UserSettingsProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

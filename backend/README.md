@@ -58,6 +58,20 @@ the uploaded size and PLY signature before the asset appears in `GET /api/v1/lib
 tracked separately. Upload permissions depend on the pending CP-49 authentication work, so the
 current development endpoints must not be exposed publicly.
 
+### User profile settings
+
+`GET /api/v1/profile/settings` returns `webgpu_tile_renderer` and `show_grid`, both true by default.
+`PATCH` at the same URL saves only supplied boolean fields and returns the confirmed preferences.
+Settings are stored in `user_settings`, keyed by user ID, independently of projects; no project
+ETag is required. Run `uv run alembic upgrade head` to apply migration `20261005_0010`.
+
+Until CP-49 adds authentication, `CAMERA_PATH_DEV_USER_ID` (default `dev-user`) selects the
+single development user for this server. All its browser clients share that user's preferences.
+Clients cannot choose a different user through a request header, query parameter or payload.
+CP-49 should replace `routers.profile.get_current_user_id` with the authenticated principal
+and clear the frontend profile query cache when the principal changes; settings endpoints and
+payloads stay the same. This development identity is not authentication.
+
 ### Project clouds
 
 Each project can reference several ready library PLY files through `project_clouds`. The project

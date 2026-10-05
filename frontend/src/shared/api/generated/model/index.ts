@@ -93,5 +93,7 @@ export * from './spiralSegmentRadialLaw';
 export * from './splineSegment';
 export * from './splineSegmentCreate';
 export * from './trajectory';
+export * from './userSettings';
+export * from './userSettingsUpdate';
 export * from './validationError';
 export * from './validationErrorCtx';

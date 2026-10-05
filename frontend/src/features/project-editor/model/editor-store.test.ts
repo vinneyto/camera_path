@@ -94,16 +94,6 @@ describe("editor store", () => {
     });
   });
 
-  it("shows the grid by default and toggles it only for this editor", () => {
-    const otherStore = createEditorStore();
-    expect(store.getState().scene.showGrid).toBe(true);
-    store.getState().sceneActions.toggleGrid();
-    expect(store.getState().scene.showGrid).toBe(false);
-    expect(otherStore.getState().scene.showGrid).toBe(true);
-    store.getState().sceneActions.toggleGrid();
-    expect(store.getState().scene.showGrid).toBe(true);
-  });
-
   it("keeps a pending cloud until cancellation, then clears it", () => {
     const asset = { id: "asset", name: "Cloud" } as LibraryAsset;
     store.getState().toolActions.startCloudPlacement(asset);

@@ -71,7 +71,9 @@ import type {
   SpiralSegmentCreate,
   SplineSegment,
   SplineSegmentCreate,
-  Trajectory
+  Trajectory,
+  UserSettings,
+  UserSettingsUpdate
 } from './model';
 
 import { orvalFetch } from '../orval-fetch';
@@ -638,6 +640,228 @@ export const useUpdateLibraryAssetDefaults = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getUpdateLibraryAssetDefaultsMutationOptions(options), queryClient);
+    }
+
+export type getUserSettingsResponse200 = {
+  data: UserSettings
+  status: 200
+}
+
+export type getUserSettingsResponseSuccess = (getUserSettingsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getUserSettingsResponse = (getUserSettingsResponseSuccess)
+
+export const getGetUserSettingsUrl = () => {
+
+
+
+
+  return `/api/v1/profile/settings`
+}
+
+/**
+ * Read the current user's settings; unset preferences default to enabled.
+ * @summary Get User Settings
+ */
+export const getUserSettings = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<getUserSettingsResponse> => {
+
+  return orvalFetch<getUserSettingsResponse>(getGetUserSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUserSettingsQueryKey = () => {
+    return [
+    `/api/v1/profile/settings`
+    ] as const;
+    }
+
+
+export const getGetUserSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getUserSettings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserSettings>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserSettings>>> = ({ signal }) => getUserSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUserSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getUserSettings>>>
+export type GetUserSettingsQueryError = unknown
+
+
+export function useGetUserSettings<TData = Awaited<ReturnType<typeof getUserSettings>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getUserSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserSettings<TData = Awaited<ReturnType<typeof getUserSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getUserSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserSettings<TData = Awaited<ReturnType<typeof getUserSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserSettings>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get User Settings
+ */
+
+export function useGetUserSettings<TData = Awaited<ReturnType<typeof getUserSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserSettings>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUserSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type updateUserSettingsResponse200 = {
+  data: UserSettings
+  status: 200
+}
+
+export type updateUserSettingsResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type updateUserSettingsResponseSuccess = (updateUserSettingsResponse200) & {
+  headers: Headers;
+};
+export type updateUserSettingsResponseError = (updateUserSettingsResponse422) & {
+  headers: Headers;
+};
+
+export type updateUserSettingsResponse = (updateUserSettingsResponseSuccess | updateUserSettingsResponseError)
+
+export const getUpdateUserSettingsUrl = () => {
+
+
+
+
+  return `/api/v1/profile/settings`
+}
+
+/**
+ * Save only supplied preferences for the current user, independently of projects.
+ * @summary Update User Settings
+ */
+export const updateUserSettings = async (userSettingsUpdate: UserSettingsUpdate, options?: Parameters<typeof orvalFetch>[1]): Promise<updateUserSettingsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<updateUserSettingsResponse>(getUpdateUserSettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(userSettingsUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateUserSettingsMutationKey = () => ['updateUserSettings'] as const;
+
+export const getUpdateUserSettingsMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,UpdateUserSettingsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,UpdateUserSettingsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateUserSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUserSettings>>, UpdateUserSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateUserSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUserSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateUserSettings>>>
+    export type UpdateUserSettingsMutationBody = UserSettingsUpdate
+    export type UpdateUserSettingsMutationError = ErrorResponse
+    export type UpdateUserSettingsMutationVariables = {data: UserSettingsUpdate}
+
+    /**
+ * @summary Update User Settings
+ */
+export const useUpdateUserSettings = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,UpdateUserSettingsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateUserSettings>>,
+        TError,
+        UpdateUserSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateUserSettingsMutationOptions(options), queryClient);
     }
 
 export type listProjectsResponse200 = {

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   EditorStoreProvider,
@@ -12,6 +12,25 @@ import {
 import { ProjectCloudControls } from "./project-cloud-controls";
 
 const mutate = vi.hoisted(() => vi.fn());
+let showGrid = true;
+vi.mock("@/features/user-settings", async () => {
+  const { useState } = await import("react");
+  return {
+    useUserSettings: () => {
+      const [grid, setGrid] = useState(showGrid);
+      return {
+        showGrid: grid,
+        ready: true,
+        saving: false,
+        error: null,
+        save: (changes: { show_grid: boolean }) => {
+          showGrid = changes.show_grid;
+          setGrid(changes.show_grid);
+        },
+      };
+    },
+  };
+});
 
 vi.mock("@/shared/api/generated/client", () => ({
   useListLibraryAssets: () => ({
@@ -49,6 +68,10 @@ function openAddCloud() {
   fireEvent.click(screen.getByRole("option", { name: "Mug" }));
 }
 
+beforeEach(() => {
+  showGrid = true;
+});
+
 afterEach(() => {
   cleanup();
   mutate.mockClear();
@@ -81,9 +104,8 @@ describe("project cloud controls", () => {
         <PlacementState />
       </EditorStoreProvider>,
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Toggle grid in test" }),
-    );
+    fireEvent.focus(screen.getByRole("combobox"));
+    fireEvent.click(screen.getByRole("option", { name: "Grid: Hide" }));
     openAddCloud();
     expect(screen.getByTestId("pending-cloud").textContent).toBe("none");
     expect(mutate).toHaveBeenCalledExactlyOnceWith({

@@ -1,9 +1,15 @@
 "use client";
 
-import { useEditorStore } from "./editor-store-provider";
+import { useUserSettings } from "@/features/user-settings";
 
 export function useSceneGrid() {
-  const showGrid = useEditorStore((state) => state.scene.showGrid);
-  const toggleGrid = useEditorStore((state) => state.sceneActions.toggleGrid);
-  return { showGrid, toggleGrid };
+  const settings = useUserSettings();
+  return {
+    showGrid: settings.showGrid,
+    toggleGrid: () => settings.save({ show_grid: !settings.showGrid }),
+    loading: settings.loading,
+    saving: settings.saving,
+    ready: settings.ready,
+    error: settings.error,
+  };
 }

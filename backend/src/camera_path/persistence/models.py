@@ -5,6 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     Float,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     Integer,
     Text,
     UniqueConstraint,
+    true,
 )
 from sqlalchemy import (
     Enum as SqlEnum,
@@ -57,6 +59,14 @@ class Vector3:
 
 class Base(DeclarativeBase):
     pass
+
+
+class UserSettingsRecord(Base):
+    __tablename__ = "user_settings"
+
+    user_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    webgpu_tile_renderer: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    show_grid: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
 
 
 class ProjectRecord(Base):

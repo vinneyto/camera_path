@@ -12,7 +12,7 @@ import {
   useTrajectoryPlayback,
   useTrajectorySelection,
 } from "@/features/project-editor";
-import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
+import { useUserSettings } from "@/features/user-settings";
 import { useClearTrajectory } from "@/features/object-deletion";
 
 import { ChatPanelContainer } from "./chat-panel-container";
@@ -24,9 +24,7 @@ interface ProjectWorkspaceProps {
 }
 
 export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
-  const webGpuTileRenderer = useGaussianRenderingSettingsStore(
-    (state) => state.webGpuTileRenderer,
-  );
+  const { webGpuTileRenderer, loading: settingsLoading } = useUserSettings();
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
   const project = projectQuery.data;
@@ -52,7 +50,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
     }
   }
 
-  if (projectQuery.isPending || trajectoryQuery.isPending) {
+  if (projectQuery.isPending || trajectoryQuery.isPending || settingsLoading) {
     return (
       <main className="flex h-screen items-center justify-center">
         <LoaderCircle className="size-5 animate-spin text-muted-foreground" />
