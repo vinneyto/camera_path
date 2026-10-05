@@ -1,13 +1,30 @@
 // @vitest-environment happy-dom
 import { createRoot, extend, events } from "@react-three/fiber";
-import { act } from "react";
+import { act, useEffect } from "react";
+import {
+  EditorStoreProvider,
+  useSetActiveEditorTool,
+} from "@/features/project-editor";
+import { useAnchorPlacement } from "@/widgets/scene-editor/ui/use-anchor-placement";
 import { GaussianStore, StreamingGaussianBackend } from "3dgs-tile-webgpu";
-import { Group, Raycaster, Scene, Vector3, type WebGLRenderer } from "three";
+import {
+  GridHelper,
+  Group,
+  LineBasicMaterial,
+  Mesh,
+  MeshBasicMaterial,
+  PlaneGeometry,
+  Raycaster,
+  Scene,
+  Vector3,
+  type WebGLRenderer,
+} from "three";
 import { afterEach, expect, it, vi } from "vitest";
 import type { LibraryAsset, ProjectCloud } from "@/shared/api/generated/model";
 import { SceneSurfaceProvider } from "@/shared/scene-surface";
 import type { GaussianRenderingBackend } from "@/shared/scene-surface/model/gaussian-rendering-backend";
 import { TileGaussianCloudInstance } from "@/shared/scene-surface/adapters/3dgs-tile-webgpu/tile-gaussian-cloud-instance";
+import { SceneGrid } from "@/widgets/scene-editor/ui/scene-grid";
 import { SceneClouds } from "@/widgets/scene-editor/ui/scene-clouds";
 import { raycastPlacementSurfaces } from "@/widgets/scene-editor/ui/raycast-placement-surfaces";
 import type { PlacementPreview } from "@/widgets/scene-editor/ui/use-cloud-placement-interaction";
@@ -20,7 +37,14 @@ afterEach(() => vi.unstubAllGlobals());
 
 it("keeps second and third PLY clouds pickable through preview handoff, transforms and removal", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  extend({ Group });
+  extend({
+    Group,
+    GridHelper,
+    LineBasicMaterial,
+    Mesh,
+    MeshBasicMaterial,
+    PlaneGeometry,
+  });
   const store = new GaussianStore(
     new StreamingGaussianBackend({ maxGaussians: 100 }),
   );
@@ -58,6 +82,8 @@ it("keeps second and third PLY clouds pickable through preview handoff, transfor
   });
   const ready = vi.fn();
   const anchorPick = vi.fn();
+  const onPlaceAnchor = vi.fn();
+  let anchorPlacement: ReturnType<typeof useAnchorPlacement>;
   const asset: LibraryAsset = {
     id: "asset",
     created_at: "",
@@ -74,23 +100,52 @@ it("keeps second and third PLY clouds pickable through preview handoff, transfor
   const keys = new Map<string, string>();
   let preview: PlacementPreview | null = null;
   let placed: PlacementPreview | null = null;
+  let showGrid = false;
   let state: ReturnType<typeof root.render> | undefined;
+  function AnchorScene() {
+    const setTool = useSetActiveEditorTool();
+    useEffect(() => setTool("anchor"), [setTool]);
+    anchorPlacement = useAnchorPlacement({ onPlace: onPlaceAnchor });
+    return (
+      <>
+        <SceneClouds
+          clouds={[...clouds]}
+          preview={preview}
+          placed={placed}
+          resourceKeyForCloud={(id) => keys.get(id)}
+          interactive
+          surfaceEvents={{
+            ...anchorPlacement.surfaceEventProps,
+            onSurfacePointerDown: (hit, event) => {
+              anchorPick(hit, event);
+              anchorPlacement.surfaceEventProps.onSurfacePointerDown(
+                hit,
+                event,
+              );
+            },
+          }}
+          onReady={ready}
+          onLoading={vi.fn()}
+          onError={vi.fn()}
+        />
+        {showGrid && (
+          <SceneGrid
+            dark={false}
+            interactive
+            placementEvents={anchorPlacement.surfaceEventProps}
+          />
+        )}
+      </>
+    );
+  }
   async function renderScene() {
     await act(async () => {
       state = root.render(
-        <SceneSurfaceProvider backend={backend}>
-          <SceneClouds
-            clouds={[...clouds]}
-            preview={preview}
-            placed={placed}
-            resourceKeyForCloud={(id) => keys.get(id)}
-            interactive
-            surfaceEvents={{ onSurfacePointerDown: anchorPick }}
-            onReady={ready}
-            onLoading={vi.fn()}
-            onError={vi.fn()}
-          />
-        </SceneSurfaceProvider>,
+        <EditorStoreProvider>
+          <SceneSurfaceProvider backend={backend}>
+            <AnchorScene />
+          </SceneSurfaceProvider>
+        </EditorStoreProvider>,
       );
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -103,18 +158,41 @@ it("keeps second and third PLY clouds pickable through preview handoff, transfor
     scene.updateMatrixWorld(true);
     return raycaster.intersectObjects(scene.children, true)[0];
   }
-  function pickAnchor(x: number) {
+  async function pickAnchor(x: number, pointerType = "mouse") {
     const camera = state!.getState().camera;
     camera.updateWorldMatrix(true, false);
     const screenPoint = new Vector3(x, 0, 0).project(camera);
-    const event = new PointerEvent("pointerdown", { pointerId: 1 });
-    Object.defineProperties(event, {
-      offsetX: { value: (screenPoint.x + 1) * 50 },
-      offsetY: { value: (1 - screenPoint.y) * 50 },
-    });
+    async function pointer(
+      type: "onPointerMove" | "onPointerDown" | "onPointerUp",
+    ) {
+      const event = new PointerEvent(type.slice(2).toLowerCase(), {
+        pointerId: 1,
+        pointerType,
+        ctrlKey: true,
+        clientX: (screenPoint.x + 1) * 50,
+        clientY: (1 - screenPoint.y) * 50,
+      });
+      Object.defineProperties(event, {
+        offsetX: { value: event.clientX },
+        offsetY: { value: event.clientY },
+        target: { value: canvas },
+      });
+      await act(async () => state!.getState().events.handlers![type](event));
+    }
+    canvas.setPointerCapture = vi.fn();
+    canvas.releasePointerCapture = vi.fn();
     anchorPick.mockClear();
-    state!.getState().events.handlers!.onPointerDown(event);
+    onPlaceAnchor.mockClear();
+    await pointer("onPointerMove");
+    const hoverHit = anchorPlacement.previewHit;
+    expect(hoverHit).not.toBeNull();
+    await pointer("onPointerDown");
     expect(anchorPick).toHaveBeenCalledOnce();
+    await pointer("onPointerUp");
+    expect(onPlaceAnchor).toHaveBeenCalledExactlyOnceWith(
+      hoverHit!.position,
+      hoverHit!.normal,
+    );
   }
   try {
     clouds.push({
@@ -173,7 +251,7 @@ it("keeps second and third PLY clouds pickable through preview handoff, transfor
       expect((object as unknown as { __r3f?: unknown }).__r3f).toBeDefined();
       // Dispatch through R3F too: anchors use surface events rather than the
       // placement raycaster. Keeping the BVH alone would not catch this bug.
-      pickAnchor(x);
+      await pickAnchor(x);
       expect(ready).toHaveBeenCalledWith(id, expect.anything());
       expect(
         raycastPlacementSurfaces(
@@ -185,10 +263,27 @@ it("keeps second and third PLY clouds pickable through preview handoff, transfor
     // With another cloud behind the last one, the nearest surface owns the tap.
     clouds[0] = { ...clouds[0], translation: [4, 0, -1] };
     await renderScene();
+    state!.getState().camera.position.x = 4;
+    state!.getState().camera.lookAt(4, 0, 0);
     scene.updateMatrixWorld(true);
-    pickAnchor(4);
+    await pickAnchor(4);
     expect(anchorPick.mock.calls[0][0].position[2]).toBeGreaterThan(-0.5);
+    showGrid = true;
+    // Look down through two clouds and the grid; hover and tap must agree.
+    clouds[0] = { ...clouds[0], translation: [4, 1, 0] };
+    clouds[2] = { ...clouds[2], translation: [4, 2, 0] };
+    await renderScene();
+    state!.getState().camera.position.set(4, 5, 0);
+    state!.getState().camera.lookAt(4, 0, 0);
+    scene.updateMatrixWorld(true);
+    await pickAnchor(4);
+    expect(onPlaceAnchor.mock.calls[0][0][1]).toBeGreaterThan(1.5);
+    await pickAnchor(4, "touch");
+    expect(onPlaceAnchor.mock.calls[0][0][1]).toBeGreaterThan(1.5);
     expect(backend.createCloud).toHaveBeenCalledTimes(3);
+    showGrid = false;
+    clouds[0] = { ...clouds[0], translation: [4, 0, -1] };
+    clouds[2] = { ...clouds[2], translation: [4, 0, 0] };
     clouds.splice(1, 1);
     await renderScene();
     expect(hit(2)).toBeUndefined();
