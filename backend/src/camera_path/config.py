@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     database_url: str = DEFAULT_DATABASE_URL
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     library_directory: Path = Path.home() / ".camera-path" / "library"
+    dev_user_id: str = Field(default="dev-user", min_length=1, max_length=128)
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -32,10 +32,16 @@ Place a canonical 3DGS file at `public/mug.ply`. The same frontend-only cloud is
 project; the backend does not store or configure it yet.
 
 The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-The Settings panel in the project header enables the WebGPU tile renderer by default. Uncheck it
-to switch to the Spark/WebGL reference adapter. The choice is saved in this browser. Spark does not
+The Profile settings panel on the project list and in the project header controls the renderer
+and grid visibility for all projects. Both settings default to enabled and are saved on the backend
+for the current user, then restored when the app opens in any browser. Uncheck the WebGPU option
+to switch to the Spark/WebGL reference adapter. Spark does not
 have feature parity with the supported WebGPU renderer and may throw explicit errors for unsupported
 operations.
+
+`features/user-settings` owns the shared profile query and mutation. Controls show loading,
+saving and error states; scene preferences change only after a successful server response.
+The old renderer localStorage value is ignored. Gaussian DPR remains a session-only setting.
 
 Start the backend first, then:
 

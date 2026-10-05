@@ -23,9 +23,11 @@ from camera_path.repositories import (
 )
 from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.project_cloud import ProjectCloudRepository
+from camera_path.repositories.user_settings import UserSettingsRepository
 from camera_path.routers.api import router as business_router
 from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.routers.library import router as library_router
+from camera_path.routers.profile import router as profile_router
 from camera_path.routers.project_clouds import router as project_cloud_router
 from camera_path.routers.resources import router as resource_router
 from camera_path.services import (
@@ -40,6 +42,7 @@ from camera_path.services import (
 from camera_path.services.library import LibraryService
 from camera_path.services.library_storage import LibraryStorage
 from camera_path.services.project_clouds import ProjectCloudService
+from camera_path.services.user_settings import UserSettingsService
 from camera_path.trajectory import GeometryError
 
 API_PREFIX = "/api/v1"
@@ -173,12 +176,17 @@ def create_app(
             {"name": "Chat", "description": "Trajectory-agent chat operations."},
             {"name": "Library", "description": "Uploaded 3DGS assets, independent of projects."},
             {"name": "Clouds", "description": "Library cloud instances in projects."},
+            {"name": "Profile", "description": "Settings of the current user."},
         ],
     )
     application.state.project_service = project_service
     application.state.library_service = library_service
     application.state.project_cloud_service = project_cloud_service
     application.state.project_repository = project_repository
+    application.state.dev_user_id = configured.dev_user_id
+    application.state.user_settings_service = UserSettingsService(
+        UserSettingsRepository(project_repository.session_factory)
+    )
     application.state.anchor_service = anchor_service
     application.state.scene_point_service = scene_point_service
     application.state.trajectory_service = trajectory_service
@@ -287,6 +295,7 @@ def create_app(
     application.include_router(resource_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
     application.include_router(project_cloud_router, prefix=API_PREFIX)
+    application.include_router(profile_router, prefix=API_PREFIX)
     if isinstance(storage, LocalLibraryStorage):
         from camera_path.dev.library_routes import router as local_library_router
 

@@ -18,7 +18,8 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
   const placement = useCloudPlacement();
-  const { showGrid, toggleGrid } = useSceneGrid();
+  const grid = useSceneGrid();
+  const { showGrid, toggleGrid } = grid;
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
     (asset) => asset.status === "ready",
   );
@@ -62,7 +63,20 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-1">
-      <CommandPalette commands={commands} disabled={actions.isPending} />
+      <CommandPalette
+        commands={commands}
+        disabled={actions.isPending || !grid.ready || grid.saving}
+      />
+      {grid.saving && (
+        <p className="text-xs text-muted-foreground" role="status">
+          Saving settings…
+        </p>
+      )}
+      {grid.error && (
+        <p className="text-xs text-destructive" role="alert">
+          {grid.error.message}
+        </p>
+      )}
       {actions.error && (
         <p
           className="rounded border bg-background px-2 py-1 text-xs text-destructive"

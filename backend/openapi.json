@@ -2438,6 +2438,41 @@
         "title": "Trajectory",
         "type": "object"
       },
+      "UserSettings": {
+        "properties": {
+          "show_grid": {
+            "title": "Show Grid",
+            "type": "boolean"
+          },
+          "webgpu_tile_renderer": {
+            "title": "Webgpu Tile Renderer",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "webgpu_tile_renderer",
+          "show_grid"
+        ],
+        "title": "UserSettings",
+        "type": "object"
+      },
+      "UserSettingsUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "show_grid": {
+            "default": true,
+            "title": "Show Grid",
+            "type": "boolean"
+          },
+          "webgpu_tile_renderer": {
+            "default": true,
+            "title": "Webgpu Tile Renderer",
+            "type": "boolean"
+          }
+        },
+        "title": "UserSettingsUpdate",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2692,6 +2727,68 @@
         "summary": "Update Library Asset Defaults",
         "tags": [
           "Library"
+        ]
+      }
+    },
+    "/api/v1/profile/settings": {
+      "get": {
+        "description": "Read the current user's settings; unset preferences default to enabled.",
+        "operationId": "getUserSettings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get User Settings",
+        "tags": [
+          "Profile"
+        ]
+      },
+      "patch": {
+        "description": "Save only supplied preferences for the current user, independently of projects.",
+        "operationId": "updateUserSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid profile settings."
+          }
+        },
+        "summary": "Update User Settings",
+        "tags": [
+          "Profile"
         ]
       }
     },
@@ -6992,6 +7089,10 @@
     {
       "description": "Library cloud instances in projects.",
       "name": "Clouds"
+    },
+    {
+      "description": "Settings of the current user.",
+      "name": "Profile"
     }
   ]
 }

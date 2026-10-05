@@ -11,6 +11,7 @@ import {
   useCreateProject,
 } from "@/features/project-selection";
 import { ThemeToggle } from "@/features/theme-switcher";
+import { UserSettingsPanel } from "@/features/user-settings";
 
 export function ProjectListPage() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export function ProjectListPage() {
           >
             Library
           </Link>
+          <UserSettingsPanel />
           <ThemeToggle />
         </div>
       </div>
