@@ -70,7 +70,13 @@ router = APIRouter()
 
 
 def _metadata(project: Project) -> ProjectMetadata:
-    return ProjectMetadata(id=project.id, name=project.name, revision=project.revision)
+    return ProjectMetadata(
+        id=project.id,
+        name=project.name,
+        revision=project.revision,
+        anchor_count=len(project.anchors),
+        segment_count=len(project.segments),
+    )
 
 
 def _with_revision(response: Response, project: Project):
@@ -114,7 +120,7 @@ async def create_project(
     operation_id="listProjects",
 )
 async def list_projects(service: ProjectServiceDep) -> list[ProjectMetadata]:
-    return [_metadata(project) for project in await service.list_projects()]
+    return await service.list_project_metadata()
 
 
 @router.get(
@@ -129,9 +135,9 @@ async def list_projects(service: ProjectServiceDep) -> list[ProjectMetadata]:
 async def get_project(
     project_id: str, service: ProjectServiceDep, response: Response
 ) -> ProjectMetadata:
-    project = await service.get_project(project_id)
+    project = await service.get_project_metadata(project_id)
     _with_revision(response, project)
-    return _metadata(project)
+    return project
 
 
 @router.patch(

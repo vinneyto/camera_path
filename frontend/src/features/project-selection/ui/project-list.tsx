@@ -6,7 +6,6 @@ import { useState } from "react";
 
 import type { ProjectMetadata } from "@/shared/api/generated/model";
 import { Card, ContextMenu, type ContextMenuPosition } from "@/shared/ui";
-import { ProjectListResources } from "./project-list-resources";
 
 interface ProjectListProps {
   deletingProjectId?: string;
@@ -63,7 +62,10 @@ export function ProjectList({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium">{project.name}</p>
-                <ProjectListResources projectId={project.id} />
+                <p className="text-[10px] text-muted-foreground">
+                  {project.anchor_count} anchors · {project.segment_count}{" "}
+                  segments
+                </p>
               </div>
               <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </Card>
