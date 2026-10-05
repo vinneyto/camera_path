@@ -74,3 +74,15 @@ npm run build
 Click the Gaussian cloud to create a labeled path anchor. Insert the resulting anchor token into
 chat, ask the agent to build a spline or spiral, then click the rendered trajectory to open its
 speed and camera-aim panels. Playback uses the compiled speed profile and camera direction track.
+
+### Cloud placement
+
+All library clouds enter placement mode, including the first cloud in an empty scene.
+The preview follows the nearest raycast hit on an existing visible cloud. The visible grid
+is a fallback when no cloud is hit, even if it is geometrically closer: WebGPU composites
+the grid underneath splats. Anchor pointer events use the same pass ordering.
+When the ray misses, the preview stays at the origin; clicking confirms that default position.
+Escape cancels placement. The preview is excluded from placement raycasts.
+
+Preview and saved cloud share one keyed React/R3F owner so handing off the loaded PLY
+retains pointer events and raycasting without loading the model twice.

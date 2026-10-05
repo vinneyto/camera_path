@@ -68,6 +68,7 @@ export function SceneGrid({
             placementEvents.onSurfacePointerUp?.(hit(event), event);
         }}
         raycast={interactive ? undefined : () => undefined}
+        userData={{ sceneSurfacePickable: interactive }}
         renderOrder={0}
         rotation={[-Math.PI / 2, 0, 0]}
       >

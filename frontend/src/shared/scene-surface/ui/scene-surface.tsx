@@ -47,7 +47,7 @@ export function SceneSurface({
 
   useEffect(() => {
     notifyStatus();
-  }, [cloud, error, loading]);
+  }, [cloud, error, loading, name]);
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     if (cloud === null) return;
@@ -58,18 +58,21 @@ export function SceneSurface({
 
   function handlePointerDown(event: ThreeEvent<PointerEvent>) {
     if (cloud === null) return;
+    if (onSurfacePointerDown) event.stopPropagation();
     onSurfacePointerDown?.(cloud.getHit(event, event.ray), event);
     if (typeof onPointerDown === "function") onPointerDown(event);
   }
 
   function handlePointerMove(event: ThreeEvent<PointerEvent>) {
     if (cloud === null) return;
+    if (onSurfacePointerMove) event.stopPropagation();
     onSurfacePointerMove?.(cloud.getHit(event, event.ray), event);
     if (typeof onPointerMove === "function") onPointerMove(event);
   }
 
   function handlePointerUp(event: ThreeEvent<PointerEvent>) {
     if (cloud === null) return;
+    if (onSurfacePointerUp) event.stopPropagation();
     onSurfacePointerUp?.(cloud.getHit(event, event.ray), event);
     if (typeof onPointerUp === "function") onPointerUp(event);
   }
@@ -97,6 +100,11 @@ export function SceneSurface({
       {...interactionProps}
       dispose={null}
       object={cloud.object}
+      userData={{
+        ...cloud.object.userData,
+        ...objectProps.userData,
+        sceneSurfacePickable: raycastable,
+      }}
     />
   ) : null;
 }

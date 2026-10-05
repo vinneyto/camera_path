@@ -32,9 +32,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       onSelectItem: (assetId) => {
         const asset = assets.find((item) => item.id === assetId);
         if (!asset) return;
-        if (clouds.length === 0 && !showGrid)
-          actions.mutate({ type: "add", assetId });
-        else placement.start(asset);
+        placement.start(asset);
       },
       loading: library.isPending,
       error: library.error ? "Could not load library clouds." : undefined,
