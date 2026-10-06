@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import AbstractAsyncContextManager
 
 from fastapi import Request
 
@@ -16,6 +17,6 @@ class LibraryStorage(ABC):
     async def inspect(self, key: str) -> tuple[int, bytes] | None: ...
 
     @abstractmethod
-    async def delete(self, key: str) -> None:
-        """Delete stored content; an already missing object is a success."""
+    def stage_delete(self, keys: list[str]) -> AbstractAsyncContextManager[None]:
+        """Hide content until DB commit; restore on failure, finalize on success."""
         ...

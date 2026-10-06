@@ -1,6 +1,11 @@
 """Local filesystem implementation of the library storage contract."""
 
 import asyncio
+import logging
+import shutil
+import tempfile
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Request
@@ -36,5 +41,35 @@ class LocalLibraryStorage(LibraryStorage):
 
         return await asyncio.to_thread(read)
 
-    async def delete(self, key: str) -> None:
-        await asyncio.to_thread(self.path(key).unlink, missing_ok=True)
+    @asynccontextmanager
+    async def stage_delete(self, keys: list[str]) -> AsyncIterator[None]:
+        # Keep recoverable bytes until the SQL transaction has committed.
+        # Renames stay on the same filesystem and never copy a multi-GB PLY.
+        staging = Path(tempfile.mkdtemp(prefix=".delete-", dir=self.directory))
+        moved: list[tuple[Path, Path]] = []
+        preserve_staging = False
+        try:
+            for key in keys:
+                source = self.path(key)
+                destination = staging / key
+                try:
+                    source.replace(destination)
+                except FileNotFoundError:
+                    continue
+                moved.append((source, destination))
+            yield
+        except BaseException:
+            try:
+                for source, destination in reversed(moved):
+                    destination.replace(source)
+            except BaseException:
+                preserve_staging = True
+                raise
+            raise
+        finally:
+            try:
+                if not preserve_staging:
+                    shutil.rmtree(staging)
+            except OSError:
+                # After commit these are unreferenced trash bytes, never live files.
+                logging.getLogger(__name__).exception("Could not clean deletion trash: %s", staging)

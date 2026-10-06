@@ -64,6 +64,13 @@ positions, and each affected project's revision advances once. A storage deletio
 rolls back database changes so the request can be retried; missing file content is tolerated.
 An unknown or already deleted asset returns 404. No database migration is required.
 
+`POST /api/v1/library/bulk-delete` accepts `{"asset_ids": ["id-1", "id-2"]}` and deletes
+the entire selection in one request. All IDs are validated before files are touched. Each
+affected project advances its revision once for the whole batch. `LibraryStorage.stage_delete`
+keeps recoverable content until SQL commit; the local adapter moves files to a temporary
+directory on the same filesystem and restores them on staging or transaction failures.
+The frontend uses checkboxes and Actions → Delete selected with a React confirmation dialog.
+
 ### User profile settings
 
 `GET /api/v1/profile/settings` returns `webgpu_tile_renderer` and `show_grid`, both true by default.

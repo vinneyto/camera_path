@@ -7,6 +7,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,7 +15,7 @@ import type { LibraryAsset } from "@/shared/api/generated/model";
 import { LibraryAssetDetails } from "./library-asset-details";
 import { LibraryAssetList } from "./library-asset-list";
 
-const asset: LibraryAsset = {
+const room: LibraryAsset = {
   id: "asset-1",
   name: "Room",
   format: "ply",
@@ -26,11 +27,13 @@ const asset: LibraryAsset = {
   default_offset: [0, 0, 0],
   download_url: "http://test/room.ply",
 };
-let assets = [asset];
+const desk = { ...room, id: "asset-2", name: "Desk" };
+const garden = { ...room, id: "asset-3", name: "Garden" };
+let assets = [room, desk, garden];
 let failDelete = false;
 let holdDelete = false;
 let finishDelete: (() => void) | undefined;
-let deleteCalls = 0;
+const requests: { url: string; method: string; ids: string[] }[] = [];
 const clients: QueryClient[] = [];
 
 function mount(details = false) {
@@ -41,7 +44,7 @@ function mount(details = false) {
   render(
     <QueryClientProvider client={client}>
       {details ? (
-        <LibraryAssetDetails assetId={asset.id} />
+        <LibraryAssetDetails assetId={room.id} />
       ) : (
         <LibraryAssetList />
       )}
@@ -51,17 +54,18 @@ function mount(details = false) {
 }
 
 beforeEach(() => {
-  assets = [asset];
+  assets = [room, desk, garden];
   failDelete = false;
   holdDelete = false;
   finishDelete = undefined;
-  deleteCalls = 0;
+  requests.length = 0;
   vi.spyOn(window, "confirm").mockReturnValue(false);
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, options: RequestInit) => {
-      if (options.method === "DELETE") {
-        deleteCalls++;
+      if (options.method === "POST" || options.method === "DELETE") {
+        const ids = JSON.parse(options.body as string).asset_ids as string[];
+        requests.push({ url, method: options.method, ids });
         if (holdDelete)
           await new Promise<void>((resolve) => {
             finishDelete = resolve;
@@ -71,12 +75,10 @@ beforeEach(() => {
             { detail: "Storage unavailable" },
             { status: 502 },
           );
-        assets = [];
+        assets = assets.filter((asset) => !ids.includes(asset.id));
         return new Response(null, { status: 204 });
       }
-      return Response.json(
-        url.endsWith(`/library/${asset.id}`) ? asset : assets,
-      );
+      return Response.json(url.endsWith("/library/" + room.id) ? room : assets);
     }),
   );
 });
@@ -88,68 +90,162 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("library deletion", () => {
-  it("keeps only the card link and an independent delete button; cancelling does nothing", async () => {
+describe("library selection and deletion", () => {
+  it("keeps card navigation separate from checkboxes and disables deletion with an empty selection", async () => {
     mount();
     const link = await screen.findByRole("link", { name: "Room" });
     expect(link.getAttribute("href")).toBe("/library/asset-1");
-    expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.queryByText("Details")).toBeNull();
     expect(screen.queryByText("Download")).toBeNull();
-    const button = screen.getByRole("button", { name: "Delete Room" });
-    expect(button.closest("a")).toBeNull();
-    fireEvent.click(button);
-    expect(window.confirm).toHaveBeenCalledWith(
-      "Delete “Room” from the library and all projects? This action cannot be undone.",
-    );
-    expect(deleteCalls).toBe(0);
-    expect(screen.getByRole("link", { name: "Room" })).toBe(link);
+    expect(screen.queryByRole("button", { name: "Delete Room" })).toBeNull();
+    const checkbox = screen.getByRole("checkbox", { name: "Select Room" });
+    expect(checkbox.closest("a")).toBeNull();
+    fireEvent.click(checkbox);
+    expect((checkbox as HTMLInputElement).checked).toBe(true);
+    const all = screen.getByRole("checkbox", {
+      name: "Select all library files",
+    }) as HTMLInputElement;
+    expect(all.indeterminate).toBe(true);
+    fireEvent.click(checkbox);
+    fireEvent.keyDown(screen.getByRole("button", { name: "Actions" }), {
+      key: "Enter",
+    });
+    expect(
+      (
+        await screen.findByRole("menuitem", { name: "Delete selected" })
+      ).getAttribute("aria-disabled"),
+    ).toBe("true");
+    expect(requests).toHaveLength(0);
   });
 
-  it("disables repeated deletion while pending and refreshes cached project resources on success", async () => {
-    vi.mocked(window.confirm).mockReturnValue(true);
+  it("opens a React confirmation with names and warning, focuses Cancel and restores Actions after cancellation", async () => {
+    mount();
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Select Room" }),
+    );
+    const actions = screen.getByRole("button", { name: "Actions" });
+    fireEvent.keyDown(actions, { key: "Enter" });
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Delete selected" }),
+    );
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Delete 1 library file?",
+    });
+    expect(within(dialog).getByText("Room")).toBeDefined();
+    expect(dialog.textContent).toContain("removed from all projects");
+    const cancel = within(dialog).getByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(document.activeElement).toBe(cancel));
+    fireEvent.click(cancel);
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(actions));
+    expect(requests).toHaveLength(0);
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(
+      (
+        screen.getByRole("checkbox", {
+          name: "Select Room",
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+  });
+
+  it("deletes two selected files in one request, blocks duplicate submits and clears selection after success", async () => {
     holdDelete = true;
     const client = mount();
     const projectKey = ["/api/v1/projects/project-1/clouds"];
-    client.setQueryData(projectKey, { data: [{ library_asset_id: asset.id }] });
-    const button = await screen.findByRole("button", { name: "Delete Room" });
-    fireEvent.click(button);
-    await waitFor(() =>
-      expect((button as HTMLButtonElement).disabled).toBe(true),
+    client.setQueryData(projectKey, { data: [{ library_asset_id: room.id }] });
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Select Room" }),
     );
-    expect(screen.getByText("Deleting…")).toBeDefined();
-    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select Desk" }));
+    fireEvent.keyDown(screen.getByRole("button", { name: "Actions" }), {
+      key: "Enter",
+    });
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Delete selected" }),
+    );
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Delete 2 library files?",
+    });
+    const confirm = within(dialog).getByRole("button", {
+      name: "Delete selected",
+    });
+    fireEvent.click(confirm);
+    await waitFor(() =>
+      expect((confirm as HTMLButtonElement).disabled).toBe(true),
+    );
+    fireEvent.click(confirm);
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    expect(screen.getByRole("alertdialog")).toBe(dialog);
+    expect(
+      (
+        within(dialog).getByRole("button", {
+          name: "Cancel",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
     await waitFor(() => expect(finishDelete).toBeDefined());
-    expect(deleteCalls).toBe(1);
+    expect(requests).toEqual([
+      {
+        url: "http://127.0.0.1:8000/api/v1/library/bulk-delete",
+        method: "POST",
+        ids: [room.id, desk.id],
+      },
+    ]);
     finishDelete!();
-    await screen.findByText("No files yet.");
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(screen.getByRole("link", { name: "Garden" })).toBeDefined();
+    expect(screen.queryByRole("link", { name: "Room" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Desk" })).toBeNull();
+    await screen.findByText("0 selected");
     await waitFor(() =>
       expect(client.getQueryState(projectKey)?.isInvalidated).toBe(true),
     );
-    expect(screen.queryByRole("link", { name: "Room" })).toBeNull();
   });
 
-  it("preserves the item on a server error and allows a confirmed retry", async () => {
-    vi.mocked(window.confirm).mockReturnValue(true);
+  it("retains selection and dialog on error and retries the same batch", async () => {
     failDelete = true;
     mount();
-    fireEvent.click(await screen.findByRole("button", { name: "Delete Room" }));
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Select all library files" }),
+    );
+    fireEvent.keyDown(screen.getByRole("button", { name: "Actions" }), {
+      key: "Enter",
+    });
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Delete selected" }),
+    );
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Delete 3 library files?",
+    });
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Delete selected" }),
+    );
     expect((await screen.findByRole("alert")).textContent).toContain(
       "Could not delete",
     );
-    expect(screen.getByRole("link", { name: "Room" })).toBeDefined();
-    const button = screen.getByRole("button", { name: "Delete Room" });
-    expect((button as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByRole("alertdialog")).toBe(dialog);
+    expect(
+      (
+        screen.getByRole("checkbox", {
+          name: "Select Room",
+          hidden: true,
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
     failDelete = false;
-    fireEvent.click(button);
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Delete selected" }),
+    );
     await screen.findByText("No files yet.");
-    expect(deleteCalls).toBe(2);
+    expect(requests).toHaveLength(2);
+    expect(requests[1].ids).toEqual(requests[0].ids);
   });
 
   it("retains Download on the asset details page", async () => {
     mount(true);
     const download = await screen.findByRole("link", { name: "Download" });
-    expect(download.getAttribute("href")).toBe(asset.download_url);
+    expect(download.getAttribute("href")).toBe(room.download_url);
     expect(download.hasAttribute("download")).toBe(true);
   });
 });

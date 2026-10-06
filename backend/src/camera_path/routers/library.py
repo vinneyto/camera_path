@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from camera_path.services.library import (
     LibraryAsset,
     LibraryAssetDefaultsUpdate,
+    LibraryAssetsDelete,
     LibraryService,
     LibraryUpload,
     LibraryUploadCreate,
@@ -18,6 +19,17 @@ def get_library_service(request: Request) -> LibraryService:
 
 
 Library = Annotated[LibraryService, Depends(get_library_service)]
+
+
+@router.post(
+    "/bulk-delete",
+    status_code=204,
+    operation_id="deleteLibraryAssets",
+    description="Delete selected library files and all their instances from every project.",
+)
+async def delete_library_assets(data: LibraryAssetsDelete, service: Library) -> Response:
+    await service.delete_many(data.asset_ids)
+    return Response(status_code=204)
 
 
 @router.get(

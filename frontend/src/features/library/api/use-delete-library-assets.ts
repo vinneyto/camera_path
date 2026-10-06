@@ -3,24 +3,25 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
-  deleteLibraryAsset,
+  deleteLibraryAssets,
   getGetLibraryAssetQueryKey,
   getListLibraryAssetsQueryKey,
   type listLibraryAssetsResponse,
 } from "@/shared/api/generated/client";
 
-export function useDeleteLibraryAsset() {
+export function useDeleteLibraryAssets() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (assetId: string) => deleteLibraryAsset(assetId),
-    onSuccess: async (_, assetId) => {
+    mutationFn: (assetIds: string[]) =>
+      deleteLibraryAssets({ asset_ids: assetIds }),
+    onSuccess: async (_, assetIds) => {
       const affected = {
         predicate: (query: { queryKey: readonly unknown[] }) => {
           const path = query.queryKey[0];
           return (
             typeof path === "string" &&
             (path === "/api/v1/library" ||
-              path === `/api/v1/library/${assetId}` ||
+              assetIds.some((id) => path === `/api/v1/library/${id}`) ||
               /^\/api\/v1\/projects(?:\/|$)/.test(path))
           );
         },
@@ -31,13 +32,14 @@ export function useDeleteLibraryAsset() {
         (current) =>
           current && {
             ...current,
-            data: current.data.filter((asset) => asset.id !== assetId),
+            data: current.data.filter((asset) => !assetIds.includes(asset.id)),
           },
       );
-      queryClient.removeQueries({
-        queryKey: getGetLibraryAssetQueryKey(assetId),
-        exact: true,
-      });
+      for (const id of assetIds)
+        queryClient.removeQueries({
+          queryKey: getGetLibraryAssetQueryKey(id),
+          exact: true,
+        });
       await queryClient.invalidateQueries(affected);
     },
   });

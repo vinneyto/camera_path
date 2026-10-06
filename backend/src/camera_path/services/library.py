@@ -42,6 +42,10 @@ class LibraryUploadCreate(BaseModel):
     format: Literal["ply"] = "ply"
 
 
+class LibraryAssetsDelete(BaseModel):
+    asset_ids: list[str] = Field(min_length=1)
+
+
 class LibraryUpload(LibraryAsset):
     upload_url: str
 
@@ -97,18 +101,28 @@ class LibraryService:
         )
 
     async def delete(self, asset_id: str) -> None:
+        await self.delete_many([asset_id])
+
+    async def delete_many(self, asset_ids: list[str]) -> None:
+        asset_ids = sorted(set(asset_ids))
         async with self.repository.sessions.begin() as session:
-            record = await self.repository.get_for_update(session, asset_id)
-            if record is None:
-                raise HTTPException(404, "Library file not found")
-            await self.clouds.remove_library_asset(session, asset_id)
-            await self.repository.delete(session, record)
-            await session.flush()
+            records = []
+            # Validate and lock the entire selection before touching any file.
+            for asset_id in asset_ids:
+                record = await self.repository.get_for_update(session, asset_id)
+                if record is None:
+                    raise HTTPException(404, "Library file not found; reload the library")
+                records.append(record)
             try:
-                await self.storage.delete(record.object_key)
+                async with self.storage.stage_delete([record.object_key for record in records]):
+                    await self.clouds.remove_library_assets(session, asset_ids)
+                    for record in records:
+                        await self.repository.delete(session, record)
+                    await session.flush()
+                    # Storage staging must enclose the commit so SQL failures restore bytes.
+                    await session.commit()
             except OSError as error:
-                # Leave metadata, project instances and revisions intact for a retry.
-                raise HTTPException(502, "Could not delete the library file") from error
+                raise HTTPException(502, "Could not delete the selected library files") from error
 
     async def update_defaults(
         self, asset_id: str, data: LibraryAssetDefaultsUpdate, request: Request

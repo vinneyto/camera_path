@@ -1,6 +1,9 @@
 export { Badge } from "./badge";
 export { Button } from "./button";
 export { Card } from "./card";
+export { Checkbox } from "./checkbox";
+export { ConfirmationDialog } from "./confirmation-dialog";
+export { DropdownMenu } from "./dropdown-menu";
 export { ContextMenu, type ContextMenuPosition } from "./context-menu";
 export { Input } from "./input";
 export { Separator } from "./separator";

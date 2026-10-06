@@ -1,5 +1,5 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
-from unittest.mock import AsyncMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -132,14 +132,20 @@ async def test_storage_failure_rolls_back_and_can_be_retried(tmp_path: Path, mon
             ).status_code == 201
             before = await client.get(url)
             storage = app.state.library_service.storage
-            real_delete = storage.delete
-            monkeypatch.setattr(storage, "delete", AsyncMock(side_effect=OSError("Unavailable")))
+            real_delete = storage.stage_delete
+
+            @asynccontextmanager
+            async def failing_delete(keys):
+                raise OSError("Unavailable")
+                yield
+
+            monkeypatch.setattr(storage, "stage_delete", failing_delete)
             assert (await client.delete(f"/api/v1/library/{asset['id']}")).status_code == 502
             after = await client.get(url)
             assert after.json() == before.json()
             assert after.headers["etag"] == before.headers["etag"]
             assert (await client.get(asset["upload_url"])).status_code == 200
-            monkeypatch.setattr(storage, "delete", real_delete)
+            monkeypatch.setattr(storage, "stage_delete", real_delete)
             assert (await client.delete(f"/api/v1/library/{asset['id']}")).status_code == 204
             assert (await client.get(url)).json() == []
     finally:

@@ -1485,6 +1485,23 @@
         "title": "LibraryAssetDefaultsUpdate",
         "type": "object"
       },
+      "LibraryAssetsDelete": {
+        "properties": {
+          "asset_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Asset Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "asset_ids"
+        ],
+        "title": "LibraryAssetsDelete",
+        "type": "object"
+      },
       "LibraryUpload": {
         "properties": {
           "created_at": {
@@ -2544,6 +2561,41 @@
           }
         },
         "summary": "List Library Assets",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
+    "/api/v1/library/bulk-delete": {
+      "post": {
+        "description": "Delete selected library files and all their instances from every project.",
+        "operationId": "deleteLibraryAssets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryAssetsDelete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Library Assets",
         "tags": [
           "Library"
         ]

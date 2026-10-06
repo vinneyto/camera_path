@@ -77,12 +77,12 @@ class ProjectCloudRepository:
         await session.flush()
         await self._reorder(session, project_id, [item for item in clouds if item.id != cloud_id])
 
-    async def remove_library_asset(self, session: AsyncSession, asset_id: str) -> None:
+    async def remove_library_assets(self, session: AsyncSession, asset_ids: list[str]) -> None:
         project_ids = list(
             (
                 await session.scalars(
                     select(ProjectCloudRecord.project_id)
-                    .where(ProjectCloudRecord.library_asset_id == asset_id)
+                    .where(ProjectCloudRecord.library_asset_id.in_(asset_ids))
                     .distinct()
                     .order_by(ProjectCloudRecord.project_id)
                 )
@@ -99,7 +99,7 @@ class ProjectCloudRepository:
             await session.execute(
                 delete(ProjectCloudRecord).where(
                     ProjectCloudRecord.project_id == project_id,
-                    ProjectCloudRecord.library_asset_id == asset_id,
+                    ProjectCloudRecord.library_asset_id.in_(asset_ids),
                 )
             )
             await self._reorder(session, project_id, await self._list(session, project_id))
