@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthControl } from "@/features/auth";
+import { AuthControl, EditorOnly } from "@/features/auth";
 import Link from "next/link";
 
 import { useGetLibraryAsset } from "@/shared/api/generated/client";
@@ -54,7 +54,11 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
           </>
         )}
       </div>
-      {current && <LibraryAssetDefaults asset={current} />}
+      {current && (
+        <EditorOnly>
+          <LibraryAssetDefaults asset={current} />
+        </EditorOnly>
+      )}
     </main>
   );
 }

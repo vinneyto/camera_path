@@ -251,6 +251,6 @@ describe("library selection and deletion", () => {
 });
 
 vi.mock("@/features/auth", () => ({
-  useAuth: () => ({ canEdit: true }),
+  EditorOnly: ({ children }: { children: React.ReactNode }) => children,
   AuthControl: () => null,
 }));

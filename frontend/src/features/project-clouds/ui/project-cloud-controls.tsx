@@ -1,7 +1,5 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
-
 import {
   useListLibraryAssets,
   useListProjectClouds,
@@ -16,7 +14,6 @@ import {
 import { useProjectCloudActions } from "../api/use-project-cloud-actions";
 
 export function ProjectCloudControls({ projectId }: { projectId: string }) {
-  const { canEdit } = useAuth();
   const library = useListLibraryAssets();
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
@@ -66,7 +63,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
     <div className="space-y-1">
       <CommandPalette
         commands={commands}
-        disabled={!canEdit || actions.isPending || !grid.ready || grid.saving}
+        disabled={actions.isPending || !grid.ready || grid.saving}
       />
       {grid.saving && (
         <p className="text-xs text-muted-foreground" role="status">

@@ -1,7 +1,5 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
-
 import { useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -20,12 +18,11 @@ export function LibrarySelectionActions({
   onDeleted,
   deletion,
 }: LibrarySelectionActionsProps) {
-  const { canEdit } = useAuth();
   const [confirmation, setConfirmation] = useState<LibraryAsset[] | null>(null);
   const trigger = useRef<HTMLButtonElement>(null);
 
   function confirmDelete() {
-    if (!canEdit || !confirmation?.length || deletion.isPending) return;
+    if (!confirmation?.length || deletion.isPending) return;
     deletion.mutate(
       confirmation.map((asset) => asset.id),
       {
@@ -45,7 +42,7 @@ export function LibrarySelectionActions({
             ref={trigger}
             variant="outline"
             size="sm"
-            disabled={!canEdit || deletion.isPending}
+            disabled={deletion.isPending}
             type="button"
           >
             Actions <ChevronDown className="size-3.5" />
@@ -67,7 +64,7 @@ export function LibrarySelectionActions({
         }}
       />
       <ConfirmationDialog
-        open={canEdit && confirmation !== null}
+        open={confirmation !== null}
         onOpenChange={(open) => {
           if (!open) setConfirmation(null);
         }}

@@ -39,6 +39,9 @@ clouds/anchors/timelines, change profile settings, send messages and run the age
 enforces these permissions for direct API requests too. Create the account with the backend's
 `editor-create` command before signing in.
 
+Wrap editing forms, menus and controls in `EditorOnly` at their composition boundary. Guests see
+the shared content and read-only anchor markers; the anchor keyboard shortcut mounts only for editors.
+
 `features/auth` checks the server session on startup, window focus and once a minute. A 401 drops
 editor mode immediately. `features/user-settings` always loads the backend profile for guests.
 Editor renderer/grid/DPR choices are stored under `camera-path-editor-settings` in localStorage;

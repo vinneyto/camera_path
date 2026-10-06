@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
+import { EditorOnly } from "@/features/auth";
 
 import { type ReactNode, useState } from "react";
 
@@ -32,7 +32,6 @@ export function KeyframeTimeline({
   onDeleteKeyframe,
   renderMarker,
 }: KeyframeTimelineProps) {
-  const { canEdit } = useAuth();
   const [menu, setMenu] = useState<KeyframeMenuState | null>(null);
   const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(
     null,
@@ -48,7 +47,6 @@ export function KeyframeTimeline({
           data-keyframe-id={keyframe.id}
           key={keyframe.id}
           onContextMenu={(event) => {
-            if (!canEdit) return;
             event.preventDefault();
             setSelectedKeyframeId(keyframe.id);
             setMenu({
@@ -68,22 +66,24 @@ export function KeyframeTimeline({
           </span>
         </button>
       ))}
-      <ContextMenu
-        items={
-          menu
-            ? [
-                {
-                  destructive: true,
-                  disabled: deletingKeyframeId === menu.keyframeId,
-                  label: deleteLabel,
-                  onSelect: () => onDeleteKeyframe(menu.keyframeId),
-                },
-              ]
-            : []
-        }
-        onClose={() => setMenu(null)}
-        position={canEdit ? menu : null}
-      />
+      <EditorOnly>
+        <ContextMenu
+          items={
+            menu
+              ? [
+                  {
+                    destructive: true,
+                    disabled: deletingKeyframeId === menu.keyframeId,
+                    label: deleteLabel,
+                    onSelect: () => onDeleteKeyframe(menu.keyframeId),
+                  },
+                ]
+              : []
+          }
+          onClose={() => setMenu(null)}
+          position={menu}
+        />
+      </EditorOnly>
     </>
   );
 }

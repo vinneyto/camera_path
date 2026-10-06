@@ -10,13 +10,21 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { AuthProvider, useAuth } from "@/features/auth";
+import { AuthProvider, EditorOnly, useAuth } from "@/features/auth";
 import {
   UserSettingsProvider,
   useUserSettings,
   EDITOR_SETTINGS_KEY,
 } from "../model/user-settings-provider";
 import { UserSettingsPanel } from "./user-settings-panel";
+import {
+  AnchorToolShortcut,
+  EditorStoreProvider,
+  useActiveEditorTool,
+} from "@/features/project-editor";
+import { ProjectCreateForm } from "@/features/project-selection";
+import { LibraryUploadForm } from "@/features/library";
+import { ChatPanel } from "@/features/chat-agent/ui/chat-panel";
 
 const DEFAULTS = {
   webgpu_tile_renderer: true,
@@ -34,6 +42,7 @@ let guestReads = 0;
 function Controls() {
   const auth = useAuth();
   const settings = useUserSettings();
+  const tool = useActiveEditorTool();
   return (
     <>
       <span data-testid="preferences">{`${settings.webGpuTileRenderer}/${settings.showGrid}/${settings.gaussianDpr}`}</span>
@@ -41,7 +50,20 @@ function Controls() {
         Login
       </button>
       <button onClick={() => void auth.logout()}>Logout</button>
-      <UserSettingsPanel />
+      <span data-testid="tool">{tool ?? "none"}</span>
+      <EditorOnly>
+        <AnchorToolShortcut />
+        <UserSettingsPanel />
+        <ProjectCreateForm onCreate={async () => true} />
+        <LibraryUploadForm />
+      </EditorOnly>
+      <ChatPanel
+        anchors={[]}
+        messages={[]}
+        error={null}
+        pending={false}
+        onSend={async () => {}}
+      />
     </>
   );
 }
@@ -54,13 +76,23 @@ function mount() {
     <QueryClientProvider client={client}>
       <AuthProvider>
         <UserSettingsProvider>
-          <Controls />
+          <EditorStoreProvider>
+            <Controls />
+          </EditorStoreProvider>
         </UserSettingsProvider>
       </AuthProvider>
     </QueryClientProvider>,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Profile settings" }));
   return { ...result, client };
+}
+
+async function openSettings() {
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Profile settings" }),
+  );
+  return (await screen.findByRole("checkbox", {
+    name: "Show grid",
+  })) as HTMLInputElement;
 }
 
 beforeEach(() => {
@@ -109,6 +141,7 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 it("guests load the server profile and cannot edit it even with editor localStorage", async () => {
@@ -123,11 +156,8 @@ it("guests load the server profile and cannot edit it even with editor localStor
   mount();
   await waitFor(() => expect(guestReads).toBe(1));
   expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x");
-  expect(
-    screen
-      .getAllByRole("checkbox")
-      .every((box) => (box as HTMLInputElement).disabled),
-  ).toBe(true);
+  expect(screen.queryByRole("button", { name: "Profile settings" })).toBeNull();
+  expect(screen.queryByRole("checkbox")).toBeNull();
   expect(patches).toEqual([]);
 });
 
@@ -146,9 +176,7 @@ it("restores editor localStorage on login, saves changes there, and reloads back
       "false/false/system",
     ),
   );
-  const grid = screen.getByRole("checkbox", {
-    name: "Show grid",
-  }) as HTMLInputElement;
+  const grid = await openSettings();
   await waitFor(() => expect(grid.disabled).toBe(false));
   fireEvent.click(grid);
   await waitFor(() => expect(patches).toEqual([{ show_grid: true }]));
@@ -162,7 +190,7 @@ it("restores editor localStorage on login, saves changes there, and reloads back
   await waitFor(() =>
     expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x"),
   );
-  expect(grid.disabled).toBe(true);
+  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
   // Signing out preserves editor settings for the next login, without applying them to the guest.
   fireEvent.click(screen.getByRole("button", { name: "Login" }));
   await waitFor(() =>
@@ -176,9 +204,7 @@ it("keeps editor settings locally when server persistence fails, while the guest
   signedIn = true;
   failWrite = true;
   mount();
-  const grid = screen.getByRole("checkbox", {
-    name: "Show grid",
-  }) as HTMLInputElement;
+  const grid = await openSettings();
   await waitFor(() => expect(grid.disabled).toBe(false));
   fireEvent.click(grid);
   await screen.findByText("Save failed");
@@ -188,20 +214,20 @@ it("keeps editor settings locally when server persistence fails, while the guest
   );
   fireEvent.click(screen.getByRole("button", { name: "Logout" }));
   await waitFor(() => expect(guestReads).toBeGreaterThan(0));
-  await waitFor(() => expect(grid.checked).toBe(true));
-  expect(grid.disabled).toBe(true);
+  await waitFor(() =>
+    expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
+  );
+  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
 });
 
-it("drops editor preferences and disables edits when the session expires", async () => {
+it("drops editor preferences and hides edits when the session expires", async () => {
   signedIn = true;
   localStorage.setItem(
     EDITOR_SETTINGS_KEY,
     JSON.stringify({ ...DEFAULTS, show_grid: false }),
   );
   mount();
-  const grid = screen.getByRole("checkbox", {
-    name: "Show grid",
-  }) as HTMLInputElement;
+  const grid = await openSettings();
   await waitFor(() => expect(grid.disabled).toBe(false));
   expect(grid.checked).toBe(false);
   signedIn = false;
@@ -209,8 +235,10 @@ it("drops editor preferences and disables edits when the session expires", async
     window.dispatchEvent(new Event("camera-path-auth-expired"));
   });
   await waitFor(() => expect(guestReads).toBeGreaterThan(0));
-  await waitFor(() => expect(grid.checked).toBe(true));
-  expect(grid.disabled).toBe(true);
+  await waitFor(() =>
+    expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
+  );
+  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
 });
 
 it("a pending editor save cannot restore editor localStorage after logout", async () => {
@@ -221,9 +249,7 @@ it("a pending editor save cannot restore editor localStorage after logout", asyn
     JSON.stringify({ ...DEFAULTS, webgpu_tile_renderer: false }),
   );
   mount();
-  const grid = screen.getByRole("checkbox", {
-    name: "Show grid",
-  }) as HTMLInputElement;
+  const grid = await openSettings();
   await waitFor(() => expect(grid.disabled).toBe(false));
   fireEvent.click(grid);
   await waitFor(() => expect(releaseWrite).toBeDefined());
@@ -238,5 +264,36 @@ it("a pending editor save cannot restore editor localStorage after logout", asyn
   await waitFor(() =>
     expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x"),
   );
-  expect(grid.disabled).toBe(true);
+  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
 });
+
+it.each([
+  ["Macintosh", "Meta", { metaKey: true }],
+  ["Linux", "Control", { ctrlKey: true }],
+] as const)(
+  "hides guest editing and cancels %s placement on logout",
+  async (userAgent, key, modifier) => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(userAgent);
+    mount();
+    await waitFor(() => expect(guestReads).toBe(1));
+    expect(screen.queryByRole("textbox", { name: "Project name" })).toBeNull();
+    expect(screen.queryByLabelText("Add a PLY file to the library")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Send message" })).toBeNull();
+    expect(screen.getByText("Trajectory agent")).toBeTruthy();
+    fireEvent.keyDown(window, { key, ...modifier });
+    expect(screen.getByTestId("tool").textContent).toBe("none");
+    fireEvent.click(screen.getByRole("button", { name: "Login" }));
+    await screen.findByRole("textbox", { name: "Project name" });
+    expect(screen.getByLabelText("Add a PLY file to the library")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Send message" })).toBeTruthy();
+    fireEvent.keyDown(window, { key, ...modifier });
+    expect(screen.getByTestId("tool").textContent).toBe("anchor");
+    fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Send message" })).toBeNull(),
+    );
+    expect(screen.getByTestId("tool").textContent).toBe("none");
+    fireEvent.keyDown(window, { key, ...modifier });
+    expect(screen.getByTestId("tool").textContent).toBe("none");
+  },
+);

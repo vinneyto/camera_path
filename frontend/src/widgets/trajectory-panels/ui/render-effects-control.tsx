@@ -1,7 +1,5 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
-
 import { Plus } from "lucide-react";
 
 interface RenderEffectsControlProps {
@@ -15,7 +13,6 @@ export function RenderEffectsControl({
   hasDepthOfField,
   onAddDepthOfField,
 }: RenderEffectsControlProps) {
-  const { canEdit } = useAuth();
   if (hasDepthOfField) return null;
 
   return (
@@ -28,7 +25,7 @@ export function RenderEffectsControl({
         <div className="absolute right-0 top-full z-20 mt-1 min-w-32 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
           <button
             className="w-full rounded px-2 py-1 text-left text-[11px] hover:bg-accent disabled:cursor-not-allowed disabled:opacity-45"
-            disabled={!canEdit || disabled}
+            disabled={disabled}
             onClick={(event) => {
               onAddDepthOfField();
               event.currentTarget.closest("details")?.removeAttribute("open");

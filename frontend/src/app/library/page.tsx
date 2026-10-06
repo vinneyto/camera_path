@@ -1,4 +1,4 @@
-import { AuthControl } from "@/features/auth";
+import { AuthControl, EditorOnly } from "@/features/auth";
 import Link from "next/link";
 
 import { LibraryAssetList, LibraryUploadForm } from "@/features/library";
@@ -21,7 +21,9 @@ export default function LibraryPage() {
           Upload reconstruction files here. Projects will be able to reuse them.
         </p>
       </div>
-      <LibraryUploadForm />
+      <EditorOnly>
+        <LibraryUploadForm />
+      </EditorOnly>
       <LibraryAssetList />
     </main>
   );

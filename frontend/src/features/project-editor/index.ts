@@ -18,3 +18,4 @@ export { useTrajectorySelection } from "./model/use-trajectory-selection";
 export { useTrajectoryPlayback } from "./model/use-trajectory-playback";
 export { CameraModeToggle } from "./ui/camera-mode-toggle";
 export { TrajectoryPlaybackLoop } from "./ui/trajectory-playback-loop";
+export { AnchorToolShortcut } from "./ui/anchor-tool-shortcut";

@@ -140,4 +140,6 @@ describe("SceneViewportFrame trajectory context menu", () => {
   });
 });
 
-vi.mock("@/features/auth", () => ({ useAuth: () => ({ canEdit: true }) }));
+vi.mock("@/features/auth", () => ({
+  EditorOnly: ({ children }: { children: React.ReactNode }) => children,
+}));

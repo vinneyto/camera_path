@@ -1,7 +1,5 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -13,11 +11,10 @@ import {
   useCreateProject,
 } from "@/features/project-selection";
 import { ThemeToggle } from "@/features/theme-switcher";
-import { AuthControl } from "@/features/auth";
+import { AuthControl, EditorOnly } from "@/features/auth";
 import { UserSettingsPanel } from "@/features/user-settings";
 
 export function ProjectListPage() {
-  const { canEdit } = useAuth();
   const router = useRouter();
   const projectsQuery = useProjectsQuery();
   const createProjectMutation = useCreateProject();
@@ -28,7 +25,6 @@ export function ProjectListPage() {
     deleteProjectMutation.error;
 
   async function createProject(name: string) {
-    if (!canEdit) return false;
     try {
       const project = await createProjectMutation.mutateAsync(name);
       router.push(`/projects/${project.id}`);
@@ -39,7 +35,6 @@ export function ProjectListPage() {
   }
 
   function deleteProject(projectId: string, projectName: string) {
-    if (!canEdit) return;
     if (
       !window.confirm(`Delete “${projectName}”? This action cannot be undone.`)
     )
@@ -67,16 +62,20 @@ export function ProjectListPage() {
             Library
           </Link>
           <AuthControl />
-          <UserSettingsPanel />
+          <EditorOnly>
+            <UserSettingsPanel />
+          </EditorOnly>
           <ThemeToggle />
         </div>
       </div>
-      <div className="mb-4">
-        <ProjectCreateForm
-          disabled={!canEdit || createProjectMutation.isPending}
-          onCreate={createProject}
-        />
-      </div>
+      <EditorOnly>
+        <div className="mb-4">
+          <ProjectCreateForm
+            disabled={createProjectMutation.isPending}
+            onCreate={createProject}
+          />
+        </div>
+      </EditorOnly>
       {error && (
         <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
           {error instanceof Error ? error.message : "Could not load projects"}

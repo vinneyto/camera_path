@@ -1,4 +1,4 @@
-import { useAuth } from "@/features/auth";
+import { EditorOnly, useAuth } from "@/features/auth";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -116,7 +116,6 @@ export function SceneContents({
   );
   const placement = useAnchorPlacement({
     onPlace: onAddAnchor,
-    enabled: canEdit,
   });
   const cloudPlacement = useCloudPlacementInteraction({
     onPlace: onAddCloud,
@@ -124,13 +123,12 @@ export function SceneContents({
   });
   const { pendingCloud } = useCloudPlacement();
   useCloudPlacementRaycast(
-    canEdit && cameraMode === "orbit" && pendingCloud !== null,
+    cameraMode === "orbit" && pendingCloud !== null,
     cloudPlacement,
   );
   const heightEditing = useAnchorHeightEditing({
     anchors,
     onCommit: onUpdateAnchorLift,
-    enabled: canEdit,
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const framedInitialScene = useRef(false);
@@ -210,7 +208,7 @@ export function SceneContents({
         preview={editorVisible ? cloudPlacement.preview : null}
         placed={cloudPlacement.placed}
         resourceKeyForCloud={cloudPlacement.resourceKeyForCloud}
-        interactive={canEdit && isGaussianSurfacePickActive(activeTool)}
+        interactive={isGaussianSurfacePickActive(activeTool)}
         surfaceEvents={
           canEdit && editorVisible && activeTool !== "cloud"
             ? placement.surfaceEventProps
@@ -223,9 +221,9 @@ export function SceneContents({
       {showGrid && (
         <SceneGrid
           dark={dark}
-          interactive={canEdit && cameraMode === "orbit"}
+          interactive={cameraMode === "orbit"}
           placementEvents={
-            activeTool === "cloud" ? {} : placement.surfaceEventProps
+            canEdit && activeTool !== "cloud" ? placement.surfaceEventProps : {}
           }
         />
       )}
@@ -263,31 +261,39 @@ export function SceneContents({
                 }
               : anchor;
           return (
-            <AnchorMarker
-              anchor={markerAnchor}
-              hovered={heightEditing.hoveredAnchorId === anchor.id}
+            <EditorOnly
               key={anchor.id}
-              {...heightEditing.getAnchorInteractionProps(anchor)}
-              onContextMenu={(event) => {
-                event.stopPropagation();
-                event.nativeEvent.preventDefault();
-                if (!canEdit) return;
-                onOpenAnchorMenu(anchor, {
-                  x: event.nativeEvent.clientX,
-                  y: event.nativeEvent.clientY,
-                });
-              }}
-            />
+              fallback={<AnchorMarker anchor={anchor} />}
+            >
+              <AnchorMarker
+                anchor={markerAnchor}
+                hovered={heightEditing.hoveredAnchorId === anchor.id}
+                key={anchor.id}
+                {...heightEditing.getAnchorInteractionProps(anchor)}
+                onContextMenu={(event) => {
+                  event.stopPropagation();
+                  event.nativeEvent.preventDefault();
+                  onOpenAnchorMenu(anchor, {
+                    x: event.nativeEvent.clientX,
+                    y: event.nativeEvent.clientY,
+                  });
+                }}
+              />
+            </EditorOnly>
           );
         })}
-      {editorVisible && heightEditing.activeAnchor !== null && (
-        <AnchorHeightEditingOverlay
-          anchor={heightEditing.activeAnchor}
-          backend={renderingBackend}
-          dragging={heightEditing.preview?.dragging ?? false}
-          lift={heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift}
-        />
-      )}
+      <EditorOnly>
+        {editorVisible && heightEditing.activeAnchor !== null && (
+          <AnchorHeightEditingOverlay
+            anchor={heightEditing.activeAnchor}
+            backend={renderingBackend}
+            dragging={heightEditing.preview?.dragging ?? false}
+            lift={
+              heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift
+            }
+          />
+        )}
+      </EditorOnly>
       {editorVisible && trajectory && (
         <TrajectoryLine
           dark={dark}

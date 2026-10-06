@@ -23,7 +23,6 @@ interface UserSettingsContextValue {
   loading: boolean;
   saving: boolean;
   ready: boolean;
-  canEdit: boolean;
   error: Error | null;
   retry: () => void;
   save: (changes: UserSettingsUpdate) => void;
@@ -74,7 +73,6 @@ export function UserSettingsProvider({
     loading: auth.loading || query.isPending,
     saving: mutation.isPending,
     ready: query.isSuccess,
-    canEdit: auth.canEdit,
     error: (auth.canEdit ? mutation.error : null) ?? query.error,
     retry: () => {
       void query.refetch();

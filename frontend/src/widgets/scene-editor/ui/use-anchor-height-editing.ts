@@ -19,7 +19,6 @@ interface AnchorHeightPreview {
 }
 
 interface UseAnchorHeightEditingOptions {
-  enabled?: boolean;
   anchors: Anchor[];
   onCommit: (anchorId: string, lift: number) => Promise<void>;
 }
@@ -45,7 +44,6 @@ type AnchorInteractionProps = Pick<
 export function useAnchorHeightEditing({
   anchors,
   onCommit,
-  enabled = true,
 }: UseAnchorHeightEditingOptions) {
   const activeTool = useActiveEditorTool();
   const { clearHoveredAnchor, hoveredAnchorId, hoverAnchor } =
@@ -96,7 +94,7 @@ export function useAnchorHeightEditing({
   }
 
   function handlePointerDown(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (!enabled || activeTool !== null || event.button !== 0) return;
+    if (activeTool !== null || event.button !== 0) return;
     event.stopPropagation();
     event.nativeEvent.preventDefault();
     const target = event.target as Element | null;
@@ -136,13 +134,11 @@ export function useAnchorHeightEditing({
     const lift = Number(drag.lift.toFixed(4));
     setPreview({ anchorId: anchor.id, dragging: false, lift });
     setActiveTool(null);
-    void (enabled ? onCommit(anchor.id, lift) : Promise.resolve()).finally(
-      () => {
-        setPreview((current) =>
-          current?.anchorId === anchor.id && !current.dragging ? null : current,
-        );
-      },
-    );
+    void onCommit(anchor.id, lift).finally(() => {
+      setPreview((current) =>
+        current?.anchorId === anchor.id && !current.dragging ? null : current,
+      );
+    });
   }
 
   function handlePointerCancel(

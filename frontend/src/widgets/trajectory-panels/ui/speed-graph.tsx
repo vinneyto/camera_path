@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
+import { EditorOnly } from "@/features/auth";
 
 import { useState } from "react";
 
@@ -35,7 +35,6 @@ export function SpeedGraph({
   pathPosition,
   trajectory,
 }: SpeedGraphProps) {
-  const { canEdit } = useAuth();
   const [hoveredKeyframeId, setHoveredKeyframeId] = useState<string | null>(
     null,
   );
@@ -134,7 +133,6 @@ export function SpeedGraph({
               key={keyframe.id}
               onBlur={() => setHoveredKeyframeId(null)}
               onContextMenu={(event) => {
-                if (!canEdit) return;
                 event.preventDefault();
                 setMenu({
                   keyframeId: keyframe.id,
@@ -162,22 +160,24 @@ export function SpeedGraph({
           );
         })}
       </div>
-      <ContextMenu
-        items={
-          menu
-            ? [
-                {
-                  destructive: true,
-                  disabled: deletingKeyframeId === menu.keyframeId,
-                  label: "Delete speed keyframe",
-                  onSelect: () => onDeleteKeyframe(menu.keyframeId),
-                },
-              ]
-            : []
-        }
-        onClose={() => setMenu(null)}
-        position={canEdit ? menu : null}
-      />
+      <EditorOnly>
+        <ContextMenu
+          items={
+            menu
+              ? [
+                  {
+                    destructive: true,
+                    disabled: deletingKeyframeId === menu.keyframeId,
+                    label: "Delete speed keyframe",
+                    onSelect: () => onDeleteKeyframe(menu.keyframeId),
+                  },
+                ]
+              : []
+          }
+          onClose={() => setMenu(null)}
+          position={menu}
+        />
+      </EditorOnly>
     </div>
   );
 }

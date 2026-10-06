@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/features/auth";
+import { EditorOnly } from "@/features/auth";
 
 import { useState } from "react";
 
@@ -38,7 +38,6 @@ export function SceneViewportFrame({
   trajectoryAvailable,
   unavailableMessage = "This renderer is unavailable in this browser",
 }: SceneViewportFrameProps) {
-  const { canEdit } = useAuth();
   const { theme } = useTheme();
   const { cameraMode } = useCameraMode();
   const dark = theme === "dark";
@@ -109,31 +108,33 @@ export function SceneViewportFrame({
           />
         </div>
       )}
-      {canEdit && cameraMode === "orbit" && (
-        <ContextMenu
-          items={
-            contextMenu?.type === "anchor"
-              ? [
-                  {
-                    destructive: true,
-                    label: `Delete anchor ${contextMenu.anchor.label}`,
-                    onSelect: () => onDeleteAnchor(contextMenu.anchor),
-                  },
-                ]
-              : contextMenu?.type === "trajectory"
+      {cameraMode === "orbit" && (
+        <EditorOnly>
+          <ContextMenu
+            items={
+              contextMenu?.type === "anchor"
                 ? [
                     {
                       destructive: true,
-                      disabled: deletingTrajectory,
-                      label: "Delete trajectory",
-                      onSelect: onDeleteTrajectory,
+                      label: `Delete anchor ${contextMenu.anchor.label}`,
+                      onSelect: () => onDeleteAnchor(contextMenu.anchor),
                     },
                   ]
-                : []
-          }
-          onClose={() => setContextMenu(null)}
-          position={contextMenu}
-        />
+                : contextMenu?.type === "trajectory"
+                  ? [
+                      {
+                        destructive: true,
+                        disabled: deletingTrajectory,
+                        label: "Delete trajectory",
+                        onSelect: onDeleteTrajectory,
+                      },
+                    ]
+                  : []
+            }
+            onClose={() => setContextMenu(null)}
+            position={contextMenu}
+          />
+        </EditorOnly>
       )}
     </div>
   );
