@@ -63,6 +63,7 @@ class Base(DeclarativeBase):
 
 class UserSettingsRecord(Base):
     __tablename__ = "user_settings"
+    gaussian_dpr: Mapped[str] = mapped_column(Text, nullable=False, server_default="1x")
 
     user_id: Mapped[str] = mapped_column(Text, primary_key=True)
     webgpu_tile_renderer: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
@@ -394,6 +395,20 @@ class DepthOfFieldKeyframeRecord(ProjectScopedKeyframeRecord, Base):
     focus_scene_point_id: Mapped[str | None] = mapped_column(Text)
     focus_range_scale: Mapped[float] = mapped_column(Float, nullable=False)
     bokeh_scale: Mapped[float] = mapped_column(Float, nullable=False)
+
+
+class EditorRecord(Base):
+    __tablename__ = "editors"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    username: Mapped[str] = mapped_column(Text, nullable=False)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    credential_version: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class EditorSessionRecord(Base):
+    __tablename__ = "editor_sessions"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    expires_at: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 class ChatMessageRecord(ProjectChildRecord, Base):

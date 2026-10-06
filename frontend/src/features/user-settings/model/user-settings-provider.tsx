@@ -1,21 +1,29 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useAuth } from "@/features/auth";
 import {
-  getGetUserSettingsQueryKey,
-  useGetUserSettings,
-  useUpdateUserSettings,
+  getUserSettings,
+  updateUserSettings,
 } from "@/shared/api/generated/client";
-import type { UserSettingsUpdate } from "@/shared/api/generated/model";
+import type {
+  UserSettings,
+  UserSettingsUpdate,
+} from "@/shared/api/generated/model";
+import { readEditorSettings } from "./read-editor-settings";
+
+export const EDITOR_SETTINGS_KEY = "camera-path-editor-settings";
 
 interface UserSettingsContextValue {
   webGpuTileRenderer: boolean;
   showGrid: boolean;
+  gaussianDpr: "1x" | "system";
   loading: boolean;
   saving: boolean;
   ready: boolean;
+  canEdit: boolean;
   error: Error | null;
   retry: () => void;
   save: (changes: UserSettingsUpdate) => void;
@@ -30,41 +38,56 @@ export function UserSettingsProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const auth = useAuth();
   const queryClient = useQueryClient();
-  const query = useGetUserSettings({ query: { staleTime: Infinity } });
-  const mutation = useUpdateUserSettings<Error>({
-    mutation: {
-      onMutate: async () => {
-        // A read started before the save must not overwrite the confirmed result.
-        await queryClient.cancelQueries({
-          queryKey: getGetUserSettingsQueryKey(),
-        });
-      },
-      onSuccess: (response) => {
-        if (response.status === 200) {
-          queryClient.setQueryData(getGetUserSettingsQueryKey(), response);
-        }
-      },
+  const mode = auth.canEdit ? "editor" : "guest";
+  const key = ["profile-settings", mode];
+  const query = useQuery({
+    queryKey: key,
+    enabled: !auth.loading,
+    // Guest profile is read again on every transition (including logout/expiry).
+    staleTime: 0,
+    queryFn: async () => {
+      const response = await getUserSettings();
+      if (mode === "editor") {
+        const restored = readEditorSettings(response.data);
+        localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(restored));
+        return restored;
+      }
+      return response.data;
     },
   });
-
+  const mutation = useMutation({
+    mutationFn: (changes: UserSettingsUpdate) => updateUserSettings(changes),
+    onSuccess: () => {
+      // A late editor save cannot replace guest values after logout.
+      void queryClient.invalidateQueries({
+        queryKey: ["profile-settings", "guest"],
+      });
+    },
+  });
+  const preferences = query.data;
   const value: UserSettingsContextValue = {
-    webGpuTileRenderer: query.data?.data.webgpu_tile_renderer ?? true,
-    showGrid: query.data?.data.show_grid ?? true,
-    loading: query.isPending,
+    webGpuTileRenderer: preferences?.webgpu_tile_renderer ?? true,
+    showGrid: preferences?.show_grid ?? true,
+    gaussianDpr: preferences?.gaussian_dpr ?? "1x",
+    loading: auth.loading || query.isPending,
     saving: mutation.isPending,
     ready: query.isSuccess,
-    error:
-      mutation.error ?? (query.error instanceof Error ? query.error : null),
+    canEdit: auth.canEdit,
+    error: (auth.canEdit ? mutation.error : null) ?? query.error,
     retry: () => {
       void query.refetch();
     },
     save: (changes) => {
-      if (!query.isSuccess || mutation.isPending) return;
-      mutation.mutate({ data: changes });
+      if (!auth.canEdit || !preferences || mutation.isPending) return;
+      const next: UserSettings = { ...preferences, ...changes };
+      // Editor UI state is always persisted locally, even if backend save fails.
+      localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(next));
+      queryClient.setQueryData(key, next);
+      mutation.mutate(changes);
     },
   };
-
   return (
     <UserSettingsContext.Provider value={value}>
       {children}

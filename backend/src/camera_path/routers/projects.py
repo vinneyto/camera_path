@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, status
 
 from camera_path.models import Project, ProjectCreate, ProjectUpdate
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import (
     ERROR_RESPONSES,
     MUTATION_ERROR_RESPONSES,
@@ -11,7 +12,7 @@ from camera_path.routers.dependencies import MutationGuard, ProjectServiceDep
 router = APIRouter(tags=["Projects"])
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects",
     response_model=Project,
     status_code=status.HTTP_201_CREATED,
@@ -49,7 +50,7 @@ async def get_project(project_id: str, service: ProjectServiceDep, response: Res
     return with_project_etag(response, await service.get_project(project_id))
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}",
     response_model=Project,
     summary="Rename a project",
@@ -67,7 +68,7 @@ async def update_project(
     return with_project_etag(response, await service.update_project(project_id, data))
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a project",
@@ -82,7 +83,7 @@ async def delete_project(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/reset",
     response_model=Project,
     summary="Reset a project",

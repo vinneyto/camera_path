@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { useState } from "react";
 
 import { evaluateSpeed, type CompiledTrajectory } from "@/entities/trajectory";
@@ -33,6 +35,7 @@ export function SpeedGraph({
   pathPosition,
   trajectory,
 }: SpeedGraphProps) {
+  const { canEdit } = useAuth();
   const [hoveredKeyframeId, setHoveredKeyframeId] = useState<string | null>(
     null,
   );
@@ -131,6 +134,7 @@ export function SpeedGraph({
               key={keyframe.id}
               onBlur={() => setHoveredKeyframeId(null)}
               onContextMenu={(event) => {
+                if (!canEdit) return;
                 event.preventDefault();
                 setMenu({
                   keyframeId: keyframe.id,
@@ -172,7 +176,7 @@ export function SpeedGraph({
             : []
         }
         onClose={() => setMenu(null)}
-        position={menu}
+        position={canEdit ? menu : null}
       />
     </div>
   );

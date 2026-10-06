@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { useState } from "react";
 
 import type { Anchor } from "@/entities/project";
@@ -36,6 +38,7 @@ export function SceneViewportFrame({
   trajectoryAvailable,
   unavailableMessage = "This renderer is unavailable in this browser",
 }: SceneViewportFrameProps) {
+  const { canEdit } = useAuth();
   const { theme } = useTheme();
   const { cameraMode } = useCameraMode();
   const dark = theme === "dark";
@@ -106,7 +109,7 @@ export function SceneViewportFrame({
           />
         </div>
       )}
-      {cameraMode === "orbit" && (
+      {canEdit && cameraMode === "orbit" && (
         <ContextMenu
           items={
             contextMenu?.type === "anchor"

@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -16,6 +18,7 @@ interface LibraryAssetDefaultsProps {
 }
 
 export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
+  const { canEdit } = useAuth();
   const [angles, setAngles] = useState(() =>
     asset.default_rotation_deg.map(String),
   );
@@ -43,7 +46,7 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    save.mutate();
+    if (canEdit) save.mutate();
   }
 
   return (
@@ -52,7 +55,10 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
       <p className="text-xs text-muted-foreground">
         Default rotation: local X → Y → Z (Euler XYZ), degrees
       </p>
-      <div className="flex flex-wrap items-end gap-2">
+      <fieldset
+        disabled={!canEdit || save.isPending}
+        className="flex flex-wrap items-end gap-2"
+      >
         {(["X", "Y", "Z"] as const).map((axis, index) => (
           <label className="w-20 text-xs" key={axis}>
             {axis} (°)
@@ -106,7 +112,7 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
         <Button disabled={save.isPending} size="sm" type="submit">
           {save.isPending ? "Saving…" : "Save defaults"}
         </Button>
-      </div>
+      </fieldset>
       {save.error && (
         <p className="text-xs text-destructive" role="alert">
           {save.error.message}

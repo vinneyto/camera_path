@@ -1,3 +1,4 @@
+import { AuthControl } from "@/features/auth";
 import Link from "next/link";
 
 import { LibraryAssetList, LibraryUploadForm } from "@/features/library";
@@ -12,6 +13,9 @@ export default function LibraryPage() {
         >
           ← Projects
         </Link>
+        <div className="flex justify-end">
+          <AuthControl />
+        </div>
         <h1 className="mt-4 text-xl font-semibold">3DGS library</h1>
         <p className="mt-1 text-xs text-muted-foreground">
           Upload reconstruction files here. Projects will be able to reuse them.

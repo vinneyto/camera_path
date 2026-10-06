@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Response
 
 from camera_path.models import CompiledTrajectory, Project, SpiralSegmentCreate, SplineSegmentCreate
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import (
     ERROR_RESPONSES,
     MUTATION_ERROR_RESPONSES,
@@ -12,7 +13,7 @@ from camera_path.routers.dependencies import MutationGuard, TrajectoryServiceDep
 router = APIRouter(tags=["Trajectory"])
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/trajectory",
     response_model=Project,
     summary="Clear a trajectory",
@@ -26,7 +27,7 @@ async def clear_trajectory(
     return with_project_etag(response, await service.clear_trajectory(project_id))
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/segments/spline",
     response_model=Project,
     summary="Add a spline segment",
@@ -44,7 +45,7 @@ async def add_spline(
     return with_project_etag(response, await service.add_spline(project_id, data))
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/segments/spiral",
     response_model=Project,
     summary="Add a spiral segment",
@@ -62,7 +63,7 @@ async def add_spiral(
     return with_project_etag(response, await service.add_spiral(project_id, data))
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/segments/{segment_id}",
     response_model=Project,
     summary="Delete a segment",

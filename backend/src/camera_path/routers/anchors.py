@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Response
 
 from camera_path.models import AnchorCreate, AnchorUpdate, Project
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import AnchorServiceDep, MutationGuard
 
 router = APIRouter(tags=["Projects"])
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/anchors",
     response_model=Project,
     summary="Add an anchor",
@@ -25,7 +26,7 @@ async def add_anchor(
     return with_project_etag(response, await service.add_anchor(project_id, data))
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/anchors/{anchor_id}",
     response_model=Project,
     summary="Update an anchor",
@@ -48,7 +49,7 @@ async def update_anchor(
     return with_project_etag(response, project)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/anchors/{anchor_id}",
     response_model=Project,
     summary="Delete an anchor",

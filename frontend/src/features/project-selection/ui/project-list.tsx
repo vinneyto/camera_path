@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import Link from "next/link";
 import { ArrowRight, Box, LoaderCircle } from "lucide-react";
 import { useState } from "react";
@@ -24,6 +26,7 @@ export function ProjectList({
   onDelete,
   projects,
 }: ProjectListProps) {
+  const { canEdit } = useAuth();
   const [menu, setMenu] = useState<ProjectMenuState | null>(null);
 
   if (loading) {
@@ -48,6 +51,7 @@ export function ProjectList({
             href={`/projects/${project.id}`}
             key={project.id}
             onContextMenu={(event) => {
+              if (!canEdit) return;
               event.preventDefault();
               setMenu({ project, x: event.clientX, y: event.clientY });
             }}
@@ -74,7 +78,7 @@ export function ProjectList({
       </div>
       <ContextMenu
         items={
-          menu
+          canEdit && menu
             ? [
                 {
                   destructive: true,

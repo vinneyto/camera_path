@@ -1,17 +1,20 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { useState, type FormEvent } from "react";
 
 import { Button, Input } from "@/shared/ui";
 import { useUploadLibraryFile } from "../api/use-upload-library-file";
 
 export function LibraryUploadForm() {
+  const { canEdit } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const upload = useUploadLibraryFile();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!file) return;
+    if (!canEdit || !file) return;
     const form = event.currentTarget;
     try {
       await upload.mutateAsync(file);
@@ -29,13 +32,14 @@ export function LibraryUploadForm() {
       </label>
       <div className="flex flex-wrap items-center gap-3">
         <Input
+          disabled={!canEdit || upload.isPending}
           accept=".ply"
           className="min-w-0 flex-1"
           id="library-file"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           type="file"
         />
-        <Button disabled={!file || upload.isPending} type="submit">
+        <Button disabled={!canEdit || !file || upload.isPending} type="submit">
           {upload.isPending ? "Uploading…" : "Upload"}
         </Button>
       </div>

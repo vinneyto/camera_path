@@ -111,3 +111,5 @@ describe("project cloud controls", () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 });
+
+vi.mock("@/features/auth", () => ({ useAuth: () => ({ canEdit: true }) }));

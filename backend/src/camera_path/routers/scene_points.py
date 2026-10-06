@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Response
 
 from camera_path.models import Project, ScenePointCreate, ScenePointUpdate
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import MutationGuard, ScenePointServiceDep
 
 router = APIRouter(tags=["Projects"])
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/scene-points",
     response_model=Project,
     summary="Add a scene point",
@@ -25,7 +26,7 @@ async def add_scene_point(
     return with_project_etag(response, await service.add_scene_point(project_id, data))
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/scene-points/{point_id}",
     response_model=Project,
     summary="Update a scene point",
@@ -48,7 +49,7 @@ async def update_scene_point(
     return with_project_etag(response, project)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/scene-points/{point_id}",
     response_model=Project,
     summary="Delete a scene point",

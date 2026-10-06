@@ -1,2 +1,2 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+// Browser API requests always pass through the same-origin Next.js proxy.
+export const API_URL = "";

@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Response
 
 from camera_path.models import Project
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import HistoryServiceDep, MutationGuard
 
 router = APIRouter(tags=["History"])
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/undo",
     response_model=Project,
     summary="Undo the latest change",
@@ -21,7 +22,7 @@ async def undo(
     return with_project_etag(response, await service.undo(project_id))
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/redo",
     response_model=Project,
     summary="Redo the next change",

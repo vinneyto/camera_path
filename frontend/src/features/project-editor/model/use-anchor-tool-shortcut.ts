@@ -6,11 +6,15 @@ import { useEditorStoreApi } from "./editor-store-provider";
 import { getAnchorToolModifier } from "./get-anchor-tool-modifier";
 import { useSetActiveEditorTool } from "./use-set-active-editor-tool";
 
-export function useAnchorToolShortcut() {
+export function useAnchorToolShortcut(enabled = true) {
   const store = useEditorStoreApi();
   const setActiveTool = useSetActiveEditorTool();
 
   useEffect(() => {
+    if (!enabled) {
+      setActiveTool(null);
+      return;
+    }
     function handleKeyDown(event: KeyboardEvent) {
       if (
         event.key === getAnchorToolModifier(event).key &&
@@ -42,5 +46,5 @@ export function useAnchorToolShortcut() {
       window.removeEventListener("blur", handleBlur);
       setActiveTool(null);
     };
-  }, [setActiveTool, store]);
+  }, [enabled, setActiveTool, store]);
 }

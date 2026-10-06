@@ -61,6 +61,13 @@ export async function orvalFetch<T>(
     });
   }
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      url !== "/api/v1/auth/login"
+    ) {
+      window.dispatchEvent(new Event("camera-path-auth-expired"));
+    }
     const payload = (await response.json().catch(() => null)) as {
       detail?: string;
     } | null;

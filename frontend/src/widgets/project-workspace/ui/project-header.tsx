@@ -5,6 +5,7 @@ import type { Project } from "@/entities/project";
 import { GaussianDprSelect } from "@/features/gaussian-rendering-settings";
 import { ProjectCloudControls } from "@/features/project-clouds";
 import { ThemeToggle } from "@/features/theme-switcher";
+import { AuthControl } from "@/features/auth";
 import { UserSettingsPanel } from "@/features/user-settings";
 import { Badge, Button, FLOATING_PANEL_Z_INDEX } from "@/shared/ui";
 
@@ -43,6 +44,7 @@ export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
         <div className="hidden lg:block">
           <GaussianDprSelect />
         </div>
+        <AuthControl />
         <UserSettingsPanel />
         <ThemeToggle />
         <Badge className="hidden gap-1 2xl:inline-flex">

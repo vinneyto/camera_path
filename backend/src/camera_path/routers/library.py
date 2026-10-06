@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
+from camera_path.routers.auth import authenticated
 from camera_path.services.library import (
     LibraryAsset,
     LibraryAssetDefaultsUpdate,
@@ -21,7 +22,7 @@ def get_library_service(request: Request) -> LibraryService:
 Library = Annotated[LibraryService, Depends(get_library_service)]
 
 
-@router.post(
+@authenticated(router.post)(
     "/bulk-delete",
     status_code=204,
     operation_id="deleteLibraryAssets",
@@ -52,7 +53,7 @@ async def get_library_asset(asset_id: str, request: Request, service: Library) -
     return await service.get(asset_id, request)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/{asset_id}",
     status_code=204,
     operation_id="deleteLibraryAsset",
@@ -63,7 +64,7 @@ async def delete_library_asset(asset_id: str, service: Library) -> Response:
     return Response(status_code=204)
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/{asset_id}/defaults",
     response_model=LibraryAsset,
     operation_id="updateLibraryAssetDefaults",
@@ -75,7 +76,7 @@ async def update_library_asset_defaults(
     return await service.update_defaults(asset_id, data, request)
 
 
-@router.post(
+@authenticated(router.post)(
     "/uploads",
     response_model=LibraryUpload,
     status_code=201,
@@ -88,7 +89,7 @@ async def create_library_upload(
     return await service.create(data, request)
 
 
-@router.post(
+@authenticated(router.post)(
     "/{asset_id}/complete",
     response_model=LibraryAsset,
     operation_id="completeLibraryUpload",

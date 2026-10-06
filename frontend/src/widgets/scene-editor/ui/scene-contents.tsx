@@ -1,3 +1,4 @@
+import { useAuth } from "@/features/auth";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -10,7 +11,7 @@ import {
   type CompiledTrajectory,
 } from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
-import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
+import { useUserSettings } from "@/features/user-settings";
 import {
   useActiveEditorTool,
   useCloudPlacement,
@@ -89,14 +90,13 @@ export function SceneContents({
   selected,
   trajectory,
 }: SceneContentsProps) {
+  const { canEdit } = useAuth();
   const camera = useThree((state) => state.camera);
   const activeTool = useActiveEditorTool();
   const { showGrid } = useSceneGrid();
   const { cameraMode, setCameraMode } = useCameraMode();
   useEditorHoverCursor();
-  const gaussianDprMode = useGaussianRenderingSettingsStore(
-    (state) => state.dprMode,
-  );
+  const { gaussianDpr: gaussianDprMode } = useUserSettings();
   const depthOfFieldKeyframe = trajectory
     ? evaluateDepthOfFieldKeyframe(trajectory, pathPosition)
     : null;
@@ -114,19 +114,23 @@ export function SceneContents({
     depthOfFieldEnabled,
     GAUSSIAN_CLOUD_LAYERS,
   );
-  const placement = useAnchorPlacement({ onPlace: onAddAnchor });
+  const placement = useAnchorPlacement({
+    onPlace: onAddAnchor,
+    enabled: canEdit,
+  });
   const cloudPlacement = useCloudPlacementInteraction({
     onPlace: onAddCloud,
     clouds,
   });
   const { pendingCloud } = useCloudPlacement();
   useCloudPlacementRaycast(
-    cameraMode === "orbit" && pendingCloud !== null,
+    canEdit && cameraMode === "orbit" && pendingCloud !== null,
     cloudPlacement,
   );
   const heightEditing = useAnchorHeightEditing({
     anchors,
     onCommit: onUpdateAnchorLift,
+    enabled: canEdit,
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const framedInitialScene = useRef(false);
@@ -206,9 +210,9 @@ export function SceneContents({
         preview={editorVisible ? cloudPlacement.preview : null}
         placed={cloudPlacement.placed}
         resourceKeyForCloud={cloudPlacement.resourceKeyForCloud}
-        interactive={isGaussianSurfacePickActive(activeTool)}
+        interactive={canEdit && isGaussianSurfacePickActive(activeTool)}
         surfaceEvents={
-          editorVisible && activeTool !== "cloud"
+          canEdit && editorVisible && activeTool !== "cloud"
             ? placement.surfaceEventProps
             : {}
         }
@@ -219,7 +223,7 @@ export function SceneContents({
       {showGrid && (
         <SceneGrid
           dark={dark}
-          interactive={cameraMode === "orbit"}
+          interactive={canEdit && cameraMode === "orbit"}
           placementEvents={
             activeTool === "cloud" ? {} : placement.surfaceEventProps
           }
@@ -267,6 +271,7 @@ export function SceneContents({
               onContextMenu={(event) => {
                 event.stopPropagation();
                 event.nativeEvent.preventDefault();
+                if (!canEdit) return;
                 onOpenAnchorMenu(anchor, {
                   x: event.nativeEvent.clientX,
                   y: event.nativeEvent.clientY,

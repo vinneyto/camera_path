@@ -55,8 +55,8 @@ To upload a file, call `POST /api/v1/library/uploads` with its name and byte siz
 to the returned `upload_url`, then call `POST /api/v1/library/{id}/complete`. The final step checks
 the uploaded size and PLY signature before the asset appears in `GET /api/v1/library` with a
 `download_url`. Library assets are independent of projects; associating clouds with projects is
-tracked separately. Upload permissions depend on the pending CP-49 authentication work, so the
-current development endpoints must not be exposed publicly.
+tracked separately. Preparing, uploading, confirming and deleting assets require an editor JWT;
+downloading ready files remains public.
 
 `DELETE /api/v1/library/{id}` removes the asset, its stored file and every cloud instance
 that references it in every project. Remaining clouds retain their order with consecutive
@@ -73,17 +73,52 @@ The frontend uses checkboxes and Actions → Delete selected with a React confir
 
 ### User profile settings
 
-`GET /api/v1/profile/settings` returns `webgpu_tile_renderer` and `show_grid`, both true by default.
-`PATCH` at the same URL saves only supplied boolean fields and returns the confirmed preferences.
-Settings are stored in `user_settings`, keyed by user ID, independently of projects; no project
-ETag is required. Run `uv run alembic upgrade head` to apply migration `20261005_0010`.
+`GET /api/v1/profile/settings` returns the shared guest viewer profile: `webgpu_tile_renderer`
+and `show_grid` default to true; `gaussian_dpr` defaults to `"1x"` and also accepts `"system"`.
+Anonymous reads never create or update profile rows. `PATCH` requires an editor JWT and saves
+only supplied fields; it publishes the confirmed values as the guest fallback. No project ETag
+is required. `CAMERA_PATH_DEV_USER_ID` (default `dev-user`) retains the existing M2 profile key;
+it does not identify the authenticated editor or scope projects/chat/library to an owner.
+Editor UI preferences are additionally saved in browser localStorage and restored on login.
 
-Until CP-49 adds authentication, `CAMERA_PATH_DEV_USER_ID` (default `dev-user`) selects the
-single development user for this server. All its browser clients share that user's preferences.
-Clients cannot choose a different user through a request header, query parameter or payload.
-CP-49 should replace `routers.profile.get_current_user_id` with the authenticated principal
-and clear the frontend profile query cache when the principal changes; settings endpoints and
-payloads stay the same. This development identity is not authentication.
+### Editor authentication
+
+All reads of projects, resources, library files and chat history remain public. Every write route,
+including legacy aliases, local PLY uploads and both agent endpoints, uses the common
+`@authenticated(router.post/patch/put/delete)` decorator. Anonymous or invalid JWT writes return
+401 before revision checks or side effects. Data remains shared between guest and editor.
+
+Configure a random signing secret with at least 32 bytes in `backend/.env` (never commit it):
+
+```bash
+uv run python -c 'import secrets; print(secrets.token_urlsafe(48))'
+```
+
+Set the printed value as `CAMERA_PATH_JWT_SECRET`, then prepare the database and single account:
+
+```bash
+uv run alembic upgrade head
+uv run editor-create your-login
+```
+
+The command asks for a password twice (12–1024 characters), stores a salted Argon2 hash and
+revokes all previous sessions when replacing credentials. There is no public registration API.
+The new migration `20261006_0011` preserves project/library/profile data and adds editor sessions.
+Missing/short signing secrets disable login and authenticated requests; public reads still work.
+
+`POST /api/v1/auth/login` accepts JSON `{ "username": "...", "password": "..." }` and returns
+`access_token`, `token_type` and `expires_in` to direct API clients. Use `Authorization: Bearer ...`
+for writes and `GET /api/v1/auth/session`. JWT validation fixes HS256 and checks signature, issuer,
+audience, required claims, expiry and the active server session. Default lifetime is eight hours;
+`CAMERA_PATH_JWT_TTL_SECONDS` accepts 60–86400 seconds. No refresh token is issued.
+`POST /api/v1/auth/logout` revokes only the current session, so replaying that JWT fails immediately.
+Sign-in is limited to ten attempts per minute per backend process; use one process for this initial
+single-editor deployment. A request already authenticated/in flight may finish after logout.
+
+The Next.js proxy stores the JWT in an HttpOnly, SameSite=Strict cookie (Secure in production),
+adds Bearer authorization for the backend, and validates the Origin of every browser write.
+The browser receives session metadata rather than the raw token. Cookies and JWTs are not in
+localStorage. The same proxy works locally and on Vercel; only its server-side backend URL changes.
 
 ### Project clouds
 

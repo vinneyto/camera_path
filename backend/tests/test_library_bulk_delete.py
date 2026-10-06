@@ -2,11 +2,11 @@ from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
+from conftest import create_editor_app as create_app
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from test_library_delete import upload
 
-from camera_path.api import create_app
 from camera_path.config import Settings
 
 

@@ -139,3 +139,5 @@ describe("SceneViewportFrame trajectory context menu", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
+
+vi.mock("@/features/auth", () => ({ useAuth: () => ({ canEdit: true }) }));

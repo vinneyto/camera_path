@@ -11,13 +11,14 @@ from openai import OpenAIError
 from camera_path.agent import AgentUnavailableError
 from camera_path.models import ChatMessage, ChatResult, Project
 from camera_path.repositories import ProjectNotFoundError
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import CHAT_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import Agent, ChatServiceDep, MutationGuard
 
 router = APIRouter(tags=["Chat"])
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/chat",
     response_model=Project,
     summary="Clear chat history",
@@ -31,7 +32,7 @@ async def clear_chat(
     return with_project_etag(response, await service.clear_chat(project_id))
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/chat/messages",
     response_model=ChatResult,
     summary="Send a chat message",
@@ -56,7 +57,7 @@ async def chat(
     return result
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/chat/user-messages",
     response_model=Project,
     summary="Save a user chat message",
@@ -79,7 +80,7 @@ def _sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/chat/messages/stream",
     summary="Stream a chat response",
     description=(

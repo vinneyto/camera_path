@@ -21,10 +21,12 @@ from camera_path.repositories import (
     ProjectRepository,
     RevisionConflictError,
 )
+from camera_path.repositories.auth import AuthRepository
 from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.project_cloud import ProjectCloudRepository
 from camera_path.repositories.user_settings import UserSettingsRepository
 from camera_path.routers.api import router as business_router
+from camera_path.routers.auth import router as auth_router
 from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.routers.library import router as library_router
 from camera_path.routers.profile import router as profile_router
@@ -39,6 +41,7 @@ from camera_path.services import (
     TimelineService,
     TrajectoryService,
 )
+from camera_path.services.auth import AuthService
 from camera_path.services.library import LibraryService
 from camera_path.services.library_storage import LibraryStorage
 from camera_path.services.project_clouds import ProjectCloudService
@@ -183,6 +186,9 @@ def create_app(
     application.state.library_service = library_service
     application.state.project_cloud_service = project_cloud_service
     application.state.project_repository = project_repository
+    application.state.auth_service = AuthService(
+        AuthRepository(project_repository.session_factory), configured
+    )
     application.state.dev_user_id = configured.dev_user_id
     application.state.user_settings_service = UserSettingsService(
         UserSettingsRepository(project_repository.session_factory)
@@ -293,6 +299,7 @@ def create_app(
         )
 
     application.include_router(resource_router, prefix=API_PREFIX)
+    application.include_router(auth_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
     application.include_router(project_cloud_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)

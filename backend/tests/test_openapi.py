@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 
 import pytest
+from conftest import create_editor_app as create_app
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
 
-from camera_path.api import create_app
 from camera_path.config import Settings
 from camera_path.export_openapi import export_schema
 from camera_path.repositories import ProjectRepository

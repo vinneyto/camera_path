@@ -15,16 +15,20 @@ import { usePointerTap } from "@/shared/lib/use-pointer-tap";
 const CLICK_THRESHOLD_PX = 5;
 
 interface UseAnchorPlacementOptions {
+  enabled?: boolean;
   onPlace: (position: Vec3, normal: Vec3) => void;
 }
 
-export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
+export function useAnchorPlacement({
+  onPlace,
+  enabled = true,
+}: UseAnchorPlacementOptions) {
   const activeTool = useActiveEditorTool();
   const setActiveTool = useSetActiveEditorTool();
   const [previewHit, setPreviewHit] = useState<SceneSurfaceHit | null>(null);
 
   function handleTap(hit: SceneSurfaceHit) {
-    onPlace(hit.position, hit.normal);
+    if (enabled) onPlace(hit.position, hit.normal);
   }
   const {
     cancel: cancelPointerTap,
@@ -45,11 +49,11 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     event: ThreeEvent<PointerEvent>,
   ) {
     const pointerType = event.nativeEvent.pointerType;
-    const enabled =
+    const pointerEnabled =
       activeTool === "anchor" ||
       getAnchorToolModifier(event.nativeEvent).pressed ||
       pointerType === "touch";
-    if (!enabled) return;
+    if (!enabled || !pointerEnabled) return;
     if (pointerType === "touch") setActiveTool("anchor");
     beginPointerTap(hit, event);
     setPreviewHit(hit);
@@ -61,8 +65,9 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     event: ThreeEvent<PointerEvent>,
   ) {
     if (
-      activeTool === "anchor" ||
-      getAnchorToolModifier(event.nativeEvent).pressed
+      enabled &&
+      (activeTool === "anchor" ||
+        getAnchorToolModifier(event.nativeEvent).pressed)
     ) {
       setPreviewHit(hit);
     }
@@ -75,11 +80,11 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     event: ThreeEvent<PointerEvent>,
   ) {
     (event.target as Element | null)?.releasePointerCapture?.(event.pointerId);
-    const enabled =
+    const pointerEnabled =
       activeTool === "anchor" ||
       getAnchorToolModifier(event.nativeEvent).pressed ||
       event.nativeEvent.pointerType === "touch";
-    if (enabled) finishPointerTap(event);
+    if (enabled && pointerEnabled) finishPointerTap(event);
     else cancelPointerTap();
     if (event.nativeEvent.pointerType === "touch") {
       setPreviewHit(null);
@@ -104,7 +109,7 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
 
   return {
     handleControlsChange,
-    previewHit: activeTool === "anchor" ? previewHit : null,
+    previewHit: enabled && activeTool === "anchor" ? previewHit : null,
     surfaceEventProps: {
       onPointerCancel: handlePointerCancel,
       onPointerOut: handlePointerOut,

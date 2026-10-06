@@ -10,7 +10,7 @@ export function UserSettingsPanel() {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const settings = useUserSettings();
-  const disabled = !settings.ready || settings.saving;
+  const disabled = !settings.canEdit || !settings.ready || settings.saving;
 
   useEffect(() => {
     if (!open) return;

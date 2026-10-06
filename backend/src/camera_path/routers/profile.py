@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 
 from camera_path.models import ErrorResponse
+from camera_path.routers.auth import authenticated
 from camera_path.services.user_settings import (
     UserSettings,
     UserSettingsService,
@@ -13,7 +14,11 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
 
 
 def get_current_user_id(request: Request) -> str:
-    """Dev identity seam; CP-49 will resolve the authenticated principal here."""
+    """Shared published viewer profile; writes are restricted to the editor.
+
+    Preserve the existing profile key so M2 preferences survive the migration.
+    Editor localStorage restoration is independent of this backend fallback.
+    """
     return request.app.state.dev_user_id
 
 
@@ -35,7 +40,7 @@ async def get_user_settings(user_id: CurrentUser, service: UserSettingsServiceDe
     return await service.get(user_id)
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/settings",
     response_model=UserSettings,
     operation_id="updateUserSettings",

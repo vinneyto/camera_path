@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
 
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, set_revision_etag
 from camera_path.routers.dependencies import MutationGuard, parse_if_match
 from camera_path.services.project_clouds import (
@@ -36,7 +37,7 @@ async def list_project_clouds(
     return clouds
 
 
-@router.post(
+@authenticated(router.post)(
     "",
     response_model=ProjectCloud,
     status_code=201,
@@ -64,7 +65,7 @@ async def create_project_cloud(
     return cloud
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/{cloud_id}",
     response_model=ProjectCloud,
     operation_id="updateProjectCloud",
@@ -88,7 +89,7 @@ async def update_project_cloud(
     return cloud
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/{cloud_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     operation_id="deleteProjectCloud",

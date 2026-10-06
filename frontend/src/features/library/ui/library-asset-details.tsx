@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthControl } from "@/features/auth";
 import Link from "next/link";
 
 import { useGetLibraryAsset } from "@/shared/api/generated/client";
@@ -16,6 +17,9 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-5 py-12">
       <div>
+        <div className="flex justify-end">
+          <AuthControl />
+        </div>
         <Link
           className="text-xs text-muted-foreground hover:underline"
           href="/library"

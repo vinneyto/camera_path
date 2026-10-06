@@ -1632,6 +1632,30 @@
         "title": "LibraryUploadCreate",
         "type": "object"
       },
+      "LoginRequest": {
+        "properties": {
+          "password": {
+            "format": "password",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "username": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
       "LookAtPointAim": {
         "properties": {
           "kind": {
@@ -2133,6 +2157,19 @@
         "title": "ScenePointUpdate",
         "type": "object"
       },
+      "SessionResponse": {
+        "properties": {
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username"
+        ],
+        "title": "SessionResponse",
+        "type": "object"
+      },
       "SpeedKeyframe": {
         "properties": {
           "id": {
@@ -2428,6 +2465,29 @@
         "title": "SplineSegmentCreate",
         "type": "object"
       },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
       "Trajectory": {
         "properties": {
           "segments": {
@@ -2457,6 +2517,15 @@
       },
       "UserSettings": {
         "properties": {
+          "gaussian_dpr": {
+            "default": "1x",
+            "enum": [
+              "1x",
+              "system"
+            ],
+            "title": "Gaussian Dpr",
+            "type": "string"
+          },
           "show_grid": {
             "title": "Show Grid",
             "type": "boolean"
@@ -2476,6 +2545,15 @@
       "UserSettingsUpdate": {
         "additionalProperties": false,
         "properties": {
+          "gaussian_dpr": {
+            "default": "1x",
+            "enum": [
+              "1x",
+              "system"
+            ],
+            "title": "Gaussian Dpr",
+            "type": "string"
+          },
           "show_grid": {
             "default": true,
             "title": "Show Grid",
@@ -2530,6 +2608,12 @@
         "title": "ValidationError",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -2540,6 +2624,98 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Verify credentials and issue a revocable JWT.",
+        "operationId": "loginEditor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign in as the editor",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Revoke the current JWT session on the server.",
+        "operationId": "logoutEditor",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sign out",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/session": {
+      "get": {
+        "description": "Validate the JWT and return the editor name.",
+        "operationId": "getEditorSession",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read the editor session",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/v1/library": {
       "get": {
         "description": "List ready 3DGS files in the reusable library.",
@@ -2584,6 +2760,9 @@
           "204": {
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2595,6 +2774,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete Library Assets",
         "tags": [
           "Library"
@@ -2626,6 +2810,9 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2637,6 +2824,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Library Upload",
         "tags": [
           "Library"
@@ -2662,6 +2854,9 @@
           "204": {
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2673,6 +2868,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete Library Asset",
         "tags": [
           "Library"
@@ -2746,6 +2946,9 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2757,6 +2960,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Complete Library Upload",
         "tags": [
           "Library"
@@ -2799,6 +3007,9 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2810,6 +3021,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update Library Asset Defaults",
         "tags": [
           "Library"
@@ -2861,6 +3077,9 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2872,6 +3091,11 @@
             "description": "Invalid profile settings."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update User Settings",
         "tags": [
           "Profile"
@@ -2938,6 +3162,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2949,6 +3176,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create a project",
         "tags": [
           "Projects"
@@ -2984,6 +3216,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -3026,6 +3261,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete a project",
         "tags": [
           "Projects"
@@ -3160,6 +3400,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3201,6 +3444,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Rename a project",
         "tags": [
           "Projects"
@@ -3321,6 +3569,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3362,6 +3613,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create an anchor",
         "tags": [
           "Anchors"
@@ -3406,6 +3662,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -3459,6 +3718,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete an anchor",
         "tags": [
           "Anchors"
@@ -3530,6 +3794,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3571,6 +3838,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update an anchor",
         "tags": [
           "Anchors"
@@ -3687,6 +3959,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3728,6 +4003,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update the aim timeline",
         "tags": [
           "Timelines"
@@ -3846,6 +4126,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3887,6 +4170,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create a depth-of-field keyframe",
         "tags": [
           "Timelines"
@@ -3931,6 +4219,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -3984,6 +4275,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete a depth-of-field keyframe",
         "tags": [
           "Timelines"
@@ -4055,6 +4351,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4096,6 +4395,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update a depth-of-field keyframe",
         "tags": [
           "Timelines"
@@ -4160,6 +4464,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4201,6 +4508,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create an aim keyframe",
         "tags": [
           "Timelines"
@@ -4245,6 +4557,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -4298,6 +4613,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete an aim keyframe",
         "tags": [
           "Timelines"
@@ -4369,6 +4689,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4410,6 +4733,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update an aim keyframe",
         "tags": [
           "Timelines"
@@ -4526,6 +4854,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4567,6 +4898,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update default orientation",
         "tags": [
           "Timelines"
@@ -4631,6 +4967,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4672,6 +5011,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create an orientation keyframe",
         "tags": [
           "Timelines"
@@ -4716,6 +5060,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -4769,6 +5116,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete an orientation keyframe",
         "tags": [
           "Timelines"
@@ -4840,6 +5192,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4881,6 +5236,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update an orientation keyframe",
         "tags": [
           "Timelines"
@@ -4916,6 +5276,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -4969,6 +5332,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Clear chat history",
         "tags": [
           "Chat"
@@ -5089,6 +5457,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5130,6 +5501,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Send a chat message",
         "tags": [
           "Chat"
@@ -5183,6 +5559,9 @@
             },
             "description": "Server-sent events named delta, result, or error."
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -5194,6 +5573,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Stream a chat response",
         "tags": [
           "Chat"
@@ -5258,6 +5642,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5299,6 +5686,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Save a user chat message",
         "tags": [
           "Chat"
@@ -5419,6 +5811,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5460,6 +5855,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Add a library cloud",
         "tags": [
           "Clouds"
@@ -5504,6 +5904,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -5557,6 +5960,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Remove a project cloud",
         "tags": [
           "Clouds"
@@ -5628,6 +6036,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5669,6 +6080,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update a project cloud",
         "tags": [
           "Clouds"
@@ -5785,6 +6201,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5826,6 +6245,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update the speed timeline",
         "tags": [
           "Timelines"
@@ -5890,6 +6314,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5931,6 +6358,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create a speed keyframe",
         "tags": [
           "Timelines"
@@ -5975,6 +6407,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
           },
           "404": {
             "content": {
@@ -6028,6 +6463,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete a speed keyframe",
         "tags": [
           "Timelines"
@@ -6099,6 +6539,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6140,6 +6583,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update a speed keyframe",
         "tags": [
           "Timelines"
@@ -6194,6 +6642,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6235,6 +6686,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Reset a project",
         "tags": [
           "Projects"
@@ -6355,6 +6811,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6396,6 +6855,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create a scene point",
         "tags": [
           "Scene points"
@@ -6451,6 +6915,9 @@
           "204": {
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6503,6 +6970,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete a scene point",
         "tags": [
           "Scene points"
@@ -6574,6 +7046,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6615,6 +7090,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update a scene point",
         "tags": [
           "Scene points"
@@ -6679,6 +7159,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6720,6 +7203,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create a spiral segment",
         "tags": [
           "Trajectory"
@@ -6784,6 +7272,9 @@
               }
             }
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6825,6 +7316,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create a spline segment",
         "tags": [
           "Trajectory"
@@ -6870,6 +7366,9 @@
           "204": {
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -6922,6 +7421,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete a trajectory segment",
         "tags": [
           "Trajectory"
@@ -6958,6 +7462,9 @@
           "204": {
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -7010,6 +7517,11 @@
             "description": "The If-Match header is required."
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Clear the trajectory",
         "tags": [
           "Trajectory"

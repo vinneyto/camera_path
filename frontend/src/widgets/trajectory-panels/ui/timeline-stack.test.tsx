@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { KeyframeTrackDescriptor } from "../model/timeline-track";
 import { TimelineStack } from "./timeline-stack";
@@ -73,3 +73,5 @@ describe("TimelineStack", () => {
     expect(markup).toContain("Third descriptor-only track");
   });
 });
+
+vi.mock("@/features/auth", () => ({ useAuth: () => ({ canEdit: true }) }));

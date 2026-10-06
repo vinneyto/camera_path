@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -11,9 +13,11 @@ import {
   useCreateProject,
 } from "@/features/project-selection";
 import { ThemeToggle } from "@/features/theme-switcher";
+import { AuthControl } from "@/features/auth";
 import { UserSettingsPanel } from "@/features/user-settings";
 
 export function ProjectListPage() {
+  const { canEdit } = useAuth();
   const router = useRouter();
   const projectsQuery = useProjectsQuery();
   const createProjectMutation = useCreateProject();
@@ -24,6 +28,7 @@ export function ProjectListPage() {
     deleteProjectMutation.error;
 
   async function createProject(name: string) {
+    if (!canEdit) return false;
     try {
       const project = await createProjectMutation.mutateAsync(name);
       router.push(`/projects/${project.id}`);
@@ -34,6 +39,7 @@ export function ProjectListPage() {
   }
 
   function deleteProject(projectId: string, projectName: string) {
+    if (!canEdit) return;
     if (
       !window.confirm(`Delete “${projectName}”? This action cannot be undone.`)
     )
@@ -60,13 +66,14 @@ export function ProjectListPage() {
           >
             Library
           </Link>
+          <AuthControl />
           <UserSettingsPanel />
           <ThemeToggle />
         </div>
       </div>
       <div className="mb-4">
         <ProjectCreateForm
-          disabled={createProjectMutation.isPending}
+          disabled={!canEdit || createProjectMutation.isPending}
           onCreate={createProject}
         />
       </div>

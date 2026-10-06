@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { type ReactNode, useState } from "react";
 
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
@@ -30,6 +32,7 @@ export function KeyframeTimeline({
   onDeleteKeyframe,
   renderMarker,
 }: KeyframeTimelineProps) {
+  const { canEdit } = useAuth();
   const [menu, setMenu] = useState<KeyframeMenuState | null>(null);
   const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(
     null,
@@ -45,6 +48,7 @@ export function KeyframeTimeline({
           data-keyframe-id={keyframe.id}
           key={keyframe.id}
           onContextMenu={(event) => {
+            if (!canEdit) return;
             event.preventDefault();
             setSelectedKeyframeId(keyframe.id);
             setMenu({
@@ -78,7 +82,7 @@ export function KeyframeTimeline({
             : []
         }
         onClose={() => setMenu(null)}
-        position={menu}
+        position={canEdit ? menu : null}
       />
     </>
   );

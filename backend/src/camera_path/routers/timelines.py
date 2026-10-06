@@ -14,6 +14,7 @@ from camera_path.models import (
     SpeedKeyframeCreate,
     SpeedKeyframeUpdate,
 )
+from camera_path.routers.auth import authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import MutationGuard, TimelineServiceDep
 
@@ -24,7 +25,7 @@ def _not_found(error: KeyError) -> HTTPException:
     return HTTPException(status_code=404, detail=str(error))
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/motion",
     response_model=Project,
     summary="Update the motion profile",
@@ -42,7 +43,7 @@ async def update_motion_profile(
     return with_project_etag(response, await service.update_motion_profile(project_id, data))
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/motion/keyframes",
     response_model=Project,
     summary="Add a speed keyframe",
@@ -60,7 +61,7 @@ async def add_speed_keyframe(
     return with_project_etag(response, await service.add_speed_keyframe(project_id, data))
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/motion/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Update a speed keyframe",
@@ -83,7 +84,7 @@ async def update_speed_keyframe(
     return with_project_etag(response, project)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/motion/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Delete a speed keyframe",
@@ -105,7 +106,7 @@ async def delete_speed_keyframe(
     return with_project_etag(response, project)
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/camera",
     response_model=Project,
     summary="Update the camera aim track",
@@ -123,7 +124,7 @@ async def update_camera_track(
     return with_project_etag(response, await service.update_camera_track(project_id, data))
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/camera/keyframes",
     response_model=Project,
     summary="Add a camera aim keyframe",
@@ -141,7 +142,7 @@ async def add_camera_keyframe(
     return with_project_etag(response, await service.add_camera_keyframe(project_id, data))
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/camera/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Update a camera aim keyframe",
@@ -164,7 +165,7 @@ async def update_camera_keyframe(
     return with_project_etag(response, project)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/camera/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Delete a camera aim keyframe",
@@ -186,7 +187,7 @@ async def delete_camera_keyframe(
     return with_project_etag(response, project)
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/camera/orientation",
     response_model=Project,
     summary="Update default camera orientation",
@@ -205,7 +206,7 @@ async def update_default_camera_orientation(
     return with_project_etag(response, project)
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/camera/orientation/keyframes",
     response_model=Project,
     summary="Add an orientation keyframe",
@@ -224,7 +225,7 @@ async def add_camera_orientation_keyframe(
     return with_project_etag(response, project)
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Update an orientation keyframe",
@@ -247,7 +248,7 @@ async def update_camera_orientation_keyframe(
     return with_project_etag(response, project)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Delete an orientation keyframe",
@@ -269,7 +270,7 @@ async def delete_camera_orientation_keyframe(
     return with_project_etag(response, project)
 
 
-@router.post(
+@authenticated(router.post)(
     "/projects/{project_id}/camera/depth-of-field/keyframes",
     response_model=Project,
     summary="Add a depth-of-field keyframe",
@@ -288,7 +289,7 @@ async def add_depth_of_field_keyframe(
     return with_project_etag(response, project)
 
 
-@router.patch(
+@authenticated(router.patch)(
     "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Update a depth-of-field keyframe",
@@ -311,7 +312,7 @@ async def update_depth_of_field_keyframe(
     return with_project_etag(response, project)
 
 
-@router.delete(
+@authenticated(router.delete)(
     "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
     response_model=Project,
     summary="Delete a depth-of-field keyframe",

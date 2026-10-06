@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Send } from "lucide-react";
 
@@ -29,6 +31,7 @@ export function ChatPanel({
   pending,
   onSend,
 }: ChatPanelProps) {
+  const { canEdit } = useAuth();
   const [message, setMessage] = useState("");
   const draftIdRef = useRef<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -41,7 +44,7 @@ export function ChatPanel({
   function submit(event?: FormEvent) {
     event?.preventDefault();
     const text = message.trim();
-    if (!text || pending) return;
+    if (!canEdit || !text || pending) return;
     const submittedMessage = message;
     const messageId = draftIdRef.current ?? crypto.randomUUID();
     draftIdRef.current = messageId;
@@ -105,14 +108,16 @@ export function ChatPanel({
         <div ref={endRef} />
       </div>
       <form className="space-y-2 border-t p-3" onSubmit={submit}>
-        <AnchorReferencePicker anchors={anchors} onSelect={insertAnchor} />
+        <fieldset disabled={!canEdit || pending}>
+          <AnchorReferencePicker anchors={anchors} onSelect={insertAnchor} />
+        </fieldset>
         {error && (
           <p className="text-[10px] leading-4 text-destructive">{error}</p>
         )}
         <div className="rounded-xl border border-input bg-transparent shadow-xs focus-within:ring-2 focus-within:ring-ring">
           <AutoGrowingTextarea
             className="min-h-10 rounded-none border-0 px-2.5 pb-1 pt-2.5 shadow-none focus-visible:ring-0"
-            disabled={pending}
+            disabled={!canEdit || pending}
             onChange={(event) => changeMessage(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Create a smooth path from @A through @B…"
@@ -121,7 +126,7 @@ export function ChatPanel({
           <div className="flex justify-end px-1.5 pb-1.5">
             <Button
               aria-label="Send message"
-              disabled={pending || !message.trim()}
+              disabled={!canEdit || pending || !message.trim()}
               size="icon"
               type="submit"
             >
@@ -130,7 +135,9 @@ export function ChatPanel({
           </div>
         </div>
         <p className="text-[9px] text-muted-foreground">
-          Enter to send · Shift+Enter for a new line
+          {canEdit
+            ? "Enter to send · Shift+Enter for a new line"
+            : "Sign in to send messages and run the agent"}
         </p>
       </form>
     </aside>

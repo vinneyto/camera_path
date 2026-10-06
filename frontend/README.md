@@ -28,20 +28,24 @@ keeps the backend compiler as the single source of geometry sampling truth.
 
 ## Run
 
-Place a canonical 3DGS file at `public/mug.ply`. The same frontend-only cloud is loaded for every
-project; the backend does not store or configure it yet.
-
 The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-The Profile settings panel on the project list and in the project header controls the renderer
-and grid visibility for all projects. Both settings default to enabled and are saved on the backend
-for the current user, then restored when the app opens in any browser. Uncheck the WebGPU option
-to switch to the Spark/WebGL reference adapter. Spark does not
-have feature parity with the supported WebGPU renderer and may throw explicit errors for unsupported
-operations.
+Library assets and project cloud instances are loaded from the backend. The Profile settings panel
+controls renderer and grid visibility; Gaussian DPR is in the project header. Unchecking the WebGPU
+option selects the Spark/WebGL reference adapter, which has no feature parity guarantee.
 
-`features/user-settings` owns the shared profile query and mutation. Controls show loading,
-saving and error states; scene preferences change only after a successful server response.
-The old renderer localStorage value is ignored. Gaussian DPR remains a session-only setting.
+Visitors can browse projects, library details/downloads, scenes, playback and all chat history.
+Sign in with the editor account to create/delete projects, upload/delete library assets, edit
+clouds/anchors/timelines, change profile settings, send messages and run the agent. The backend
+enforces these permissions for direct API requests too. Create the account with the backend's
+`editor-create` command before signing in.
+
+`features/auth` checks the server session on startup, window focus and once a minute. A 401 drops
+editor mode immediately. `features/user-settings` always loads the backend profile for guests.
+Editor renderer/grid/DPR choices are stored under `camera-path-editor-settings` in localStorage;
+login restores those choices, falling back to backend values for missing fields. Explicit edits
+also publish the changed fields to the backend guest profile. Local choices survive failed backend
+saves, which show an error. Logout or session expiry re-reads the backend guest settings and never
+applies the editor's localStorage to the guest; local values remain available for a later login.
 
 Start the backend first, then:
 
@@ -52,7 +56,12 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:3000>. `NEXT_PUBLIC_API_URL` points the browser at the FastAPI server.
+Open <http://localhost:3000>. Browser requests use same-origin `/api/v1` route handlers.
+Set server-only `CAMERA_PATH_BACKEND_URL` to local FastAPI or the HTTPS CloudFront origin;
+`NEXT_PUBLIC_API_URL` is no longer used. On Vercel set the same server-side variable.
+The proxy keeps JWTs in HttpOnly cookies, validates Origin on writes, forwards revision headers,
+streams binary local uploads/downloads and agent SSE, and rewrites local content URLs to itself.
+Signed S3 URLs stay direct browser transfers. Production cookies require HTTPS.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
 
 The frontend API client, types, and TanStack Query hooks are generated from

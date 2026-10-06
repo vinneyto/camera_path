@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import { useState } from "react";
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 
@@ -42,6 +44,7 @@ export function SceneViewportContainer({
   selected,
   trajectory,
 }: SceneViewportContainerProps) {
+  const { canEdit } = useAuth();
   const addAnchorMutation = useAddAnchor(projectId);
   const updateAnchorMutation = useUpdateAnchor(projectId);
   const deleteAnchorMutation = useDeleteAnchor(projectId);
@@ -71,10 +74,10 @@ export function SceneViewportContainer({
     deleteAnchorMutation.isPending;
   const Viewport =
     rendererBackend === "webgpu" ? SceneWebGpuViewport : SceneViewport;
-  useAnchorToolShortcut();
+  useAnchorToolShortcut(canEdit);
 
   async function addAnchor(position: Vec3, normal: Vec3) {
-    if (mutating) return;
+    if (!canEdit || mutating) return;
     await addAnchorMutation
       .mutateAsync({
         label: getAnchorLabel(anchors),
@@ -89,13 +92,14 @@ export function SceneViewportContainer({
   }
 
   async function updateAnchorLift(anchorId: string, lift: number) {
+    if (!canEdit) return;
     await updateAnchorMutation
       .mutateAsync({ anchorId, lift })
       .catch(() => undefined);
   }
 
   async function addCloud(assetId: string, position: Vec3): Promise<boolean> {
-    if (cloudActions.isPending) return false;
+    if (!canEdit || cloudActions.isPending) return false;
     const response = await cloudActions.mutateAsync({
       type: "add",
       assetId,
@@ -123,7 +127,7 @@ export function SceneViewportContainer({
         selected={selected}
         trajectory={trajectory}
       />
-      {cameraMode === "orbit" && (
+      {canEdit && cameraMode === "orbit" && (
         <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
           {mutating ? (
             <LoaderCircle className="size-3 animate-spin" />

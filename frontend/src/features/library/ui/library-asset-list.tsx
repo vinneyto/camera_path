@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
+
 import Link from "next/link";
 import { useState } from "react";
 
@@ -9,6 +11,7 @@ import { LibrarySelectionActions } from "./library-selection-actions";
 import { useDeleteLibraryAssets } from "../api/use-delete-library-assets";
 
 export function LibraryAssetList() {
+  const { canEdit } = useAuth();
   const library = useListLibraryAssets();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const deletion = useDeleteLibraryAssets();
@@ -36,7 +39,7 @@ export function LibraryAssetList() {
       <div className="flex items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-xs">
           <Checkbox
-            disabled={deletion.isPending}
+            disabled={!canEdit || deletion.isPending}
             aria-label="Select all library files"
             checked={selected.length === assets.length}
             indeterminate={
@@ -63,7 +66,7 @@ export function LibraryAssetList() {
               <div className="flex items-center gap-3">
                 <label className="relative z-20 flex shrink-0 items-center self-stretch px-1">
                   <Checkbox
-                    disabled={deletion.isPending}
+                    disabled={!canEdit || deletion.isPending}
                     aria-label={`Select ${asset.name}`}
                     checked={selectedIds.includes(asset.id)}
                     onChange={(event) =>
