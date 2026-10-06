@@ -86,3 +86,12 @@ Escape cancels placement. The preview is excluded from placement raycasts.
 
 Preview and saved cloud share one keyed React/R3F owner so handing off the loaded PLY
 retains pointer events and raycasting without loading the model twice.
+
+### Agent message formatting
+
+Assistant text is rendered with `react-markdown` and `remark-gfm`, including tables and
+fenced code blocks. User messages stay literal. Raw HTML is skipped, the default safe URL
+transform is retained, and external links open with `noopener noreferrer`.
+Code and tables have local horizontal scroll; formatting uses the existing theme colors.
+The same renderer handles partial content updates and saved history without changing message
+content or the existing chat request transport.
