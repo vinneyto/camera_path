@@ -29,11 +29,11 @@ export function LibraryAssetList() {
     <ul className="space-y-2">
       {assets.map((asset) => (
         <li key={asset.id}>
-          <Card className="p-3">
+          <Card className="relative isolate p-3 transition-colors hover:border-primary/40 hover:bg-accent/50">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <Link
-                  className="block truncate text-xs font-medium hover:underline"
+                  className="block truncate text-xs font-medium after:absolute after:inset-0 after:z-10 after:rounded-lg after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-offset-2 focus-visible:after:ring-offset-background"
                   href={`/library/${asset.id}`}
                 >
                   {asset.name}
@@ -50,12 +50,20 @@ export function LibraryAssetList() {
                     ` · Offset XYZ: ${asset.default_offset.join(", ")}`}
                 </p>
               </div>
+              {/* Actions sit above the stretched link; gaps still open details. */}
               <div className="flex shrink-0 gap-3 text-xs">
-                <Link className="underline" href={`/library/${asset.id}`}>
+                <Link
+                  className="relative z-20 rounded-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  href={`/library/${asset.id}`}
+                >
                   Details
                 </Link>
                 {asset.download_url && (
-                  <a className="underline" download href={asset.download_url}>
+                  <a
+                    className="relative z-20 rounded-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    download
+                    href={asset.download_url}
+                  >
                     Download
                   </a>
                 )}
