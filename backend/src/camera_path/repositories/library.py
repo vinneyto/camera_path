@@ -27,6 +27,14 @@ class LibraryRepository:
         async with self.sessions() as session:
             return await session.get(LibraryAssetRecord, asset_id)
 
+    async def get_for_update(
+        self, session: AsyncSession, asset_id: str
+    ) -> LibraryAssetRecord | None:
+        return await session.get(LibraryAssetRecord, asset_id, with_for_update=True)
+
+    async def delete(self, session: AsyncSession, record: LibraryAssetRecord) -> None:
+        await session.delete(record)
+
     async def create(self, record: LibraryAssetRecord) -> None:
         async with self.sessions.begin() as session:
             session.add(record)
