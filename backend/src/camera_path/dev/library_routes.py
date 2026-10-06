@@ -6,10 +6,10 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import FileResponse
 
 from camera_path.dev.library_storage import LocalLibraryStorage
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.services.library import LibraryService
 
-router = APIRouter(prefix="/library", include_in_schema=False)
+router = APIRouter(route_class=AuthenticatedRoute, prefix="/library", include_in_schema=False)
 
 
 def local_service(request: Request) -> tuple[LibraryService, LocalLibraryStorage]:
@@ -20,7 +20,8 @@ def local_service(request: Request) -> tuple[LibraryService, LocalLibraryStorage
     return service, storage
 
 
-@authenticated(router.put)("/{asset_id}/content", name="upload_local_library_content")
+@router.put("/{asset_id}/content", name="upload_local_library_content")
+@authenticated
 async def upload_local_library_content(asset_id: str, request: Request) -> Response:
     service, storage = local_service(request)
     asset = await service.get_record(asset_id)

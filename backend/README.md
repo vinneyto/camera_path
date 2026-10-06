@@ -85,8 +85,15 @@ Editor UI preferences are additionally saved in browser localStorage and restore
 
 All reads of projects, resources, library files and chat history remain public. Every write route,
 including legacy aliases, local PLY uploads and both agent endpoints, uses the common
-`@authenticated(router.post/patch/put/delete)` decorator. Anonymous or invalid JWT writes return
-401 before revision checks or side effects. Data remains shared between guest and editor.
+`@authenticated` decorator below `@router.post/patch/put/delete(...)`. Anonymous or invalid JWT
+writes return
+401 before revision checks or side effects. `AuthenticatedRoute` adds the standard FastAPI dependency
+when registering marked endpoints; the decorator leaves endpoint signatures unchanged. Data remains
+shared between guest and editor.
+
+Configure these routers with `APIRouter(route_class=AuthenticatedRoute)`. Decorators execute from
+bottom to top: `@authenticated` marks the function first, then `@router...` registers the protected
+endpoint. It does not wrap or call the route decorator.
 
 Configure a random signing secret with at least 32 bytes in `backend/.env` (never commit it):
 

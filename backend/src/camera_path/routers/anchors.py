@@ -1,14 +1,14 @@
 from fastapi import APIRouter, HTTPException, Response
 
 from camera_path.models import AnchorCreate, AnchorUpdate, Project
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import AnchorServiceDep, MutationGuard
 
-router = APIRouter(tags=["Projects"])
+router = APIRouter(route_class=AuthenticatedRoute, tags=["Projects"])
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/anchors",
     response_model=Project,
     summary="Add an anchor",
@@ -16,6 +16,7 @@ router = APIRouter(tags=["Projects"])
     operation_id="createAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def add_anchor(
     project_id: str,
     data: AnchorCreate,
@@ -26,7 +27,7 @@ async def add_anchor(
     return with_project_etag(response, await service.add_anchor(project_id, data))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/anchors/{anchor_id}",
     response_model=Project,
     summary="Update an anchor",
@@ -34,6 +35,7 @@ async def add_anchor(
     operation_id="updateAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_anchor(
     project_id: str,
     anchor_id: str,
@@ -49,7 +51,7 @@ async def update_anchor(
     return with_project_etag(response, project)
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/anchors/{anchor_id}",
     response_model=Project,
     summary="Delete an anchor",
@@ -57,6 +59,7 @@ async def update_anchor(
     operation_id="deleteAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_anchor(
     project_id: str,
     anchor_id: str,

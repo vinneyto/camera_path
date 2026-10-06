@@ -11,14 +11,14 @@ from openai import OpenAIError
 from camera_path.agent import AgentUnavailableError
 from camera_path.models import ChatMessage, ChatResult, Project
 from camera_path.repositories import ProjectNotFoundError
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import CHAT_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import Agent, ChatServiceDep, MutationGuard
 
-router = APIRouter(tags=["Chat"])
+router = APIRouter(route_class=AuthenticatedRoute, tags=["Chat"])
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/chat",
     response_model=Project,
     summary="Clear chat history",
@@ -26,13 +26,14 @@ router = APIRouter(tags=["Chat"])
     operation_id="clearProjectChat",
     responses=CHAT_ERROR_RESPONSES,
 )
+@authenticated
 async def clear_chat(
     project_id: str, service: ChatServiceDep, response: Response, _guard: MutationGuard
 ) -> Project:
     return with_project_etag(response, await service.clear_chat(project_id))
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/chat/messages",
     response_model=ChatResult,
     summary="Send a chat message",
@@ -40,6 +41,7 @@ async def clear_chat(
     operation_id="createChatMessage",
     responses=CHAT_ERROR_RESPONSES,
 )
+@authenticated
 async def chat(
     project_id: str,
     data: ChatMessage,
@@ -57,7 +59,7 @@ async def chat(
     return result
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/chat/user-messages",
     response_model=Project,
     summary="Save a user chat message",
@@ -65,6 +67,7 @@ async def chat(
     operation_id="saveUserChatMessage",
     responses=CHAT_ERROR_RESPONSES,
 )
+@authenticated
 async def save_user_message(
     project_id: str,
     data: ChatMessage,
@@ -80,7 +83,7 @@ def _sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/chat/messages/stream",
     summary="Stream a chat response",
     description=(
@@ -98,6 +101,7 @@ def _sse(event: str, data: Any) -> str:
         },
     },
 )
+@authenticated
 async def stream_chat(
     project_id: str,
     data: ChatMessage,

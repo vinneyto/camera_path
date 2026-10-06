@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, status
 
 from camera_path.models import Project, ProjectCreate, ProjectUpdate
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import (
     ERROR_RESPONSES,
     MUTATION_ERROR_RESPONSES,
@@ -9,10 +9,10 @@ from camera_path.routers.contract import (
 )
 from camera_path.routers.dependencies import MutationGuard, ProjectServiceDep
 
-router = APIRouter(tags=["Projects"])
+router = APIRouter(route_class=AuthenticatedRoute, tags=["Projects"])
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects",
     response_model=Project,
     status_code=status.HTTP_201_CREATED,
@@ -21,6 +21,7 @@ router = APIRouter(tags=["Projects"])
     operation_id="createProject",
     responses={422: ERROR_RESPONSES[422]},
 )
+@authenticated
 async def create_project(
     data: ProjectCreate, service: ProjectServiceDep, response: Response
 ) -> Project:
@@ -50,7 +51,7 @@ async def get_project(project_id: str, service: ProjectServiceDep, response: Res
     return with_project_etag(response, await service.get_project(project_id))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}",
     response_model=Project,
     summary="Rename a project",
@@ -58,6 +59,7 @@ async def get_project(project_id: str, service: ProjectServiceDep, response: Res
     operation_id="updateProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_project(
     project_id: str,
     data: ProjectUpdate,
@@ -68,7 +70,7 @@ async def update_project(
     return with_project_etag(response, await service.update_project(project_id, data))
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a project",
@@ -76,6 +78,7 @@ async def update_project(
     operation_id="deleteProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_project(
     project_id: str, service: ProjectServiceDep, _guard: MutationGuard
 ) -> Response:
@@ -83,7 +86,7 @@ async def delete_project(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/reset",
     response_model=Project,
     summary="Reset a project",
@@ -91,6 +94,7 @@ async def delete_project(
     operation_id="resetProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def reset_project(
     project_id: str,
     service: ProjectServiceDep,

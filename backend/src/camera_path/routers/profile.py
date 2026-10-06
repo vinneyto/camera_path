@@ -3,14 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 
 from camera_path.models import ErrorResponse
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.services.user_settings import (
     UserSettings,
     UserSettingsService,
     UserSettingsUpdate,
 )
 
-router = APIRouter(prefix="/profile", tags=["Profile"])
+router = APIRouter(route_class=AuthenticatedRoute, prefix="/profile", tags=["Profile"])
 
 
 def get_current_user_id(request: Request) -> str:
@@ -40,13 +40,14 @@ async def get_user_settings(user_id: CurrentUser, service: UserSettingsServiceDe
     return await service.get(user_id)
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/settings",
     response_model=UserSettings,
     operation_id="updateUserSettings",
     description="Save only supplied preferences for the current user, independently of projects.",
     responses={422: {"model": ErrorResponse, "description": "Invalid profile settings."}},
 )
+@authenticated
 async def update_user_settings(
     data: UserSettingsUpdate, user_id: CurrentUser, service: UserSettingsServiceDep
 ) -> UserSettings:

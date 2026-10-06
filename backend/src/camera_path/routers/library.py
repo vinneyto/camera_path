@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.services.library import (
     LibraryAsset,
     LibraryAssetDefaultsUpdate,
@@ -12,7 +12,7 @@ from camera_path.services.library import (
     LibraryUploadCreate,
 )
 
-router = APIRouter(prefix="/library", tags=["Library"])
+router = APIRouter(route_class=AuthenticatedRoute, prefix="/library", tags=["Library"])
 
 
 def get_library_service(request: Request) -> LibraryService:
@@ -22,12 +22,13 @@ def get_library_service(request: Request) -> LibraryService:
 Library = Annotated[LibraryService, Depends(get_library_service)]
 
 
-@authenticated(router.post)(
+@router.post(
     "/bulk-delete",
     status_code=204,
     operation_id="deleteLibraryAssets",
     description="Delete selected library files and all their instances from every project.",
 )
+@authenticated
 async def delete_library_assets(data: LibraryAssetsDelete, service: Library) -> Response:
     await service.delete_many(data.asset_ids)
     return Response(status_code=204)
@@ -53,48 +54,52 @@ async def get_library_asset(asset_id: str, request: Request, service: Library) -
     return await service.get(asset_id, request)
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/{asset_id}",
     status_code=204,
     operation_id="deleteLibraryAsset",
     description="Delete the library file and all its cloud instances from every project.",
 )
+@authenticated
 async def delete_library_asset(asset_id: str, service: Library) -> Response:
     await service.delete(asset_id)
     return Response(status_code=204)
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/{asset_id}/defaults",
     response_model=LibraryAsset,
     operation_id="updateLibraryAssetDefaults",
     description="Set XYZ Euler angles in degrees (Three.js XYZ order) and uniform scale.",
 )
+@authenticated
 async def update_library_asset_defaults(
     asset_id: str, data: LibraryAssetDefaultsUpdate, request: Request, service: Library
 ) -> LibraryAsset:
     return await service.update_defaults(asset_id, data, request)
 
 
-@authenticated(router.post)(
+@router.post(
     "/uploads",
     response_model=LibraryUpload,
     status_code=201,
     operation_id="createLibraryUpload",
     description="Create a pending file and obtain an upload URL.",
 )
+@authenticated
 async def create_library_upload(
     data: LibraryUploadCreate, request: Request, service: Library
 ) -> LibraryUpload:
     return await service.create(data, request)
 
 
-@authenticated(router.post)(
+@router.post(
     "/{asset_id}/complete",
     response_model=LibraryAsset,
     operation_id="completeLibraryUpload",
     description="Validate the uploaded PLY and publish it in the library.",
 )
+@authenticated
 async def complete_library_upload(
     asset_id: str, request: Request, service: Library
 ) -> LibraryAsset:

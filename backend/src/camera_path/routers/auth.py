@@ -1,7 +1,8 @@
 from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated, Any, TypeVar
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.routing import APIRoute
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, SecretStr
 
@@ -23,18 +24,30 @@ async def require_editor(service: AuthServiceDep, credentials: Credentials) -> s
     return username
 
 
-def authenticated(route: Callable) -> Callable:
-    """Common route decorator: authenticate before validation/mutation dependencies."""
+Endpoint = TypeVar("Endpoint", bound=Callable[..., Any])
 
-    def decorate(*args: Any, **kwargs: Any) -> Callable:
-        kwargs["dependencies"] = [Depends(require_editor), *kwargs.get("dependencies", [])]
-        kwargs["responses"] = {
-            **kwargs.get("responses", {}),
-            401: {"description": "Valid editor JWT required."},
-        }
-        return route(*args, **kwargs)
 
-    return decorate
+def authenticated(endpoint: Endpoint) -> Endpoint:
+    """Mark an endpoint before its @router decorator registers it."""
+    endpoint.__requires_editor__ = True
+    return endpoint
+
+
+class AuthenticatedRoute(APIRoute):
+    """Translate @authenticated into a normal FastAPI dependency at registration."""
+
+    def __init__(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
+        if getattr(endpoint, "__requires_editor__", False):
+            dependencies = kwargs.get("dependencies") or []
+            kwargs["dependencies"] = [
+                Depends(require_editor),
+                *(dep for dep in dependencies if dep.dependency is not require_editor),
+            ]
+            kwargs["responses"] = {
+                **(kwargs.get("responses") or {}),
+                401: {"description": "Valid editor JWT required."},
+            }
+        super().__init__(path, endpoint, **kwargs)
 
 
 class LoginRequest(BaseModel):
@@ -52,7 +65,7 @@ class SessionResponse(BaseModel):
     username: str
 
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"], route_class=AuthenticatedRoute)
 
 
 @router.post(
@@ -78,13 +91,14 @@ async def current_session(username: Annotated[str, Depends(require_editor)]) -> 
     return SessionResponse(username=username)
 
 
-@authenticated(router.post)(
+@router.post(
     "/logout",
     status_code=204,
     operation_id="logoutEditor",
     summary="Sign out",
     description="Revoke the current JWT session on the server.",
 )
+@authenticated
 async def logout(service: AuthServiceDep, credentials: Credentials) -> None:
     assert credentials is not None
     await service.logout(credentials.credentials)

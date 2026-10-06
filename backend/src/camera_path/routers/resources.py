@@ -50,7 +50,7 @@ from camera_path.models import (
     Trajectory,
 )
 from camera_path.repositories import ProjectNotFoundError
-from camera_path.routers.auth import authenticated
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import (
     ERROR_RESPONSES,
     MUTATION_ERROR_RESPONSES,
@@ -67,7 +67,7 @@ from camera_path.routers.dependencies import (
     TrajectoryServiceDep,
 )
 
-router = APIRouter()
+router = APIRouter(route_class=AuthenticatedRoute)
 
 
 def _metadata(project: Project) -> ProjectMetadata:
@@ -95,7 +95,7 @@ def _not_found(error: KeyError) -> HTTPException:
     return HTTPException(status_code=404, detail=str(error))
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects",
     response_model=ProjectMetadata,
     status_code=status.HTTP_201_CREATED,
@@ -104,6 +104,7 @@ def _not_found(error: KeyError) -> HTTPException:
     description="Create an empty project and return only project metadata.",
     operation_id="createProject",
 )
+@authenticated
 async def create_project(
     data: ProjectCreate, service: ProjectServiceDep, response: Response
 ) -> ProjectMetadata:
@@ -141,7 +142,7 @@ async def get_project(
     return project
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}",
     response_model=ProjectMetadata,
     tags=["Projects"],
@@ -150,6 +151,7 @@ async def get_project(
     operation_id="updateProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_project(
     project_id: str,
     data: ProjectUpdate,
@@ -162,7 +164,7 @@ async def update_project(
     return _metadata(project)
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Projects"],
@@ -171,6 +173,7 @@ async def update_project(
     operation_id="deleteProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_project(
     project_id: str, service: ProjectServiceDep, _guard: MutationGuard
 ) -> Response:
@@ -179,7 +182,7 @@ async def delete_project(
     return _deleted(project)
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/reset",
     response_model=ProjectMetadata,
     tags=["Projects"],
@@ -188,6 +191,7 @@ async def delete_project(
     operation_id="resetProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def reset_project(
     project_id: str,
     service: ProjectServiceDep,
@@ -215,7 +219,7 @@ async def list_anchors(
     return list(project.anchors.values())
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/anchors",
     response_model=Anchor,
     status_code=status.HTTP_201_CREATED,
@@ -225,6 +229,7 @@ async def list_anchors(
     operation_id="createAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_anchor(
     project_id: str,
     data: AnchorCreate,
@@ -237,7 +242,7 @@ async def create_anchor(
     return next(reversed(project.anchors.values()))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/anchors/{anchor_id}",
     response_model=Anchor,
     tags=["Anchors"],
@@ -246,6 +251,7 @@ async def create_anchor(
     operation_id="updateAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_anchor(
     project_id: str,
     anchor_id: str,
@@ -262,7 +268,7 @@ async def update_anchor(
     return project.anchors[anchor_id]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/anchors/{anchor_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Anchors"],
@@ -271,6 +277,7 @@ async def update_anchor(
     operation_id="deleteAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_anchor(
     project_id: str,
     anchor_id: str,
@@ -302,7 +309,7 @@ async def list_scene_points(
     return list(project.scene_points.values())
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/scene-points",
     response_model=ScenePoint,
     status_code=status.HTTP_201_CREATED,
@@ -312,6 +319,7 @@ async def list_scene_points(
     operation_id="createScenePoint",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_scene_point(
     project_id: str,
     data: ScenePointCreate,
@@ -324,7 +332,7 @@ async def create_scene_point(
     return next(reversed(project.scene_points.values()))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/scene-points/{point_id}",
     response_model=ScenePoint,
     tags=["Scene points"],
@@ -333,6 +341,7 @@ async def create_scene_point(
     operation_id="updateScenePoint",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_scene_point(
     project_id: str,
     point_id: str,
@@ -349,7 +358,7 @@ async def update_scene_point(
     return project.scene_points[point_id]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/scene-points/{point_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Scene points"],
@@ -358,6 +367,7 @@ async def update_scene_point(
     operation_id="deleteScenePoint",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_scene_point(
     project_id: str,
     point_id: str,
@@ -390,7 +400,7 @@ async def get_trajectory(
     return Trajectory(segments=project.segments)
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/trajectory",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Trajectory"],
@@ -399,13 +409,14 @@ async def get_trajectory(
     operation_id="clearTrajectory",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def clear_trajectory(
     project_id: str, service: TrajectoryServiceDep, _guard: MutationGuard
 ) -> Response:
     return _deleted(await service.clear_trajectory(project_id))
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/segments/spline",
     response_model=SplineSegment,
     status_code=status.HTTP_201_CREATED,
@@ -415,6 +426,7 @@ async def clear_trajectory(
     operation_id="createSplineSegment",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_spline(
     project_id: str,
     data: SplineSegmentCreate,
@@ -427,7 +439,7 @@ async def create_spline(
     return project.segments[-1]
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/segments/spiral",
     response_model=SpiralSegment,
     status_code=status.HTTP_201_CREATED,
@@ -437,6 +449,7 @@ async def create_spline(
     operation_id="createSpiralSegment",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_spiral(
     project_id: str,
     data: SpiralSegmentCreate,
@@ -449,7 +462,7 @@ async def create_spiral(
     return project.segments[-1]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/segments/{segment_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Trajectory"],
@@ -458,6 +471,7 @@ async def create_spiral(
     operation_id="deleteTrajectorySegment",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_segment(
     project_id: str,
     segment_id: str,
@@ -503,7 +517,7 @@ async def get_speed_timeline(
     return project.motion_profile
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/motion",
     response_model=MotionProfile,
     tags=["Timelines"],
@@ -512,6 +526,7 @@ async def get_speed_timeline(
     operation_id="updateMotionProfile",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_motion_profile(
     project_id: str,
     data: MotionProfileUpdate,
@@ -524,7 +539,7 @@ async def update_motion_profile(
     return project.motion_profile
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/motion/keyframes",
     response_model=SpeedKeyframe,
     status_code=status.HTTP_201_CREATED,
@@ -534,6 +549,7 @@ async def update_motion_profile(
     operation_id="createSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_speed_keyframe(
     project_id: str,
     data: SpeedKeyframeCreate,
@@ -546,7 +562,7 @@ async def create_speed_keyframe(
     return next(reversed(project.motion_profile.keyframes.values()))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/motion/keyframes/{keyframe_id}",
     response_model=SpeedKeyframe,
     tags=["Timelines"],
@@ -555,6 +571,7 @@ async def create_speed_keyframe(
     operation_id="updateSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_speed_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -571,7 +588,7 @@ async def update_speed_keyframe(
     return project.motion_profile.keyframes[keyframe_id]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/motion/keyframes/{keyframe_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Timelines"],
@@ -580,6 +597,7 @@ async def update_speed_keyframe(
     operation_id="deleteSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_speed_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -616,7 +634,7 @@ async def get_aim_timeline(
     return _aim(project)
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/camera",
     response_model=AimTimeline,
     tags=["Timelines"],
@@ -625,6 +643,7 @@ async def get_aim_timeline(
     operation_id="updateCameraTrack",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_aim_timeline(
     project_id: str,
     data: CameraTrackUpdate,
@@ -639,7 +658,7 @@ async def update_aim_timeline(
 
 # Remaining aim/orientation/depth-of-field mutations retain their existing paths but return
 # the changed keyframe or timeline rather than an aggregate Project.
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/camera/keyframes",
     response_model=CameraKeyframe,
     status_code=status.HTTP_201_CREATED,
@@ -649,6 +668,7 @@ async def update_aim_timeline(
     operation_id="createCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_aim_keyframe(
     project_id: str,
     data: CameraKeyframeCreate,
@@ -661,7 +681,7 @@ async def create_aim_keyframe(
     return next(reversed(project.camera_track.keyframes.values()))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/camera/keyframes/{keyframe_id}",
     response_model=CameraKeyframe,
     tags=["Timelines"],
@@ -670,6 +690,7 @@ async def create_aim_keyframe(
     operation_id="updateCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_aim_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -686,7 +707,7 @@ async def update_aim_keyframe(
     return project.camera_track.keyframes[keyframe_id]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/camera/keyframes/{keyframe_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Timelines"],
@@ -695,6 +716,7 @@ async def update_aim_keyframe(
     operation_id="deleteCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_aim_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -726,7 +748,7 @@ async def get_orientation_timeline(
     )
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/camera/orientation",
     response_model=OrientationTimeline,
     tags=["Timelines"],
@@ -735,6 +757,7 @@ async def get_orientation_timeline(
     operation_id="updateCameraOrientation",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_orientation(
     project_id: str,
     data: CameraOrientation,
@@ -750,7 +773,7 @@ async def update_orientation(
     )
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/camera/orientation/keyframes",
     response_model=CameraOrientationKeyframe,
     status_code=status.HTTP_201_CREATED,
@@ -760,6 +783,7 @@ async def update_orientation(
     operation_id="createCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_orientation_keyframe(
     project_id: str,
     data: CameraOrientationKeyframeCreate,
@@ -772,7 +796,7 @@ async def create_orientation_keyframe(
     return next(reversed(project.camera_track.orientation_keyframes.values()))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
     response_model=CameraOrientationKeyframe,
     tags=["Timelines"],
@@ -781,6 +805,7 @@ async def create_orientation_keyframe(
     operation_id="updateCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -797,7 +822,7 @@ async def update_orientation_keyframe(
     return project.camera_track.orientation_keyframes[keyframe_id]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Timelines"],
@@ -806,6 +831,7 @@ async def update_orientation_keyframe(
     operation_id="deleteCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -813,9 +839,7 @@ async def delete_orientation_keyframe(
     _guard: MutationGuard,
 ) -> Response:
     try:
-        return _deleted(
-            await service.delete_camera_orientation_keyframe(project_id, keyframe_id)
-        )
+        return _deleted(await service.delete_camera_orientation_keyframe(project_id, keyframe_id))
     except KeyError as error:
         raise _not_found(error) from error
 
@@ -836,7 +860,7 @@ async def get_depth_of_field_timeline(
     return DepthOfFieldTimeline(keyframes=project.camera_track.depth_of_field_keyframes)
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/camera/depth-of-field/keyframes",
     response_model=DepthOfFieldKeyframe,
     status_code=status.HTTP_201_CREATED,
@@ -846,6 +870,7 @@ async def get_depth_of_field_timeline(
     operation_id="createDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_depth_of_field_keyframe(
     project_id: str,
     data: DepthOfFieldKeyframeCreate,
@@ -858,7 +883,7 @@ async def create_depth_of_field_keyframe(
     return next(reversed(project.camera_track.depth_of_field_keyframes.values()))
 
 
-@authenticated(router.patch)(
+@router.patch(
     "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
     response_model=DepthOfFieldKeyframe,
     tags=["Timelines"],
@@ -867,6 +892,7 @@ async def create_depth_of_field_keyframe(
     operation_id="updateDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -883,7 +909,7 @@ async def update_depth_of_field_keyframe(
     return project.camera_track.depth_of_field_keyframes[keyframe_id]
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Timelines"],
@@ -892,6 +918,7 @@ async def update_depth_of_field_keyframe(
     operation_id="deleteDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -920,7 +947,7 @@ async def list_chat_messages(
     return project.chat_history
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/chat/user-messages",
     response_model=ChatHistoryMessage,
     status_code=status.HTTP_201_CREATED,
@@ -930,6 +957,7 @@ async def list_chat_messages(
     operation_id="saveUserChatMessage",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def save_user_message(
     project_id: str,
     data: ChatMessage,
@@ -942,7 +970,7 @@ async def save_user_message(
     return next(message for message in project.chat_history if message.id == data.id)
 
 
-@authenticated(router.delete)(
+@router.delete(
     "/projects/{project_id}/chat",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Chat"],
@@ -951,13 +979,12 @@ async def save_user_message(
     operation_id="clearProjectChat",
     responses=MUTATION_ERROR_RESPONSES,
 )
-async def clear_chat(
-    project_id: str, service: ChatServiceDep, _guard: MutationGuard
-) -> Response:
+@authenticated
+async def clear_chat(project_id: str, service: ChatServiceDep, _guard: MutationGuard) -> Response:
     return _deleted(await service.clear_chat(project_id))
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/chat/messages",
     response_model=ChatResponse,
     tags=["Chat"],
@@ -966,6 +993,7 @@ async def clear_chat(
     operation_id="createChatMessage",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_chat_message(
     project_id: str,
     data: ChatMessage,
@@ -987,7 +1015,7 @@ def _sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
-@authenticated(router.post)(
+@router.post(
     "/projects/{project_id}/chat/messages/stream",
     tags=["Chat"],
     summary="Stream a chat response",
@@ -1004,6 +1032,7 @@ def _sse(event: str, data: Any) -> str:
         }
     },
 )
+@authenticated
 async def stream_chat_message(
     project_id: str,
     data: ChatMessage,
