@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { useListLibraryAssets } from "@/shared/api/generated/client";
 import { Card } from "@/shared/ui";
+import { DeleteLibraryAssetButton } from "./delete-library-asset-button";
 
 export function LibraryAssetList() {
   const library = useListLibraryAssets();
@@ -50,24 +51,7 @@ export function LibraryAssetList() {
                     ` · Offset XYZ: ${asset.default_offset.join(", ")}`}
                 </p>
               </div>
-              {/* Actions sit above the stretched link; gaps still open details. */}
-              <div className="flex shrink-0 gap-3 text-xs">
-                <Link
-                  className="relative z-20 rounded-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  href={`/library/${asset.id}`}
-                >
-                  Details
-                </Link>
-                {asset.download_url && (
-                  <a
-                    className="relative z-20 rounded-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    download
-                    href={asset.download_url}
-                  >
-                    Download
-                  </a>
-                )}
-              </div>
+              <DeleteLibraryAssetButton asset={asset} />
             </div>
           </Card>
         </li>

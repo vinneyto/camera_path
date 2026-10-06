@@ -318,6 +318,100 @@ export const useCreateLibraryUpload = <TError = HTTPValidationError,
       return useMutation(getCreateLibraryUploadMutationOptions(options), queryClient);
     }
 
+export type deleteLibraryAssetResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteLibraryAssetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type deleteLibraryAssetResponseSuccess = (deleteLibraryAssetResponse204) & {
+  headers: Headers;
+};
+export type deleteLibraryAssetResponseError = (deleteLibraryAssetResponse422) & {
+  headers: Headers;
+};
+
+export type deleteLibraryAssetResponse = (deleteLibraryAssetResponseSuccess | deleteLibraryAssetResponseError)
+
+export const getDeleteLibraryAssetUrl = (assetId: string,) => {
+
+
+
+
+  return `/api/v1/library/${assetId}`
+}
+
+/**
+ * Delete the library file and all its cloud instances from every project.
+ * @summary Delete Library Asset
+ */
+export const deleteLibraryAsset = async (assetId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteLibraryAssetResponse> => {
+
+  return orvalFetch<deleteLibraryAssetResponse>(getDeleteLibraryAssetUrl(assetId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLibraryAssetMutationKey = () => ['deleteLibraryAsset'] as const;
+
+export const getDeleteLibraryAssetMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAsset>>, TError,DeleteLibraryAssetMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAsset>>, TError,DeleteLibraryAssetMutationVariables, TContext> => {
+
+const mutationKey = getDeleteLibraryAssetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLibraryAsset>>, DeleteLibraryAssetMutationVariables> = (props) => {
+          const {assetId} = props ?? {};
+
+          return  deleteLibraryAsset(assetId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLibraryAssetMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLibraryAsset>>>
+
+    export type DeleteLibraryAssetMutationError = HTTPValidationError
+    export type DeleteLibraryAssetMutationVariables = {assetId: string}
+
+    /**
+ * @summary Delete Library Asset
+ */
+export const useDeleteLibraryAsset = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAsset>>, TError,DeleteLibraryAssetMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLibraryAsset>>,
+        TError,
+        DeleteLibraryAssetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteLibraryAssetMutationOptions(options), queryClient);
+    }
+
 export type getLibraryAssetResponse200 = {
   data: LibraryAsset
   status: 200

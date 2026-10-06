@@ -83,7 +83,7 @@ class ProjectCloudService:
     ) -> tuple[ProjectCloud, int]:
         try:
             async with self.repository.sessions.begin() as session:
-                asset = await session.get(LibraryAssetRecord, asset_id)
+                asset = await session.get(LibraryAssetRecord, asset_id, with_for_update=True)
                 if asset is None or asset.status != "ready":
                     raise KeyError("Library asset not found or not ready")
                 revision = await advance_project_revision(session, project_id, expected)

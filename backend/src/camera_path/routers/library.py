@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 
 from camera_path.services.library import (
     LibraryAsset,
@@ -38,6 +38,17 @@ async def list_library_assets(request: Request, service: Library) -> list[Librar
 )
 async def get_library_asset(asset_id: str, request: Request, service: Library) -> LibraryAsset:
     return await service.get(asset_id, request)
+
+
+@router.delete(
+    "/{asset_id}",
+    status_code=204,
+    operation_id="deleteLibraryAsset",
+    description="Delete the library file and all its cloud instances from every project.",
+)
+async def delete_library_asset(asset_id: str, service: Library) -> Response:
+    await service.delete(asset_id)
+    return Response(status_code=204)
 
 
 @router.patch(

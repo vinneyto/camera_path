@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from camera_path.persistence.models import LibraryAssetRecord, ProjectCloudRecord, ProjectRecord
@@ -76,6 +76,33 @@ class ProjectCloudRepository:
         await session.delete(cloud)
         await session.flush()
         await self._reorder(session, project_id, [item for item in clouds if item.id != cloud_id])
+
+    async def remove_library_asset(self, session: AsyncSession, asset_id: str) -> None:
+        project_ids = list(
+            (
+                await session.scalars(
+                    select(ProjectCloudRecord.project_id)
+                    .where(ProjectCloudRecord.library_asset_id == asset_id)
+                    .distinct()
+                    .order_by(ProjectCloudRecord.project_id)
+                )
+            ).all()
+        )
+        for project_id in project_ids:
+            # Serialize with project mutations and invalidate stale If-Match values once,
+            # even when this project contains several instances of the same asset.
+            await session.execute(
+                update(ProjectRecord)
+                .where(ProjectRecord.id == project_id)
+                .values(revision=ProjectRecord.revision + 1)
+            )
+            await session.execute(
+                delete(ProjectCloudRecord).where(
+                    ProjectCloudRecord.project_id == project_id,
+                    ProjectCloudRecord.library_asset_id == asset_id,
+                )
+            )
+            await self._reorder(session, project_id, await self._list(session, project_id))
 
     @staticmethod
     async def _reorder(

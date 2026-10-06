@@ -35,3 +35,6 @@ class LocalLibraryStorage(LibraryStorage):
                 return path.stat().st_size, stream.read(4)
 
         return await asyncio.to_thread(read)
+
+    async def delete(self, key: str) -> None:
+        await asyncio.to_thread(self.path(key).unlink, missing_ok=True)

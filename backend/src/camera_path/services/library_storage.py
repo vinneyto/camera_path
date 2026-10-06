@@ -14,3 +14,8 @@ class LibraryStorage(ABC):
 
     @abstractmethod
     async def inspect(self, key: str) -> tuple[int, bytes] | None: ...
+
+    @abstractmethod
+    async def delete(self, key: str) -> None:
+        """Delete stored content; an already missing object is a success."""
+        ...
