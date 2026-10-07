@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Input } from "@/shared/ui";
+import { UserSettingsPanel } from "@/features/user-settings/ui/user-settings-panel";
+import { SignOutButton } from "./sign-out-button";
 import { useAuth } from "../model/auth-provider";
 
 export function AuthControl() {
@@ -21,28 +23,25 @@ export function AuthControl() {
     }
   }
 
+  if (auth.username) {
+    return (
+      <UserSettingsPanel>
+        <SignOutButton />
+      </UserSettingsPanel>
+    );
+  }
+
   return (
     <div className="relative">
-      {auth.username ? (
-        <Button
-          disabled={auth.pending}
-          onClick={() => void auth.logout()}
-          size="sm"
-          variant="ghost"
-        >
-          Sign out
-        </Button>
-      ) : (
-        <Button
-          disabled={auth.loading || auth.pending}
-          onClick={() => setOpen(!open)}
-          size="sm"
-          variant="outline"
-        >
-          Sign in
-        </Button>
-      )}
-      {open && !auth.username && (
+      <Button
+        disabled={auth.loading || auth.pending}
+        onClick={() => setOpen(!open)}
+        size="sm"
+        variant="outline"
+      >
+        Sign in
+      </Button>
+      {open && (
         <form
           onSubmit={submit}
           className="absolute right-0 top-full z-50 mt-2 w-72 space-y-3 rounded-lg border bg-background p-4 shadow-lg"

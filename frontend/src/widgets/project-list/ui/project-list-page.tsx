@@ -12,7 +12,6 @@ import {
 } from "@/features/project-selection";
 import { ThemeToggle } from "@/features/theme-switcher";
 import { AuthControl, EditorOnly } from "@/features/auth";
-import { UserSettingsPanel } from "@/features/user-settings";
 
 export function ProjectListPage() {
   const router = useRouter();
@@ -62,9 +61,6 @@ export function ProjectListPage() {
             Library
           </Link>
           <AuthControl />
-          <EditorOnly>
-            <UserSettingsPanel />
-          </EditorOnly>
           <ThemeToggle />
         </div>
       </div>

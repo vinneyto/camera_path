@@ -6,7 +6,6 @@ import { GaussianDprSelect } from "@/features/gaussian-rendering-settings";
 import { ProjectCloudControls } from "@/features/project-clouds";
 import { ThemeToggle } from "@/features/theme-switcher";
 import { AuthControl, EditorOnly } from "@/features/auth";
-import { UserSettingsPanel } from "@/features/user-settings";
 import { Badge, Button, FLOATING_PANEL_Z_INDEX } from "@/shared/ui";
 
 interface ProjectHeaderProps {
@@ -49,9 +48,6 @@ export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
           </div>
         </EditorOnly>
         <AuthControl />
-        <EditorOnly>
-          <UserSettingsPanel />
-        </EditorOnly>
         <ThemeToggle />
         <Badge className="hidden gap-1 2xl:inline-flex">
           <MapPin className="size-2.5" />

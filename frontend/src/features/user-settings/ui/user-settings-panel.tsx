@@ -1,12 +1,16 @@
 "use client";
 
 import { UserRound } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/shared/ui";
 import { useUserSettings } from "../model/user-settings-provider";
 
-export function UserSettingsPanel() {
+interface UserSettingsPanelProps {
+  children?: ReactNode;
+}
+
+export function UserSettingsPanel({ children }: UserSettingsPanelProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const settings = useUserSettings();
@@ -90,6 +94,7 @@ export function UserSettingsPanel() {
               )}
             </div>
           )}
+          {children}
         </div>
       )}
     </div>
