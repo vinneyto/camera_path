@@ -27,7 +27,7 @@ export function Modal({
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay
-          className="fixed inset-0 bg-black/40"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
           style={{ zIndex: CONTEXT_MENU_Z_INDEX + 1 }}
         />
         <Dialog.Content

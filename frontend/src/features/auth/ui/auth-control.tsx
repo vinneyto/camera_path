@@ -32,65 +32,68 @@ export function AuthControl() {
   }
 
   return (
-    <Modal
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setPassword("");
-      }}
-      title="Editor sign in"
-      trigger={
-        <Button
-          disabled={auth.loading || auth.pending}
-          size="sm"
-          variant="outline"
-        >
-          Sign in
-        </Button>
-      }
-    >
-      <form onSubmit={submit} className="space-y-4">
-        <label className="block text-xs">
-          Username
-          <Input
-            autoComplete="username"
-            required
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-          />
-        </label>
-        <label className="block text-xs">
-          Password
-          <Input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        <div className="flex gap-2">
-          <Button type="submit" disabled={auth.pending} size="sm">
-            {auth.pending ? "Signing in…" : "Sign in"}
-          </Button>
+    <>
+      <UserSettingsPanel />
+      <Modal
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setPassword("");
+        }}
+        title="Editor sign in"
+        trigger={
           <Button
-            type="button"
+            disabled={auth.loading || auth.pending}
             size="sm"
-            variant="ghost"
-            onClick={() => {
-              setOpen(false);
-              setPassword("");
-            }}
+            variant="outline"
           >
-            Cancel
+            Sign in
           </Button>
-        </div>
-        {auth.error && (
-          <p className="text-xs text-destructive" role="alert">
-            {auth.error.message}
-          </p>
-        )}
-      </form>
-    </Modal>
+        }
+      >
+        <form onSubmit={submit} className="space-y-4">
+          <label className="block text-xs">
+            Username
+            <Input
+              autoComplete="username"
+              required
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+          </label>
+          <label className="block text-xs">
+            Password
+            <Input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={auth.pending} size="sm">
+              {auth.pending ? "Signing in…" : "Sign in"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setOpen(false);
+                setPassword("");
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+          {auth.error && (
+            <p className="text-xs text-destructive" role="alert">
+              {auth.error.message}
+            </p>
+          )}
+        </form>
+      </Modal>
+    </>
   );
 }

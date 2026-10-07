@@ -39,51 +39,48 @@ export function UserSettingsProvider({
 }) {
   const auth = useAuth();
   const queryClient = useQueryClient();
-  const mode = auth.canEdit ? "editor" : "guest";
-  const key = ["profile-settings", mode];
+  const key = ["profile-settings"];
   const query = useQuery({
     queryKey: key,
-    enabled: !auth.loading,
-    // Guest profile is read again on every transition (including logout/expiry).
-    staleTime: 0,
     queryFn: async () => {
-      const response = await getUserSettings();
-      if (mode === "editor") {
-        const restored = readEditorSettings(response.data);
-        localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(restored));
-        return restored;
+      let fallback: UserSettings = {
+        webgpu_tile_renderer: true,
+        show_grid: true,
+        gaussian_dpr: "1x",
+      };
+      try {
+        const response = await getUserSettings();
+        fallback = response.data;
+      } catch {
+        // Viewer preferences remain available if the backend cannot be reached.
       }
-      return response.data;
+      const restored = readEditorSettings(fallback);
+      localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(restored));
+      return restored;
     },
   });
   const mutation = useMutation({
     mutationFn: (changes: UserSettingsUpdate) => updateUserSettings(changes),
-    onSuccess: () => {
-      // A late editor save cannot replace guest values after logout.
-      void queryClient.invalidateQueries({
-        queryKey: ["profile-settings", "guest"],
-      });
-    },
   });
   const preferences = query.data;
   const value: UserSettingsContextValue = {
     webGpuTileRenderer: preferences?.webgpu_tile_renderer ?? true,
     showGrid: preferences?.show_grid ?? true,
     gaussianDpr: preferences?.gaussian_dpr ?? "1x",
-    loading: auth.loading || query.isPending,
-    saving: mutation.isPending,
+    loading: query.isPending,
+    saving: auth.canEdit && mutation.isPending,
     ready: query.isSuccess,
     error: (auth.canEdit ? mutation.error : null) ?? query.error,
     retry: () => {
       void query.refetch();
     },
     save: (changes) => {
-      if (!auth.canEdit || !preferences || mutation.isPending) return;
+      if (!preferences || (auth.canEdit && mutation.isPending)) return;
       const next: UserSettings = { ...preferences, ...changes };
-      // Editor UI state is always persisted locally, even if backend save fails.
+      // Viewer preferences survive login/logout and failed backend saves.
       localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(next));
       queryClient.setQueryData(key, next);
-      mutation.mutate(changes);
+      if (auth.canEdit) mutation.mutate(changes);
     },
   };
   return (

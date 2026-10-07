@@ -42,11 +42,9 @@ export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
         </EditorOnly>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2">
-        <EditorOnly>
-          <div className="hidden lg:block">
-            <GaussianDprSelect />
-          </div>
-        </EditorOnly>
+        <div className="hidden lg:block">
+          <GaussianDprSelect />
+        </div>
         <AuthControl />
         <ThemeToggle />
         <Badge className="hidden gap-1 2xl:inline-flex">

@@ -52,11 +52,13 @@ function Controls() {
       </button>
 
       <span data-testid="tool">{tool ?? "none"}</span>
+      <UserSettingsPanel>
+        <EditorOnly>
+          <SignOutButton />
+        </EditorOnly>
+      </UserSettingsPanel>
       <EditorOnly>
         <AnchorToolShortcut />
-        <UserSettingsPanel>
-          <SignOutButton />
-        </UserSettingsPanel>
         <ProjectCreateForm onCreate={async () => true} />
         <LibraryUploadForm />
       </EditorOnly>
@@ -101,6 +103,10 @@ async function openSettings() {
 async function signOut() {
   if (!screen.queryByRole("dialog")) await openSettings();
   fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull(),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 }
 
 beforeEach(() => {
@@ -152,7 +158,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it("guests load the server profile and cannot edit it even with editor localStorage", async () => {
+it("guests restore and edit local preferences without backend writes", async () => {
   localStorage.setItem(
     EDITOR_SETTINGS_KEY,
     JSON.stringify({
@@ -161,15 +167,36 @@ it("guests load the server profile and cannot edit it even with editor localStor
       gaussian_dpr: "system",
     }),
   );
-  mount();
-  await waitFor(() => expect(guestReads).toBe(1));
-  expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x");
-  expect(screen.queryByRole("button", { name: "Profile settings" })).toBeNull();
-  expect(screen.queryByRole("checkbox")).toBeNull();
+  const first = mount();
+  const grid = await openSettings();
+  await waitFor(() => expect(grid.disabled).toBe(false));
+  expect(screen.getByTestId("preferences").textContent).toBe(
+    "false/false/system",
+  );
+  fireEvent.click(grid);
+  await waitFor(() =>
+    expect(screen.getByTestId("preferences").textContent).toBe(
+      "false/true/system",
+    ),
+  );
+  expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!).show_grid).toBe(
+    true,
+  );
   expect(patches).toEqual([]);
+  expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+  first.unmount();
+  first.client.clear();
+  mount();
+  const restored = await openSettings();
+  await waitFor(() => expect(restored.disabled).toBe(false));
+  await waitFor(() =>
+    expect(screen.getByTestId("preferences").textContent).toBe(
+      "false/true/system",
+    ),
+  );
 });
 
-it("restores editor localStorage on login, saves changes there, and reloads backend settings on logout", async () => {
+it("keeps local preferences through login and logout; only editors publish changes", async () => {
   const local = {
     webgpu_tile_renderer: false,
     show_grid: false,
@@ -179,11 +206,7 @@ it("restores editor localStorage on login, saves changes there, and reloads back
   mount();
   await waitFor(() => expect(guestReads).toBe(1));
   fireEvent.click(screen.getByRole("button", { name: "Login" }));
-  await waitFor(() =>
-    expect(screen.getByTestId("preferences").textContent).toBe(
-      "false/false/system",
-    ),
-  );
+  await screen.findByRole("textbox", { name: "Project name" });
   const grid = await openSettings();
   await waitFor(() => expect(grid.disabled).toBe(false));
   fireEvent.click(grid);
@@ -192,23 +215,25 @@ it("restores editor localStorage on login, saves changes there, and reloads back
     ...local,
     show_grid: true,
   });
-  server = { ...DEFAULTS, webgpu_tile_renderer: true, show_grid: false };
   await signOut();
-  await waitFor(() => expect(guestReads).toBeGreaterThan(1));
-  await waitFor(() =>
-    expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x"),
-  );
-  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
-  // Signing out preserves editor settings for the next login, without applying them to the guest.
-  fireEvent.click(screen.getByRole("button", { name: "Login" }));
   await waitFor(() =>
     expect(screen.getByTestId("preferences").textContent).toBe(
       "false/true/system",
     ),
   );
+  const guestGrid = await openSettings();
+  expect(guestGrid.disabled).toBe(false);
+  fireEvent.click(guestGrid);
+  expect(patches).toEqual([{ show_grid: true }]);
+  fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+  fireEvent.click(screen.getByRole("button", { name: "Login" }));
+  await screen.findByRole("textbox", { name: "Project name" });
+  expect(screen.getByTestId("preferences").textContent).toBe(
+    "false/false/system",
+  );
 });
 
-it("keeps editor settings locally when server persistence fails, while the guest uses confirmed server values", async () => {
+it("keeps local preferences after logout even when backend persistence fails", async () => {
   signedIn = true;
   failWrite = true;
   mount();
@@ -217,18 +242,15 @@ it("keeps editor settings locally when server persistence fails, while the guest
   fireEvent.click(grid);
   await screen.findByText("Save failed");
   expect(grid.checked).toBe(false);
-  expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!).show_grid).toBe(
-    false,
-  );
   await signOut();
-  await waitFor(() => expect(guestReads).toBeGreaterThan(0));
-  await waitFor(() =>
-    expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
-  );
-  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
+  expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x");
+  const guestGrid = await openSettings();
+  expect(guestGrid.checked).toBe(false);
+  expect(guestGrid.disabled).toBe(false);
+  expect(screen.queryByText("Save failed")).toBeNull();
 });
 
-it("drops editor preferences and hides edits when the session expires", async () => {
+it("preserves preferences while hiding writes when the session expires", async () => {
   signedIn = true;
   localStorage.setItem(
     EDITOR_SETTINGS_KEY,
@@ -237,19 +259,20 @@ it("drops editor preferences and hides edits when the session expires", async ()
   mount();
   const grid = await openSettings();
   await waitFor(() => expect(grid.disabled).toBe(false));
-  expect(grid.checked).toBe(false);
   signedIn = false;
   act(() => {
     window.dispatchEvent(new Event("camera-path-auth-expired"));
   });
-  await waitFor(() => expect(guestReads).toBeGreaterThan(0));
   await waitFor(() =>
-    expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull(),
   );
-  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
+  expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x");
+  fireEvent.click(grid);
+  await waitFor(() => expect(grid.checked).toBe(true));
+  expect(patches).toEqual([]);
 });
 
-it("a pending editor save cannot restore editor localStorage after logout", async () => {
+it("a late editor save cannot replace newer guest preferences", async () => {
   signedIn = true;
   holdWrite = true;
   localStorage.setItem(
@@ -262,17 +285,55 @@ it("a pending editor save cannot restore editor localStorage after logout", asyn
   fireEvent.click(grid);
   await waitFor(() => expect(releaseWrite).toBeDefined());
   await signOut();
-  await waitFor(() => expect(guestReads).toBeGreaterThan(0));
-  await waitFor(() =>
-    expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
-  );
+  const guestGrid = await openSettings();
+  expect(guestGrid.disabled).toBe(false);
+  fireEvent.click(guestGrid);
   await act(async () => {
     releaseWrite!();
   });
   await waitFor(() =>
-    expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x"),
+    expect(screen.getByTestId("preferences").textContent).toBe("false/true/1x"),
   );
-  expect(screen.queryByRole("checkbox", { name: "Show grid" })).toBeNull();
+  expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!)).toEqual({
+    ...DEFAULTS,
+    webgpu_tile_renderer: false,
+  });
+  expect(patches).toEqual([{ show_grid: false }]);
+});
+
+it("uses backend defaults for an invalid local profile", async () => {
+  localStorage.setItem(
+    EDITOR_SETTINGS_KEY,
+    '{"show_grid":"wrong","gaussian_dpr":"invalid"}',
+  );
+  server.show_grid = false;
+  mount();
+  const grid = await openSettings();
+  await waitFor(() => expect(grid.disabled).toBe(false));
+  expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x");
+});
+
+it("keeps local settings usable when profile reads fail", async () => {
+  const fetch = globalThis.fetch;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: string, options: RequestInit) => {
+      if (url.endsWith("/profile/settings"))
+        return Promise.reject(new Error("Offline"));
+      return fetch(url, options);
+    }),
+  );
+  localStorage.setItem(
+    EDITOR_SETTINGS_KEY,
+    JSON.stringify({ ...DEFAULTS, show_grid: false }),
+  );
+  mount();
+  const grid = await openSettings();
+  await waitFor(() => expect(grid.disabled).toBe(false));
+  expect(grid.checked).toBe(false);
+  fireEvent.click(grid);
+  await waitFor(() => expect(grid.checked).toBe(true));
+  expect(patches).toEqual([]);
 });
 
 it.each([

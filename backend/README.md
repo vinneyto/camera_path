@@ -79,7 +79,9 @@ Anonymous reads never create or update profile rows. `PATCH` requires an editor 
 only supplied fields; it publishes the confirmed values as the guest fallback. No project ETag
 is required. `CAMERA_PATH_DEV_USER_ID` (default `dev-user`) retains the existing M2 profile key;
 it does not identify the authenticated editor or scope projects/chat/library to an owner.
-Editor UI preferences are additionally saved in browser localStorage and restored on login.
+Viewer preferences are always saved in browser localStorage and take priority over backend values.
+Guests can edit them locally; editor changes also publish the supplied fields to this backend profile.
+Login, logout and session expiry preserve local preferences.
 
 ### Editor authentication
 

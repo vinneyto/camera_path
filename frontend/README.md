@@ -43,12 +43,13 @@ Wrap editing forms, menus and controls in `EditorOnly` at their composition boun
 the shared content and read-only anchor markers; the anchor keyboard shortcut mounts only for editors.
 
 `features/auth` checks the server session on startup, window focus and once a minute. A 401 drops
-editor mode immediately. `features/user-settings` always loads the backend profile for guests.
-Editor renderer/grid/DPR choices are stored under `camera-path-editor-settings` in localStorage;
-login restores those choices, falling back to backend values for missing fields. Explicit edits
-also publish the changed fields to the backend guest profile. Local choices survive failed backend
-saves, which show an error. Logout or session expiry re-reads the backend guest settings and never
-applies the editor's localStorage to the guest; local values remain available for a later login.
+editor mode immediately. Profile settings remain available to guests. Renderer/grid/DPR choices
+are always stored under `camera-path-editor-settings` in localStorage (the existing key is retained).
+Local values take priority over the backend fallback, survive login/logout and session expiry, and
+remain usable when backend profile reads fail. Guests only edit local preferences; editors also
+publish changed fields to the backend. Failed saves show an error without reverting local choices.
+Profile and sign-in windows use the shared modal, with a lightly blurred overlay, focus trapping,
+and dismissal by clicking outside, the close button, or Escape.
 
 Start the backend first, then:
 
