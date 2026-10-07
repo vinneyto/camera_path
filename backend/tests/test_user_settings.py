@@ -3,12 +3,12 @@ import sqlite3
 
 import pytest
 from alembic.config import Config
+from conftest import create_editor_app as create_app
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateTable
 
 from alembic import command
-from camera_path.api import create_app
 from camera_path.config import Settings, settings
 from camera_path.persistence.models import UserSettingsRecord
 from camera_path.repositories import ProjectRepository
@@ -31,16 +31,23 @@ async def test_settings_persist_across_apps_and_are_scoped_to_current_user(tmp_p
             assert (await alice.get(URL)).json() == {
                 "webgpu_tile_renderer": True,
                 "show_grid": True,
+                "gaussian_dpr": "1x",
             }
             assert (await alice.patch(URL, json={"webgpu_tile_renderer": False})).json() == {
                 "webgpu_tile_renderer": False,
                 "show_grid": True,
+                "gaussian_dpr": "1x",
             }
             assert (await alice.patch(URL, json={"show_grid": False})).json() == {
                 "webgpu_tile_renderer": False,
                 "show_grid": False,
+                "gaussian_dpr": "1x",
             }
-            assert (await bob.get(URL)).json() == {"webgpu_tile_renderer": True, "show_grid": True}
+            assert (await bob.get(URL)).json() == {
+                "webgpu_tile_renderer": True,
+                "show_grid": True,
+                "gaussian_dpr": "1x",
+            }
             # Caller-supplied IDs cannot switch users. CP-49 can replace the dependency.
             assert (await bob.get(URL, headers={"X-User-ID": "alice"})).json()["show_grid"]
             bob_app.dependency_overrides[get_current_user_id] = lambda: "alice"
@@ -55,7 +62,11 @@ async def test_settings_persist_across_apps_and_are_scoped_to_current_user(tmp_p
         async with AsyncClient(
             transport=ASGITransport(app=application), base_url="http://test"
         ) as c:
-            assert (await c.get(URL)).json() == {"webgpu_tile_renderer": False, "show_grid": False}
+            assert (await c.get(URL)).json() == {
+                "webgpu_tile_renderer": False,
+                "show_grid": False,
+                "gaussian_dpr": "1x",
+            }
     finally:
         await reopened.close()
 
@@ -74,6 +85,7 @@ async def test_concurrent_partial_first_writes_preserve_both_fields(tmp_path) ->
             assert (await client.get(URL)).json() == {
                 "webgpu_tile_renderer": False,
                 "show_grid": False,
+                "gaussian_dpr": "1x",
             }
     finally:
         await repo.close()

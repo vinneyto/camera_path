@@ -14,10 +14,11 @@ from camera_path.models import (
     SpeedKeyframeCreate,
     SpeedKeyframeUpdate,
 )
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import MutationGuard, TimelineServiceDep
 
-router = APIRouter(tags=["Timelines"])
+router = APIRouter(route_class=AuthenticatedRoute, tags=["Timelines"])
 
 
 def _not_found(error: KeyError) -> HTTPException:
@@ -32,6 +33,7 @@ def _not_found(error: KeyError) -> HTTPException:
     operation_id="updateMotionProfile",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_motion_profile(
     project_id: str,
     data: MotionProfileUpdate,
@@ -50,6 +52,7 @@ async def update_motion_profile(
     operation_id="createSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def add_speed_keyframe(
     project_id: str,
     data: SpeedKeyframeCreate,
@@ -68,6 +71,7 @@ async def add_speed_keyframe(
     operation_id="updateSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_speed_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -91,6 +95,7 @@ async def update_speed_keyframe(
     operation_id="deleteSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_speed_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -113,6 +118,7 @@ async def delete_speed_keyframe(
     operation_id="updateCameraTrack",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_camera_track(
     project_id: str,
     data: CameraTrackUpdate,
@@ -131,6 +137,7 @@ async def update_camera_track(
     operation_id="createCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def add_camera_keyframe(
     project_id: str,
     data: CameraKeyframeCreate,
@@ -149,6 +156,7 @@ async def add_camera_keyframe(
     operation_id="updateCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_camera_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -172,6 +180,7 @@ async def update_camera_keyframe(
     operation_id="deleteCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_camera_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -194,6 +203,7 @@ async def delete_camera_keyframe(
     operation_id="updateCameraOrientation",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_default_camera_orientation(
     project_id: str,
     data: CameraOrientation,
@@ -213,6 +223,7 @@ async def update_default_camera_orientation(
     operation_id="createCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def add_camera_orientation_keyframe(
     project_id: str,
     data: CameraOrientationKeyframeCreate,
@@ -232,6 +243,7 @@ async def add_camera_orientation_keyframe(
     operation_id="updateCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_camera_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -255,6 +267,7 @@ async def update_camera_orientation_keyframe(
     operation_id="deleteCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_camera_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -277,6 +290,7 @@ async def delete_camera_orientation_keyframe(
     operation_id="createDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def add_depth_of_field_keyframe(
     project_id: str,
     data: DepthOfFieldKeyframeCreate,
@@ -296,6 +310,7 @@ async def add_depth_of_field_keyframe(
     operation_id="updateDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -319,6 +334,7 @@ async def update_depth_of_field_keyframe(
     operation_id="deleteDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,

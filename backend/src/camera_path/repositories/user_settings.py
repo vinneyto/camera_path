@@ -13,7 +13,7 @@ class UserSettingsRepository:
             return await session.get(UserSettingsRecord, user_id)
 
     async def update(
-        self, session: AsyncSession, user_id: str, changes: dict[str, bool]
+        self, session: AsyncSession, user_id: str, changes: dict[str, bool | str]
     ) -> UserSettingsRecord:
         # Update only supplied fields so changes from other clients are preserved.
         if changes:

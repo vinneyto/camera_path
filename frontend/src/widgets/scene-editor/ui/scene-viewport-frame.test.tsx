@@ -139,3 +139,7 @@ describe("SceneViewportFrame trajectory context menu", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
+
+vi.mock("@/features/auth", () => ({
+  EditorOnly: ({ children }: { children: React.ReactNode }) => children,
+}));

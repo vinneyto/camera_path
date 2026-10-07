@@ -53,6 +53,7 @@ import type {
   LibraryAssetsDelete,
   LibraryUpload,
   LibraryUploadCreate,
+  LoginRequest,
   MotionProfile,
   MotionProfileUpdate,
   OrientationTimeline,
@@ -65,6 +66,7 @@ import type {
   ScenePoint,
   ScenePointCreate,
   ScenePointUpdate,
+  SessionResponse,
   SpeedKeyframe,
   SpeedKeyframeCreate,
   SpeedKeyframeUpdate,
@@ -72,6 +74,7 @@ import type {
   SpiralSegmentCreate,
   SplineSegment,
   SplineSegmentCreate,
+  TokenResponse,
   Trajectory,
   UserSettings,
   UserSettingsUpdate
@@ -96,6 +99,322 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export type loginEditorResponse200 = {
+  data: TokenResponse
+  status: 200
+}
+
+export type loginEditorResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type loginEditorResponseSuccess = (loginEditorResponse200) & {
+  headers: Headers;
+};
+export type loginEditorResponseError = (loginEditorResponse422) & {
+  headers: Headers;
+};
+
+export type loginEditorResponse = (loginEditorResponseSuccess | loginEditorResponseError)
+
+export const getLoginEditorUrl = () => {
+
+
+
+
+  return `/api/v1/auth/login`
+}
+
+/**
+ * Verify credentials and issue a revocable JWT.
+ * @summary Sign in as the editor
+ */
+export const loginEditor = async (loginRequest: LoginRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<loginEditorResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<loginEditorResponse>(getLoginEditorUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(loginRequest)
+  }
+);}
+
+
+
+
+
+export const getLoginEditorMutationKey = () => ['loginEditor'] as const;
+
+export const getLoginEditorMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginEditor>>, TError,LoginEditorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loginEditor>>, TError,LoginEditorMutationVariables, TContext> => {
+
+const mutationKey = getLoginEditorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginEditor>>, LoginEditorMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  loginEditor(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginEditorMutationResult = NonNullable<Awaited<ReturnType<typeof loginEditor>>>
+    export type LoginEditorMutationBody = LoginRequest
+    export type LoginEditorMutationError = HTTPValidationError
+    export type LoginEditorMutationVariables = {data: LoginRequest}
+
+    /**
+ * @summary Sign in as the editor
+ */
+export const useLoginEditor = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginEditor>>, TError,LoginEditorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof loginEditor>>,
+        TError,
+        LoginEditorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLoginEditorMutationOptions(options), queryClient);
+    }
+
+export type logoutEditorResponse204 = {
+  data: void
+  status: 204
+}
+
+export type logoutEditorResponse401 = {
+  data: void
+  status: 401
+}
+
+export type logoutEditorResponseSuccess = (logoutEditorResponse204) & {
+  headers: Headers;
+};
+export type logoutEditorResponseError = (logoutEditorResponse401) & {
+  headers: Headers;
+};
+
+export type logoutEditorResponse = (logoutEditorResponseSuccess | logoutEditorResponseError)
+
+export const getLogoutEditorUrl = () => {
+
+
+
+
+  return `/api/v1/auth/logout`
+}
+
+/**
+ * Revoke the current JWT session on the server.
+ * @summary Sign out
+ */
+export const logoutEditor = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<logoutEditorResponse> => {
+
+  return orvalFetch<logoutEditorResponse>(getLogoutEditorUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutEditorMutationKey = () => ['logoutEditor'] as const;
+
+export const getLogoutEditorMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutEditor>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutEditor>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutEditorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutEditor>>, void> = () => {
+
+
+          return  logoutEditor(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutEditorMutationResult = NonNullable<Awaited<ReturnType<typeof logoutEditor>>>
+
+    export type LogoutEditorMutationError = void
+
+
+    /**
+ * @summary Sign out
+ */
+export const useLogoutEditor = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutEditor>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logoutEditor>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutEditorMutationOptions(options), queryClient);
+    }
+
+export type getEditorSessionResponse200 = {
+  data: SessionResponse
+  status: 200
+}
+
+export type getEditorSessionResponseSuccess = (getEditorSessionResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getEditorSessionResponse = (getEditorSessionResponseSuccess)
+
+export const getGetEditorSessionUrl = () => {
+
+
+
+
+  return `/api/v1/auth/session`
+}
+
+/**
+ * Validate the JWT and return the editor name.
+ * @summary Read the editor session
+ */
+export const getEditorSession = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<getEditorSessionResponse> => {
+
+  return orvalFetch<getEditorSessionResponse>(getGetEditorSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEditorSessionQueryKey = () => {
+    return [
+    `/api/v1/auth/session`
+    ] as const;
+    }
+
+
+export const getGetEditorSessionQueryOptions = <TData = Awaited<ReturnType<typeof getEditorSession>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorSession>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEditorSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEditorSession>>> = ({ signal }) => getEditorSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEditorSession>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetEditorSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getEditorSession>>>
+export type GetEditorSessionQueryError = unknown
+
+
+export function useGetEditorSession<TData = Awaited<ReturnType<typeof getEditorSession>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorSession>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEditorSession>>,
+          TError,
+          Awaited<ReturnType<typeof getEditorSession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEditorSession<TData = Awaited<ReturnType<typeof getEditorSession>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorSession>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEditorSession>>,
+          TError,
+          Awaited<ReturnType<typeof getEditorSession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEditorSession<TData = Awaited<ReturnType<typeof getEditorSession>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorSession>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read the editor session
+ */
+
+export function useGetEditorSession<TData = Awaited<ReturnType<typeof getEditorSession>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorSession>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetEditorSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type listLibraryAssetsResponse200 = {
   data: LibraryAsset[]
@@ -216,6 +535,11 @@ export type deleteLibraryAssetsResponse204 = {
   status: 204
 }
 
+export type deleteLibraryAssetsResponse401 = {
+  data: void
+  status: 401
+}
+
 export type deleteLibraryAssetsResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -224,7 +548,7 @@ export type deleteLibraryAssetsResponse422 = {
 export type deleteLibraryAssetsResponseSuccess = (deleteLibraryAssetsResponse204) & {
   headers: Headers;
 };
-export type deleteLibraryAssetsResponseError = (deleteLibraryAssetsResponse422) & {
+export type deleteLibraryAssetsResponseError = (deleteLibraryAssetsResponse401 | deleteLibraryAssetsResponse422) & {
   headers: Headers;
 };
 
@@ -273,7 +597,7 @@ return orvalFetch<deleteLibraryAssetsResponse>(getDeleteLibraryAssetsUrl(),
 
 export const getDeleteLibraryAssetsMutationKey = () => ['deleteLibraryAssets'] as const;
 
-export const getDeleteLibraryAssetsMutationOptions = <TError = HTTPValidationError,
+export const getDeleteLibraryAssetsMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAssets>>, TError,DeleteLibraryAssetsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAssets>>, TError,DeleteLibraryAssetsMutationVariables, TContext> => {
 
@@ -302,13 +626,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteLibraryAssetsMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLibraryAssets>>>
     export type DeleteLibraryAssetsMutationBody = LibraryAssetsDelete
-    export type DeleteLibraryAssetsMutationError = HTTPValidationError
+    export type DeleteLibraryAssetsMutationError = void | HTTPValidationError
     export type DeleteLibraryAssetsMutationVariables = {data: LibraryAssetsDelete}
 
     /**
  * @summary Delete Library Assets
  */
-export const useDeleteLibraryAssets = <TError = HTTPValidationError,
+export const useDeleteLibraryAssets = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAssets>>, TError,DeleteLibraryAssetsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteLibraryAssets>>,
@@ -324,6 +648,11 @@ export type createLibraryUploadResponse201 = {
   status: 201
 }
 
+export type createLibraryUploadResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createLibraryUploadResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -332,7 +661,7 @@ export type createLibraryUploadResponse422 = {
 export type createLibraryUploadResponseSuccess = (createLibraryUploadResponse201) & {
   headers: Headers;
 };
-export type createLibraryUploadResponseError = (createLibraryUploadResponse422) & {
+export type createLibraryUploadResponseError = (createLibraryUploadResponse401 | createLibraryUploadResponse422) & {
   headers: Headers;
 };
 
@@ -381,7 +710,7 @@ return orvalFetch<createLibraryUploadResponse>(getCreateLibraryUploadUrl(),
 
 export const getCreateLibraryUploadMutationKey = () => ['createLibraryUpload'] as const;
 
-export const getCreateLibraryUploadMutationOptions = <TError = HTTPValidationError,
+export const getCreateLibraryUploadMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLibraryUpload>>, TError,CreateLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createLibraryUpload>>, TError,CreateLibraryUploadMutationVariables, TContext> => {
 
@@ -410,13 +739,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateLibraryUploadMutationResult = NonNullable<Awaited<ReturnType<typeof createLibraryUpload>>>
     export type CreateLibraryUploadMutationBody = LibraryUploadCreate
-    export type CreateLibraryUploadMutationError = HTTPValidationError
+    export type CreateLibraryUploadMutationError = void | HTTPValidationError
     export type CreateLibraryUploadMutationVariables = {data: LibraryUploadCreate}
 
     /**
  * @summary Create Library Upload
  */
-export const useCreateLibraryUpload = <TError = HTTPValidationError,
+export const useCreateLibraryUpload = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLibraryUpload>>, TError,CreateLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createLibraryUpload>>,
@@ -432,6 +761,11 @@ export type deleteLibraryAssetResponse204 = {
   status: 204
 }
 
+export type deleteLibraryAssetResponse401 = {
+  data: void
+  status: 401
+}
+
 export type deleteLibraryAssetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -440,7 +774,7 @@ export type deleteLibraryAssetResponse422 = {
 export type deleteLibraryAssetResponseSuccess = (deleteLibraryAssetResponse204) & {
   headers: Headers;
 };
-export type deleteLibraryAssetResponseError = (deleteLibraryAssetResponse422) & {
+export type deleteLibraryAssetResponseError = (deleteLibraryAssetResponse401 | deleteLibraryAssetResponse422) & {
   headers: Headers;
 };
 
@@ -475,7 +809,7 @@ export const deleteLibraryAsset = async (assetId: string, options?: Parameters<t
 
 export const getDeleteLibraryAssetMutationKey = () => ['deleteLibraryAsset'] as const;
 
-export const getDeleteLibraryAssetMutationOptions = <TError = HTTPValidationError,
+export const getDeleteLibraryAssetMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAsset>>, TError,DeleteLibraryAssetMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAsset>>, TError,DeleteLibraryAssetMutationVariables, TContext> => {
 
@@ -504,13 +838,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteLibraryAssetMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLibraryAsset>>>
 
-    export type DeleteLibraryAssetMutationError = HTTPValidationError
+    export type DeleteLibraryAssetMutationError = void | HTTPValidationError
     export type DeleteLibraryAssetMutationVariables = {assetId: string}
 
     /**
  * @summary Delete Library Asset
  */
-export const useDeleteLibraryAsset = <TError = HTTPValidationError,
+export const useDeleteLibraryAsset = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLibraryAsset>>, TError,DeleteLibraryAssetMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteLibraryAsset>>,
@@ -647,6 +981,11 @@ export type completeLibraryUploadResponse200 = {
   status: 200
 }
 
+export type completeLibraryUploadResponse401 = {
+  data: void
+  status: 401
+}
+
 export type completeLibraryUploadResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -655,7 +994,7 @@ export type completeLibraryUploadResponse422 = {
 export type completeLibraryUploadResponseSuccess = (completeLibraryUploadResponse200) & {
   headers: Headers;
 };
-export type completeLibraryUploadResponseError = (completeLibraryUploadResponse422) & {
+export type completeLibraryUploadResponseError = (completeLibraryUploadResponse401 | completeLibraryUploadResponse422) & {
   headers: Headers;
 };
 
@@ -690,7 +1029,7 @@ export const completeLibraryUpload = async (assetId: string, options?: Parameter
 
 export const getCompleteLibraryUploadMutationKey = () => ['completeLibraryUpload'] as const;
 
-export const getCompleteLibraryUploadMutationOptions = <TError = HTTPValidationError,
+export const getCompleteLibraryUploadMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeLibraryUpload>>, TError,CompleteLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof completeLibraryUpload>>, TError,CompleteLibraryUploadMutationVariables, TContext> => {
 
@@ -719,13 +1058,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CompleteLibraryUploadMutationResult = NonNullable<Awaited<ReturnType<typeof completeLibraryUpload>>>
 
-    export type CompleteLibraryUploadMutationError = HTTPValidationError
+    export type CompleteLibraryUploadMutationError = void | HTTPValidationError
     export type CompleteLibraryUploadMutationVariables = {assetId: string}
 
     /**
  * @summary Complete Library Upload
  */
-export const useCompleteLibraryUpload = <TError = HTTPValidationError,
+export const useCompleteLibraryUpload = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeLibraryUpload>>, TError,CompleteLibraryUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof completeLibraryUpload>>,
@@ -741,6 +1080,11 @@ export type updateLibraryAssetDefaultsResponse200 = {
   status: 200
 }
 
+export type updateLibraryAssetDefaultsResponse401 = {
+  data: void
+  status: 401
+}
+
 export type updateLibraryAssetDefaultsResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -749,7 +1093,7 @@ export type updateLibraryAssetDefaultsResponse422 = {
 export type updateLibraryAssetDefaultsResponseSuccess = (updateLibraryAssetDefaultsResponse200) & {
   headers: Headers;
 };
-export type updateLibraryAssetDefaultsResponseError = (updateLibraryAssetDefaultsResponse422) & {
+export type updateLibraryAssetDefaultsResponseError = (updateLibraryAssetDefaultsResponse401 | updateLibraryAssetDefaultsResponse422) & {
   headers: Headers;
 };
 
@@ -799,7 +1143,7 @@ return orvalFetch<updateLibraryAssetDefaultsResponse>(getUpdateLibraryAssetDefau
 
 export const getUpdateLibraryAssetDefaultsMutationKey = () => ['updateLibraryAssetDefaults'] as const;
 
-export const getUpdateLibraryAssetDefaultsMutationOptions = <TError = HTTPValidationError,
+export const getUpdateLibraryAssetDefaultsMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, TError,UpdateLibraryAssetDefaultsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, TError,UpdateLibraryAssetDefaultsMutationVariables, TContext> => {
 
@@ -828,13 +1172,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateLibraryAssetDefaultsMutationResult = NonNullable<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>>
     export type UpdateLibraryAssetDefaultsMutationBody = LibraryAssetDefaultsUpdate
-    export type UpdateLibraryAssetDefaultsMutationError = HTTPValidationError
+    export type UpdateLibraryAssetDefaultsMutationError = void | HTTPValidationError
     export type UpdateLibraryAssetDefaultsMutationVariables = {assetId: string;data: LibraryAssetDefaultsUpdate}
 
     /**
  * @summary Update Library Asset Defaults
  */
-export const useUpdateLibraryAssetDefaults = <TError = HTTPValidationError,
+export const useUpdateLibraryAssetDefaults = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLibraryAssetDefaults>>, TError,UpdateLibraryAssetDefaultsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateLibraryAssetDefaults>>,
@@ -964,6 +1308,11 @@ export type updateUserSettingsResponse200 = {
   status: 200
 }
 
+export type updateUserSettingsResponse401 = {
+  data: void
+  status: 401
+}
+
 export type updateUserSettingsResponse422 = {
   data: ErrorResponse
   status: 422
@@ -972,7 +1321,7 @@ export type updateUserSettingsResponse422 = {
 export type updateUserSettingsResponseSuccess = (updateUserSettingsResponse200) & {
   headers: Headers;
 };
-export type updateUserSettingsResponseError = (updateUserSettingsResponse422) & {
+export type updateUserSettingsResponseError = (updateUserSettingsResponse401 | updateUserSettingsResponse422) & {
   headers: Headers;
 };
 
@@ -1021,7 +1370,7 @@ return orvalFetch<updateUserSettingsResponse>(getUpdateUserSettingsUrl(),
 
 export const getUpdateUserSettingsMutationKey = () => ['updateUserSettings'] as const;
 
-export const getUpdateUserSettingsMutationOptions = <TError = ErrorResponse,
+export const getUpdateUserSettingsMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,UpdateUserSettingsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,UpdateUserSettingsMutationVariables, TContext> => {
 
@@ -1050,13 +1399,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateUserSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateUserSettings>>>
     export type UpdateUserSettingsMutationBody = UserSettingsUpdate
-    export type UpdateUserSettingsMutationError = ErrorResponse
+    export type UpdateUserSettingsMutationError = void | ErrorResponse
     export type UpdateUserSettingsMutationVariables = {data: UserSettingsUpdate}
 
     /**
  * @summary Update User Settings
  */
-export const useUpdateUserSettings = <TError = ErrorResponse,
+export const useUpdateUserSettings = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserSettings>>, TError,UpdateUserSettingsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateUserSettings>>,
@@ -1186,6 +1535,11 @@ export type createProjectResponse201 = {
   status: 201
 }
 
+export type createProjectResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createProjectResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -1194,7 +1548,7 @@ export type createProjectResponse422 = {
 export type createProjectResponseSuccess = (createProjectResponse201) & {
   headers: Headers;
 };
-export type createProjectResponseError = (createProjectResponse422) & {
+export type createProjectResponseError = (createProjectResponse401 | createProjectResponse422) & {
   headers: Headers;
 };
 
@@ -1243,7 +1597,7 @@ return orvalFetch<createProjectResponse>(getCreateProjectUrl(),
 
 export const getCreateProjectMutationKey = () => ['createProject'] as const;
 
-export const getCreateProjectMutationOptions = <TError = HTTPValidationError,
+export const getCreateProjectMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,CreateProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,CreateProjectMutationVariables, TContext> => {
 
@@ -1272,13 +1626,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof createProject>>>
     export type CreateProjectMutationBody = ProjectCreate
-    export type CreateProjectMutationError = HTTPValidationError
+    export type CreateProjectMutationError = void | HTTPValidationError
     export type CreateProjectMutationVariables = {data: ProjectCreate}
 
     /**
  * @summary Create a project
  */
-export const useCreateProject = <TError = HTTPValidationError,
+export const useCreateProject = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,CreateProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createProject>>,
@@ -1292,6 +1646,11 @@ export const useCreateProject = <TError = HTTPValidationError,
 export type deleteProjectResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteProjectResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteProjectResponse404 = {
@@ -1317,7 +1676,7 @@ export type deleteProjectResponse428 = {
 export type deleteProjectResponseSuccess = (deleteProjectResponse204) & {
   headers: Headers;
 };
-export type deleteProjectResponseError = (deleteProjectResponse404 | deleteProjectResponse409 | deleteProjectResponse422 | deleteProjectResponse428) & {
+export type deleteProjectResponseError = (deleteProjectResponse401 | deleteProjectResponse404 | deleteProjectResponse409 | deleteProjectResponse422 | deleteProjectResponse428) & {
   headers: Headers;
 };
 
@@ -1352,7 +1711,7 @@ export const deleteProject = async (projectId: string, options?: Parameters<type
 
 export const getDeleteProjectMutationKey = () => ['deleteProject'] as const;
 
-export const getDeleteProjectMutationOptions = <TError = ErrorResponse,
+export const getDeleteProjectMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProject>>, TError,DeleteProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteProject>>, TError,DeleteProjectMutationVariables, TContext> => {
 
@@ -1381,13 +1740,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteProjectMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProject>>>
 
-    export type DeleteProjectMutationError = ErrorResponse
+    export type DeleteProjectMutationError = void | ErrorResponse
     export type DeleteProjectMutationVariables = {projectId: string}
 
     /**
  * @summary Delete a project
  */
-export const useDeleteProject = <TError = ErrorResponse,
+export const useDeleteProject = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProject>>, TError,DeleteProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteProject>>,
@@ -1534,6 +1893,11 @@ export type updateProjectResponse200 = {
   status: 200
 }
 
+export type updateProjectResponse401 = {
+  data: void
+  status: 401
+}
+
 export type updateProjectResponse404 = {
   data: ErrorResponse
   status: 404
@@ -1557,7 +1921,7 @@ export type updateProjectResponse428 = {
 export type updateProjectResponseSuccess = (updateProjectResponse200) & {
   headers: Headers;
 };
-export type updateProjectResponseError = (updateProjectResponse404 | updateProjectResponse409 | updateProjectResponse422 | updateProjectResponse428) & {
+export type updateProjectResponseError = (updateProjectResponse401 | updateProjectResponse404 | updateProjectResponse409 | updateProjectResponse422 | updateProjectResponse428) & {
   headers: Headers;
 };
 
@@ -1607,7 +1971,7 @@ return orvalFetch<updateProjectResponse>(getUpdateProjectUrl(projectId),
 
 export const getUpdateProjectMutationKey = () => ['updateProject'] as const;
 
-export const getUpdateProjectMutationOptions = <TError = ErrorResponse,
+export const getUpdateProjectMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProject>>, TError,UpdateProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProject>>, TError,UpdateProjectMutationVariables, TContext> => {
 
@@ -1636,13 +2000,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof updateProject>>>
     export type UpdateProjectMutationBody = ProjectUpdate
-    export type UpdateProjectMutationError = ErrorResponse
+    export type UpdateProjectMutationError = void | ErrorResponse
     export type UpdateProjectMutationVariables = {projectId: string;data: ProjectUpdate}
 
     /**
  * @summary Rename a project
  */
-export const useUpdateProject = <TError = ErrorResponse,
+export const useUpdateProject = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProject>>, TError,UpdateProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProject>>,
@@ -1779,6 +2143,11 @@ export type createAnchorResponse201 = {
   status: 201
 }
 
+export type createAnchorResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createAnchorResponse404 = {
   data: ErrorResponse
   status: 404
@@ -1802,7 +2171,7 @@ export type createAnchorResponse428 = {
 export type createAnchorResponseSuccess = (createAnchorResponse201) & {
   headers: Headers;
 };
-export type createAnchorResponseError = (createAnchorResponse404 | createAnchorResponse409 | createAnchorResponse422 | createAnchorResponse428) & {
+export type createAnchorResponseError = (createAnchorResponse401 | createAnchorResponse404 | createAnchorResponse409 | createAnchorResponse422 | createAnchorResponse428) & {
   headers: Headers;
 };
 
@@ -1852,7 +2221,7 @@ return orvalFetch<createAnchorResponse>(getCreateAnchorUrl(projectId),
 
 export const getCreateAnchorMutationKey = () => ['createAnchor'] as const;
 
-export const getCreateAnchorMutationOptions = <TError = ErrorResponse,
+export const getCreateAnchorMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAnchor>>, TError,CreateAnchorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createAnchor>>, TError,CreateAnchorMutationVariables, TContext> => {
 
@@ -1881,13 +2250,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateAnchorMutationResult = NonNullable<Awaited<ReturnType<typeof createAnchor>>>
     export type CreateAnchorMutationBody = AnchorCreate
-    export type CreateAnchorMutationError = ErrorResponse
+    export type CreateAnchorMutationError = void | ErrorResponse
     export type CreateAnchorMutationVariables = {projectId: string;data: AnchorCreate}
 
     /**
  * @summary Create an anchor
  */
-export const useCreateAnchor = <TError = ErrorResponse,
+export const useCreateAnchor = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAnchor>>, TError,CreateAnchorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createAnchor>>,
@@ -1901,6 +2270,11 @@ export const useCreateAnchor = <TError = ErrorResponse,
 export type deleteAnchorResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteAnchorResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteAnchorResponse404 = {
@@ -1926,7 +2300,7 @@ export type deleteAnchorResponse428 = {
 export type deleteAnchorResponseSuccess = (deleteAnchorResponse204) & {
   headers: Headers;
 };
-export type deleteAnchorResponseError = (deleteAnchorResponse404 | deleteAnchorResponse409 | deleteAnchorResponse422 | deleteAnchorResponse428) & {
+export type deleteAnchorResponseError = (deleteAnchorResponse401 | deleteAnchorResponse404 | deleteAnchorResponse409 | deleteAnchorResponse422 | deleteAnchorResponse428) & {
   headers: Headers;
 };
 
@@ -1963,7 +2337,7 @@ export const deleteAnchor = async (projectId: string,
 
 export const getDeleteAnchorMutationKey = () => ['deleteAnchor'] as const;
 
-export const getDeleteAnchorMutationOptions = <TError = ErrorResponse,
+export const getDeleteAnchorMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAnchor>>, TError,DeleteAnchorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteAnchor>>, TError,DeleteAnchorMutationVariables, TContext> => {
 
@@ -1992,13 +2366,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteAnchorMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAnchor>>>
 
-    export type DeleteAnchorMutationError = ErrorResponse
+    export type DeleteAnchorMutationError = void | ErrorResponse
     export type DeleteAnchorMutationVariables = {projectId: string;anchorId: string}
 
     /**
  * @summary Delete an anchor
  */
-export const useDeleteAnchor = <TError = ErrorResponse,
+export const useDeleteAnchor = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAnchor>>, TError,DeleteAnchorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteAnchor>>,
@@ -2012,6 +2386,11 @@ export const useDeleteAnchor = <TError = ErrorResponse,
 export type updateAnchorResponse200 = {
   data: Anchor
   status: 200
+}
+
+export type updateAnchorResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateAnchorResponse404 = {
@@ -2037,7 +2416,7 @@ export type updateAnchorResponse428 = {
 export type updateAnchorResponseSuccess = (updateAnchorResponse200) & {
   headers: Headers;
 };
-export type updateAnchorResponseError = (updateAnchorResponse404 | updateAnchorResponse409 | updateAnchorResponse422 | updateAnchorResponse428) & {
+export type updateAnchorResponseError = (updateAnchorResponse401 | updateAnchorResponse404 | updateAnchorResponse409 | updateAnchorResponse422 | updateAnchorResponse428) & {
   headers: Headers;
 };
 
@@ -2089,7 +2468,7 @@ return orvalFetch<updateAnchorResponse>(getUpdateAnchorUrl(projectId,anchorId),
 
 export const getUpdateAnchorMutationKey = () => ['updateAnchor'] as const;
 
-export const getUpdateAnchorMutationOptions = <TError = ErrorResponse,
+export const getUpdateAnchorMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAnchor>>, TError,UpdateAnchorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateAnchor>>, TError,UpdateAnchorMutationVariables, TContext> => {
 
@@ -2118,13 +2497,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateAnchorMutationResult = NonNullable<Awaited<ReturnType<typeof updateAnchor>>>
     export type UpdateAnchorMutationBody = AnchorUpdate
-    export type UpdateAnchorMutationError = ErrorResponse
+    export type UpdateAnchorMutationError = void | ErrorResponse
     export type UpdateAnchorMutationVariables = {projectId: string;anchorId: string;data: AnchorUpdate}
 
     /**
  * @summary Update an anchor
  */
-export const useUpdateAnchor = <TError = ErrorResponse,
+export const useUpdateAnchor = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAnchor>>, TError,UpdateAnchorMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateAnchor>>,
@@ -2261,6 +2640,11 @@ export type updateCameraTrackResponse200 = {
   status: 200
 }
 
+export type updateCameraTrackResponse401 = {
+  data: void
+  status: 401
+}
+
 export type updateCameraTrackResponse404 = {
   data: ErrorResponse
   status: 404
@@ -2284,7 +2668,7 @@ export type updateCameraTrackResponse428 = {
 export type updateCameraTrackResponseSuccess = (updateCameraTrackResponse200) & {
   headers: Headers;
 };
-export type updateCameraTrackResponseError = (updateCameraTrackResponse404 | updateCameraTrackResponse409 | updateCameraTrackResponse422 | updateCameraTrackResponse428) & {
+export type updateCameraTrackResponseError = (updateCameraTrackResponse401 | updateCameraTrackResponse404 | updateCameraTrackResponse409 | updateCameraTrackResponse422 | updateCameraTrackResponse428) & {
   headers: Headers;
 };
 
@@ -2334,7 +2718,7 @@ return orvalFetch<updateCameraTrackResponse>(getUpdateCameraTrackUrl(projectId),
 
 export const getUpdateCameraTrackMutationKey = () => ['updateCameraTrack'] as const;
 
-export const getUpdateCameraTrackMutationOptions = <TError = ErrorResponse,
+export const getUpdateCameraTrackMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraTrack>>, TError,UpdateCameraTrackMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateCameraTrack>>, TError,UpdateCameraTrackMutationVariables, TContext> => {
 
@@ -2363,13 +2747,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateCameraTrackMutationResult = NonNullable<Awaited<ReturnType<typeof updateCameraTrack>>>
     export type UpdateCameraTrackMutationBody = CameraTrackUpdate
-    export type UpdateCameraTrackMutationError = ErrorResponse
+    export type UpdateCameraTrackMutationError = void | ErrorResponse
     export type UpdateCameraTrackMutationVariables = {projectId: string;data: CameraTrackUpdate}
 
     /**
  * @summary Update the aim timeline
  */
-export const useUpdateCameraTrack = <TError = ErrorResponse,
+export const useUpdateCameraTrack = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraTrack>>, TError,UpdateCameraTrackMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateCameraTrack>>,
@@ -2506,6 +2890,11 @@ export type createDepthOfFieldKeyframeResponse201 = {
   status: 201
 }
 
+export type createDepthOfFieldKeyframeResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createDepthOfFieldKeyframeResponse404 = {
   data: ErrorResponse
   status: 404
@@ -2529,7 +2918,7 @@ export type createDepthOfFieldKeyframeResponse428 = {
 export type createDepthOfFieldKeyframeResponseSuccess = (createDepthOfFieldKeyframeResponse201) & {
   headers: Headers;
 };
-export type createDepthOfFieldKeyframeResponseError = (createDepthOfFieldKeyframeResponse404 | createDepthOfFieldKeyframeResponse409 | createDepthOfFieldKeyframeResponse422 | createDepthOfFieldKeyframeResponse428) & {
+export type createDepthOfFieldKeyframeResponseError = (createDepthOfFieldKeyframeResponse401 | createDepthOfFieldKeyframeResponse404 | createDepthOfFieldKeyframeResponse409 | createDepthOfFieldKeyframeResponse422 | createDepthOfFieldKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -2579,7 +2968,7 @@ return orvalFetch<createDepthOfFieldKeyframeResponse>(getCreateDepthOfFieldKeyfr
 
 export const getCreateDepthOfFieldKeyframeMutationKey = () => ['createDepthOfFieldKeyframe'] as const;
 
-export const getCreateDepthOfFieldKeyframeMutationOptions = <TError = ErrorResponse,
+export const getCreateDepthOfFieldKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDepthOfFieldKeyframe>>, TError,CreateDepthOfFieldKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createDepthOfFieldKeyframe>>, TError,CreateDepthOfFieldKeyframeMutationVariables, TContext> => {
 
@@ -2608,13 +2997,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateDepthOfFieldKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof createDepthOfFieldKeyframe>>>
     export type CreateDepthOfFieldKeyframeMutationBody = DepthOfFieldKeyframeCreate
-    export type CreateDepthOfFieldKeyframeMutationError = ErrorResponse
+    export type CreateDepthOfFieldKeyframeMutationError = void | ErrorResponse
     export type CreateDepthOfFieldKeyframeMutationVariables = {projectId: string;data: DepthOfFieldKeyframeCreate}
 
     /**
  * @summary Create a depth-of-field keyframe
  */
-export const useCreateDepthOfFieldKeyframe = <TError = ErrorResponse,
+export const useCreateDepthOfFieldKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDepthOfFieldKeyframe>>, TError,CreateDepthOfFieldKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createDepthOfFieldKeyframe>>,
@@ -2628,6 +3017,11 @@ export const useCreateDepthOfFieldKeyframe = <TError = ErrorResponse,
 export type deleteDepthOfFieldKeyframeResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteDepthOfFieldKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteDepthOfFieldKeyframeResponse404 = {
@@ -2653,7 +3047,7 @@ export type deleteDepthOfFieldKeyframeResponse428 = {
 export type deleteDepthOfFieldKeyframeResponseSuccess = (deleteDepthOfFieldKeyframeResponse204) & {
   headers: Headers;
 };
-export type deleteDepthOfFieldKeyframeResponseError = (deleteDepthOfFieldKeyframeResponse404 | deleteDepthOfFieldKeyframeResponse409 | deleteDepthOfFieldKeyframeResponse422 | deleteDepthOfFieldKeyframeResponse428) & {
+export type deleteDepthOfFieldKeyframeResponseError = (deleteDepthOfFieldKeyframeResponse401 | deleteDepthOfFieldKeyframeResponse404 | deleteDepthOfFieldKeyframeResponse409 | deleteDepthOfFieldKeyframeResponse422 | deleteDepthOfFieldKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -2690,7 +3084,7 @@ export const deleteDepthOfFieldKeyframe = async (projectId: string,
 
 export const getDeleteDepthOfFieldKeyframeMutationKey = () => ['deleteDepthOfFieldKeyframe'] as const;
 
-export const getDeleteDepthOfFieldKeyframeMutationOptions = <TError = ErrorResponse,
+export const getDeleteDepthOfFieldKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDepthOfFieldKeyframe>>, TError,DeleteDepthOfFieldKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteDepthOfFieldKeyframe>>, TError,DeleteDepthOfFieldKeyframeMutationVariables, TContext> => {
 
@@ -2719,13 +3113,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteDepthOfFieldKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDepthOfFieldKeyframe>>>
 
-    export type DeleteDepthOfFieldKeyframeMutationError = ErrorResponse
+    export type DeleteDepthOfFieldKeyframeMutationError = void | ErrorResponse
     export type DeleteDepthOfFieldKeyframeMutationVariables = {projectId: string;keyframeId: string}
 
     /**
  * @summary Delete a depth-of-field keyframe
  */
-export const useDeleteDepthOfFieldKeyframe = <TError = ErrorResponse,
+export const useDeleteDepthOfFieldKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDepthOfFieldKeyframe>>, TError,DeleteDepthOfFieldKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteDepthOfFieldKeyframe>>,
@@ -2739,6 +3133,11 @@ export const useDeleteDepthOfFieldKeyframe = <TError = ErrorResponse,
 export type updateDepthOfFieldKeyframeResponse200 = {
   data: DepthOfFieldKeyframe
   status: 200
+}
+
+export type updateDepthOfFieldKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateDepthOfFieldKeyframeResponse404 = {
@@ -2764,7 +3163,7 @@ export type updateDepthOfFieldKeyframeResponse428 = {
 export type updateDepthOfFieldKeyframeResponseSuccess = (updateDepthOfFieldKeyframeResponse200) & {
   headers: Headers;
 };
-export type updateDepthOfFieldKeyframeResponseError = (updateDepthOfFieldKeyframeResponse404 | updateDepthOfFieldKeyframeResponse409 | updateDepthOfFieldKeyframeResponse422 | updateDepthOfFieldKeyframeResponse428) & {
+export type updateDepthOfFieldKeyframeResponseError = (updateDepthOfFieldKeyframeResponse401 | updateDepthOfFieldKeyframeResponse404 | updateDepthOfFieldKeyframeResponse409 | updateDepthOfFieldKeyframeResponse422 | updateDepthOfFieldKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -2816,7 +3215,7 @@ return orvalFetch<updateDepthOfFieldKeyframeResponse>(getUpdateDepthOfFieldKeyfr
 
 export const getUpdateDepthOfFieldKeyframeMutationKey = () => ['updateDepthOfFieldKeyframe'] as const;
 
-export const getUpdateDepthOfFieldKeyframeMutationOptions = <TError = ErrorResponse,
+export const getUpdateDepthOfFieldKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDepthOfFieldKeyframe>>, TError,UpdateDepthOfFieldKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateDepthOfFieldKeyframe>>, TError,UpdateDepthOfFieldKeyframeMutationVariables, TContext> => {
 
@@ -2845,13 +3244,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateDepthOfFieldKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof updateDepthOfFieldKeyframe>>>
     export type UpdateDepthOfFieldKeyframeMutationBody = DepthOfFieldKeyframeUpdate
-    export type UpdateDepthOfFieldKeyframeMutationError = ErrorResponse
+    export type UpdateDepthOfFieldKeyframeMutationError = void | ErrorResponse
     export type UpdateDepthOfFieldKeyframeMutationVariables = {projectId: string;keyframeId: string;data: DepthOfFieldKeyframeUpdate}
 
     /**
  * @summary Update a depth-of-field keyframe
  */
-export const useUpdateDepthOfFieldKeyframe = <TError = ErrorResponse,
+export const useUpdateDepthOfFieldKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDepthOfFieldKeyframe>>, TError,UpdateDepthOfFieldKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateDepthOfFieldKeyframe>>,
@@ -2865,6 +3264,11 @@ export const useUpdateDepthOfFieldKeyframe = <TError = ErrorResponse,
 export type createCameraAimKeyframeResponse201 = {
   data: CameraKeyframe
   status: 201
+}
+
+export type createCameraAimKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type createCameraAimKeyframeResponse404 = {
@@ -2890,7 +3294,7 @@ export type createCameraAimKeyframeResponse428 = {
 export type createCameraAimKeyframeResponseSuccess = (createCameraAimKeyframeResponse201) & {
   headers: Headers;
 };
-export type createCameraAimKeyframeResponseError = (createCameraAimKeyframeResponse404 | createCameraAimKeyframeResponse409 | createCameraAimKeyframeResponse422 | createCameraAimKeyframeResponse428) & {
+export type createCameraAimKeyframeResponseError = (createCameraAimKeyframeResponse401 | createCameraAimKeyframeResponse404 | createCameraAimKeyframeResponse409 | createCameraAimKeyframeResponse422 | createCameraAimKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -2940,7 +3344,7 @@ return orvalFetch<createCameraAimKeyframeResponse>(getCreateCameraAimKeyframeUrl
 
 export const getCreateCameraAimKeyframeMutationKey = () => ['createCameraAimKeyframe'] as const;
 
-export const getCreateCameraAimKeyframeMutationOptions = <TError = ErrorResponse,
+export const getCreateCameraAimKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCameraAimKeyframe>>, TError,CreateCameraAimKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createCameraAimKeyframe>>, TError,CreateCameraAimKeyframeMutationVariables, TContext> => {
 
@@ -2969,13 +3373,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateCameraAimKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof createCameraAimKeyframe>>>
     export type CreateCameraAimKeyframeMutationBody = CameraKeyframeCreate
-    export type CreateCameraAimKeyframeMutationError = ErrorResponse
+    export type CreateCameraAimKeyframeMutationError = void | ErrorResponse
     export type CreateCameraAimKeyframeMutationVariables = {projectId: string;data: CameraKeyframeCreate}
 
     /**
  * @summary Create an aim keyframe
  */
-export const useCreateCameraAimKeyframe = <TError = ErrorResponse,
+export const useCreateCameraAimKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCameraAimKeyframe>>, TError,CreateCameraAimKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createCameraAimKeyframe>>,
@@ -2989,6 +3393,11 @@ export const useCreateCameraAimKeyframe = <TError = ErrorResponse,
 export type deleteCameraAimKeyframeResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteCameraAimKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteCameraAimKeyframeResponse404 = {
@@ -3014,7 +3423,7 @@ export type deleteCameraAimKeyframeResponse428 = {
 export type deleteCameraAimKeyframeResponseSuccess = (deleteCameraAimKeyframeResponse204) & {
   headers: Headers;
 };
-export type deleteCameraAimKeyframeResponseError = (deleteCameraAimKeyframeResponse404 | deleteCameraAimKeyframeResponse409 | deleteCameraAimKeyframeResponse422 | deleteCameraAimKeyframeResponse428) & {
+export type deleteCameraAimKeyframeResponseError = (deleteCameraAimKeyframeResponse401 | deleteCameraAimKeyframeResponse404 | deleteCameraAimKeyframeResponse409 | deleteCameraAimKeyframeResponse422 | deleteCameraAimKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -3051,7 +3460,7 @@ export const deleteCameraAimKeyframe = async (projectId: string,
 
 export const getDeleteCameraAimKeyframeMutationKey = () => ['deleteCameraAimKeyframe'] as const;
 
-export const getDeleteCameraAimKeyframeMutationOptions = <TError = ErrorResponse,
+export const getDeleteCameraAimKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCameraAimKeyframe>>, TError,DeleteCameraAimKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteCameraAimKeyframe>>, TError,DeleteCameraAimKeyframeMutationVariables, TContext> => {
 
@@ -3080,13 +3489,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteCameraAimKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCameraAimKeyframe>>>
 
-    export type DeleteCameraAimKeyframeMutationError = ErrorResponse
+    export type DeleteCameraAimKeyframeMutationError = void | ErrorResponse
     export type DeleteCameraAimKeyframeMutationVariables = {projectId: string;keyframeId: string}
 
     /**
  * @summary Delete an aim keyframe
  */
-export const useDeleteCameraAimKeyframe = <TError = ErrorResponse,
+export const useDeleteCameraAimKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCameraAimKeyframe>>, TError,DeleteCameraAimKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteCameraAimKeyframe>>,
@@ -3100,6 +3509,11 @@ export const useDeleteCameraAimKeyframe = <TError = ErrorResponse,
 export type updateCameraAimKeyframeResponse200 = {
   data: CameraKeyframe
   status: 200
+}
+
+export type updateCameraAimKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateCameraAimKeyframeResponse404 = {
@@ -3125,7 +3539,7 @@ export type updateCameraAimKeyframeResponse428 = {
 export type updateCameraAimKeyframeResponseSuccess = (updateCameraAimKeyframeResponse200) & {
   headers: Headers;
 };
-export type updateCameraAimKeyframeResponseError = (updateCameraAimKeyframeResponse404 | updateCameraAimKeyframeResponse409 | updateCameraAimKeyframeResponse422 | updateCameraAimKeyframeResponse428) & {
+export type updateCameraAimKeyframeResponseError = (updateCameraAimKeyframeResponse401 | updateCameraAimKeyframeResponse404 | updateCameraAimKeyframeResponse409 | updateCameraAimKeyframeResponse422 | updateCameraAimKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -3177,7 +3591,7 @@ return orvalFetch<updateCameraAimKeyframeResponse>(getUpdateCameraAimKeyframeUrl
 
 export const getUpdateCameraAimKeyframeMutationKey = () => ['updateCameraAimKeyframe'] as const;
 
-export const getUpdateCameraAimKeyframeMutationOptions = <TError = ErrorResponse,
+export const getUpdateCameraAimKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraAimKeyframe>>, TError,UpdateCameraAimKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateCameraAimKeyframe>>, TError,UpdateCameraAimKeyframeMutationVariables, TContext> => {
 
@@ -3206,13 +3620,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateCameraAimKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof updateCameraAimKeyframe>>>
     export type UpdateCameraAimKeyframeMutationBody = CameraKeyframeUpdate
-    export type UpdateCameraAimKeyframeMutationError = ErrorResponse
+    export type UpdateCameraAimKeyframeMutationError = void | ErrorResponse
     export type UpdateCameraAimKeyframeMutationVariables = {projectId: string;keyframeId: string;data: CameraKeyframeUpdate}
 
     /**
  * @summary Update an aim keyframe
  */
-export const useUpdateCameraAimKeyframe = <TError = ErrorResponse,
+export const useUpdateCameraAimKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraAimKeyframe>>, TError,UpdateCameraAimKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateCameraAimKeyframe>>,
@@ -3349,6 +3763,11 @@ export type updateCameraOrientationResponse200 = {
   status: 200
 }
 
+export type updateCameraOrientationResponse401 = {
+  data: void
+  status: 401
+}
+
 export type updateCameraOrientationResponse404 = {
   data: ErrorResponse
   status: 404
@@ -3372,7 +3791,7 @@ export type updateCameraOrientationResponse428 = {
 export type updateCameraOrientationResponseSuccess = (updateCameraOrientationResponse200) & {
   headers: Headers;
 };
-export type updateCameraOrientationResponseError = (updateCameraOrientationResponse404 | updateCameraOrientationResponse409 | updateCameraOrientationResponse422 | updateCameraOrientationResponse428) & {
+export type updateCameraOrientationResponseError = (updateCameraOrientationResponse401 | updateCameraOrientationResponse404 | updateCameraOrientationResponse409 | updateCameraOrientationResponse422 | updateCameraOrientationResponse428) & {
   headers: Headers;
 };
 
@@ -3422,7 +3841,7 @@ return orvalFetch<updateCameraOrientationResponse>(getUpdateCameraOrientationUrl
 
 export const getUpdateCameraOrientationMutationKey = () => ['updateCameraOrientation'] as const;
 
-export const getUpdateCameraOrientationMutationOptions = <TError = ErrorResponse,
+export const getUpdateCameraOrientationMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraOrientation>>, TError,UpdateCameraOrientationMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateCameraOrientation>>, TError,UpdateCameraOrientationMutationVariables, TContext> => {
 
@@ -3451,13 +3870,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateCameraOrientationMutationResult = NonNullable<Awaited<ReturnType<typeof updateCameraOrientation>>>
     export type UpdateCameraOrientationMutationBody = CameraOrientation
-    export type UpdateCameraOrientationMutationError = ErrorResponse
+    export type UpdateCameraOrientationMutationError = void | ErrorResponse
     export type UpdateCameraOrientationMutationVariables = {projectId: string;data: CameraOrientation}
 
     /**
  * @summary Update default orientation
  */
-export const useUpdateCameraOrientation = <TError = ErrorResponse,
+export const useUpdateCameraOrientation = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraOrientation>>, TError,UpdateCameraOrientationMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateCameraOrientation>>,
@@ -3471,6 +3890,11 @@ export const useUpdateCameraOrientation = <TError = ErrorResponse,
 export type createCameraOrientationKeyframeResponse201 = {
   data: CameraOrientationKeyframe
   status: 201
+}
+
+export type createCameraOrientationKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type createCameraOrientationKeyframeResponse404 = {
@@ -3496,7 +3920,7 @@ export type createCameraOrientationKeyframeResponse428 = {
 export type createCameraOrientationKeyframeResponseSuccess = (createCameraOrientationKeyframeResponse201) & {
   headers: Headers;
 };
-export type createCameraOrientationKeyframeResponseError = (createCameraOrientationKeyframeResponse404 | createCameraOrientationKeyframeResponse409 | createCameraOrientationKeyframeResponse422 | createCameraOrientationKeyframeResponse428) & {
+export type createCameraOrientationKeyframeResponseError = (createCameraOrientationKeyframeResponse401 | createCameraOrientationKeyframeResponse404 | createCameraOrientationKeyframeResponse409 | createCameraOrientationKeyframeResponse422 | createCameraOrientationKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -3546,7 +3970,7 @@ return orvalFetch<createCameraOrientationKeyframeResponse>(getCreateCameraOrient
 
 export const getCreateCameraOrientationKeyframeMutationKey = () => ['createCameraOrientationKeyframe'] as const;
 
-export const getCreateCameraOrientationKeyframeMutationOptions = <TError = ErrorResponse,
+export const getCreateCameraOrientationKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCameraOrientationKeyframe>>, TError,CreateCameraOrientationKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createCameraOrientationKeyframe>>, TError,CreateCameraOrientationKeyframeMutationVariables, TContext> => {
 
@@ -3575,13 +3999,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateCameraOrientationKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof createCameraOrientationKeyframe>>>
     export type CreateCameraOrientationKeyframeMutationBody = CameraOrientationKeyframeCreate
-    export type CreateCameraOrientationKeyframeMutationError = ErrorResponse
+    export type CreateCameraOrientationKeyframeMutationError = void | ErrorResponse
     export type CreateCameraOrientationKeyframeMutationVariables = {projectId: string;data: CameraOrientationKeyframeCreate}
 
     /**
  * @summary Create an orientation keyframe
  */
-export const useCreateCameraOrientationKeyframe = <TError = ErrorResponse,
+export const useCreateCameraOrientationKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCameraOrientationKeyframe>>, TError,CreateCameraOrientationKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createCameraOrientationKeyframe>>,
@@ -3595,6 +4019,11 @@ export const useCreateCameraOrientationKeyframe = <TError = ErrorResponse,
 export type deleteCameraOrientationKeyframeResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteCameraOrientationKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteCameraOrientationKeyframeResponse404 = {
@@ -3620,7 +4049,7 @@ export type deleteCameraOrientationKeyframeResponse428 = {
 export type deleteCameraOrientationKeyframeResponseSuccess = (deleteCameraOrientationKeyframeResponse204) & {
   headers: Headers;
 };
-export type deleteCameraOrientationKeyframeResponseError = (deleteCameraOrientationKeyframeResponse404 | deleteCameraOrientationKeyframeResponse409 | deleteCameraOrientationKeyframeResponse422 | deleteCameraOrientationKeyframeResponse428) & {
+export type deleteCameraOrientationKeyframeResponseError = (deleteCameraOrientationKeyframeResponse401 | deleteCameraOrientationKeyframeResponse404 | deleteCameraOrientationKeyframeResponse409 | deleteCameraOrientationKeyframeResponse422 | deleteCameraOrientationKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -3657,7 +4086,7 @@ export const deleteCameraOrientationKeyframe = async (projectId: string,
 
 export const getDeleteCameraOrientationKeyframeMutationKey = () => ['deleteCameraOrientationKeyframe'] as const;
 
-export const getDeleteCameraOrientationKeyframeMutationOptions = <TError = ErrorResponse,
+export const getDeleteCameraOrientationKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCameraOrientationKeyframe>>, TError,DeleteCameraOrientationKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteCameraOrientationKeyframe>>, TError,DeleteCameraOrientationKeyframeMutationVariables, TContext> => {
 
@@ -3686,13 +4115,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteCameraOrientationKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCameraOrientationKeyframe>>>
 
-    export type DeleteCameraOrientationKeyframeMutationError = ErrorResponse
+    export type DeleteCameraOrientationKeyframeMutationError = void | ErrorResponse
     export type DeleteCameraOrientationKeyframeMutationVariables = {projectId: string;keyframeId: string}
 
     /**
  * @summary Delete an orientation keyframe
  */
-export const useDeleteCameraOrientationKeyframe = <TError = ErrorResponse,
+export const useDeleteCameraOrientationKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCameraOrientationKeyframe>>, TError,DeleteCameraOrientationKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteCameraOrientationKeyframe>>,
@@ -3706,6 +4135,11 @@ export const useDeleteCameraOrientationKeyframe = <TError = ErrorResponse,
 export type updateCameraOrientationKeyframeResponse200 = {
   data: CameraOrientationKeyframe
   status: 200
+}
+
+export type updateCameraOrientationKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateCameraOrientationKeyframeResponse404 = {
@@ -3731,7 +4165,7 @@ export type updateCameraOrientationKeyframeResponse428 = {
 export type updateCameraOrientationKeyframeResponseSuccess = (updateCameraOrientationKeyframeResponse200) & {
   headers: Headers;
 };
-export type updateCameraOrientationKeyframeResponseError = (updateCameraOrientationKeyframeResponse404 | updateCameraOrientationKeyframeResponse409 | updateCameraOrientationKeyframeResponse422 | updateCameraOrientationKeyframeResponse428) & {
+export type updateCameraOrientationKeyframeResponseError = (updateCameraOrientationKeyframeResponse401 | updateCameraOrientationKeyframeResponse404 | updateCameraOrientationKeyframeResponse409 | updateCameraOrientationKeyframeResponse422 | updateCameraOrientationKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -3783,7 +4217,7 @@ return orvalFetch<updateCameraOrientationKeyframeResponse>(getUpdateCameraOrient
 
 export const getUpdateCameraOrientationKeyframeMutationKey = () => ['updateCameraOrientationKeyframe'] as const;
 
-export const getUpdateCameraOrientationKeyframeMutationOptions = <TError = ErrorResponse,
+export const getUpdateCameraOrientationKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraOrientationKeyframe>>, TError,UpdateCameraOrientationKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateCameraOrientationKeyframe>>, TError,UpdateCameraOrientationKeyframeMutationVariables, TContext> => {
 
@@ -3812,13 +4246,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateCameraOrientationKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof updateCameraOrientationKeyframe>>>
     export type UpdateCameraOrientationKeyframeMutationBody = CameraOrientationKeyframeUpdate
-    export type UpdateCameraOrientationKeyframeMutationError = ErrorResponse
+    export type UpdateCameraOrientationKeyframeMutationError = void | ErrorResponse
     export type UpdateCameraOrientationKeyframeMutationVariables = {projectId: string;keyframeId: string;data: CameraOrientationKeyframeUpdate}
 
     /**
  * @summary Update an orientation keyframe
  */
-export const useUpdateCameraOrientationKeyframe = <TError = ErrorResponse,
+export const useUpdateCameraOrientationKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCameraOrientationKeyframe>>, TError,UpdateCameraOrientationKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateCameraOrientationKeyframe>>,
@@ -3832,6 +4266,11 @@ export const useUpdateCameraOrientationKeyframe = <TError = ErrorResponse,
 export type clearProjectChatResponse204 = {
   data: void
   status: 204
+}
+
+export type clearProjectChatResponse401 = {
+  data: void
+  status: 401
 }
 
 export type clearProjectChatResponse404 = {
@@ -3857,7 +4296,7 @@ export type clearProjectChatResponse428 = {
 export type clearProjectChatResponseSuccess = (clearProjectChatResponse204) & {
   headers: Headers;
 };
-export type clearProjectChatResponseError = (clearProjectChatResponse404 | clearProjectChatResponse409 | clearProjectChatResponse422 | clearProjectChatResponse428) & {
+export type clearProjectChatResponseError = (clearProjectChatResponse401 | clearProjectChatResponse404 | clearProjectChatResponse409 | clearProjectChatResponse422 | clearProjectChatResponse428) & {
   headers: Headers;
 };
 
@@ -3892,7 +4331,7 @@ export const clearProjectChat = async (projectId: string, options?: Parameters<t
 
 export const getClearProjectChatMutationKey = () => ['clearProjectChat'] as const;
 
-export const getClearProjectChatMutationOptions = <TError = ErrorResponse,
+export const getClearProjectChatMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearProjectChat>>, TError,ClearProjectChatMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof clearProjectChat>>, TError,ClearProjectChatMutationVariables, TContext> => {
 
@@ -3921,13 +4360,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ClearProjectChatMutationResult = NonNullable<Awaited<ReturnType<typeof clearProjectChat>>>
 
-    export type ClearProjectChatMutationError = ErrorResponse
+    export type ClearProjectChatMutationError = void | ErrorResponse
     export type ClearProjectChatMutationVariables = {projectId: string}
 
     /**
  * @summary Clear chat history
  */
-export const useClearProjectChat = <TError = ErrorResponse,
+export const useClearProjectChat = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearProjectChat>>, TError,ClearProjectChatMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof clearProjectChat>>,
@@ -4064,6 +4503,11 @@ export type createChatMessageResponse200 = {
   status: 200
 }
 
+export type createChatMessageResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createChatMessageResponse404 = {
   data: ErrorResponse
   status: 404
@@ -4087,7 +4531,7 @@ export type createChatMessageResponse428 = {
 export type createChatMessageResponseSuccess = (createChatMessageResponse200) & {
   headers: Headers;
 };
-export type createChatMessageResponseError = (createChatMessageResponse404 | createChatMessageResponse409 | createChatMessageResponse422 | createChatMessageResponse428) & {
+export type createChatMessageResponseError = (createChatMessageResponse401 | createChatMessageResponse404 | createChatMessageResponse409 | createChatMessageResponse422 | createChatMessageResponse428) & {
   headers: Headers;
 };
 
@@ -4137,7 +4581,7 @@ return orvalFetch<createChatMessageResponse>(getCreateChatMessageUrl(projectId),
 
 export const getCreateChatMessageMutationKey = () => ['createChatMessage'] as const;
 
-export const getCreateChatMessageMutationOptions = <TError = ErrorResponse,
+export const getCreateChatMessageMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatMessage>>, TError,CreateChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createChatMessage>>, TError,CreateChatMessageMutationVariables, TContext> => {
 
@@ -4166,13 +4610,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof createChatMessage>>>
     export type CreateChatMessageMutationBody = ChatMessage
-    export type CreateChatMessageMutationError = ErrorResponse
+    export type CreateChatMessageMutationError = void | ErrorResponse
     export type CreateChatMessageMutationVariables = {projectId: string;data: ChatMessage}
 
     /**
  * @summary Send a chat message
  */
-export const useCreateChatMessage = <TError = ErrorResponse,
+export const useCreateChatMessage = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatMessage>>, TError,CreateChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createChatMessage>>,
@@ -4188,6 +4632,11 @@ export type streamChatMessageResponse200 = {
   status: 200
 }
 
+export type streamChatMessageResponse401 = {
+  data: void
+  status: 401
+}
+
 export type streamChatMessageResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -4196,7 +4645,7 @@ export type streamChatMessageResponse422 = {
 export type streamChatMessageResponseSuccess = (streamChatMessageResponse200) & {
   headers: Headers;
 };
-export type streamChatMessageResponseError = (streamChatMessageResponse422) & {
+export type streamChatMessageResponseError = (streamChatMessageResponse401 | streamChatMessageResponse422) & {
   headers: Headers;
 };
 
@@ -4246,7 +4695,7 @@ return orvalFetch<streamChatMessageResponse>(getStreamChatMessageUrl(projectId),
 
 export const getStreamChatMessageMutationKey = () => ['streamChatMessage'] as const;
 
-export const getStreamChatMessageMutationOptions = <TError = HTTPValidationError,
+export const getStreamChatMessageMutationOptions = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof streamChatMessage>>, TError,StreamChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof streamChatMessage>>, TError,StreamChatMessageMutationVariables, TContext> => {
 
@@ -4275,13 +4724,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type StreamChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof streamChatMessage>>>
     export type StreamChatMessageMutationBody = ChatMessage
-    export type StreamChatMessageMutationError = HTTPValidationError
+    export type StreamChatMessageMutationError = void | HTTPValidationError
     export type StreamChatMessageMutationVariables = {projectId: string;data: ChatMessage}
 
     /**
  * @summary Stream a chat response
  */
-export const useStreamChatMessage = <TError = HTTPValidationError,
+export const useStreamChatMessage = <TError = void | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof streamChatMessage>>, TError,StreamChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof streamChatMessage>>,
@@ -4295,6 +4744,11 @@ export const useStreamChatMessage = <TError = HTTPValidationError,
 export type saveUserChatMessageResponse201 = {
   data: ChatHistoryMessage
   status: 201
+}
+
+export type saveUserChatMessageResponse401 = {
+  data: void
+  status: 401
 }
 
 export type saveUserChatMessageResponse404 = {
@@ -4320,7 +4774,7 @@ export type saveUserChatMessageResponse428 = {
 export type saveUserChatMessageResponseSuccess = (saveUserChatMessageResponse201) & {
   headers: Headers;
 };
-export type saveUserChatMessageResponseError = (saveUserChatMessageResponse404 | saveUserChatMessageResponse409 | saveUserChatMessageResponse422 | saveUserChatMessageResponse428) & {
+export type saveUserChatMessageResponseError = (saveUserChatMessageResponse401 | saveUserChatMessageResponse404 | saveUserChatMessageResponse409 | saveUserChatMessageResponse422 | saveUserChatMessageResponse428) & {
   headers: Headers;
 };
 
@@ -4370,7 +4824,7 @@ return orvalFetch<saveUserChatMessageResponse>(getSaveUserChatMessageUrl(project
 
 export const getSaveUserChatMessageMutationKey = () => ['saveUserChatMessage'] as const;
 
-export const getSaveUserChatMessageMutationOptions = <TError = ErrorResponse,
+export const getSaveUserChatMessageMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveUserChatMessage>>, TError,SaveUserChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveUserChatMessage>>, TError,SaveUserChatMessageMutationVariables, TContext> => {
 
@@ -4399,13 +4853,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveUserChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof saveUserChatMessage>>>
     export type SaveUserChatMessageMutationBody = ChatMessage
-    export type SaveUserChatMessageMutationError = ErrorResponse
+    export type SaveUserChatMessageMutationError = void | ErrorResponse
     export type SaveUserChatMessageMutationVariables = {projectId: string;data: ChatMessage}
 
     /**
  * @summary Save a user chat message
  */
-export const useSaveUserChatMessage = <TError = ErrorResponse,
+export const useSaveUserChatMessage = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveUserChatMessage>>, TError,SaveUserChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveUserChatMessage>>,
@@ -4542,6 +4996,11 @@ export type createProjectCloudResponse201 = {
   status: 201
 }
 
+export type createProjectCloudResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createProjectCloudResponse404 = {
   data: ErrorResponse
   status: 404
@@ -4565,7 +5024,7 @@ export type createProjectCloudResponse428 = {
 export type createProjectCloudResponseSuccess = (createProjectCloudResponse201) & {
   headers: Headers;
 };
-export type createProjectCloudResponseError = (createProjectCloudResponse404 | createProjectCloudResponse409 | createProjectCloudResponse422 | createProjectCloudResponse428) & {
+export type createProjectCloudResponseError = (createProjectCloudResponse401 | createProjectCloudResponse404 | createProjectCloudResponse409 | createProjectCloudResponse422 | createProjectCloudResponse428) & {
   headers: Headers;
 };
 
@@ -4615,7 +5074,7 @@ return orvalFetch<createProjectCloudResponse>(getCreateProjectCloudUrl(projectId
 
 export const getCreateProjectCloudMutationKey = () => ['createProjectCloud'] as const;
 
-export const getCreateProjectCloudMutationOptions = <TError = ErrorResponse,
+export const getCreateProjectCloudMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext> => {
 
@@ -4644,13 +5103,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectCloud>>>
     export type CreateProjectCloudMutationBody = ProjectCloudCreate
-    export type CreateProjectCloudMutationError = ErrorResponse
+    export type CreateProjectCloudMutationError = void | ErrorResponse
     export type CreateProjectCloudMutationVariables = {projectId: string;data: ProjectCloudCreate}
 
     /**
  * @summary Add a library cloud
  */
-export const useCreateProjectCloud = <TError = ErrorResponse,
+export const useCreateProjectCloud = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createProjectCloud>>,
@@ -4664,6 +5123,11 @@ export const useCreateProjectCloud = <TError = ErrorResponse,
 export type deleteProjectCloudResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteProjectCloudResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteProjectCloudResponse404 = {
@@ -4689,7 +5153,7 @@ export type deleteProjectCloudResponse428 = {
 export type deleteProjectCloudResponseSuccess = (deleteProjectCloudResponse204) & {
   headers: Headers;
 };
-export type deleteProjectCloudResponseError = (deleteProjectCloudResponse404 | deleteProjectCloudResponse409 | deleteProjectCloudResponse422 | deleteProjectCloudResponse428) & {
+export type deleteProjectCloudResponseError = (deleteProjectCloudResponse401 | deleteProjectCloudResponse404 | deleteProjectCloudResponse409 | deleteProjectCloudResponse422 | deleteProjectCloudResponse428) & {
   headers: Headers;
 };
 
@@ -4726,7 +5190,7 @@ export const deleteProjectCloud = async (projectId: string,
 
 export const getDeleteProjectCloudMutationKey = () => ['deleteProjectCloud'] as const;
 
-export const getDeleteProjectCloudMutationOptions = <TError = ErrorResponse,
+export const getDeleteProjectCloudMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext> => {
 
@@ -4755,13 +5219,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectCloud>>>
 
-    export type DeleteProjectCloudMutationError = ErrorResponse
+    export type DeleteProjectCloudMutationError = void | ErrorResponse
     export type DeleteProjectCloudMutationVariables = {projectId: string;cloudId: string}
 
     /**
  * @summary Remove a project cloud
  */
-export const useDeleteProjectCloud = <TError = ErrorResponse,
+export const useDeleteProjectCloud = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteProjectCloud>>,
@@ -4775,6 +5239,11 @@ export const useDeleteProjectCloud = <TError = ErrorResponse,
 export type updateProjectCloudResponse200 = {
   data: ProjectCloud
   status: 200
+}
+
+export type updateProjectCloudResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateProjectCloudResponse404 = {
@@ -4800,7 +5269,7 @@ export type updateProjectCloudResponse428 = {
 export type updateProjectCloudResponseSuccess = (updateProjectCloudResponse200) & {
   headers: Headers;
 };
-export type updateProjectCloudResponseError = (updateProjectCloudResponse404 | updateProjectCloudResponse409 | updateProjectCloudResponse422 | updateProjectCloudResponse428) & {
+export type updateProjectCloudResponseError = (updateProjectCloudResponse401 | updateProjectCloudResponse404 | updateProjectCloudResponse409 | updateProjectCloudResponse422 | updateProjectCloudResponse428) & {
   headers: Headers;
 };
 
@@ -4852,7 +5321,7 @@ return orvalFetch<updateProjectCloudResponse>(getUpdateProjectCloudUrl(projectId
 
 export const getUpdateProjectCloudMutationKey = () => ['updateProjectCloud'] as const;
 
-export const getUpdateProjectCloudMutationOptions = <TError = ErrorResponse,
+export const getUpdateProjectCloudMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext> => {
 
@@ -4881,13 +5350,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectCloud>>>
     export type UpdateProjectCloudMutationBody = ProjectCloudUpdate
-    export type UpdateProjectCloudMutationError = ErrorResponse
+    export type UpdateProjectCloudMutationError = void | ErrorResponse
     export type UpdateProjectCloudMutationVariables = {projectId: string;cloudId: string;data: ProjectCloudUpdate}
 
     /**
  * @summary Update a project cloud
  */
-export const useUpdateProjectCloud = <TError = ErrorResponse,
+export const useUpdateProjectCloud = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProjectCloud>>,
@@ -5024,6 +5493,11 @@ export type updateMotionProfileResponse200 = {
   status: 200
 }
 
+export type updateMotionProfileResponse401 = {
+  data: void
+  status: 401
+}
+
 export type updateMotionProfileResponse404 = {
   data: ErrorResponse
   status: 404
@@ -5047,7 +5521,7 @@ export type updateMotionProfileResponse428 = {
 export type updateMotionProfileResponseSuccess = (updateMotionProfileResponse200) & {
   headers: Headers;
 };
-export type updateMotionProfileResponseError = (updateMotionProfileResponse404 | updateMotionProfileResponse409 | updateMotionProfileResponse422 | updateMotionProfileResponse428) & {
+export type updateMotionProfileResponseError = (updateMotionProfileResponse401 | updateMotionProfileResponse404 | updateMotionProfileResponse409 | updateMotionProfileResponse422 | updateMotionProfileResponse428) & {
   headers: Headers;
 };
 
@@ -5097,7 +5571,7 @@ return orvalFetch<updateMotionProfileResponse>(getUpdateMotionProfileUrl(project
 
 export const getUpdateMotionProfileMutationKey = () => ['updateMotionProfile'] as const;
 
-export const getUpdateMotionProfileMutationOptions = <TError = ErrorResponse,
+export const getUpdateMotionProfileMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMotionProfile>>, TError,UpdateMotionProfileMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateMotionProfile>>, TError,UpdateMotionProfileMutationVariables, TContext> => {
 
@@ -5126,13 +5600,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateMotionProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateMotionProfile>>>
     export type UpdateMotionProfileMutationBody = MotionProfileUpdate
-    export type UpdateMotionProfileMutationError = ErrorResponse
+    export type UpdateMotionProfileMutationError = void | ErrorResponse
     export type UpdateMotionProfileMutationVariables = {projectId: string;data: MotionProfileUpdate}
 
     /**
  * @summary Update the speed timeline
  */
-export const useUpdateMotionProfile = <TError = ErrorResponse,
+export const useUpdateMotionProfile = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMotionProfile>>, TError,UpdateMotionProfileMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateMotionProfile>>,
@@ -5146,6 +5620,11 @@ export const useUpdateMotionProfile = <TError = ErrorResponse,
 export type createSpeedKeyframeResponse201 = {
   data: SpeedKeyframe
   status: 201
+}
+
+export type createSpeedKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type createSpeedKeyframeResponse404 = {
@@ -5171,7 +5650,7 @@ export type createSpeedKeyframeResponse428 = {
 export type createSpeedKeyframeResponseSuccess = (createSpeedKeyframeResponse201) & {
   headers: Headers;
 };
-export type createSpeedKeyframeResponseError = (createSpeedKeyframeResponse404 | createSpeedKeyframeResponse409 | createSpeedKeyframeResponse422 | createSpeedKeyframeResponse428) & {
+export type createSpeedKeyframeResponseError = (createSpeedKeyframeResponse401 | createSpeedKeyframeResponse404 | createSpeedKeyframeResponse409 | createSpeedKeyframeResponse422 | createSpeedKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -5221,7 +5700,7 @@ return orvalFetch<createSpeedKeyframeResponse>(getCreateSpeedKeyframeUrl(project
 
 export const getCreateSpeedKeyframeMutationKey = () => ['createSpeedKeyframe'] as const;
 
-export const getCreateSpeedKeyframeMutationOptions = <TError = ErrorResponse,
+export const getCreateSpeedKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSpeedKeyframe>>, TError,CreateSpeedKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSpeedKeyframe>>, TError,CreateSpeedKeyframeMutationVariables, TContext> => {
 
@@ -5250,13 +5729,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateSpeedKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof createSpeedKeyframe>>>
     export type CreateSpeedKeyframeMutationBody = SpeedKeyframeCreate
-    export type CreateSpeedKeyframeMutationError = ErrorResponse
+    export type CreateSpeedKeyframeMutationError = void | ErrorResponse
     export type CreateSpeedKeyframeMutationVariables = {projectId: string;data: SpeedKeyframeCreate}
 
     /**
  * @summary Create a speed keyframe
  */
-export const useCreateSpeedKeyframe = <TError = ErrorResponse,
+export const useCreateSpeedKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSpeedKeyframe>>, TError,CreateSpeedKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createSpeedKeyframe>>,
@@ -5270,6 +5749,11 @@ export const useCreateSpeedKeyframe = <TError = ErrorResponse,
 export type deleteSpeedKeyframeResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteSpeedKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteSpeedKeyframeResponse404 = {
@@ -5295,7 +5779,7 @@ export type deleteSpeedKeyframeResponse428 = {
 export type deleteSpeedKeyframeResponseSuccess = (deleteSpeedKeyframeResponse204) & {
   headers: Headers;
 };
-export type deleteSpeedKeyframeResponseError = (deleteSpeedKeyframeResponse404 | deleteSpeedKeyframeResponse409 | deleteSpeedKeyframeResponse422 | deleteSpeedKeyframeResponse428) & {
+export type deleteSpeedKeyframeResponseError = (deleteSpeedKeyframeResponse401 | deleteSpeedKeyframeResponse404 | deleteSpeedKeyframeResponse409 | deleteSpeedKeyframeResponse422 | deleteSpeedKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -5332,7 +5816,7 @@ export const deleteSpeedKeyframe = async (projectId: string,
 
 export const getDeleteSpeedKeyframeMutationKey = () => ['deleteSpeedKeyframe'] as const;
 
-export const getDeleteSpeedKeyframeMutationOptions = <TError = ErrorResponse,
+export const getDeleteSpeedKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpeedKeyframe>>, TError,DeleteSpeedKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSpeedKeyframe>>, TError,DeleteSpeedKeyframeMutationVariables, TContext> => {
 
@@ -5361,13 +5845,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteSpeedKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSpeedKeyframe>>>
 
-    export type DeleteSpeedKeyframeMutationError = ErrorResponse
+    export type DeleteSpeedKeyframeMutationError = void | ErrorResponse
     export type DeleteSpeedKeyframeMutationVariables = {projectId: string;keyframeId: string}
 
     /**
  * @summary Delete a speed keyframe
  */
-export const useDeleteSpeedKeyframe = <TError = ErrorResponse,
+export const useDeleteSpeedKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpeedKeyframe>>, TError,DeleteSpeedKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteSpeedKeyframe>>,
@@ -5381,6 +5865,11 @@ export const useDeleteSpeedKeyframe = <TError = ErrorResponse,
 export type updateSpeedKeyframeResponse200 = {
   data: SpeedKeyframe
   status: 200
+}
+
+export type updateSpeedKeyframeResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateSpeedKeyframeResponse404 = {
@@ -5406,7 +5895,7 @@ export type updateSpeedKeyframeResponse428 = {
 export type updateSpeedKeyframeResponseSuccess = (updateSpeedKeyframeResponse200) & {
   headers: Headers;
 };
-export type updateSpeedKeyframeResponseError = (updateSpeedKeyframeResponse404 | updateSpeedKeyframeResponse409 | updateSpeedKeyframeResponse422 | updateSpeedKeyframeResponse428) & {
+export type updateSpeedKeyframeResponseError = (updateSpeedKeyframeResponse401 | updateSpeedKeyframeResponse404 | updateSpeedKeyframeResponse409 | updateSpeedKeyframeResponse422 | updateSpeedKeyframeResponse428) & {
   headers: Headers;
 };
 
@@ -5458,7 +5947,7 @@ return orvalFetch<updateSpeedKeyframeResponse>(getUpdateSpeedKeyframeUrl(project
 
 export const getUpdateSpeedKeyframeMutationKey = () => ['updateSpeedKeyframe'] as const;
 
-export const getUpdateSpeedKeyframeMutationOptions = <TError = ErrorResponse,
+export const getUpdateSpeedKeyframeMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSpeedKeyframe>>, TError,UpdateSpeedKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateSpeedKeyframe>>, TError,UpdateSpeedKeyframeMutationVariables, TContext> => {
 
@@ -5487,13 +5976,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateSpeedKeyframeMutationResult = NonNullable<Awaited<ReturnType<typeof updateSpeedKeyframe>>>
     export type UpdateSpeedKeyframeMutationBody = SpeedKeyframeUpdate
-    export type UpdateSpeedKeyframeMutationError = ErrorResponse
+    export type UpdateSpeedKeyframeMutationError = void | ErrorResponse
     export type UpdateSpeedKeyframeMutationVariables = {projectId: string;keyframeId: string;data: SpeedKeyframeUpdate}
 
     /**
  * @summary Update a speed keyframe
  */
-export const useUpdateSpeedKeyframe = <TError = ErrorResponse,
+export const useUpdateSpeedKeyframe = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSpeedKeyframe>>, TError,UpdateSpeedKeyframeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateSpeedKeyframe>>,
@@ -5507,6 +5996,11 @@ export const useUpdateSpeedKeyframe = <TError = ErrorResponse,
 export type resetProjectResponse200 = {
   data: ProjectMetadata
   status: 200
+}
+
+export type resetProjectResponse401 = {
+  data: void
+  status: 401
 }
 
 export type resetProjectResponse404 = {
@@ -5532,7 +6026,7 @@ export type resetProjectResponse428 = {
 export type resetProjectResponseSuccess = (resetProjectResponse200) & {
   headers: Headers;
 };
-export type resetProjectResponseError = (resetProjectResponse404 | resetProjectResponse409 | resetProjectResponse422 | resetProjectResponse428) & {
+export type resetProjectResponseError = (resetProjectResponse401 | resetProjectResponse404 | resetProjectResponse409 | resetProjectResponse422 | resetProjectResponse428) & {
   headers: Headers;
 };
 
@@ -5567,7 +6061,7 @@ export const resetProject = async (projectId: string, options?: Parameters<typeo
 
 export const getResetProjectMutationKey = () => ['resetProject'] as const;
 
-export const getResetProjectMutationOptions = <TError = ErrorResponse,
+export const getResetProjectMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetProject>>, TError,ResetProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof resetProject>>, TError,ResetProjectMutationVariables, TContext> => {
 
@@ -5596,13 +6090,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ResetProjectMutationResult = NonNullable<Awaited<ReturnType<typeof resetProject>>>
 
-    export type ResetProjectMutationError = ErrorResponse
+    export type ResetProjectMutationError = void | ErrorResponse
     export type ResetProjectMutationVariables = {projectId: string}
 
     /**
  * @summary Reset a project
  */
-export const useResetProject = <TError = ErrorResponse,
+export const useResetProject = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetProject>>, TError,ResetProjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof resetProject>>,
@@ -5739,6 +6233,11 @@ export type createScenePointResponse201 = {
   status: 201
 }
 
+export type createScenePointResponse401 = {
+  data: void
+  status: 401
+}
+
 export type createScenePointResponse404 = {
   data: ErrorResponse
   status: 404
@@ -5762,7 +6261,7 @@ export type createScenePointResponse428 = {
 export type createScenePointResponseSuccess = (createScenePointResponse201) & {
   headers: Headers;
 };
-export type createScenePointResponseError = (createScenePointResponse404 | createScenePointResponse409 | createScenePointResponse422 | createScenePointResponse428) & {
+export type createScenePointResponseError = (createScenePointResponse401 | createScenePointResponse404 | createScenePointResponse409 | createScenePointResponse422 | createScenePointResponse428) & {
   headers: Headers;
 };
 
@@ -5812,7 +6311,7 @@ return orvalFetch<createScenePointResponse>(getCreateScenePointUrl(projectId),
 
 export const getCreateScenePointMutationKey = () => ['createScenePoint'] as const;
 
-export const getCreateScenePointMutationOptions = <TError = ErrorResponse,
+export const getCreateScenePointMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScenePoint>>, TError,CreateScenePointMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createScenePoint>>, TError,CreateScenePointMutationVariables, TContext> => {
 
@@ -5841,13 +6340,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateScenePointMutationResult = NonNullable<Awaited<ReturnType<typeof createScenePoint>>>
     export type CreateScenePointMutationBody = ScenePointCreate
-    export type CreateScenePointMutationError = ErrorResponse
+    export type CreateScenePointMutationError = void | ErrorResponse
     export type CreateScenePointMutationVariables = {projectId: string;data: ScenePointCreate}
 
     /**
  * @summary Create a scene point
  */
-export const useCreateScenePoint = <TError = ErrorResponse,
+export const useCreateScenePoint = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScenePoint>>, TError,CreateScenePointMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createScenePoint>>,
@@ -5861,6 +6360,11 @@ export const useCreateScenePoint = <TError = ErrorResponse,
 export type deleteScenePointResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteScenePointResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteScenePointResponse404 = {
@@ -5886,7 +6390,7 @@ export type deleteScenePointResponse428 = {
 export type deleteScenePointResponseSuccess = (deleteScenePointResponse204) & {
   headers: Headers;
 };
-export type deleteScenePointResponseError = (deleteScenePointResponse404 | deleteScenePointResponse409 | deleteScenePointResponse422 | deleteScenePointResponse428) & {
+export type deleteScenePointResponseError = (deleteScenePointResponse401 | deleteScenePointResponse404 | deleteScenePointResponse409 | deleteScenePointResponse422 | deleteScenePointResponse428) & {
   headers: Headers;
 };
 
@@ -5932,7 +6436,7 @@ export const deleteScenePoint = async (projectId: string,
 
 export const getDeleteScenePointMutationKey = () => ['deleteScenePoint'] as const;
 
-export const getDeleteScenePointMutationOptions = <TError = ErrorResponse,
+export const getDeleteScenePointMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteScenePoint>>, TError,DeleteScenePointMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteScenePoint>>, TError,DeleteScenePointMutationVariables, TContext> => {
 
@@ -5961,13 +6465,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteScenePointMutationResult = NonNullable<Awaited<ReturnType<typeof deleteScenePoint>>>
 
-    export type DeleteScenePointMutationError = ErrorResponse
+    export type DeleteScenePointMutationError = void | ErrorResponse
     export type DeleteScenePointMutationVariables = {projectId: string;pointId: string;params?: DeleteScenePointParams}
 
     /**
  * @summary Delete a scene point
  */
-export const useDeleteScenePoint = <TError = ErrorResponse,
+export const useDeleteScenePoint = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteScenePoint>>, TError,DeleteScenePointMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteScenePoint>>,
@@ -5981,6 +6485,11 @@ export const useDeleteScenePoint = <TError = ErrorResponse,
 export type updateScenePointResponse200 = {
   data: ScenePoint
   status: 200
+}
+
+export type updateScenePointResponse401 = {
+  data: void
+  status: 401
 }
 
 export type updateScenePointResponse404 = {
@@ -6006,7 +6515,7 @@ export type updateScenePointResponse428 = {
 export type updateScenePointResponseSuccess = (updateScenePointResponse200) & {
   headers: Headers;
 };
-export type updateScenePointResponseError = (updateScenePointResponse404 | updateScenePointResponse409 | updateScenePointResponse422 | updateScenePointResponse428) & {
+export type updateScenePointResponseError = (updateScenePointResponse401 | updateScenePointResponse404 | updateScenePointResponse409 | updateScenePointResponse422 | updateScenePointResponse428) & {
   headers: Headers;
 };
 
@@ -6058,7 +6567,7 @@ return orvalFetch<updateScenePointResponse>(getUpdateScenePointUrl(projectId,poi
 
 export const getUpdateScenePointMutationKey = () => ['updateScenePoint'] as const;
 
-export const getUpdateScenePointMutationOptions = <TError = ErrorResponse,
+export const getUpdateScenePointMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateScenePoint>>, TError,UpdateScenePointMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateScenePoint>>, TError,UpdateScenePointMutationVariables, TContext> => {
 
@@ -6087,13 +6596,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateScenePointMutationResult = NonNullable<Awaited<ReturnType<typeof updateScenePoint>>>
     export type UpdateScenePointMutationBody = ScenePointUpdate
-    export type UpdateScenePointMutationError = ErrorResponse
+    export type UpdateScenePointMutationError = void | ErrorResponse
     export type UpdateScenePointMutationVariables = {projectId: string;pointId: string;data: ScenePointUpdate}
 
     /**
  * @summary Update a scene point
  */
-export const useUpdateScenePoint = <TError = ErrorResponse,
+export const useUpdateScenePoint = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateScenePoint>>, TError,UpdateScenePointMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateScenePoint>>,
@@ -6107,6 +6616,11 @@ export const useUpdateScenePoint = <TError = ErrorResponse,
 export type createSpiralSegmentResponse201 = {
   data: SpiralSegment
   status: 201
+}
+
+export type createSpiralSegmentResponse401 = {
+  data: void
+  status: 401
 }
 
 export type createSpiralSegmentResponse404 = {
@@ -6132,7 +6646,7 @@ export type createSpiralSegmentResponse428 = {
 export type createSpiralSegmentResponseSuccess = (createSpiralSegmentResponse201) & {
   headers: Headers;
 };
-export type createSpiralSegmentResponseError = (createSpiralSegmentResponse404 | createSpiralSegmentResponse409 | createSpiralSegmentResponse422 | createSpiralSegmentResponse428) & {
+export type createSpiralSegmentResponseError = (createSpiralSegmentResponse401 | createSpiralSegmentResponse404 | createSpiralSegmentResponse409 | createSpiralSegmentResponse422 | createSpiralSegmentResponse428) & {
   headers: Headers;
 };
 
@@ -6182,7 +6696,7 @@ return orvalFetch<createSpiralSegmentResponse>(getCreateSpiralSegmentUrl(project
 
 export const getCreateSpiralSegmentMutationKey = () => ['createSpiralSegment'] as const;
 
-export const getCreateSpiralSegmentMutationOptions = <TError = ErrorResponse,
+export const getCreateSpiralSegmentMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSpiralSegment>>, TError,CreateSpiralSegmentMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSpiralSegment>>, TError,CreateSpiralSegmentMutationVariables, TContext> => {
 
@@ -6211,13 +6725,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateSpiralSegmentMutationResult = NonNullable<Awaited<ReturnType<typeof createSpiralSegment>>>
     export type CreateSpiralSegmentMutationBody = SpiralSegmentCreate
-    export type CreateSpiralSegmentMutationError = ErrorResponse
+    export type CreateSpiralSegmentMutationError = void | ErrorResponse
     export type CreateSpiralSegmentMutationVariables = {projectId: string;data: SpiralSegmentCreate}
 
     /**
  * @summary Create a spiral segment
  */
-export const useCreateSpiralSegment = <TError = ErrorResponse,
+export const useCreateSpiralSegment = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSpiralSegment>>, TError,CreateSpiralSegmentMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createSpiralSegment>>,
@@ -6231,6 +6745,11 @@ export const useCreateSpiralSegment = <TError = ErrorResponse,
 export type createSplineSegmentResponse201 = {
   data: SplineSegment
   status: 201
+}
+
+export type createSplineSegmentResponse401 = {
+  data: void
+  status: 401
 }
 
 export type createSplineSegmentResponse404 = {
@@ -6256,7 +6775,7 @@ export type createSplineSegmentResponse428 = {
 export type createSplineSegmentResponseSuccess = (createSplineSegmentResponse201) & {
   headers: Headers;
 };
-export type createSplineSegmentResponseError = (createSplineSegmentResponse404 | createSplineSegmentResponse409 | createSplineSegmentResponse422 | createSplineSegmentResponse428) & {
+export type createSplineSegmentResponseError = (createSplineSegmentResponse401 | createSplineSegmentResponse404 | createSplineSegmentResponse409 | createSplineSegmentResponse422 | createSplineSegmentResponse428) & {
   headers: Headers;
 };
 
@@ -6306,7 +6825,7 @@ return orvalFetch<createSplineSegmentResponse>(getCreateSplineSegmentUrl(project
 
 export const getCreateSplineSegmentMutationKey = () => ['createSplineSegment'] as const;
 
-export const getCreateSplineSegmentMutationOptions = <TError = ErrorResponse,
+export const getCreateSplineSegmentMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSplineSegment>>, TError,CreateSplineSegmentMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSplineSegment>>, TError,CreateSplineSegmentMutationVariables, TContext> => {
 
@@ -6335,13 +6854,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateSplineSegmentMutationResult = NonNullable<Awaited<ReturnType<typeof createSplineSegment>>>
     export type CreateSplineSegmentMutationBody = SplineSegmentCreate
-    export type CreateSplineSegmentMutationError = ErrorResponse
+    export type CreateSplineSegmentMutationError = void | ErrorResponse
     export type CreateSplineSegmentMutationVariables = {projectId: string;data: SplineSegmentCreate}
 
     /**
  * @summary Create a spline segment
  */
-export const useCreateSplineSegment = <TError = ErrorResponse,
+export const useCreateSplineSegment = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSplineSegment>>, TError,CreateSplineSegmentMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createSplineSegment>>,
@@ -6355,6 +6874,11 @@ export const useCreateSplineSegment = <TError = ErrorResponse,
 export type deleteTrajectorySegmentResponse204 = {
   data: void
   status: 204
+}
+
+export type deleteTrajectorySegmentResponse401 = {
+  data: void
+  status: 401
 }
 
 export type deleteTrajectorySegmentResponse404 = {
@@ -6380,7 +6904,7 @@ export type deleteTrajectorySegmentResponse428 = {
 export type deleteTrajectorySegmentResponseSuccess = (deleteTrajectorySegmentResponse204) & {
   headers: Headers;
 };
-export type deleteTrajectorySegmentResponseError = (deleteTrajectorySegmentResponse404 | deleteTrajectorySegmentResponse409 | deleteTrajectorySegmentResponse422 | deleteTrajectorySegmentResponse428) & {
+export type deleteTrajectorySegmentResponseError = (deleteTrajectorySegmentResponse401 | deleteTrajectorySegmentResponse404 | deleteTrajectorySegmentResponse409 | deleteTrajectorySegmentResponse422 | deleteTrajectorySegmentResponse428) & {
   headers: Headers;
 };
 
@@ -6417,7 +6941,7 @@ export const deleteTrajectorySegment = async (projectId: string,
 
 export const getDeleteTrajectorySegmentMutationKey = () => ['deleteTrajectorySegment'] as const;
 
-export const getDeleteTrajectorySegmentMutationOptions = <TError = ErrorResponse,
+export const getDeleteTrajectorySegmentMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTrajectorySegment>>, TError,DeleteTrajectorySegmentMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteTrajectorySegment>>, TError,DeleteTrajectorySegmentMutationVariables, TContext> => {
 
@@ -6446,13 +6970,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteTrajectorySegmentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTrajectorySegment>>>
 
-    export type DeleteTrajectorySegmentMutationError = ErrorResponse
+    export type DeleteTrajectorySegmentMutationError = void | ErrorResponse
     export type DeleteTrajectorySegmentMutationVariables = {projectId: string;segmentId: string}
 
     /**
  * @summary Delete a trajectory segment
  */
-export const useDeleteTrajectorySegment = <TError = ErrorResponse,
+export const useDeleteTrajectorySegment = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTrajectorySegment>>, TError,DeleteTrajectorySegmentMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteTrajectorySegment>>,
@@ -6466,6 +6990,11 @@ export const useDeleteTrajectorySegment = <TError = ErrorResponse,
 export type clearTrajectoryResponse204 = {
   data: void
   status: 204
+}
+
+export type clearTrajectoryResponse401 = {
+  data: void
+  status: 401
 }
 
 export type clearTrajectoryResponse404 = {
@@ -6491,7 +7020,7 @@ export type clearTrajectoryResponse428 = {
 export type clearTrajectoryResponseSuccess = (clearTrajectoryResponse204) & {
   headers: Headers;
 };
-export type clearTrajectoryResponseError = (clearTrajectoryResponse404 | clearTrajectoryResponse409 | clearTrajectoryResponse422 | clearTrajectoryResponse428) & {
+export type clearTrajectoryResponseError = (clearTrajectoryResponse401 | clearTrajectoryResponse404 | clearTrajectoryResponse409 | clearTrajectoryResponse422 | clearTrajectoryResponse428) & {
   headers: Headers;
 };
 
@@ -6526,7 +7055,7 @@ export const clearTrajectory = async (projectId: string, options?: Parameters<ty
 
 export const getClearTrajectoryMutationKey = () => ['clearTrajectory'] as const;
 
-export const getClearTrajectoryMutationOptions = <TError = ErrorResponse,
+export const getClearTrajectoryMutationOptions = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearTrajectory>>, TError,ClearTrajectoryMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof clearTrajectory>>, TError,ClearTrajectoryMutationVariables, TContext> => {
 
@@ -6555,13 +7084,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ClearTrajectoryMutationResult = NonNullable<Awaited<ReturnType<typeof clearTrajectory>>>
 
-    export type ClearTrajectoryMutationError = ErrorResponse
+    export type ClearTrajectoryMutationError = void | ErrorResponse
     export type ClearTrajectoryMutationVariables = {projectId: string}
 
     /**
  * @summary Clear the trajectory
  */
-export const useClearTrajectory = <TError = ErrorResponse,
+export const useClearTrajectory = <TError = void | ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearTrajectory>>, TError,ClearTrajectoryMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof clearTrajectory>>,

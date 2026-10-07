@@ -5,8 +5,10 @@
  * Create camera-path projects, author scene and trajectory data, edit playback timelines, and run the trajectory agent. Canonical operations use project revision ETags for optimistic concurrency.
  * OpenAPI spec version: 1.0.0
  */
+import type { UserSettingsGaussianDpr } from './userSettingsGaussianDpr';
 
 export interface UserSettings {
+  gaussian_dpr?: UserSettingsGaussianDpr;
   show_grid: boolean;
   webgpu_tile_renderer: boolean;
 }

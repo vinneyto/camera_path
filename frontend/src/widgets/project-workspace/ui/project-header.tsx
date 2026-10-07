@@ -5,7 +5,7 @@ import type { Project } from "@/entities/project";
 import { GaussianDprSelect } from "@/features/gaussian-rendering-settings";
 import { ProjectCloudControls } from "@/features/project-clouds";
 import { ThemeToggle } from "@/features/theme-switcher";
-import { UserSettingsPanel } from "@/features/user-settings";
+import { AuthControl, EditorOnly } from "@/features/auth";
 import { Badge, Button, FLOATING_PANEL_Z_INDEX } from "@/shared/ui";
 
 interface ProjectHeaderProps {
@@ -37,13 +37,15 @@ export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
         </div>
       </div>
       <div className="min-w-0">
-        <ProjectCloudControls projectId={projectId} />
+        <EditorOnly>
+          <ProjectCloudControls projectId={projectId} />
+        </EditorOnly>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2">
         <div className="hidden lg:block">
           <GaussianDprSelect />
         </div>
-        <UserSettingsPanel />
+        <AuthControl />
         <ThemeToggle />
         <Badge className="hidden gap-1 2xl:inline-flex">
           <MapPin className="size-2.5" />

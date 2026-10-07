@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorOnly } from "@/features/auth";
+
 import { type ReactNode, useState } from "react";
 
 import { ContextMenu, type ContextMenuPosition } from "@/shared/ui";
@@ -64,22 +66,24 @@ export function KeyframeTimeline({
           </span>
         </button>
       ))}
-      <ContextMenu
-        items={
-          menu
-            ? [
-                {
-                  destructive: true,
-                  disabled: deletingKeyframeId === menu.keyframeId,
-                  label: deleteLabel,
-                  onSelect: () => onDeleteKeyframe(menu.keyframeId),
-                },
-              ]
-            : []
-        }
-        onClose={() => setMenu(null)}
-        position={menu}
-      />
+      <EditorOnly>
+        <ContextMenu
+          items={
+            menu
+              ? [
+                  {
+                    destructive: true,
+                    disabled: deletingKeyframeId === menu.keyframeId,
+                    label: deleteLabel,
+                    onSelect: () => onDeleteKeyframe(menu.keyframeId),
+                  },
+                ]
+              : []
+          }
+          onClose={() => setMenu(null)}
+          position={menu}
+        />
+      </EditorOnly>
     </>
   );
 }

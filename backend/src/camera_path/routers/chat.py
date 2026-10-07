@@ -11,10 +11,11 @@ from openai import OpenAIError
 from camera_path.agent import AgentUnavailableError
 from camera_path.models import ChatMessage, ChatResult, Project
 from camera_path.repositories import ProjectNotFoundError
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import CHAT_ERROR_RESPONSES, with_project_etag
 from camera_path.routers.dependencies import Agent, ChatServiceDep, MutationGuard
 
-router = APIRouter(tags=["Chat"])
+router = APIRouter(route_class=AuthenticatedRoute, tags=["Chat"])
 
 
 @router.delete(
@@ -25,6 +26,7 @@ router = APIRouter(tags=["Chat"])
     operation_id="clearProjectChat",
     responses=CHAT_ERROR_RESPONSES,
 )
+@authenticated
 async def clear_chat(
     project_id: str, service: ChatServiceDep, response: Response, _guard: MutationGuard
 ) -> Project:
@@ -39,6 +41,7 @@ async def clear_chat(
     operation_id="createChatMessage",
     responses=CHAT_ERROR_RESPONSES,
 )
+@authenticated
 async def chat(
     project_id: str,
     data: ChatMessage,
@@ -64,6 +67,7 @@ async def chat(
     operation_id="saveUserChatMessage",
     responses=CHAT_ERROR_RESPONSES,
 )
+@authenticated
 async def save_user_message(
     project_id: str,
     data: ChatMessage,
@@ -97,6 +101,7 @@ def _sse(event: str, data: Any) -> str:
         },
     },
 )
+@authenticated
 async def stream_chat(
     project_id: str,
     data: ChatMessage,

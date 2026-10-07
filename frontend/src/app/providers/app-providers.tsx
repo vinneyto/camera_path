@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { UserSettingsProvider } from "@/features/user-settings";
 import { ThemeProvider } from "@/features/theme-switcher";
+import { AuthProvider } from "@/features/auth";
 
 export function AppProviders({
   children,
@@ -25,7 +26,9 @@ export function AppProviders({
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <UserSettingsProvider>{children}</UserSettingsProvider>
+        <AuthProvider>
+          <UserSettingsProvider>{children}</UserSettingsProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

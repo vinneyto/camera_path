@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorOnly } from "@/features/auth";
+
 import { useState } from "react";
 
 import type { Anchor } from "@/entities/project";
@@ -107,30 +109,32 @@ export function SceneViewportFrame({
         </div>
       )}
       {cameraMode === "orbit" && (
-        <ContextMenu
-          items={
-            contextMenu?.type === "anchor"
-              ? [
-                  {
-                    destructive: true,
-                    label: `Delete anchor ${contextMenu.anchor.label}`,
-                    onSelect: () => onDeleteAnchor(contextMenu.anchor),
-                  },
-                ]
-              : contextMenu?.type === "trajectory"
+        <EditorOnly>
+          <ContextMenu
+            items={
+              contextMenu?.type === "anchor"
                 ? [
                     {
                       destructive: true,
-                      disabled: deletingTrajectory,
-                      label: "Delete trajectory",
-                      onSelect: onDeleteTrajectory,
+                      label: `Delete anchor ${contextMenu.anchor.label}`,
+                      onSelect: () => onDeleteAnchor(contextMenu.anchor),
                     },
                   ]
-                : []
-          }
-          onClose={() => setContextMenu(null)}
-          position={contextMenu}
-        />
+                : contextMenu?.type === "trajectory"
+                  ? [
+                      {
+                        destructive: true,
+                        disabled: deletingTrajectory,
+                        label: "Delete trajectory",
+                        onSelect: onDeleteTrajectory,
+                      },
+                    ]
+                  : []
+            }
+            onClose={() => setContextMenu(null)}
+            position={contextMenu}
+          />
+        </EditorOnly>
       )}
     </div>
   );

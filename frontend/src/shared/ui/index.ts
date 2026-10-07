@@ -17,3 +17,4 @@ export {
   FLOATING_UI_Z_INDEX_MAX,
   FLOATING_UI_Z_INDEX_MIN,
 } from "./z-order";
+export { Modal } from "./modal";

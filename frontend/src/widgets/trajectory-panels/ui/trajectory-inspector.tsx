@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorOnly } from "@/features/auth";
+
 import { X } from "lucide-react";
 
 import type { Project } from "@/entities/project";
@@ -78,13 +80,15 @@ export function TrajectoryInspector({
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <RenderEffectsControl
-            disabled={effectsPending}
-            hasDepthOfField={
-              trajectory.camera_track.depth_of_field_keyframes.length > 0
-            }
-            onAddDepthOfField={onAddDepthOfField}
-          />
+          <EditorOnly>
+            <RenderEffectsControl
+              disabled={effectsPending}
+              hasDepthOfField={
+                trajectory.camera_track.depth_of_field_keyframes.length > 0
+              }
+              onAddDepthOfField={onAddDepthOfField}
+            />
+          </EditorOnly>
           <Button
             aria-label="Close trajectory panels"
             onClick={onClose}

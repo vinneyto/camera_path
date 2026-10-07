@@ -187,7 +187,7 @@ describe("library selection and deletion", () => {
     await waitFor(() => expect(finishDelete).toBeDefined());
     expect(requests).toEqual([
       {
-        url: "http://127.0.0.1:8000/api/v1/library/bulk-delete",
+        url: "/api/v1/library/bulk-delete",
         method: "POST",
         ids: [room.id, desk.id],
       },
@@ -249,3 +249,8 @@ describe("library selection and deletion", () => {
     expect(download.hasAttribute("download")).toBe(true);
   });
 });
+
+vi.mock("@/features/auth", () => ({
+  EditorOnly: ({ children }: { children: React.ReactNode }) => children,
+  AuthControl: () => null,
+}));

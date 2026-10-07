@@ -11,6 +11,8 @@ dependencies = [
     "numpy>=2.0,<3",
     "openai>=1.100,<3",
     "pydantic-settings>=2.10,<3",
+    "pyjwt>=2.10,<3",
+    "pwdlib[argon2]>=0.2,<1",
     "scalar-fastapi>=1.4,<2",
     "sqlalchemy[asyncio]>=2.0,<3",
     "uvicorn[standard]>=0.35,<1",
@@ -28,6 +30,7 @@ dev = [
 camera-path = "camera_path.main:run"
 db-populate = "camera_path.seed:run"
 openapi-export = "camera_path.export_openapi:run"
+editor-create = "camera_path.auth_cli:run"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,18 +1,25 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useAuth } from "@/features/auth";
 import {
-  getGetUserSettingsQueryKey,
-  useGetUserSettings,
-  useUpdateUserSettings,
+  getUserSettings,
+  updateUserSettings,
 } from "@/shared/api/generated/client";
-import type { UserSettingsUpdate } from "@/shared/api/generated/model";
+import type {
+  UserSettings,
+  UserSettingsUpdate,
+} from "@/shared/api/generated/model";
+import { readEditorSettings } from "./read-editor-settings";
+
+export const EDITOR_SETTINGS_KEY = "camera-path-editor-settings";
 
 interface UserSettingsContextValue {
   webGpuTileRenderer: boolean;
   showGrid: boolean;
+  gaussianDpr: "1x" | "system";
   loading: boolean;
   saving: boolean;
   ready: boolean;
@@ -30,41 +37,52 @@ export function UserSettingsProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const auth = useAuth();
   const queryClient = useQueryClient();
-  const query = useGetUserSettings({ query: { staleTime: Infinity } });
-  const mutation = useUpdateUserSettings<Error>({
-    mutation: {
-      onMutate: async () => {
-        // A read started before the save must not overwrite the confirmed result.
-        await queryClient.cancelQueries({
-          queryKey: getGetUserSettingsQueryKey(),
-        });
-      },
-      onSuccess: (response) => {
-        if (response.status === 200) {
-          queryClient.setQueryData(getGetUserSettingsQueryKey(), response);
-        }
-      },
+  const key = ["profile-settings"];
+  const query = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      let fallback: UserSettings = {
+        webgpu_tile_renderer: true,
+        show_grid: true,
+        gaussian_dpr: "1x",
+      };
+      try {
+        const response = await getUserSettings();
+        fallback = response.data;
+      } catch {
+        // Viewer preferences remain available if the backend cannot be reached.
+      }
+      const restored = readEditorSettings(fallback);
+      localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(restored));
+      return restored;
     },
   });
-
+  const mutation = useMutation({
+    mutationFn: (changes: UserSettingsUpdate) => updateUserSettings(changes),
+  });
+  const preferences = query.data;
   const value: UserSettingsContextValue = {
-    webGpuTileRenderer: query.data?.data.webgpu_tile_renderer ?? true,
-    showGrid: query.data?.data.show_grid ?? true,
+    webGpuTileRenderer: preferences?.webgpu_tile_renderer ?? true,
+    showGrid: preferences?.show_grid ?? true,
+    gaussianDpr: preferences?.gaussian_dpr ?? "1x",
     loading: query.isPending,
-    saving: mutation.isPending,
+    saving: auth.canEdit && mutation.isPending,
     ready: query.isSuccess,
-    error:
-      mutation.error ?? (query.error instanceof Error ? query.error : null),
+    error: (auth.canEdit ? mutation.error : null) ?? query.error,
     retry: () => {
       void query.refetch();
     },
     save: (changes) => {
-      if (!query.isSuccess || mutation.isPending) return;
-      mutation.mutate({ data: changes });
+      if (!preferences || (auth.canEdit && mutation.isPending)) return;
+      const next: UserSettings = { ...preferences, ...changes };
+      // Viewer preferences survive login/logout and failed backend saves.
+      localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(next));
+      queryClient.setQueryData(key, next);
+      if (auth.canEdit) mutation.mutate(changes);
     },
   };
-
   return (
     <UserSettingsContext.Provider value={value}>
       {children}

@@ -50,6 +50,7 @@ from camera_path.models import (
     Trajectory,
 )
 from camera_path.repositories import ProjectNotFoundError
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import (
     ERROR_RESPONSES,
     MUTATION_ERROR_RESPONSES,
@@ -66,7 +67,7 @@ from camera_path.routers.dependencies import (
     TrajectoryServiceDep,
 )
 
-router = APIRouter()
+router = APIRouter(route_class=AuthenticatedRoute)
 
 
 def _metadata(project: Project) -> ProjectMetadata:
@@ -103,6 +104,7 @@ def _not_found(error: KeyError) -> HTTPException:
     description="Create an empty project and return only project metadata.",
     operation_id="createProject",
 )
+@authenticated
 async def create_project(
     data: ProjectCreate, service: ProjectServiceDep, response: Response
 ) -> ProjectMetadata:
@@ -149,6 +151,7 @@ async def get_project(
     operation_id="updateProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_project(
     project_id: str,
     data: ProjectUpdate,
@@ -170,6 +173,7 @@ async def update_project(
     operation_id="deleteProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_project(
     project_id: str, service: ProjectServiceDep, _guard: MutationGuard
 ) -> Response:
@@ -187,6 +191,7 @@ async def delete_project(
     operation_id="resetProject",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def reset_project(
     project_id: str,
     service: ProjectServiceDep,
@@ -224,6 +229,7 @@ async def list_anchors(
     operation_id="createAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_anchor(
     project_id: str,
     data: AnchorCreate,
@@ -245,6 +251,7 @@ async def create_anchor(
     operation_id="updateAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_anchor(
     project_id: str,
     anchor_id: str,
@@ -270,6 +277,7 @@ async def update_anchor(
     operation_id="deleteAnchor",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_anchor(
     project_id: str,
     anchor_id: str,
@@ -311,6 +319,7 @@ async def list_scene_points(
     operation_id="createScenePoint",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_scene_point(
     project_id: str,
     data: ScenePointCreate,
@@ -332,6 +341,7 @@ async def create_scene_point(
     operation_id="updateScenePoint",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_scene_point(
     project_id: str,
     point_id: str,
@@ -357,6 +367,7 @@ async def update_scene_point(
     operation_id="deleteScenePoint",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_scene_point(
     project_id: str,
     point_id: str,
@@ -398,6 +409,7 @@ async def get_trajectory(
     operation_id="clearTrajectory",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def clear_trajectory(
     project_id: str, service: TrajectoryServiceDep, _guard: MutationGuard
 ) -> Response:
@@ -414,6 +426,7 @@ async def clear_trajectory(
     operation_id="createSplineSegment",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_spline(
     project_id: str,
     data: SplineSegmentCreate,
@@ -436,6 +449,7 @@ async def create_spline(
     operation_id="createSpiralSegment",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_spiral(
     project_id: str,
     data: SpiralSegmentCreate,
@@ -457,6 +471,7 @@ async def create_spiral(
     operation_id="deleteTrajectorySegment",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_segment(
     project_id: str,
     segment_id: str,
@@ -511,6 +526,7 @@ async def get_speed_timeline(
     operation_id="updateMotionProfile",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_motion_profile(
     project_id: str,
     data: MotionProfileUpdate,
@@ -533,6 +549,7 @@ async def update_motion_profile(
     operation_id="createSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_speed_keyframe(
     project_id: str,
     data: SpeedKeyframeCreate,
@@ -554,6 +571,7 @@ async def create_speed_keyframe(
     operation_id="updateSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_speed_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -579,6 +597,7 @@ async def update_speed_keyframe(
     operation_id="deleteSpeedKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_speed_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -624,6 +643,7 @@ async def get_aim_timeline(
     operation_id="updateCameraTrack",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_aim_timeline(
     project_id: str,
     data: CameraTrackUpdate,
@@ -648,6 +668,7 @@ async def update_aim_timeline(
     operation_id="createCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_aim_keyframe(
     project_id: str,
     data: CameraKeyframeCreate,
@@ -669,6 +690,7 @@ async def create_aim_keyframe(
     operation_id="updateCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_aim_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -694,6 +716,7 @@ async def update_aim_keyframe(
     operation_id="deleteCameraAimKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_aim_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -734,6 +757,7 @@ async def get_orientation_timeline(
     operation_id="updateCameraOrientation",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_orientation(
     project_id: str,
     data: CameraOrientation,
@@ -759,6 +783,7 @@ async def update_orientation(
     operation_id="createCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_orientation_keyframe(
     project_id: str,
     data: CameraOrientationKeyframeCreate,
@@ -780,6 +805,7 @@ async def create_orientation_keyframe(
     operation_id="updateCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -805,6 +831,7 @@ async def update_orientation_keyframe(
     operation_id="deleteCameraOrientationKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_orientation_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -812,9 +839,7 @@ async def delete_orientation_keyframe(
     _guard: MutationGuard,
 ) -> Response:
     try:
-        return _deleted(
-            await service.delete_camera_orientation_keyframe(project_id, keyframe_id)
-        )
+        return _deleted(await service.delete_camera_orientation_keyframe(project_id, keyframe_id))
     except KeyError as error:
         raise _not_found(error) from error
 
@@ -845,6 +870,7 @@ async def get_depth_of_field_timeline(
     operation_id="createDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_depth_of_field_keyframe(
     project_id: str,
     data: DepthOfFieldKeyframeCreate,
@@ -866,6 +892,7 @@ async def create_depth_of_field_keyframe(
     operation_id="updateDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -891,6 +918,7 @@ async def update_depth_of_field_keyframe(
     operation_id="deleteDepthOfFieldKeyframe",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_depth_of_field_keyframe(
     project_id: str,
     keyframe_id: str,
@@ -929,6 +957,7 @@ async def list_chat_messages(
     operation_id="saveUserChatMessage",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def save_user_message(
     project_id: str,
     data: ChatMessage,
@@ -950,9 +979,8 @@ async def save_user_message(
     operation_id="clearProjectChat",
     responses=MUTATION_ERROR_RESPONSES,
 )
-async def clear_chat(
-    project_id: str, service: ChatServiceDep, _guard: MutationGuard
-) -> Response:
+@authenticated
+async def clear_chat(project_id: str, service: ChatServiceDep, _guard: MutationGuard) -> Response:
     return _deleted(await service.clear_chat(project_id))
 
 
@@ -965,6 +993,7 @@ async def clear_chat(
     operation_id="createChatMessage",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_chat_message(
     project_id: str,
     data: ChatMessage,
@@ -1003,6 +1032,7 @@ def _sse(event: str, data: Any) -> str:
         }
     },
 )
+@authenticated
 async def stream_chat_message(
     project_id: str,
     data: ChatMessage,

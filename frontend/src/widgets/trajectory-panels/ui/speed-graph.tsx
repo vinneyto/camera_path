@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorOnly } from "@/features/auth";
+
 import { useState } from "react";
 
 import { evaluateSpeed, type CompiledTrajectory } from "@/entities/trajectory";
@@ -158,22 +160,24 @@ export function SpeedGraph({
           );
         })}
       </div>
-      <ContextMenu
-        items={
-          menu
-            ? [
-                {
-                  destructive: true,
-                  disabled: deletingKeyframeId === menu.keyframeId,
-                  label: "Delete speed keyframe",
-                  onSelect: () => onDeleteKeyframe(menu.keyframeId),
-                },
-              ]
-            : []
-        }
-        onClose={() => setMenu(null)}
-        position={menu}
-      />
+      <EditorOnly>
+        <ContextMenu
+          items={
+            menu
+              ? [
+                  {
+                    destructive: true,
+                    disabled: deletingKeyframeId === menu.keyframeId,
+                    label: "Delete speed keyframe",
+                    onSelect: () => onDeleteKeyframe(menu.keyframeId),
+                  },
+                ]
+              : []
+          }
+          onClose={() => setMenu(null)}
+          position={menu}
+        />
+      </EditorOnly>
     </div>
   );
 }

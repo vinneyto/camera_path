@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorOnly } from "@/features/auth";
+
 import Link from "next/link";
 import { useState } from "react";
 
@@ -33,48 +35,52 @@ export function LibraryAssetList() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox
-            disabled={deletion.isPending}
-            aria-label="Select all library files"
-            checked={selected.length === assets.length}
-            indeterminate={
-              selected.length > 0 && selected.length < assets.length
-            }
-            onChange={(event) =>
-              setSelectedIds(
-                event.target.checked ? assets.map((asset) => asset.id) : [],
-              )
-            }
+      <EditorOnly>
+        <div className="flex items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-xs">
+            <Checkbox
+              disabled={deletion.isPending}
+              aria-label="Select all library files"
+              checked={selected.length === assets.length}
+              indeterminate={
+                selected.length > 0 && selected.length < assets.length
+              }
+              onChange={(event) =>
+                setSelectedIds(
+                  event.target.checked ? assets.map((asset) => asset.id) : [],
+                )
+              }
+            />
+            {selected.length} selected
+          </label>
+          <LibrarySelectionActions
+            deletion={deletion}
+            selected={selected}
+            onDeleted={() => setSelectedIds([])}
           />
-          {selected.length} selected
-        </label>
-        <LibrarySelectionActions
-          deletion={deletion}
-          selected={selected}
-          onDeleted={() => setSelectedIds([])}
-        />
-      </div>
+        </div>
+      </EditorOnly>
       <ul className="space-y-2">
         {assets.map((asset) => (
           <li key={asset.id}>
             <Card className="relative isolate p-3 transition-colors hover:border-primary/40 hover:bg-accent/50">
               <div className="flex items-center gap-3">
-                <label className="relative z-20 flex shrink-0 items-center self-stretch px-1">
-                  <Checkbox
-                    disabled={deletion.isPending}
-                    aria-label={`Select ${asset.name}`}
-                    checked={selectedIds.includes(asset.id)}
-                    onChange={(event) =>
-                      setSelectedIds((ids) =>
-                        event.target.checked
-                          ? [...ids, asset.id]
-                          : ids.filter((id) => id !== asset.id),
-                      )
-                    }
-                  />
-                </label>
+                <EditorOnly>
+                  <label className="relative z-20 flex shrink-0 items-center self-stretch px-1">
+                    <Checkbox
+                      disabled={deletion.isPending}
+                      aria-label={`Select ${asset.name}`}
+                      checked={selectedIds.includes(asset.id)}
+                      onChange={(event) =>
+                        setSelectedIds((ids) =>
+                          event.target.checked
+                            ? [...ids, asset.id]
+                            : ids.filter((id) => id !== asset.id),
+                        )
+                      }
+                    />
+                  </label>
+                </EditorOnly>
                 <div className="min-w-0">
                   <Link
                     className="block truncate text-xs font-medium after:absolute after:inset-0 after:z-10 after:rounded-lg after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-offset-2 focus-visible:after:ring-offset-background"

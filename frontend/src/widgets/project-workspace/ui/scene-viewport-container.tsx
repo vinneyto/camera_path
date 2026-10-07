@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorOnly } from "@/features/auth";
+
 import { useState } from "react";
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 
@@ -11,7 +13,7 @@ import { getAnchorLabel, useAddAnchor } from "@/features/anchor-creation";
 import { useUpdateAnchor } from "@/features/anchor-editing";
 import {
   useActiveEditorTool,
-  useAnchorToolShortcut,
+  AnchorToolShortcut,
   useCameraMode,
   useTrajectoryPlayback,
 } from "@/features/project-editor";
@@ -71,7 +73,6 @@ export function SceneViewportContainer({
     deleteAnchorMutation.isPending;
   const Viewport =
     rendererBackend === "webgpu" ? SceneWebGpuViewport : SceneViewport;
-  useAnchorToolShortcut();
 
   async function addAnchor(position: Vec3, normal: Vec3) {
     if (mutating) return;
@@ -106,6 +107,9 @@ export function SceneViewportContainer({
 
   return (
     <>
+      <EditorOnly>
+        <AnchorToolShortcut />
+      </EditorOnly>
       <Viewport
         key={projectId}
         anchors={anchors}
@@ -123,22 +127,24 @@ export function SceneViewportContainer({
         selected={selected}
         trajectory={trajectory}
       />
-      {cameraMode === "orbit" && (
-        <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
-          {mutating ? (
-            <LoaderCircle className="size-3 animate-spin" />
-          ) : (
-            <MousePointerClick className="size-3" />
-          )}
-          {activeTool === "anchor"
-            ? "Anchor tool active — release the modifier key to exit"
-            : activeTool === "cloud"
-              ? "Click to place cloud on a surface (origin if no hit); press Escape to cancel"
-              : activeTool === "anchor-height"
-                ? "Drag vertically to set anchor height; press Escape to cancel"
-                : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
-        </div>
-      )}
+      <EditorOnly>
+        {cameraMode === "orbit" && (
+          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
+            {mutating ? (
+              <LoaderCircle className="size-3 animate-spin" />
+            ) : (
+              <MousePointerClick className="size-3" />
+            )}
+            {activeTool === "anchor"
+              ? "Anchor tool active — release the modifier key to exit"
+              : activeTool === "cloud"
+                ? "Click to place cloud on a surface (origin if no hit); press Escape to cancel"
+                : activeTool === "anchor-height"
+                  ? "Drag vertically to set anchor height; press Escape to cancel"
+                  : "Hold Command on macOS or Ctrl on Windows/Linux; tap on touchscreens"}
+          </div>
+        )}
+      </EditorOnly>
       {cloudActions.error && (
         <div
           className="absolute left-3 top-12 rounded border bg-background px-2 py-1 text-xs text-destructive"

@@ -1,3 +1,4 @@
+import { EditorOnly, useAuth } from "@/features/auth";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -10,7 +11,7 @@ import {
   type CompiledTrajectory,
 } from "@/entities/trajectory";
 import { getAnchorLabel } from "@/features/anchor-creation";
-import { useGaussianRenderingSettingsStore } from "@/features/gaussian-rendering-settings";
+import { useUserSettings } from "@/features/user-settings";
 import {
   useActiveEditorTool,
   useCloudPlacement,
@@ -89,14 +90,13 @@ export function SceneContents({
   selected,
   trajectory,
 }: SceneContentsProps) {
+  const { canEdit } = useAuth();
   const camera = useThree((state) => state.camera);
   const activeTool = useActiveEditorTool();
   const { showGrid } = useSceneGrid();
   const { cameraMode, setCameraMode } = useCameraMode();
   useEditorHoverCursor();
-  const gaussianDprMode = useGaussianRenderingSettingsStore(
-    (state) => state.dprMode,
-  );
+  const { gaussianDpr: gaussianDprMode } = useUserSettings();
   const depthOfFieldKeyframe = trajectory
     ? evaluateDepthOfFieldKeyframe(trajectory, pathPosition)
     : null;
@@ -114,7 +114,9 @@ export function SceneContents({
     depthOfFieldEnabled,
     GAUSSIAN_CLOUD_LAYERS,
   );
-  const placement = useAnchorPlacement({ onPlace: onAddAnchor });
+  const placement = useAnchorPlacement({
+    onPlace: onAddAnchor,
+  });
   const cloudPlacement = useCloudPlacementInteraction({
     onPlace: onAddCloud,
     clouds,
@@ -208,7 +210,7 @@ export function SceneContents({
         resourceKeyForCloud={cloudPlacement.resourceKeyForCloud}
         interactive={isGaussianSurfacePickActive(activeTool)}
         surfaceEvents={
-          editorVisible && activeTool !== "cloud"
+          canEdit && editorVisible && activeTool !== "cloud"
             ? placement.surfaceEventProps
             : {}
         }
@@ -221,7 +223,7 @@ export function SceneContents({
           dark={dark}
           interactive={cameraMode === "orbit"}
           placementEvents={
-            activeTool === "cloud" ? {} : placement.surfaceEventProps
+            canEdit && activeTool !== "cloud" ? placement.surfaceEventProps : {}
           }
         />
       )}
@@ -259,30 +261,39 @@ export function SceneContents({
                 }
               : anchor;
           return (
-            <AnchorMarker
-              anchor={markerAnchor}
-              hovered={heightEditing.hoveredAnchorId === anchor.id}
+            <EditorOnly
               key={anchor.id}
-              {...heightEditing.getAnchorInteractionProps(anchor)}
-              onContextMenu={(event) => {
-                event.stopPropagation();
-                event.nativeEvent.preventDefault();
-                onOpenAnchorMenu(anchor, {
-                  x: event.nativeEvent.clientX,
-                  y: event.nativeEvent.clientY,
-                });
-              }}
-            />
+              fallback={<AnchorMarker anchor={anchor} />}
+            >
+              <AnchorMarker
+                anchor={markerAnchor}
+                hovered={heightEditing.hoveredAnchorId === anchor.id}
+                key={anchor.id}
+                {...heightEditing.getAnchorInteractionProps(anchor)}
+                onContextMenu={(event) => {
+                  event.stopPropagation();
+                  event.nativeEvent.preventDefault();
+                  onOpenAnchorMenu(anchor, {
+                    x: event.nativeEvent.clientX,
+                    y: event.nativeEvent.clientY,
+                  });
+                }}
+              />
+            </EditorOnly>
           );
         })}
-      {editorVisible && heightEditing.activeAnchor !== null && (
-        <AnchorHeightEditingOverlay
-          anchor={heightEditing.activeAnchor}
-          backend={renderingBackend}
-          dragging={heightEditing.preview?.dragging ?? false}
-          lift={heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift}
-        />
-      )}
+      <EditorOnly>
+        {editorVisible && heightEditing.activeAnchor !== null && (
+          <AnchorHeightEditingOverlay
+            anchor={heightEditing.activeAnchor}
+            backend={renderingBackend}
+            dragging={heightEditing.preview?.dragging ?? false}
+            lift={
+              heightEditing.preview?.lift ?? heightEditing.activeAnchor.lift
+            }
+          />
+        )}
+      </EditorOnly>
       {editorVisible && trajectory && (
         <TrajectoryLine
           dark={dark}

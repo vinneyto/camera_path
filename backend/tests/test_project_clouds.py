@@ -1,8 +1,8 @@
 from pathlib import Path
 
+from conftest import create_editor_app as create_app
 from httpx import ASGITransport, AsyncClient
 
-from camera_path.api import create_app
 from camera_path.config import Settings
 
 

@@ -11,7 +11,7 @@ import {
   useCreateProject,
 } from "@/features/project-selection";
 import { ThemeToggle } from "@/features/theme-switcher";
-import { UserSettingsPanel } from "@/features/user-settings";
+import { AuthControl, EditorOnly } from "@/features/auth";
 
 export function ProjectListPage() {
   const router = useRouter();
@@ -60,16 +60,18 @@ export function ProjectListPage() {
           >
             Library
           </Link>
-          <UserSettingsPanel />
+          <AuthControl />
           <ThemeToggle />
         </div>
       </div>
-      <div className="mb-4">
-        <ProjectCreateForm
-          disabled={createProjectMutation.isPending}
-          onCreate={createProject}
-        />
-      </div>
+      <EditorOnly>
+        <div className="mb-4">
+          <ProjectCreateForm
+            disabled={createProjectMutation.isPending}
+            onCreate={createProject}
+          />
+        </div>
+      </EditorOnly>
       {error && (
         <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
           {error instanceof Error ? error.message : "Could not load projects"}

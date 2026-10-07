@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
 
+from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.routers.contract import MUTATION_ERROR_RESPONSES, set_revision_etag
 from camera_path.routers.dependencies import MutationGuard, parse_if_match
 from camera_path.services.project_clouds import (
@@ -11,7 +12,9 @@ from camera_path.services.project_clouds import (
     ProjectCloudUpdate,
 )
 
-router = APIRouter(prefix="/projects/{project_id}/clouds", tags=["Clouds"])
+router = APIRouter(
+    route_class=AuthenticatedRoute, prefix="/projects/{project_id}/clouds", tags=["Clouds"]
+)
 
 
 def get_service(request: Request) -> ProjectCloudService:
@@ -45,6 +48,7 @@ async def list_project_clouds(
     description="Attach a ready library asset to the project.",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def create_project_cloud(
     project_id: str,
     data: ProjectCloudCreate,
@@ -72,6 +76,7 @@ async def create_project_cloud(
     description="Change visibility or ordering of an instance.",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def update_project_cloud(
     project_id: str,
     cloud_id: str,
@@ -96,6 +101,7 @@ async def update_project_cloud(
     description="Detach an instance without deleting its library file.",
     responses=MUTATION_ERROR_RESPONSES,
 )
+@authenticated
 async def delete_project_cloud(
     project_id: str, cloud_id: str, request: Request, service: Service, _guard: MutationGuard
 ) -> Response:

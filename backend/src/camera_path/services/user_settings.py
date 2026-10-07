@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, StrictBool
 from sqlalchemy.exc import IntegrityError
 
@@ -9,6 +11,7 @@ class UserSettings(BaseModel):
 
     webgpu_tile_renderer: bool
     show_grid: bool
+    gaussian_dpr: Literal["1x", "system"] = "1x"
 
 
 class UserSettingsUpdate(BaseModel):
@@ -17,6 +20,7 @@ class UserSettingsUpdate(BaseModel):
     # Defaults allow omitted PATCH fields; exclude_unset keeps them out of the write.
     webgpu_tile_renderer: StrictBool = True
     show_grid: StrictBool = True
+    gaussian_dpr: Literal["1x", "system"] = "1x"
 
 
 class UserSettingsService:

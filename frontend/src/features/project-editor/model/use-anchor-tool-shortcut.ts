@@ -41,6 +41,7 @@ export function useAnchorToolShortcut() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
       setActiveTool(null);
+      setActiveTool(null);
     };
   }, [setActiveTool, store]);
 }
