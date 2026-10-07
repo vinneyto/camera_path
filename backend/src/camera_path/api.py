@@ -43,7 +43,7 @@ from camera_path.services import (
 )
 from camera_path.services.auth import AuthService
 from camera_path.services.library import LibraryService
-from camera_path.services.library_storage import LibraryStorage
+from camera_path.services.library_storage import LibraryStorage, LibraryStorageError
 from camera_path.services.project_clouds import ProjectCloudService
 from camera_path.services.user_settings import UserSettingsService
 from camera_path.trajectory import GeometryError
@@ -127,7 +127,14 @@ def create_app(
     configured = app_settings or settings
     owns_repository = repository is None
     project_repository = repository or ProjectRepository(configured.database_url)
-    storage = library_storage or LocalLibraryStorage(configured.library_directory)
+    if library_storage is not None:
+        storage = library_storage
+    elif configured.library_storage == "s3":
+        from camera_path.aws.library_storage import S3LibraryStorage
+
+        storage = S3LibraryStorage.from_settings(configured)
+    else:
+        storage = LocalLibraryStorage(configured.library_directory)
     library_service = LibraryService(LibraryRepository(project_repository.session_factory), storage)
     project_cloud_service = ProjectCloudService(
         ProjectCloudRepository(project_repository.session_factory),
@@ -183,6 +190,14 @@ def create_app(
         ],
     )
     application.state.project_service = project_service
+
+    @application.exception_handler(LibraryStorageError)
+    async def storage_error(request: Request, _: LibraryStorageError) -> JSONResponse:
+        return JSONResponse(
+            status_code=502,
+            content=_error_content(request, "storage_unavailable", "Library storage unavailable"),
+        )
+
     application.state.library_service = library_service
     application.state.project_cloud_service = project_cloud_service
     application.state.project_repository = project_repository

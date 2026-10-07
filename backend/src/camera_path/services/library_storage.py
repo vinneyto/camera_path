@@ -6,7 +6,19 @@ from contextlib import AbstractAsyncContextManager
 from fastapi import Request
 
 
+class LibraryStorageError(OSError):
+    """Storage operation failed; provider details must not reach the HTTP response."""
+
+
 class LibraryStorage(ABC):
+    async def finalize_upload(self, key: str, expected_size: int) -> bool:
+        inspection = await self.inspect(key)
+        return (
+            inspection is not None
+            and inspection[0] == expected_size
+            and inspection[1] in {b"ply\n", b"ply\r"}
+        )
+
     @abstractmethod
     async def upload_url(self, asset_id: str, key: str, request: Request) -> str: ...
 
