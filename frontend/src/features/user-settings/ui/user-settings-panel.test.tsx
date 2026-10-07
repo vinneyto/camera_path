@@ -16,6 +16,7 @@ import {
   useUserSettings,
   EDITOR_SETTINGS_KEY,
 } from "../model/user-settings-provider";
+import { SignOutButton } from "@/features/auth/ui/sign-out-button";
 import { UserSettingsPanel } from "./user-settings-panel";
 import {
   AnchorToolShortcut,
@@ -49,11 +50,13 @@ function Controls() {
       <button onClick={() => void auth.login("editor", "password")}>
         Login
       </button>
-      <button onClick={() => void auth.logout()}>Logout</button>
+
       <span data-testid="tool">{tool ?? "none"}</span>
       <EditorOnly>
         <AnchorToolShortcut />
-        <UserSettingsPanel />
+        <UserSettingsPanel>
+          <SignOutButton />
+        </UserSettingsPanel>
         <ProjectCreateForm onCreate={async () => true} />
         <LibraryUploadForm />
       </EditorOnly>
@@ -93,6 +96,11 @@ async function openSettings() {
   return (await screen.findByRole("checkbox", {
     name: "Show grid",
   })) as HTMLInputElement;
+}
+
+async function signOut() {
+  if (!screen.queryByRole("dialog")) await openSettings();
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 }
 
 beforeEach(() => {
@@ -185,7 +193,7 @@ it("restores editor localStorage on login, saves changes there, and reloads back
     show_grid: true,
   });
   server = { ...DEFAULTS, webgpu_tile_renderer: true, show_grid: false };
-  fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+  await signOut();
   await waitFor(() => expect(guestReads).toBeGreaterThan(1));
   await waitFor(() =>
     expect(screen.getByTestId("preferences").textContent).toBe("true/false/1x"),
@@ -212,7 +220,7 @@ it("keeps editor settings locally when server persistence fails, while the guest
   expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!).show_grid).toBe(
     false,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+  await signOut();
   await waitFor(() => expect(guestReads).toBeGreaterThan(0));
   await waitFor(() =>
     expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
@@ -253,7 +261,7 @@ it("a pending editor save cannot restore editor localStorage after logout", asyn
   await waitFor(() => expect(grid.disabled).toBe(false));
   fireEvent.click(grid);
   await waitFor(() => expect(releaseWrite).toBeDefined());
-  fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+  await signOut();
   await waitFor(() => expect(guestReads).toBeGreaterThan(0));
   await waitFor(() =>
     expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x"),
@@ -288,7 +296,7 @@ it.each([
     expect(screen.getByRole("button", { name: "Send message" })).toBeTruthy();
     fireEvent.keyDown(window, { key, ...modifier });
     expect(screen.getByTestId("tool").textContent).toBe("anchor");
-    fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+    await signOut();
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: "Send message" })).toBeNull(),
     );
@@ -297,3 +305,28 @@ it.each([
     expect(screen.getByTestId("tool").textContent).toBe("none");
   },
 );
+
+it("closes profile settings with the cross and Escape", async () => {
+  signedIn = true;
+  mount();
+  await openSettings();
+  fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await openSettings();
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+it("closes on the overlay without activating the page", async () => {
+  signedIn = true;
+  mount();
+  await openSettings();
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  const overlay = document.querySelector('.fixed.inset-0[data-state="open"]')!;
+  fireEvent.pointerDown(overlay, { pointerType: "mouse", button: 0 });
+  fireEvent.click(overlay);
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(signedIn).toBe(true);
+});
