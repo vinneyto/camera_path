@@ -150,22 +150,23 @@ class LibraryService:
         )
         if not record.name:
             raise HTTPException(422, "Name cannot be blank")
+        upload_url = await self.storage.upload_url(record.id, key, request)
         await self.repository.create(record)
         return LibraryUpload(
             **self._model(record).model_dump(),
-            upload_url=await self.storage.upload_url(record.id, key, request),
+            upload_url=upload_url,
         )
 
     async def complete(self, asset_id: str, request: Request) -> LibraryAsset:
-        record = await self.get_record(asset_id)
-        inspection = await self.storage.inspect(record.object_key)
-        if (
-            inspection is None
-            or inspection[0] != record.size_bytes
-            or inspection[1] not in {b"ply\n", b"ply\r"}
-        ):
-            raise HTTPException(422, "Uploaded PLY is missing, incomplete or invalid")
-        await self.repository.mark_ready(asset_id)
+        async with self.repository.sessions.begin() as session:
+            record = await self.repository.get_for_update(session, asset_id)
+            if record is None:
+                raise HTTPException(404, "Library file not found")
+            if record.status == LibraryAssetStatus.PENDING:
+                if not await self.storage.finalize_upload(record.object_key, record.size_bytes):
+                    raise HTTPException(422, "Uploaded PLY is missing, incomplete or invalid")
+                record.status = LibraryAssetStatus.READY
+                await session.flush()
         return self._model(
             record, await self.storage.download_url(record.id, record.object_key, request)
-        ).model_copy(update={"status": "ready"})
+        )

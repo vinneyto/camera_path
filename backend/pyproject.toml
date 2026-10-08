@@ -32,6 +32,11 @@ db-populate = "camera_path.seed:run"
 openapi-export = "camera_path.export_openapi:run"
 editor-create = "camera_path.auth_cli:run"
 
+[project.optional-dependencies]
+aws = [
+    "boto3>=1.40,<2",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

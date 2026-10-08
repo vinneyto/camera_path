@@ -47,8 +47,8 @@ are intentionally discarded; CP-41 and CP-42 introduce the replacement command-b
 The library stores file metadata in the database and PLY bytes in
 `~/.camera-path/library` by default. Set `CAMERA_PATH_LIBRARY_DIRECTORY` to choose another
 directory. Keep this directory persistent across backend restarts. The local storage adapter
-provides development upload and download routes; production S3 storage is tracked separately in
-CP-61. Storage access is behind `LibraryStorage`, so API and library service code do not depend on
+provides development upload and download routes. Storage access is behind `LibraryStorage`,
+so API and library service code do not depend on
 the storage implementation.
 
 To upload a file, call `POST /api/v1/library/uploads` with its name and byte size, PUT the bytes
@@ -70,6 +70,61 @@ affected project advances its revision once for the whole batch. `LibraryStorage
 keeps recoverable content until SQL commit; the local adapter moves files to a temporary
 directory on the same filesystem and restores them on staging or transaction failures.
 The frontend uses checkboxes and Actions → Delete selected with a React confirmation dialog.
+
+### S3 library with a local backend (M3-1)
+
+Install the AWS extra with `uv sync --extra aws`. Add these values to `backend/.env`, alongside
+your existing JWT/OpenAI configuration:
+
+```dotenv
+CAMERA_PATH_AWS_LIBRARY_STORAGE=s3
+CAMERA_PATH_AWS_S3_BUCKET=camera-path-library-d9f856354df8-992382434156
+CAMERA_PATH_AWS_S3_PREFIX=library/
+CAMERA_PATH_AWS_REGION=us-east-1
+```
+
+The existing `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `.env` are read as secrets and
+passed to Boto3; temporary credentials may also set `AWS_SESSION_TOKEN`. Alternatively set
+`CAMERA_PATH_AWS_PROFILE=camera-path-backend-d9f856354df8` and omit explicit keys. With neither supplied,
+Boto3 uses its standard credential chain, including an EC2 IAM role. Standard `AWS_REGION`, `AWS_DEFAULT_REGION` and `AWS_PROFILE` remain supported as fallbacks;
+project-prefixed values take priority. No AWS credentials reach
+the browser. Keep `.env` untracked.
+
+Run `uv run --extra aws alembic upgrade head`, then
+`uv run --extra aws uvicorn camera_path.api:app --reload`. Start the frontend normally, with its
+server-side `CAMERA_PATH_BACKEND_URL=http://127.0.0.1:8000`. S3 mode does not mount the local
+file-content routes. Set `CAMERA_PATH_AWS_LIBRARY_STORAGE=local` to use filesystem storage again.
+Use a separate `CAMERA_PATH_DATABASE_URL` for the S3 trial: switching adapters does not migrate
+existing local files, and the database stores keys, not the storage backend or temporary URLs.
+
+The browser PUTs bytes directly to a SigV4 URL for `library/_uploads/<id>.ply`. Completion
+checks the actual size and PLY signature using HeadObject and a four-byte range read, then
+copies the inspected ETag to `library/<id>.ply`. The staging object is removed. An old upload
+URL cannot overwrite the confirmed file. Completion is idempotent; if SQL fails after the
+copy, the next attempt can recover the promoted object. Download URLs use the permanent key
+and an attachment filename, including for guest viewing and project-cloud instances.
+`CAMERA_PATH_AWS_S3_URL_TTL_SECONDS` defaults to 300 (60–3600). Refresh library/project metadata to
+obtain fresh URLs after expiration; temporary AWS credentials may expire sooner.
+
+The manually prepared bucket uses region `us-east-1`, disabled ACLs, Block Public Access and
+SSE-S3. Bucket and backend IAM user carry `DeploymentId=d9f856354df8`. IAM needs GetObject,
+PutObject and DeleteObject on `library/*`; ListBucket with a `library/*` prefix is useful for
+the CLI smoke test. Server-side copy uses those same object permissions. Bucket CORS must
+allow local frontend origins, GET/HEAD/PUT/POST and request headers, as configured in M3-1.
+
+Deletion copies objects into `library/_delete/<operation-id>/` before removing live keys.
+Staging or SQL failures restore them; backups are removed after commit. If restoration fails,
+backups are retained for recovery. Cleanup failure after commit is logged without reporting a
+failed deletion. A process crash can leave staging/backup objects: retain `_delete/` for manual
+recovery and remove abandoned `_uploads/` only after their signed URLs expire. Replaying an
+unexpired upload URL may recreate an unreferenced staging object. Automatic cleanup and upload
+quotas are follow-up work in M3-5; this PR keeps the existing size limit and does not change
+bucket lifecycle policies.
+
+Local smoke check: sign in, upload a PLY, view it in a project, download as a guest, restart the
+backend and reopen it, then delete as an editor (including bulk deletion). Verify that guest
+upload/completion/deletion is rejected. AWS adapter tests run with
+`uv run --extra aws pytest`; ordinary local tests can run without the extra.
 
 ### User profile settings
 
