@@ -77,9 +77,9 @@ Install the AWS extra with `uv sync --extra aws`. Add these values to `backend/.
 your existing JWT/OpenAI configuration:
 
 ```dotenv
-CAMERA_PATH_LIBRARY_STORAGE=s3
-CAMERA_PATH_S3_BUCKET=camera-path-library-d9f856354df8-992382434156
-CAMERA_PATH_S3_PREFIX=library/
+AWS_LIBRARY_STORAGE=s3
+AWS_S3_BUCKET=camera-path-library-d9f856354df8-992382434156
+AWS_S3_PREFIX=library/
 AWS_REGION=us-east-1
 ```
 
@@ -92,7 +92,7 @@ the browser. Keep `.env` untracked.
 Run `uv run --extra aws alembic upgrade head`, then
 `uv run --extra aws uvicorn camera_path.api:app --reload`. Start the frontend normally, with its
 server-side `CAMERA_PATH_BACKEND_URL=http://127.0.0.1:8000`. S3 mode does not mount the local
-file-content routes. Set `CAMERA_PATH_LIBRARY_STORAGE=local` to use filesystem storage again.
+file-content routes. Set `AWS_LIBRARY_STORAGE=local` to use filesystem storage again.
 Use a separate `CAMERA_PATH_DATABASE_URL` for the S3 trial: switching adapters does not migrate
 existing local files, and the database stores keys, not the storage backend or temporary URLs.
 
@@ -102,7 +102,7 @@ copies the inspected ETag to `library/<id>.ply`. The staging object is removed. 
 URL cannot overwrite the confirmed file. Completion is idempotent; if SQL fails after the
 copy, the next attempt can recover the promoted object. Download URLs use the permanent key
 and an attachment filename, including for guest viewing and project-cloud instances.
-`CAMERA_PATH_S3_URL_TTL_SECONDS` defaults to 300 (60–3600). Refresh library/project metadata to
+`AWS_S3_URL_TTL_SECONDS` defaults to 300 (60–3600). Refresh library/project metadata to
 obtain fresh URLs after expiration; temporary AWS credentials may expire sooner.
 
 The manually prepared bucket uses region `us-east-1`, disabled ACLs, Block Public Access and

@@ -369,7 +369,8 @@ async def test_provider_error_is_sanitized_and_does_not_confirm_upload(storage, 
 def test_dotenv_credentials_and_s3_selection(tmp_path: Path, monkeypatch):
     env = tmp_path / ".env"
     env.write_text(
-        "CAMERA_PATH_LIBRARY_STORAGE=s3\nCAMERA_PATH_S3_BUCKET=test-library\n"
+        "AWS_LIBRARY_STORAGE=s3\nAWS_S3_BUCKET=test-library\n"
+        "AWS_S3_PREFIX=custom/library/\nAWS_S3_URL_TTL_SECONDS=600\n"
         "AWS_REGION=us-east-1\nAWS_ACCESS_KEY_ID=local-key\n"
         "AWS_SECRET_ACCESS_KEY=local-secret\nAWS_SESSION_TOKEN=local-token\n"
     )
@@ -380,6 +381,9 @@ def test_dotenv_credentials_and_s3_selection(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(boto3, "Session", factory)
     app = create_app(settings)
     assert isinstance(app.state.library_service.storage, S3LibraryStorage)
+    assert app.state.library_service.storage.bucket == "test-library"
+    assert app.state.library_service.storage.prefix == "custom/library/"
+    assert app.state.library_service.storage.ttl == 600
     factory.assert_called_once_with(
         profile_name=None,
         region_name="us-east-1",
@@ -393,9 +397,9 @@ def test_dotenv_credentials_and_s3_selection(tmp_path: Path, monkeypatch):
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"library_storage": "s3"},
-        {"s3_prefix": "../"},
-        {"s3_url_ttl_seconds": 0},
+        {"AWS_LIBRARY_STORAGE": "s3"},
+        {"AWS_S3_PREFIX": "../"},
+        {"AWS_S3_URL_TTL_SECONDS": 0},
         {"AWS_ACCESS_KEY_ID": "key"},
     ],
 )
