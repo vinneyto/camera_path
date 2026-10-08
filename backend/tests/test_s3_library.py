@@ -369,9 +369,9 @@ async def test_provider_error_is_sanitized_and_does_not_confirm_upload(storage, 
 def test_dotenv_credentials_and_s3_selection(tmp_path: Path, monkeypatch):
     env = tmp_path / ".env"
     env.write_text(
-        "AWS_LIBRARY_STORAGE=s3\nAWS_S3_BUCKET=test-library\n"
-        "AWS_S3_PREFIX=custom/library/\nAWS_S3_URL_TTL_SECONDS=600\n"
-        "AWS_REGION=us-east-1\nAWS_ACCESS_KEY_ID=local-key\n"
+        "CAMERA_PATH_AWS_LIBRARY_STORAGE=s3\nCAMERA_PATH_AWS_S3_BUCKET=test-library\n"
+        "CAMERA_PATH_AWS_S3_PREFIX=custom/library/\nCAMERA_PATH_AWS_S3_URL_TTL_SECONDS=600\n"
+        "CAMERA_PATH_AWS_REGION=us-east-1\nAWS_ACCESS_KEY_ID=local-key\n"
         "AWS_SECRET_ACCESS_KEY=local-secret\nAWS_SESSION_TOKEN=local-token\n"
     )
     settings = Settings(_env_file=env)
@@ -397,9 +397,9 @@ def test_dotenv_credentials_and_s3_selection(tmp_path: Path, monkeypatch):
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"AWS_LIBRARY_STORAGE": "s3"},
-        {"AWS_S3_PREFIX": "../"},
-        {"AWS_S3_URL_TTL_SECONDS": 0},
+        {"CAMERA_PATH_AWS_LIBRARY_STORAGE": "s3"},
+        {"CAMERA_PATH_AWS_S3_PREFIX": "../"},
+        {"CAMERA_PATH_AWS_S3_URL_TTL_SECONDS": 0},
         {"AWS_ACCESS_KEY_ID": "key"},
     ],
 )

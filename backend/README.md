@@ -77,22 +77,23 @@ Install the AWS extra with `uv sync --extra aws`. Add these values to `backend/.
 your existing JWT/OpenAI configuration:
 
 ```dotenv
-AWS_LIBRARY_STORAGE=s3
-AWS_S3_BUCKET=camera-path-library-d9f856354df8-992382434156
-AWS_S3_PREFIX=library/
-AWS_REGION=us-east-1
+CAMERA_PATH_AWS_LIBRARY_STORAGE=s3
+CAMERA_PATH_AWS_S3_BUCKET=camera-path-library-d9f856354df8-992382434156
+CAMERA_PATH_AWS_S3_PREFIX=library/
+CAMERA_PATH_AWS_REGION=us-east-1
 ```
 
 The existing `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `.env` are read as secrets and
 passed to Boto3; temporary credentials may also set `AWS_SESSION_TOKEN`. Alternatively set
-`AWS_PROFILE=camera-path-backend-d9f856354df8` and omit explicit keys. With neither supplied,
-Boto3 uses its standard credential chain, including an EC2 IAM role. No AWS credentials reach
+`CAMERA_PATH_AWS_PROFILE=camera-path-backend-d9f856354df8` and omit explicit keys. With neither supplied,
+Boto3 uses its standard credential chain, including an EC2 IAM role. Standard `AWS_REGION`, `AWS_DEFAULT_REGION` and `AWS_PROFILE` remain supported as fallbacks;
+project-prefixed values take priority. No AWS credentials reach
 the browser. Keep `.env` untracked.
 
 Run `uv run --extra aws alembic upgrade head`, then
 `uv run --extra aws uvicorn camera_path.api:app --reload`. Start the frontend normally, with its
 server-side `CAMERA_PATH_BACKEND_URL=http://127.0.0.1:8000`. S3 mode does not mount the local
-file-content routes. Set `AWS_LIBRARY_STORAGE=local` to use filesystem storage again.
+file-content routes. Set `CAMERA_PATH_AWS_LIBRARY_STORAGE=local` to use filesystem storage again.
 Use a separate `CAMERA_PATH_DATABASE_URL` for the S3 trial: switching adapters does not migrate
 existing local files, and the database stores keys, not the storage backend or temporary URLs.
 
@@ -102,7 +103,7 @@ copies the inspected ETag to `library/<id>.ply`. The staging object is removed. 
 URL cannot overwrite the confirmed file. Completion is idempotent; if SQL fails after the
 copy, the next attempt can recover the promoted object. Download URLs use the permanent key
 and an attachment filename, including for guest viewing and project-cloud instances.
-`AWS_S3_URL_TTL_SECONDS` defaults to 300 (60–3600). Refresh library/project metadata to
+`CAMERA_PATH_AWS_S3_URL_TTL_SECONDS` defaults to 300 (60–3600). Refresh library/project metadata to
 obtain fresh URLs after expiration; temporary AWS credentials may expire sooner.
 
 The manually prepared bucket uses region `us-east-1`, disabled ACLs, Block Public Access and
