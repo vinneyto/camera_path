@@ -9,3 +9,5 @@ node_modules/
 .next/
 out/
 *.tsbuildinfo
+cdk.out/
+infra/cdk.context.json
