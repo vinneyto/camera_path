@@ -1,0 +1,12 @@
+{
+  "name": "camera-path-infra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "cdk": "cdk",
+    "test": "node --import tsx --test tests/*.test.ts && python3 -m unittest discover -s tests -p 'test_*.py'"
+  },
+  "dependencies": {"aws-cdk-lib": "2.272.0", "constructs": "10.5.0"},
+  "devDependencies": {"aws-cdk": "2.1129.0", "@types/node": "^24.0.0", "tsx": "^4.20.0", "typescript": "^5.9.0"}
+}
