@@ -12,7 +12,7 @@ class ProviderTests(unittest.TestCase):
         self.event = {
             "RequestType": "Update", "RequestId": "test-request",
             "ResourceProperties": {"Revision": "a" * 40, "InstanceId": "i-test",
-                                   "Script": base64.b64encode(b"print('test')").decode(), "Config": {}},
+                                   "Script": base64.b64encode(b"print('test')").decode(), "TlsScript": base64.b64encode(b"print('tls')").decode(), "Config": {}},
         }
         self.ssm = Mock()
         self.ssm.get_paginator.return_value.paginate.return_value = [{"Commands": []}]
@@ -31,6 +31,9 @@ class ProviderTests(unittest.TestCase):
         }
         self.assertFalse(p.is_complete(self.event, None)["IsComplete"])
         self.ssm.send_command.assert_called_once()
+        command = self.ssm.send_command.call_args.kwargs['Parameters']['commands'][0]
+        self.assertLess(command.index('python /etc/camera-path/configure-https.py'),
+                        command.index('python /etc/camera-path/release-'))
 
     def test_existing_command_is_polled_without_resubmitting(self):
         self.ssm.get_paginator.return_value.paginate.return_value = [

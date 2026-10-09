@@ -8,14 +8,11 @@ export interface BackendResources {
 
 export function createBackend(scope: Construct, vpc: ec2.Vpc, role: iam.Role): BackendResources {
   const sg = new ec2.SecurityGroup(scope, 'BackendSecurityGroup', { vpc, allowAllOutbound: true });
-  // CloudFront's managed prefix list; no public IP, SSH or public CIDR ingress.
-  const prefixList = ec2.PrefixList.fromLookup(scope, 'CloudFrontPrefixList', {
-    prefixListName: 'com.amazonaws.global.cloudfront.origin-facing',
-  });
-  sg.addIngressRule(ec2.Peer.prefixList(prefixList.prefixListId), ec2.Port.tcp(80), 'CloudFront origin');
-  const subnet = vpc.privateSubnets[0];
+  sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'ACME HTTP challenge and HTTPS redirect');
+  sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS API');
+  const subnet = vpc.publicSubnets[0];
   const instance = new ec2.Instance(scope, 'Backend', {
-    vpc, vpcSubnets: { subnets: [subnet] }, securityGroup: sg, role,
+    vpc, vpcSubnets: { subnets: [subnet] }, securityGroup: sg, role, associatePublicIpAddress: true,
     instanceType: new ec2.InstanceType('t3.small'), requireImdsv2: true,
     machineImage: ec2.MachineImage.fromSsmParameter(
       '/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id',

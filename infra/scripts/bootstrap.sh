@@ -1,26 +1,20 @@
 set -euxo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y git ca-certificates python3-venv sqlite3 nginx
+apt-get install -y git ca-certificates python3-venv sqlite3 nginx certbot curl
 python3 -m venv /opt/camera-path-tools
 /opt/camera-path-tools/bin/pip install 'uv==0.8.22' 'boto3>=1.40,<2'
 id camera-path >/dev/null 2>&1 || useradd --system --create-home --home-dir /opt/camera-path --shell /usr/sbin/nologin camera-path
 install -d -o camera-path -g camera-path -m 0750 /opt/camera-path/releases
-install -d -m 0755 /var/lib/camera-path
+install -d -m 0755 /var/lib/camera-path /var/www/camera-path-acme
 cat > /etc/nginx/sites-available/camera-path <<'CP_NGINX'
 server {
     listen 80 default_server;
     server_name _;
-    client_max_body_size 2m;
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_buffering off;
-        proxy_read_timeout 300s;
+    location /.well-known/acme-challenge/ {
+        root /var/www/camera-path-acme;
     }
+    location / { return 404; }
 }
 CP_NGINX
 rm -f /etc/nginx/sites-enabled/default

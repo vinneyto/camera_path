@@ -5,6 +5,9 @@ import { resolve } from 'node:path';
 /** Resource identifiers only; secret values are fetched on the instance. */
 export interface DeploymentConfig {
   region: string;
+  api_domain: string;
+  public_ip: string;
+  tls_email: string;
   library_bucket: string;
   backups_bucket: string;
   jwt_secret: string;

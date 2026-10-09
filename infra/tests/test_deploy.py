@@ -79,6 +79,15 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(self.value(), "original")
         self.assertEqual(d.CURRENT.resolve(), self.old)
 
+    def test_https_failure_restores_database_and_previous_release(self):
+        with patch.object(d, "as_user", side_effect=lambda *a, **kw: self.mutate_database()), \
+                patch.object(d, "service"), patch.object(d, "wait_healthy"), \
+                patch.object(d, "wait_https_healthy", side_effect=RuntimeError("TLS health failed")):
+            with self.assertRaisesRegex(RuntimeError, "previous database and release restored"):
+                d.deploy("b" * 40, {"region": "us-east-1", "backups_bucket": "backup", "api_domain": "api.example.com"})
+        self.assertEqual(self.value(), "original")
+        self.assertEqual(d.CURRENT.resolve(), self.old)
+
     def test_failed_restore_does_not_start_old_service(self):
         with patch.object(d, "as_user", side_effect=RuntimeError("migration")), \
                 patch.object(d, "service") as svc, \

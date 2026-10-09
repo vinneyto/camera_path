@@ -7,19 +7,23 @@ import { BackendStack } from '../src/stack';
 function template(revision = 'a'.repeat(40), localAccess = false) {
   const app = new App({ context: {
     'availability-zones:account=992382434156:region=us-east-1': ['us-east-1a', 'us-east-1b'],
-    'cc-api-provider:account=992382434156:expectedMatchCount=exactly-one:propertiesToReturn.0=PrefixListId:propertyMatch.PrefixListName=com.amazonaws.global.cloudfront.origin-facing:region=us-east-1:typeName=AWS$:$:EC2$:$:PrefixList': [{ PrefixListId: 'pl-3b927c52' }],
   } });
   return Template.fromStack(new BackendStack(app, 'test', {
     env: { account: '992382434156', region: 'us-east-1' },
-    deploymentId: 'd9f856354df8', revision, frontendOrigins: ['http://localhost:3000'], localAccess,
+    deploymentId: 'test-deployment', domain: { domainName: 'example.com', hostedZoneId: 'ZTEST123', tlsEmail: 'ops@example.com' }, revision, frontendOrigins: ['http://localhost:3000'], localAccess,
   }));
 }
 
-test('private EC2, one NAT, direct VPC origin, uncached API, retained encrypted storage', () => {
+test('public EC2, HTTPS domain and retained encrypted storage without NAT or CloudFront', () => {
   const t = template();
-  t.resourceCountIs('AWS::EC2::NatGateway', 1);
+  t.resourceCountIs('AWS::EC2::NatGateway', 0);
   t.resourceCountIs('AWS::EC2::Instance', 1);
-  t.resourceCountIs('AWS::CloudFront::VpcOrigin', 1);
+  t.resourceCountIs('AWS::CloudFront::VpcOrigin', 0)
+  t.resourceCountIs('AWS::CloudFront::Distribution', 0);
+  t.resourceCountIs('AWS::EC2::EIP', 1);
+  t.resourceCountIs('AWS::EC2::EIPAssociation', 1);
+  t.resourceCountIs('AWS::Route53::HostedZone', 0);
+  t.hasResourceProperties('AWS::Route53::RecordSet', { HostedZoneId: 'ZTEST123', Name: 'api.example.com.', Type: 'A' });
   t.resourceCountIs('AWS::ElasticLoadBalancingV2::LoadBalancer', 0);
   t.resourceCountIs('AWS::IAM::AccessKey', 0);
   t.resourceCountIs('AWS::IAM::User', 0);
@@ -30,26 +34,20 @@ test('private EC2, one NAT, direct VPC origin, uncached API, retained encrypted 
     LaunchTemplateData: Match.objectLike({ MetadataOptions: Match.objectLike({ HttpTokens: 'required' }) }),
   });
   t.hasResourceProperties('AWS::SecretsManager::Secret', {
-    Name: 'camera-path-d9f856354df8/openai', GenerateSecretString: Match.absent(), SecretString: Match.absent(),
+    Name: 'camera-path-test-deployment/openai', GenerateSecretString: Match.absent(), SecretString: Match.absent(),
   });
   t.hasResource('AWS::EC2::Volume', { DeletionPolicy: 'Retain', UpdateReplacePolicy: 'Retain',
     Properties: Match.objectLike({ Encrypted: true }) });
-  t.hasResourceProperties('AWS::CloudFront::Distribution', {
-    DistributionConfig: Match.objectLike({ DefaultCacheBehavior: Match.objectLike({
-      ViewerProtocolPolicy: 'https-only',
-      AllowedMethods: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE'],
-      CachePolicyId: '4135ea2d-6df8-44a3-9df3-4b5a84be39ad',
-    }) }),
-  });
   const json = t.toJSON();
   const instance = Object.values<any>(json.Resources).find(r => r.Type === 'AWS::EC2::Instance');
-  assert.ok(instance.Properties.SubnetId.Ref.includes('backend'));
-  assert.equal(instance.Properties.NetworkInterfaces, undefined);
+  assert.equal(instance.Properties.NetworkInterfaces[0].AssociatePublicIpAddress, true);
+  assert.ok(instance.Properties.NetworkInterfaces[0].SubnetId.Ref.includes('public'));
   const groups = Object.values<any>(json.Resources).filter(r => r.Type === 'AWS::EC2::SecurityGroup');
-  for (const group of groups) for (const ingress of group.Properties.SecurityGroupIngress ?? []) {
-    assert.equal(ingress.CidrIp, undefined);
-    assert.equal(ingress.FromPort, 80);
-    assert.ok(ingress.SourcePrefixListId);
+  const ingress = groups.flatMap(group => group.Properties.SecurityGroupIngress ?? []);
+  assert.deepEqual(ingress.map(rule => rule.FromPort).sort((a, b) => a - b), [80, 443]);
+  for (const rule of ingress) {
+    assert.equal(rule.CidrIp, '0.0.0.0/0');
+    assert.equal(rule.ToPort, rule.FromPort);
   }
   const buckets = Object.values<any>(json.Resources).filter(r => r.Type === 'AWS::S3::Bucket');
   assert.equal(buckets.length, 2);
@@ -72,4 +70,24 @@ test('optional local identity has no generated credentials', () => {
   const t = template('a'.repeat(40), true);
   t.resourceCountIs('AWS::IAM::User', 1);
   t.resourceCountIs('AWS::IAM::AccessKey', 0);
+});
+
+
+test('EC2 permissions are restricted to library prefix, backup uploads, secrets and SSM channels', () => {
+  const json = template().toJSON();
+  const roleId = Object.keys(json.Resources).find(id => id.startsWith('BackendRole') && json.Resources[id].Type === 'AWS::IAM::Role')!;
+  assert.equal(json.Resources[roleId].Properties.ManagedPolicyArns, undefined);
+  const policies = Object.values<any>(json.Resources).filter(r => r.Type === 'AWS::IAM::Policy' &&
+    r.Properties.Roles?.some((ref: any) => ref.Ref === roleId));
+  const statements = policies.flatMap(p => p.Properties.PolicyDocument.Statement);
+  const backups = statements.find(s => JSON.stringify(s.Resource).includes('database/*'));
+  assert.deepEqual(backups.Action, ['s3:PutObject', 's3:AbortMultipartUpload']);
+  const wildcardStatements = statements.filter(s => s.Resource === '*');
+  assert.equal(wildcardStatements.length, 1);
+  assert.deepEqual(wildcardStatements[0].Action, [
+    'ssm:UpdateInstanceInformation', 'ssmmessages:CreateControlChannel', 'ssmmessages:CreateDataChannel',
+    'ssmmessages:OpenControlChannel', 'ssmmessages:OpenDataChannel',
+  ]);
+  assert.ok(!JSON.stringify(statements).includes('route53:'));
+  assert.ok(!JSON.stringify(statements).includes('ssm:GetParameter'));
 });

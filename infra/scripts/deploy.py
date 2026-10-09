@@ -103,6 +103,19 @@ def wait_healthy():
     raise RuntimeError("Backend health check failed")
 
 
+def wait_https_healthy(config):
+    domain = config.get("api_domain")
+    if not domain:
+        return
+    # Test certificate validity/hostname and Nginx locally, without an EIP hairpin.
+    result = subprocess.run([
+        "curl", "--fail", "--silent", "--show-error", "--max-time", "10",
+        "--resolve", f"{domain}:443:127.0.0.1", f"https://{domain}/health",
+    ], check=True, capture_output=True, text=True, timeout=15)
+    if json.loads(result.stdout).get("status") != "ok":
+        raise RuntimeError("HTTPS API health check failed")
+
+
 def mount_data(config):
     serial = config["volume_id"].replace("-", "")
     device = Path(f"/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_{serial}")
@@ -197,6 +210,7 @@ def deploy(revision, config):
     if (previous and (previous / ".revision").read_text().strip() == revision
             and env_text == old_env):
         wait_healthy()
+        wait_https_healthy(config)
         print("Requested revision is already healthy")
         return
     release = prepare_release(revision)
@@ -224,6 +238,7 @@ def deploy(revision, config):
         switch_release(release)
         service("start")
         wait_healthy()
+        wait_https_healthy(config)
     except Exception as failure:
         # Fail closed: never start the old code against an un-restored database.
         try:

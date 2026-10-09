@@ -6,21 +6,22 @@ the deployer's AWS credentials are prerequisites, not application resources.
 
 ## Architecture
 
-- Two AZs with public and private subnets, **one** public NAT Gateway (not one per AZ).
-- One `t3.small` Ubuntu 24.04 EC2 in the first private subnet, no public IP and no SSH.
-- CloudFront's standard HTTPS hostname, direct **EC2 VPC origin** over private HTTP,
-  no ALB and no custom domain/certificate. Only CloudFront's AWS-managed prefix list
-  can reach Nginx on port 80; Uvicorn binds to `127.0.0.1:8000`.
-- All API methods, query strings and Authorization headers are forwarded; caching is
-  disabled. Nginx disables buffering for SSE. Origin idle timeout is 60 seconds:
-  an idle chat stream with no events for that duration can time out.
+- One AZ, one public subnet and Internet Gateway; **no NAT Gateway, CloudFront or ALB**.
+- One `t3.small` Ubuntu 24.04 EC2 with Elastic IP, IMDSv2 and no SSH ingress.
+- `api.<CP_DOMAIN>` A record in the existing public hosted zone selected by
+  `CP_HOSTED_ZONE_ID`. Domain registration and that registrar-created zone remain
+  outside this application stack; it never purchases a domain or creates a second zone.
+- Nginx terminates HTTPS with a Let's Encrypt certificate. Port 80 serves HTTP-01
+  challenges and redirects other requests to HTTPS; it never proxies plaintext API
+  traffic. Uvicorn binds only to `127.0.0.1:8000`. SSE buffering is disabled; Nginx
+  closes streams idle for 300 seconds.
 - Encrypted 20 GiB root disk and separate encrypted 10 GiB EBS for SQLite.
 - Private library bucket with `library/` IAM scope, direct browser S3 transfers and
-  configurable CORS. An S3 gateway endpoint avoids NAT processing for S3 traffic.
+  configurable CORS. An S3 gateway endpoint routes S3 traffic directly.
 - Separate private backup bucket, Secrets Manager JWT/OpenAI secrets, and SSM access.
 - S3 buckets, data volume and secrets use `RETAIN`; root disk is disposable.
 
-NAT, EC2, EBS, Secrets Manager, CloudFront, S3 and deployment-provider resources have
+EC2, public IPv4, EBS, Secrets Manager, S3 and deployment-provider resources have
 their own AWS charges. An infrastructure update which replaces EC2/EBS is **not** a
 normal code release: inspect `cdk diff` before applying it. A retained volume is not
 automatically rediscovered after deleting and recreating the stack; restoration or
@@ -29,23 +30,28 @@ resource import is required. Keep the deployment ID stable for an environment.
 ## Prepare and deploy
 
 Run from `infra/` with Node.js 24 and AWS CLI credentials authorized to deploy CDK.
-The administrative AWS profile is used only on the developer's machine.
+The administrative AWS identity is used only on the developer's machine. Use your
+configured profile or AWS CLI login session; an IAM username is not automatically
+an AWS CLI profile. Confirm the identity with `aws sts get-caller-identity` first.
+Do not commit environment values or contact information to the repository.
 
 ```bash
 npm ci
-export AWS_PROFILE=cdk-admin
-export CP_DEPLOYMENT_ID=d9f856354df8
+export CP_DEPLOYMENT_ID=<your-deployment-id>
+export CP_DOMAIN=<your-registered-domain>
+export CP_HOSTED_ZONE_ID=<existing-public-zone-id>
+export CP_TLS_EMAIL=<your-certificate-contact-email>
 export CP_AWS_REGION=us-east-1
 export CP_BACKEND_REVISION=$(git rev-parse HEAD)
 export CP_FRONTEND_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-npm run cdk -- bootstrap aws://992382434156/us-east-1
+npm run cdk -- bootstrap aws://<your-account-id>/us-east-1
 npm run cdk -- diff
 npm run cdk -- deploy
 ```
 
 The revision must be a full, **already pushed** GitHub commit SHA. It defaults to
-the local checkout's HEAD. For the first deployment use the merged main commit that
-contains this infrastructure. The server fetches that exact SHA from
+the local checkout's HEAD. For the first deployment use an already pushed branch or merged main commit that
+contains the backend to run. The server fetches that exact SHA from
 `https://github.com/vinneyto/camera_path.git`; it does not blindly pull a moving branch.
 Application source is not shipped as a CDK asset. CDK does package the small Lambda
 infrastructure provider into its bootstrap asset bucket.
@@ -95,7 +101,13 @@ even when the network/EC2 configuration is unchanged. `CP_RELEASE_TOKEN` explici
 triggers a rerun, e.g. after setting a secret. Identical revision/environment checks
 health and returns without running migrations again.
 
-EC2 user data bootstraps packages, Nginx, the application user and systemd. A small
+EC2 user data bootstraps packages, Nginx, Certbot, the application user and systemd.
+After Elastic IP association and the DNS record exist, the release command waits
+for DNS to resolve to this IP, obtains the certificate using HTTP-01, validates
+and reloads the Nginx HTTPS configuration, and enables `certbot.timer`. The renewal
+deploy hook validates/reloads Nginx to load renewed certificates. DNS/certificate
+failure aborts before backend migrations; initial HTTP setup exposes no API.
+The EC2 role has **no Route 53 permissions**; CDK's deployer creates the A record. A small
 asynchronous custom-resource provider waits for SSM, submits Run Command and waits
 for its terminal status. It does **not** report deployment success when a command
 has merely been submitted. Deleting this custom resource does not delete app data.
@@ -111,7 +123,8 @@ The root-owned release script:
    the backup API (including committed WAL contents), checks its integrity, and
    uploads it into the backup bucket. Backup failure aborts before migration.
 4. Runs Alembic with the new release's environment and dependencies.
-5. Atomically switches `current`, starts systemd and waits for `/health`.
+5. Atomically switches `current`, starts systemd and verifies both internal `/health`
+   and HTTPS `/health`, including certificate hostname/trust through local Nginx.
 6. On migration/startup/health failure: stops the new writer, removes stale WAL/SHM,
    restores the snapshot and old environment, switches back to the previous code
    **and its venv**, starts and verifies it, then exits nonzero. The SSM failure makes
@@ -136,6 +149,23 @@ An intentionally requested old commit or rollback after a successful release nee
 a schema-compatible version or an explicit database restore plan. Never assume
 `alembic upgrade head` reverses a newer migration. Keep external writers disabled
 while backing up/restoring; the initial deployment uses one Uvicorn process.
+
+## Instance AWS permissions
+
+The instance has a custom inline policy rather than `AmazonSSMManagedInstanceCore`:
+
+- Library: get/put/delete objects only under `library/`, list only that prefix.
+- Backups: upload/abort multipart only under `database/`; no read, list or delete.
+- Secrets: read/describe only this stack's JWT and OpenAI secret ARNs.
+- SSM: `UpdateInstanceInformation` and four `ssmmessages` channel operations for
+  modern SSM Agent Run Command and Session Manager. These use resource `*` as in
+  AWS's minimal channel policy; no Parameter Store reads, inventory/patch actions,
+  `SendCommand`, IAM, EC2 administration or DNS administration are granted.
+
+The release-provider Lambda has its **own** role; its `SendCommand` grant targets
+only this instance and the AWS RunShellScript document. It is not the EC2 role.
+Account-level Session Manager settings requiring KMS/session logging need additional
+scoped permissions; those integrations are not enabled by this stack.
 
 ## Local backend access to the CDK-created bucket
 
@@ -170,5 +200,24 @@ bash -n scripts/bootstrap.sh
 
 Tests synthesize the stack without creating AWS resources and exercise actual
 SQLite restoration after migration and health failures, failed backup upload,
-failed recovery, WAL backup and successful activation. The GitHub Actions check
+failed recovery, WAL backup and successful activation. They also verify DNS timeout,
+Nginx configuration restoration, renewal hook installation and restricted IAM. The GitHub Actions check
 does not deploy. First real AWS deployment and browser/SSE acceptance are manual.
+
+After a successful deploy, check externally:
+
+```bash
+curl --fail --silent --show-error https://api.<your-domain>/health
+```
+
+Inside Session Manager, verify renewal and services:
+
+```bash
+sudo certbot renew --dry-run
+sudo systemctl status certbot.timer nginx camera-path-backend --no-pager
+```
+
+Renewal verification is a real-network check, not part of the local unit tests.
+Port 80 must remain reachable for HTTP-01 renewal. Keep the registrar's name servers
+pointing to this hosted zone. Changing the domain changes the endpoint; old DNS
+records/certificates are not a frontend migration strategy.

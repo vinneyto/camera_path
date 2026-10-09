@@ -42,6 +42,7 @@ export function createRelease(scope: Construct, props: ReleaseProps): CustomReso
     properties: {
       InstanceId: instance.instanceId, Revision: props.revision,
       Config: config, ReleaseToken: props.releaseToken ?? '',
+      TlsScript: readFileSync(resolve(__dirname, '../scripts/configure_https.py')).toString('base64'),
       Script: readFileSync(resolve(__dirname, '../scripts/deploy.py')).toString('base64'),
     },
   });

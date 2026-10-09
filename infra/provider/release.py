@@ -22,6 +22,7 @@ def is_complete(event, context):
         raise ValueError("Invalid commit SHA")
     # Validate the payload before constructing a shell command.
     base64.b64decode(props["Script"], validate=True)
+    base64.b64decode(props["TlsScript"], validate=True)
     ssm = boto3.client("ssm")
     instance = props["InstanceId"]
     comment = "camera-path-" + event["RequestId"]
@@ -39,6 +40,8 @@ def is_complete(event, context):
             "timeout 1200 sh -c 'until test -f /etc/camera-path/bootstrap-ready; do sleep 5; done'\n"
             f"printf %s {shlex.quote(base64.b64encode(json.dumps(props['Config']).encode()).decode())}"
             " | base64 -d > /etc/camera-path/deployment.json\n"
+            f"printf %s {shlex.quote(props['TlsScript'])} | base64 -d > /etc/camera-path/configure-https.py\n"
+            "/opt/camera-path-tools/bin/python /etc/camera-path/configure-https.py\n"
             f"printf %s {shlex.quote(props['Script'])} | base64 -d > /etc/camera-path/release-"
             f"{hashlib.sha256(event['RequestId'].encode()).hexdigest()}.py\n"
             "/opt/camera-path-tools/bin/python /etc/camera-path/release-"
