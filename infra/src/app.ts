@@ -1,17 +1,11 @@
 import { App } from 'aws-cdk-lib';
-import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { getDeploymentId } from './getDeploymentId';
+import { getRevision } from './getRevision';
 import { BackendStack } from './stack';
 
 const app = new App();
-const deploymentId = process.env.CP_DEPLOYMENT_ID;
-if (!deploymentId || !/^[a-z0-9][a-z0-9-]{2,31}$/.test(deploymentId)) {
-  throw new Error('CP_DEPLOYMENT_ID must contain 3–32 lowercase letters, digits or hyphens');
-}
-const revision = process.env.CP_BACKEND_REVISION ?? execFileSync(
-  'git', ['rev-parse', 'HEAD'], { cwd: resolve(__dirname, '../..'), encoding: 'utf8' },
-).trim();
-if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error('CP_BACKEND_REVISION must be a full commit SHA');
+const deploymentId = getDeploymentId();
+const revision = getRevision();
 new BackendStack(app, `camera-path-${deploymentId}`, {
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CP_AWS_REGION ?? 'us-east-1' },
   deploymentId, revision,
