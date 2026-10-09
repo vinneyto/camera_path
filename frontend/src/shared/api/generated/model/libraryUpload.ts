@@ -5,6 +5,7 @@
  * Create camera-path projects, author scene and trajectory data, edit playback timelines, and run the trajectory agent. Canonical operations use project revision ETags for optimistic concurrency.
  * OpenAPI spec version: 1.0.0
  */
+import type { LibraryUploadFormat } from './libraryUploadFormat';
 import type { LibraryUploadStatus } from './libraryUploadStatus';
 
 export interface LibraryUpload {
@@ -22,7 +23,7 @@ export interface LibraryUpload {
   /** @exclusiveMinimum 0 */
   default_scale: number;
   download_url?: string | null;
-  format: 'ply';
+  format: LibraryUploadFormat;
   id: string;
   name: string;
   size_bytes: number;

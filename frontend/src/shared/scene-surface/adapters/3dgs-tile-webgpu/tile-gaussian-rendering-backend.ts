@@ -2,7 +2,7 @@ import {
   type GaussianCloud,
   type GaussianPass,
   GaussianStore,
-  WorkerStreamingGaussianBackend,
+  WorkerWasmGaussianBackend,
   gaussianPass,
   rasterScreenUV,
 } from "3dgs-tile-webgpu";
@@ -38,9 +38,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     new URLSearchParams(window.location.search).has("gaussianBackendDebug");
   private readonly store = this.debugEnabled
     ? new GaussianStore(
-        new LoggingGaussianBackend(
-          new WorkerStreamingGaussianBackend({ maxGaussians: "auto" }),
-        ),
+        new LoggingGaussianBackend(new WorkerWasmGaussianBackend({})),
       )
     : new GaussianStore();
   private unregisterPass: (() => void) | null = null;
@@ -68,12 +66,13 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (source.kind === "url") {
       cloud = await this.store.load(source.url, {
         name: options.name,
-        raycastable: true,
+        mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
       });
     } else {
       cloud = await this.store.loadBuffer(source.buffer, {
         name: options.name ?? source.name,
-        raycastable: true,
+        fileName: source.name,
+        mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
       });
     }
 

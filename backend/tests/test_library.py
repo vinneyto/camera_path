@@ -1,29 +1,36 @@
 from pathlib import Path
 
+import pytest
 from conftest import create_editor_app as create_app
 from httpx import ASGITransport, AsyncClient
 
 from camera_path.config import Settings
 
 
-async def test_library_upload_is_independent_of_projects_and_persists(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "file_format,contents",
+    [("ply", b"ply\nformat ascii 1.0\nend_header\n"), ("sog", b"PK\x03\x04test")],
+)
+async def test_library_upload_is_independent_of_projects_and_persists(
+    tmp_path: Path, file_format: str, contents: bytes
+) -> None:
     database_url = f"sqlite+aiosqlite:///{tmp_path / 'test.sqlite3'}"
     settings = Settings(
         _env_file=None, database_url=database_url, library_directory=tmp_path / "files"
     )
     app = create_app(settings)
     await app.state.project_repository.initialize()
-    contents = b"ply\nformat ascii 1.0\nend_header\n"
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             assert (await client.get("/api/v1/library")).json() == []
             created = await client.post(
                 "/api/v1/library/uploads",
-                json={"name": "Test cloud", "format": "ply", "size_bytes": len(contents)},
+                json={"name": "Test cloud", "format": file_format, "size_bytes": len(contents)},
             )
             assert created.status_code == 201
             asset = created.json()
             assert asset["status"] == "pending"
+            assert asset["format"] == file_format
             assert (await client.get("/api/v1/library")).json() == []
             assert (await client.get(f"/api/v1/library/{asset['id']}")).status_code == 404
             assert (await client.post(f"/api/v1/library/{asset['id']}/complete")).status_code == 422
@@ -32,6 +39,7 @@ async def test_library_upload_is_independent_of_projects_and_persists(tmp_path: 
             ready = await client.post(f"/api/v1/library/{asset['id']}/complete")
             assert ready.status_code == 200
             assert ready.json()["status"] == "ready"
+            assert ready.json()["format"] == file_format
             details = await client.get(f"/api/v1/library/{asset['id']}")
             assert details.status_code == 200
             assert details.json()["default_rotation_deg"] == [0, 0, 0]

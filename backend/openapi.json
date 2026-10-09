@@ -1390,7 +1390,10 @@
             "title": "Download Url"
           },
           "format": {
-            "const": "ply",
+            "enum": [
+              "ply",
+              "sog"
+            ],
             "title": "Format",
             "type": "string"
           },
@@ -1560,7 +1563,10 @@
             "title": "Download Url"
           },
           "format": {
-            "const": "ply",
+            "enum": [
+              "ply",
+              "sog"
+            ],
             "title": "Format",
             "type": "string"
           },
@@ -1607,8 +1613,11 @@
       "LibraryUploadCreate": {
         "properties": {
           "format": {
-            "const": "ply",
             "default": "ply",
+            "enum": [
+              "ply",
+              "sog"
+            ],
             "title": "Format",
             "type": "string"
           },
