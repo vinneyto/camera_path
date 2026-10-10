@@ -100,11 +100,13 @@ async def test_foreign_keys_are_rejected(storage, key):
         await adapter.upload_url("asset", key, None)
 
 
-async def test_valid_upload_promotes_only_the_inspected_object(storage):
+@pytest.mark.parametrize("key,header", [(KEY, b"ply\n"), ("asset.sog", b"PK\x03\x04")])
+async def test_valid_upload_promotes_only_the_inspected_object(storage, key, header):
     adapter, stub = storage
-    inspect_response(stub)
-    promoted(stub)
-    assert await adapter.finalize_upload(KEY, 4)
+    pending, ready = f"library/_uploads/{key}", f"library/{key}"
+    inspect_response(stub, key=pending, header=header)
+    promoted(stub, pending, ready)
+    assert await adapter.finalize_upload(key, 4)
 
 
 @pytest.mark.parametrize("size,header", [(5, b"ply\n"), (4, b"nope"), (0, b"")])
@@ -406,3 +408,10 @@ def test_dotenv_credentials_and_s3_selection(tmp_path: Path, monkeypatch):
 def test_invalid_s3_configuration_fails_fast(kwargs):
     with pytest.raises(ValueError):
         Settings(_env_file=None, **kwargs)
+
+
+@pytest.mark.parametrize("key,header", [("asset.sog", b"ply\n"), (KEY, b"PK\x03\x04")])
+async def test_mismatched_format_signature_is_not_promoted(storage, key, header):
+    adapter, stub = storage
+    inspect_response(stub, key=f"library/_uploads/{key}", header=header)
+    assert not await adapter.finalize_upload(key, 4)

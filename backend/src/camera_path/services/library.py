@@ -13,13 +13,13 @@ from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.project_cloud import ProjectCloudRepository
 from camera_path.services.library_storage import LibraryStorage
 
-MAX_PLY_BYTES = 2 * 1024 * 1024 * 1024
+MAX_LIBRARY_FILE_BYTES = 2 * 1024 * 1024 * 1024
 
 
 class LibraryAsset(BaseModel):
     id: str
     name: str
-    format: Literal["ply"]
+    format: Literal["ply", "sog"]
     size_bytes: int
     status: Literal["pending", "ready"]
     created_at: datetime
@@ -38,8 +38,8 @@ class LibraryAssetDefaultsUpdate(BaseModel):
 
 class LibraryUploadCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
-    size_bytes: int = Field(gt=0, le=MAX_PLY_BYTES)
-    format: Literal["ply"] = "ply"
+    size_bytes: int = Field(gt=0, le=MAX_LIBRARY_FILE_BYTES)
+    format: Literal["ply", "sog"] = "ply"
 
 
 class LibraryAssetsDelete(BaseModel):
@@ -61,7 +61,7 @@ class LibraryService:
         return LibraryAsset(
             id=record.id,
             name=record.name,
-            format="ply",
+            format=record.format,
             size_bytes=record.size_bytes,
             status=record.status.value,
             created_at=record.created_at,
@@ -138,7 +138,7 @@ class LibraryService:
 
     async def create(self, data: LibraryUploadCreate, request: Request) -> LibraryUpload:
         asset_id = str(uuid4())
-        key = f"{asset_id}.ply"
+        key = f"{asset_id}.{data.format}"
         record = LibraryAssetRecord(
             id=asset_id,
             name=data.name.strip(),
@@ -164,7 +164,10 @@ class LibraryService:
                 raise HTTPException(404, "Library file not found")
             if record.status == LibraryAssetStatus.PENDING:
                 if not await self.storage.finalize_upload(record.object_key, record.size_bytes):
-                    raise HTTPException(422, "Uploaded PLY is missing, incomplete or invalid")
+                    raise HTTPException(
+                        422,
+                        "Uploaded file is missing, incomplete or has an invalid format signature",
+                    )
                 record.status = LibraryAssetStatus.READY
                 await session.flush()
         return self._model(

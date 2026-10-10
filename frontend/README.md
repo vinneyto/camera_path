@@ -88,6 +88,43 @@ Click the Gaussian cloud to create a labeled path anchor. Insert the resulting a
 chat, ask the agent to build a spline or spiral, then click the rendered trajectory to open its
 speed and camera-aim panels. Playback uses the compiled speed profile and camera direction track.
 
+### Gaussian backend and file formats
+
+The pinned `3dgs-tile-webgpu` revision (`2d628df`, upstream PR #46) uses a Rust/WASM
+backend inside a Web Worker. Adding a cloud retains the current scene's displayed
+LOD while preparing the new cloud's target cut, then activates it atomically.
+Removing a cloud hides only its own active slots and retains the surviving clouds'
+detail while preparing any refined replacement cut.
+The first view-dependent selection uses the actual drawing-buffer dimensions.
+Its npm package includes the compiled WASM and inline worker, so `npm ci` and Vercel builds
+do not need Rust or a separate WASM asset deployment. The diagnostic mode
+`?gaussianBackendDebug` wraps the same worker backend. GPU capacity is negotiated by
+the Gaussian pass from renderer capabilities.
+
+The library accepts PLY and self-contained `.sog` ZIP containers (SOG v1/v2). Both local
+and S3 storage check the declared size and the format signature; full format decoding
+is performed by the renderer. Loose `meta.json` plus separate SOG textures are unsupported.
+Each loaded cloud requests a standard mipmap tree with a picking snapshot of up to
+25,000 frontier Gaussians. Picking is approximate at that resolution and independent
+of the current GPU draw cut. Buffer loads pass the source filename as a format hint.
+URL loads pass the library asset's format explicitly through preview and project-cloud
+responses, so local `/content` endpoints and signed URLs do not need a file extension.
+
+### Dependency audit
+
+After the Rust/SOG integration, `npm audit --omit=dev` reports zero frontend production
+vulnerabilities. `npm audit` still reports five high findings along the single development
+chain `eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch -> braces`.
+The root issue is [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm);
+`braces` has no patched release. The suggested forced downgrade to Next.js 14 ESLint
+configuration is not applied. These packages are used for linting rather than shipped
+in the browser or the Next.js production server.
+
+Next.js/ESLint config are updated to 16.4.0, Orval to 8.41.0 and Vitest to 4.1.11.
+The lockfile also resolves patched `sharp`, `source-map-js` and `undici`. The infra audit
+is clean after updating `aws-cdk-lib` to 2.273.0, which fixes its bundled `brace-expansion`.
+Recheck using `npm audit` in both `frontend` and `infra` when updating dependencies.
+
 ### Cloud placement
 
 All library clouds enter placement mode, including the first cloud in an empty scene.
@@ -97,7 +134,7 @@ the grid underneath splats. Anchor pointer events use the same pass ordering.
 When the ray misses, the preview stays at the origin; clicking confirms that default position.
 Escape cancels placement. The preview is excluded from placement raycasts.
 
-Preview and saved cloud share one keyed React/R3F owner so handing off the loaded PLY
+Preview and saved cloud share one keyed React/R3F owner so handing off the loaded cloud
 retains pointer events and raycasting without loading the model twice.
 
 ### Agent message formatting

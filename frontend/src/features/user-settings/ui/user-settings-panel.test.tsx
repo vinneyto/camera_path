@@ -346,14 +346,18 @@ it.each([
     mount();
     await waitFor(() => expect(guestReads).toBe(1));
     expect(screen.queryByRole("textbox", { name: "Project name" })).toBeNull();
-    expect(screen.queryByLabelText("Add a PLY file to the library")).toBeNull();
+    expect(
+      screen.queryByLabelText("Add a PLY or SOG file to the library"),
+    ).toBeNull();
     expect(screen.queryByRole("button", { name: "Send message" })).toBeNull();
     expect(screen.getByText("Trajectory agent")).toBeTruthy();
     fireEvent.keyDown(window, { key, ...modifier });
     expect(screen.getByTestId("tool").textContent).toBe("none");
     fireEvent.click(screen.getByRole("button", { name: "Login" }));
     await screen.findByRole("textbox", { name: "Project name" });
-    expect(screen.getByLabelText("Add a PLY file to the library")).toBeTruthy();
+    expect(
+      screen.getByLabelText("Add a PLY or SOG file to the library"),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Send message" })).toBeTruthy();
     fireEvent.keyDown(window, { key, ...modifier });
     expect(screen.getByTestId("tool").textContent).toBe("anchor");

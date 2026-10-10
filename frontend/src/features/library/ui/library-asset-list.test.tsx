@@ -59,7 +59,10 @@ beforeEach(() => {
   holdDelete = false;
   finishDelete = undefined;
   requests.length = 0;
-  vi.spyOn(window, "confirm").mockReturnValue(false);
+  vi.stubGlobal(
+    "confirm",
+    vi.fn(() => false),
+  );
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, options: RequestInit) => {

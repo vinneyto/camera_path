@@ -13,7 +13,11 @@ from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import Request
 
 from camera_path.config import Settings
-from camera_path.services.library_storage import LibraryStorage, LibraryStorageError
+from camera_path.services.library_storage import (
+    LibraryStorage,
+    LibraryStorageError,
+    has_library_file_header,
+)
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -134,9 +138,9 @@ class S3LibraryStorage(LibraryStorage):
                 return (
                     inspected is not None
                     and inspected[0] == expected_size
-                    and inspected[1] in {b"ply\n", b"ply\r"}
+                    and has_library_file_header(key, inspected[1])
                 )
-            if inspected[0] != expected_size or inspected[1] not in {b"ply\n", b"ply\r"}:
+            if inspected[0] != expected_size or not has_library_file_header(key, inspected[1]):
                 return False
             self.client.copy_object(
                 Bucket=self.bucket,

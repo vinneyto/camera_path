@@ -10,9 +10,13 @@ export function useUploadLibraryFile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (file: File) => {
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      if (extension !== "ply" && extension !== "sog") {
+        throw new Error("Select a PLY or SOG file");
+      }
       const created = await createLibraryUpload({
         name: file.name,
-        format: "ply",
+        format: extension,
         size_bytes: file.size,
       });
       if (created.status !== 201)

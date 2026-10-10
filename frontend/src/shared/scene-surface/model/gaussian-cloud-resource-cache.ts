@@ -89,7 +89,7 @@ export class GaussianCloudResourceCache {
   ): boolean {
     if (left.kind !== right.kind) return false;
     if (left.kind === "url" && right.kind === "url")
-      return left.url === right.url;
+      return left.url === right.url && left.format === right.format;
     if (left.kind === "buffer" && right.kind === "buffer") {
       return left.buffer === right.buffer && left.name === right.name;
     }

@@ -25,11 +25,11 @@ export function LibraryUploadForm() {
   return (
     <form className="space-y-2 rounded-lg border p-4" onSubmit={submit}>
       <label className="block text-xs font-medium" htmlFor="library-file">
-        Add a PLY file to the library
+        Add a PLY or SOG file to the library
       </label>
       <div className="flex flex-wrap items-center gap-3">
         <Input
-          accept=".ply"
+          accept=".ply,.sog"
           className="min-w-0 flex-1"
           id="library-file"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}

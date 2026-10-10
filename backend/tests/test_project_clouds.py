@@ -1,12 +1,19 @@
 from pathlib import Path
 
+import pytest
 from conftest import create_editor_app as create_app
 from httpx import ASGITransport, AsyncClient
 
 from camera_path.config import Settings
 
 
-async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "file_format,data",
+    [("ply", b"ply\nformat ascii 1.0\nend_header\n"), ("sog", b"PK\x03\x04test")],
+)
+async def test_project_clouds_are_independent_and_persist(
+    tmp_path: Path, file_format: str, data: bytes
+) -> None:
     settings = Settings(
         _env_file=None,
         database_url=f"sqlite+aiosqlite:///{tmp_path / 'db.sqlite3'}",
@@ -22,10 +29,10 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
             url = f"/api/v1/projects/{project_id}/clouds"
             assert (await client.get(url)).json() == []
             assert (await client.post(url, json={"library_asset_id": "missing"})).status_code == 428
-            data = b"ply\nformat ascii 1.0\nend_header\n"
             upload = (
                 await client.post(
-                    "/api/v1/library/uploads", json={"name": "Cloud", "size_bytes": len(data)}
+                    "/api/v1/library/uploads",
+                    json={"name": "Cloud", "format": file_format, "size_bytes": len(data)},
                 )
             ).json()
             assert (
@@ -58,6 +65,7 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
                 url, json={"library_asset_id": upload["id"]}, headers={"If-Match": '"0"'}
             )
             assert first.status_code == 201
+            assert first.json()["format"] == file_format
             assert first.json()["rotation_deg"] == defaults["default_rotation_deg"]
             assert first.json()["scale"] == defaults["default_scale"]
             assert first.json()["translation"] == [0, 0, 0]
@@ -105,6 +113,7 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
             assert changed.json()["visible"] is False
             listed = await client.get(url)
             assert listed.headers["etag"] == '"3"'
+            assert all(item["format"] == file_format for item in listed.json())
             assert [item["id"] for item in listed.json()] == [
                 second.json()["id"],
                 first.json()["id"],
@@ -128,6 +137,7 @@ async def test_project_clouds_are_independent_and_persist(tmp_path: Path) -> Non
             transport=ASGITransport(app=reopened), base_url="http://test"
         ) as client:
             assert len((await client.get(url)).json()) == 2
+            assert all(item["format"] == file_format for item in (await client.get(url)).json())
             assert (await client.get("/api/v1/library")).json()[0]["default_scale"] == 2
             assert (await client.get(url)).json()[1]["scale"] == 1.5
             assert (await client.get(url)).json()[0]["translation"] == [2, 0.3, -4]

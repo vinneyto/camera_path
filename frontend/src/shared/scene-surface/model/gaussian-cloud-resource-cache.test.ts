@@ -66,6 +66,25 @@ describe("GaussianCloudResourceCache", () => {
     expect(instance.dispose).toHaveBeenCalledOnce();
   });
 
+  it("does not reuse an opaque URL with a different format hint", () => {
+    const backend = createBackend(createInstance());
+    const cache = new GaussianCloudResourceCache(backend);
+    const first = cache.acquire({
+      kind: "url",
+      url: "/content",
+      format: "ply",
+    });
+    const second = cache.acquire({
+      kind: "url",
+      url: "/content",
+      format: "sog",
+    });
+    expect(first.promise).not.toBe(second.promise);
+    expect(backend.createCloud).toHaveBeenCalledTimes(2);
+    first.release();
+    second.release();
+  });
+
   it("keeps separate instances for two clouds using the same asset", () => {
     const backend = createBackend(createInstance());
     const cache = new GaussianCloudResourceCache(backend);

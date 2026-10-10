@@ -59,6 +59,7 @@ describe("LoggingGaussianBackend", () => {
           cloudId: "cloud-1",
           objectId: 0,
           sourceCount: 1,
+          sourceVersion: 1,
           shDegree: 0,
           bounds: [0, 0, 0, 0, 0, 0],
         },
