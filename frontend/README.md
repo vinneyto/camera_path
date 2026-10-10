@@ -90,9 +90,11 @@ speed and camera-aim panels. Playback uses the compiled speed profile and camera
 
 ### Gaussian backend and file formats
 
-The pinned `3dgs-tile-webgpu` revision (`a51b4f3`, upstream PR #45) uses a Rust/WASM
+The pinned `3dgs-tile-webgpu` revision (`2d628df`, upstream PR #46) uses a Rust/WASM
 backend inside a Web Worker. Adding a cloud retains the current scene's displayed
 LOD while preparing the new cloud's target cut, then activates it atomically.
+Removing a cloud hides only its own active slots and retains the surviving clouds'
+detail while preparing any refined replacement cut.
 The first view-dependent selection uses the actual drawing-buffer dimensions.
 Its npm package includes the compiled WASM and inline worker, so `npm ci` and Vercel builds
 do not need Rust or a separate WASM asset deployment. The diagnostic mode
