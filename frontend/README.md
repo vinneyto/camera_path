@@ -40,7 +40,10 @@ size, the download arc rotates instead of displaying a made-up percentage.
 Initial framing includes pending model positions and expands as real bounds arrive, until the
 user starts orbiting/panning/zooming. Failed models do not block others; their errors remain in the
 viewport. Removing a pending model or leaving the project aborts its download.
-The Settings button opens renderer, grid, Gaussian DPR controls.
+The Settings button opens renderer, grid, Gaussian DPR controls. Changing the renderer
+saves the preference and reloads the current page; editor saves must succeed first.
+The current renderer remains mounted during saving and after errors. Grid and DPR
+changes continue to apply without reloading.
 A separate Profile button opens the sign-in dialog for guests or the logout menu for editors.
 The theme toggle stays beside Settings and Profile. Unchecking the WebGPU
 option selects the Spark/WebGL reference adapter, which has no feature parity guarantee.
