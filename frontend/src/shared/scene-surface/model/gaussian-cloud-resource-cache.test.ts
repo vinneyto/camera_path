@@ -141,3 +141,41 @@ describe("GaussianCloudResourceCache", () => {
     expect(backend.createCloud).toHaveBeenCalledTimes(2);
   });
 });
+
+it("shares progress, replays it on preview handoff, and aborts only after the final owner releases", async () => {
+  const backend = createBackend(createInstance());
+  let report!: NonNullable<
+    import("./gaussian-rendering-backend").GaussianCloudOptions["onProgress"]
+  >;
+  let signal!: AbortSignal;
+  vi.mocked(backend.createCloud).mockImplementation((_source, options) => {
+    report = options!.onProgress!;
+    signal = options!.signal!;
+    return new Promise(() => {});
+  });
+  const cache = new GaussianCloudResourceCache(backend);
+  const preview = cache.acquire(source, {}, "same-resource");
+  const previewProgress = vi.fn();
+  const unsubscribe = preview.subscribeProgress(previewProgress);
+  const update = {
+    fraction: 0.45,
+    loadedBytes: 5,
+    totalBytes: 10,
+    phase: "download" as const,
+  };
+  report(update);
+  const saved = cache.acquire(source, {}, "same-resource");
+  const savedProgress = vi.fn();
+  saved.subscribeProgress(savedProgress);
+  expect(savedProgress).toHaveBeenCalledWith(update);
+  unsubscribe();
+  preview.release();
+  await Promise.resolve();
+  expect(signal.aborted).toBe(false);
+  saved.release();
+  await Promise.resolve();
+  expect(signal.aborted).toBe(true);
+  report({ ...update, fraction: 0.9 });
+  expect(savedProgress).toHaveBeenCalledTimes(1);
+  expect(previewProgress).toHaveBeenCalledTimes(1);
+});

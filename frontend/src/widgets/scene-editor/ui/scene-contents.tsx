@@ -1,7 +1,14 @@
 import { EditorOnly, useAuth } from "@/features/auth";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 import type { Anchor, Vec3 } from "@/entities/project";
@@ -132,6 +139,7 @@ export function SceneContents({
   });
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
   const framedInitialScene = useRef(false);
+  const initialFrameInterrupted = useRef(false);
   const cloudBounds = useRef(new Map<string, SceneSurfaceReady["bounds"]>());
   const cloudErrors = useRef(new Set<string>());
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);
@@ -152,22 +160,58 @@ export function SceneContents({
   }, [anchors, renderingBackend]);
 
   function fitClouds(cloudIds: readonly string[]): boolean {
-    const currentIds = new Set(clouds.map((cloud) => cloud.id));
+    const visibleClouds = clouds.filter((cloud) => cloud.visible);
+    const currentIds = new Set(visibleClouds.map((cloud) => cloud.id));
+    const pendingBounds = new Map(
+      visibleClouds.map((cloud) => [
+        cloud.id,
+        {
+          center: cloud.translation,
+          radius: 0.3,
+          min: cloud.translation.map((value) => value - 0.3) as Vec3,
+          max: cloud.translation.map((value) => value + 0.3) as Vec3,
+        },
+      ]),
+    );
     const bounds = resolveInitialSceneBounds(
       cloudIds,
       currentIds,
       cloudBounds.current,
       cloudErrors.current,
+      pendingBounds,
     );
-    if (bounds === undefined || bounds === null) return false;
+    if (bounds === null) return false;
     frameSurface(camera, bounds, setOrbitTarget);
     return true;
   }
 
   function tryFrameInitialScene() {
-    if (framedInitialScene.current || !initialCloudIds?.length) return;
-    if (fitClouds(initialCloudIds)) framedInitialScene.current = true;
+    if (
+      framedInitialScene.current ||
+      initialFrameInterrupted.current ||
+      cameraMode !== "orbit" ||
+      !initialCloudIds?.length
+    )
+      return;
+    fitClouds(initialCloudIds);
+    const visibleIds = new Set(
+      clouds.filter((cloud) => cloud.visible).map((cloud) => cloud.id),
+    );
+    if (
+      initialCloudIds.every(
+        (id) =>
+          !visibleIds.has(id) ||
+          cloudBounds.current.has(id) ||
+          cloudErrors.current.has(id),
+      )
+    )
+      framedInitialScene.current = true;
   }
+
+  const frameKnownPositions = useEffectEvent(() => tryFrameInitialScene());
+  useLayoutEffect(() => {
+    frameKnownPositions();
+  }, [clouds, initialCloudIds, cameraMode]);
 
   function handleSurfaceReady(cloudId: string, surface: SceneSurfaceReady) {
     cloudPlacement.finishPlacement(cloudId);
@@ -328,6 +372,9 @@ export function SceneContents({
           onChange={() => {
             placement.handleControlsChange();
             cloudPlacement.handleControlsChange();
+          }}
+          onStart={() => {
+            initialFrameInterrupted.current = true;
           }}
           onEnd={handleOrbitEnd}
           ref={orbitControlsRef}

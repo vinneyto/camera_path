@@ -49,14 +49,17 @@ describe("useGaussianCloud", () => {
       wrapper: createWrapper(backend),
     });
 
-    expect(result.current).toEqual([null, true, null]);
+    expect(result.current).toEqual([null, true, null, null]);
     await act(async () => {
       await Promise.resolve();
     });
-    expect(result.current).toEqual([instance, false, null]);
+    expect(result.current).toEqual([instance, false, null, null]);
     expect(backend.createCloud).toHaveBeenCalledOnce();
     expect(backend.createCloud).toHaveBeenCalledWith(source, {
       name: undefined,
+      worldMatrix: undefined,
+      signal: expect.any(AbortSignal),
+      onProgress: expect.any(Function),
     });
   });
 
@@ -86,7 +89,7 @@ describe("useGaussianCloud", () => {
       await Promise.resolve();
     });
 
-    expect(result.current).toEqual([instance, false, null]);
+    expect(result.current).toEqual([instance, false, null, null]);
     expect(instance.dispose).not.toHaveBeenCalled();
 
     unmount();
@@ -110,11 +113,11 @@ describe("useGaussianCloud", () => {
       wrapper: createWrapper(backend),
     });
 
-    expect(result.current).toEqual([null, true, null]);
+    expect(result.current).toEqual([null, true, null, null]);
     await act(async () => {
       await Promise.resolve();
     });
 
-    expect(result.current).toEqual([null, false, error]);
+    expect(result.current).toEqual([null, false, error, null]);
   });
 });

@@ -8,6 +8,8 @@ import { useGaussianCloud } from "./use-gaussian-cloud";
 
 export function SceneSurface({
   name,
+  initialWorldMatrix,
+  onProgress,
   onClick,
   onContextMenu,
   onDoubleClick,
@@ -33,8 +35,9 @@ export function SceneSurface({
   source,
   ...objectProps
 }: SceneSurfaceProps) {
-  const [cloud, loading, error] = useGaussianCloud({
+  const [cloud, loading, error, progress] = useGaussianCloud({
     name,
+    initialWorldMatrix,
     resourceKey,
     source,
   });
@@ -47,7 +50,14 @@ export function SceneSurface({
 
   useEffect(() => {
     notifyStatus();
-  }, [cloud, error, loading, name]);
+  }, [cloud, error, loading, name, source, resourceKey]);
+
+  const notifyProgress = useEffectEvent(() => {
+    if (progress) onProgress?.(progress);
+  });
+  useEffect(() => {
+    notifyProgress();
+  }, [progress]);
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     if (cloud === null) return;

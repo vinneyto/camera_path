@@ -1,3 +1,4 @@
+import type { GaussianCloudLoadProgress } from "./gaussian-cloud-load-progress";
 import type {
   GaussianCloudInstance,
   GaussianCloudOptions,
@@ -7,6 +8,11 @@ import type { GaussianCloudSource } from "./scene-surface-types";
 
 interface GaussianCloudResourceEntry {
   disposed: boolean;
+  controller: AbortController;
+  progress: {
+    value: GaussianCloudLoadProgress | null;
+    listeners: Set<(progress: GaussianCloudLoadProgress) => void>;
+  };
   resourceKey: string | undefined;
   name: string | undefined;
   promise: Promise<GaussianCloudInstance>;
@@ -16,6 +22,9 @@ interface GaussianCloudResourceEntry {
 
 export interface GaussianCloudResourceLease {
   readonly promise: Promise<GaussianCloudInstance>;
+  subscribeProgress(
+    listener: (progress: GaussianCloudLoadProgress) => void,
+  ): () => void;
   release(): void;
 }
 
@@ -41,11 +50,25 @@ export class GaussianCloudResourceCache {
     );
 
     if (entry === undefined) {
+      const controller = new AbortController();
+      const progress = {
+        value: null as GaussianCloudLoadProgress | null,
+        listeners: new Set<(progress: GaussianCloudLoadProgress) => void>(),
+      };
       entry = {
         disposed: false,
+        controller,
+        progress,
         resourceKey,
         name,
-        promise: this.backend.createCloud(source, options),
+        promise: this.backend.createCloud(source, {
+          ...options,
+          signal: controller.signal,
+          onProgress: (update) => {
+            progress.value = update;
+            for (const listener of progress.listeners) listener(update);
+          },
+        }),
         source,
         users: 0,
       };
@@ -61,6 +84,11 @@ export class GaussianCloudResourceCache {
 
     return {
       promise: entry.promise,
+      subscribeProgress: (listener) => {
+        entry.progress.listeners.add(listener);
+        if (entry.progress.value) listener(entry.progress.value);
+        return () => entry.progress.listeners.delete(listener);
+      },
       release: () => {
         if (released) return;
         released = true;
@@ -69,6 +97,8 @@ export class GaussianCloudResourceCache {
         queueMicrotask(() => {
           if (entry.users > 0 || entry.disposed) return;
           entry.disposed = true;
+          entry.progress.listeners.clear();
+          entry.controller.abort();
           this.remove(entry);
           void entry.promise
             .then((cloud) => cloud.dispose())
