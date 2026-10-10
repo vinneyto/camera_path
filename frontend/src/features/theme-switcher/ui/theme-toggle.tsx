@@ -11,6 +11,7 @@ export function ThemeToggle() {
 
   return (
     <Button
+      className="size-10 md:size-8"
       aria-label={`Switch to ${nextTheme} theme`}
       onClick={toggleTheme}
       size="icon"

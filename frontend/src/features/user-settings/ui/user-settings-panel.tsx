@@ -4,7 +4,6 @@ import { Settings } from "lucide-react";
 import { useState } from "react";
 
 import { GaussianDprSelect } from "@/features/gaussian-rendering-settings";
-import { ThemeToggle } from "@/features/theme-switcher";
 import { Button, Modal } from "@/shared/ui";
 import { useUserSettings } from "../model/user-settings-provider";
 
@@ -56,10 +55,6 @@ export function UserSettingsPanel() {
           Show grid
         </label>
         <GaussianDprSelect />
-        <div className="flex items-center justify-between border-t pt-2 text-xs">
-          <span>Appearance</span>
-          <ThemeToggle />
-        </div>
       </div>
       {(settings.loading || settings.saving) && (
         <p className="mt-3 text-xs text-muted-foreground" role="status">

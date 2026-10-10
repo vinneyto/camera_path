@@ -29,8 +29,9 @@ keeps the backend compiler as the single source of geometry sampling truth.
 ## Run
 
 The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-Library assets and project cloud instances are loaded from the backend. The Settings button opens renderer, grid, Gaussian DPR and appearance controls.
-A separate Profile button opens the sign-in dialog for guests or the logout menu for editors. Unchecking the WebGPU
+Library assets and project cloud instances are loaded from the backend. The Settings button opens renderer, grid, Gaussian DPR controls.
+A separate Profile button opens the sign-in dialog for guests or the logout menu for editors.
+The theme toggle stays beside Settings and Profile. Unchecking the WebGPU
 option selects the Spark/WebGL reference adapter, which has no feature parity guarantee.
 
 Visitors can browse projects, library details/downloads, scenes and playback. Chat history and the agent composer are available only to signed-in editors.
@@ -51,7 +52,7 @@ publish changed fields to the backend. Failed saves show an error without revert
 Settings and sign-in windows use the shared modal, with a lightly blurred overlay, focus trapping,
 and dismissal by clicking outside, the close button, or Escape.
 
-The workspace uses a compact two-icon header on desktop and mobile. Below 768 px, the cloud
+The workspace uses a compact header with Settings, Profile and theme icons on desktop and mobile. Below 768 px, the cloud
 command field moves to a second header row, and chat becomes a bottom drawer opened from the
 input-style bar below the scene. The drawer traps focus, closes with its cross, outside tap or
 Escape, and fits the visual viewport when the software keyboard opens. Chat drafts and retry IDs
