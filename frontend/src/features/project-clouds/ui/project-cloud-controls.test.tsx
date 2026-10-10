@@ -88,10 +88,7 @@ describe("project cloud controls", () => {
     fireEvent.focus(screen.getByRole("combobox"));
     expect(
       screen.getAllByRole("option").map((option) => option.textContent),
-    ).toEqual(["Cloud: Add", "Cloud: Remove", "Grid: Hide"]);
-    expect(
-      screen.getByRole("option", { name: "Grid: Hide" }).querySelector("svg"),
-    ).not.toBeNull();
+    ).toEqual(["Cloud: Add", "Cloud: Remove"]);
     openAddCloud();
     expect(screen.getByTestId("pending-cloud").textContent).toBe("Mug");
     expect(mutate).not.toHaveBeenCalled();
@@ -105,7 +102,9 @@ describe("project cloud controls", () => {
       </EditorStoreProvider>,
     );
     fireEvent.focus(screen.getByRole("combobox"));
-    fireEvent.click(screen.getByRole("option", { name: "Grid: Hide" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toggle grid in test" }),
+    );
     openAddCloud();
     expect(screen.getByTestId("pending-cloud").textContent).toBe("Mug");
     expect(mutate).not.toHaveBeenCalled();

@@ -1,16 +1,14 @@
 "use client";
 
-import { UserRound } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { Settings } from "lucide-react";
+import { useState } from "react";
 
+import { GaussianDprSelect } from "@/features/gaussian-rendering-settings";
+import { ThemeToggle } from "@/features/theme-switcher";
 import { Button, Modal } from "@/shared/ui";
 import { useUserSettings } from "../model/user-settings-provider";
 
-interface UserSettingsPanelProps {
-  children?: ReactNode;
-}
-
-export function UserSettingsPanel({ children }: UserSettingsPanelProps) {
+export function UserSettingsPanel() {
   const [open, setOpen] = useState(false);
   const settings = useUserSettings();
   const disabled = !settings.ready || settings.saving;
@@ -19,15 +17,16 @@ export function UserSettingsPanel({ children }: UserSettingsPanelProps) {
     <Modal
       open={open}
       onOpenChange={setOpen}
-      title="Profile settings"
+      title="Settings"
       trigger={
         <Button
-          aria-label="Profile settings"
+          aria-label="Settings"
+          className="size-10 md:size-8"
           size="icon"
-          title="Profile settings"
+          title="Settings"
           variant="ghost"
         >
-          <UserRound className="size-3.5" />
+          <Settings className="size-4" />
         </Button>
       }
     >
@@ -42,7 +41,7 @@ export function UserSettingsPanel({ children }: UserSettingsPanelProps) {
             }
             type="checkbox"
           />
-          WebGPU tile renderer (experimental)
+          Use WebGPU renderer (off: WebGL)
         </label>
         <label className="flex items-center gap-2 text-xs">
           <input
@@ -56,6 +55,11 @@ export function UserSettingsPanel({ children }: UserSettingsPanelProps) {
           />
           Show grid
         </label>
+        <GaussianDprSelect />
+        <div className="flex items-center justify-between border-t pt-2 text-xs">
+          <span>Appearance</span>
+          <ThemeToggle />
+        </div>
       </div>
       {(settings.loading || settings.saving) && (
         <p className="mt-3 text-xs text-muted-foreground" role="status">
@@ -74,7 +78,6 @@ export function UserSettingsPanel({ children }: UserSettingsPanelProps) {
           )}
         </div>
       )}
-      {children}
     </Modal>
   );
 }

@@ -1,7 +1,11 @@
 "use client";
 
 import type { Project } from "@/entities/project";
-import { ChatPanel, useSendChatMessage } from "@/features/chat-agent";
+import {
+  useSendChatMessage,
+  ResponsiveChatPanel,
+  useChatComposer,
+} from "@/features/chat-agent";
 import { useTrajectorySelection } from "@/features/project-editor";
 
 interface ChatPanelContainerProps {
@@ -38,12 +42,17 @@ export function ChatPanelContainer({
     }
   }
 
+  const composer = useChatComposer({
+    pending: chatMutation.isPending,
+    onSend: sendMessage,
+  });
+
   return (
-    <ChatPanel
+    <ResponsiveChatPanel
       anchors={anchors}
       error={error}
       messages={project.chat_history}
-      onSend={sendMessage}
+      composer={composer}
       pending={chatMutation.isPending}
     />
   );

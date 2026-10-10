@@ -5,7 +5,7 @@ import {
   useListProjectClouds,
 } from "@/shared/api/generated/client";
 import type { LibraryAsset, ProjectCloud } from "@/shared/api/generated/model";
-import { useCloudPlacement, useSceneGrid } from "@/features/project-editor";
+import { useCloudPlacement } from "@/features/project-editor";
 import {
   CommandPalette,
   type CommandPaletteCommand,
@@ -18,8 +18,6 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
   const placement = useCloudPlacement();
-  const grid = useSceneGrid();
-  const { showGrid, toggleGrid } = grid;
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
     (asset) => asset.status === "ready",
   );
@@ -36,7 +34,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       },
       loading: library.isPending,
       error: library.error ? "Could not load library clouds." : undefined,
-      emptyMessage: "Upload a PLY to the library first.",
+      emptyMessage: "Upload a PLY or SOG to the library first.",
     },
     {
       id: "remove-cloud",
@@ -51,30 +49,11 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
       error: projectClouds.error ? "Could not load project clouds." : undefined,
       emptyMessage: "This project has no clouds yet.",
     },
-    {
-      id: "toggle-grid",
-      label: showGrid ? "Grid: Hide" : "Grid: Show",
-      checked: showGrid,
-      onSelect: toggleGrid,
-    },
   ];
 
   return (
     <div className="space-y-1">
-      <CommandPalette
-        commands={commands}
-        disabled={actions.isPending || !grid.ready || grid.saving}
-      />
-      {grid.saving && (
-        <p className="text-xs text-muted-foreground" role="status">
-          Saving settings…
-        </p>
-      )}
-      {grid.error && (
-        <p className="text-xs text-destructive" role="alert">
-          {grid.error.message}
-        </p>
-      )}
+      <CommandPalette commands={commands} disabled={actions.isPending} />
       {actions.error && (
         <p
           className="rounded border bg-background px-2 py-1 text-xs text-destructive"
