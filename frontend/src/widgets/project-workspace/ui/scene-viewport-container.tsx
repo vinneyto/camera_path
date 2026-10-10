@@ -129,7 +129,7 @@ export function SceneViewportContainer({
       />
       <EditorOnly>
         {cameraMode === "orbit" && (
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur">
+          <div className="pointer-events-none absolute left-3 top-3 hidden items-center gap-1.5 rounded-md border bg-background/85 px-2 py-1 text-[10px] text-muted-foreground shadow-sm backdrop-blur md:flex">
             {mutating ? (
               <LoaderCircle className="size-3 animate-spin" />
             ) : (
