@@ -15,6 +15,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
+  RingGeometry,
   PerspectiveCamera,
   Raycaster,
   Scene,
@@ -49,7 +50,22 @@ vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
         super(new actual.WasmGaussianBackend({}));
       }
     },
-    gaussianPass: () => {
+    gaussianPass: (
+      _renderer: unknown,
+      camera: PerspectiveCamera,
+      store: InstanceType<typeof actual.GaussianStore>,
+    ) => {
+      store.setFrontendCapabilities(
+        {
+          maxStorageBufferBindingSize: 64 * 1024 * 1024,
+          maxBufferSize: 64 * 1024 * 1024,
+          maxStorageBuffersPerShaderStage: 8,
+          supportsPartialBufferUpdates: true,
+        },
+        camera,
+        100,
+        100,
+      );
       let resolutionScale = 1;
       return {
         depthSortMode: "float32",
@@ -97,6 +113,7 @@ it.each([
       Mesh,
       MeshBasicMaterial,
       PlaneGeometry,
+      RingGeometry,
     });
     const downloadUrl = "/api/v1/library/asset/content";
     const fetchCloud = vi.fn(async () => new Response(bytes.slice().buffer));
@@ -381,6 +398,222 @@ it.each([
       await act(async () => {
         root.unmount();
       });
+    }
+  },
+);
+
+it.each([
+  { format: "ply", bytes: ply },
+  { format: "sog", bytes: sog },
+])(
+  "shows a ready $format model while another still downloads, with separate positioned progress rings",
+  async ({ format, bytes }) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.spyOn(WebAssembly, "instantiateStreaming").mockImplementation(
+      async (source, imports) =>
+        WebAssembly.instantiate(await (await source).arrayBuffer(), imports),
+    );
+    extend({ Group, Mesh, MeshBasicMaterial, RingGeometry });
+    let slowController!: ReadableStreamDefaultController<Uint8Array>;
+    const cancelled = vi.fn();
+    let slowSignal: AbortSignal | undefined;
+    const originalFetch = globalThis.fetch;
+    const fetched: string[] = [];
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (!url.includes("/progressive/")) return originalFetch(input, init);
+      fetched.push(url);
+      if (url.includes("missing"))
+        return Promise.resolve(new Response("Missing", { status: 404 }));
+      if (url.includes("slow")) {
+        slowSignal = init?.signal ?? undefined;
+        return Promise.resolve(
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start(controller) {
+                slowController = controller;
+              },
+              cancel: cancelled,
+            }),
+            { headers: { "Content-Length": String(bytes.byteLength) } },
+          ),
+        );
+      }
+      return Promise.resolve(
+        new Response(bytes.slice().buffer, {
+          headers: { "Content-Length": String(bytes.byteLength) },
+        }),
+      );
+    });
+    const camera = new PerspectiveCamera(42, 1, 0.01, 100);
+    camera.position.set(4, 3, 6);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    const backend = new TileGaussianRenderingBackend({
+      camera,
+      renderer: { getPixelRatio: () => 1 },
+      getOpaqueViewDepth: vi.fn(() => ({})),
+      registerLayer: vi.fn(() => vi.fn()),
+    } as unknown as SceneRenderPipeline);
+    vi.spyOn(backend, "createCloud");
+    const canvas = document.createElement("canvas");
+    const scene = new Scene();
+    const root = createRoot(canvas);
+    await root.configure({
+      scene,
+      camera,
+      frameloop: "never",
+      size: { width: 100, height: 100, top: 0, left: 0 },
+      gl: {
+        render: vi.fn(),
+        setSize: vi.fn(),
+        setPixelRatio: vi.fn(),
+        domElement: canvas,
+      } as unknown as WebGLRenderer,
+    });
+    const ready = vi.fn();
+    const error = vi.fn();
+    const base = {
+      format: format as "ply" | "sog",
+      library_asset_id: "asset",
+      project_id: "project",
+      position: 0,
+      visible: true,
+      rotation_deg: [0, 0, 0] as [number, number, number],
+      scale: 1,
+      offset: [0, 0, 0] as [number, number, number],
+    };
+    let clouds: ProjectCloud[] = [
+      {
+        ...base,
+        id: "slow",
+        name: "slow",
+        download_url: "/progressive/slow",
+        translation: [8, 0, 0],
+      },
+      {
+        ...base,
+        id: "fast",
+        name: "fast",
+        download_url: "/progressive/fast",
+        translation: [0, 0, 0],
+      },
+    ];
+    const renderScene = async () => {
+      await act(async () => {
+        root.render(
+          <SceneSurfaceProvider backend={backend}>
+            <SceneClouds
+              clouds={clouds}
+              preview={null}
+              placed={null}
+              resourceKeyForCloud={() => undefined}
+              interactive
+              surfaceEvents={{}}
+              onReady={ready}
+              onError={error}
+              onLoading={vi.fn()}
+            />
+          </SceneSurfaceProvider>,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+    };
+    try {
+      await renderScene();
+      expect(fetched).toEqual(["/progressive/slow", "/progressive/fast"]);
+      await act(async () => {
+        await vi.mocked(backend.createCloud).mock.results[1].value;
+      });
+      expect(ready).toHaveBeenCalledWith("fast", expect.anything());
+      expect(ready).toHaveBeenCalledTimes(1);
+      expect(scene.getObjectByName("fast")).toBeTruthy();
+      expect(scene.getObjectByName("slow")).toBeUndefined();
+      const store = (
+        backend as unknown as {
+          store: import("3dgs-tile-webgpu").GaussianStore;
+        }
+      ).store;
+      expect(store.hasPackedData).toBe(true);
+      expect(
+        store.isRenderReady(scene.getObjectByName("fast") as GaussianCloud),
+      ).toBe(true);
+      const rings = scene.getObjectsByProperty("name", "cloud-loading-ring");
+      expect(rings).toHaveLength(1);
+      expect(rings[0].getWorldPosition(new Vector3()).toArray()).toEqual([
+        8, 0, 0,
+      ]);
+      const halfway = Math.floor(bytes.byteLength / 2);
+      await act(async () => {
+        slowController.enqueue(bytes.slice(0, halfway));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      const arc = scene.getObjectByName("cloud-loading-progress") as Mesh<
+        import("three").RingGeometry
+      >;
+      expect(arc.geometry.parameters.thetaLength).toBeCloseTo(
+        (Math.PI * 2 * 0.9 * halfway) / bytes.byteLength,
+      );
+      expect(ready).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        slowController.enqueue(bytes.slice(halfway));
+        slowController.close();
+        await vi.mocked(backend.createCloud).mock.results[0].value;
+      });
+      expect(ready).toHaveBeenCalledTimes(2);
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(0);
+      scene.updateMatrixWorld(true);
+      expect(
+        scene
+          .getObjectByName("slow")!
+          .getWorldPosition(new Vector3())
+          .toArray(),
+      ).toEqual([8, 0, 0]);
+      // Removing another unfinished instance aborts its download without touching ready models.
+      clouds = [
+        ...clouds,
+        {
+          ...clouds[0],
+          id: "cancel",
+          download_url: "/progressive/slow-cancel",
+          translation: [16, 0, 0],
+        },
+      ];
+      await renderScene();
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(1);
+      clouds = clouds.filter((cloud) => cloud.id !== "cancel");
+      await renderScene();
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(slowSignal?.aborted).toBe(true);
+      expect(cancelled).toHaveBeenCalledOnce();
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(0);
+      expect(scene.getObjectByName("fast")).toBeTruthy();
+      expect(error).not.toHaveBeenCalled();
+      clouds = [
+        ...clouds,
+        { ...clouds[0], id: "missing", download_url: "/progressive/missing" },
+      ];
+      await renderScene();
+      expect(error).toHaveBeenCalledWith(
+        "missing",
+        expect.objectContaining({ message: expect.stringContaining("404") }),
+      );
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(0);
+      expect(scene.getObjectByName("fast")).toBeTruthy();
+      expect(scene.getObjectByName("slow")).toBeTruthy();
+    } finally {
+      await act(async () => root.unmount());
+      backend.dispose();
     }
   },
 );

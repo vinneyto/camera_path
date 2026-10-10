@@ -1,3 +1,4 @@
+export type { GaussianCloudLoadProgress } from "./model/gaussian-cloud-load-progress";
 export {
   type GaussianCloudSource,
   type SceneSurfaceBackground,

@@ -29,7 +29,18 @@ keeps the backend compiler as the single source of geometry sampling truth.
 ## Run
 
 The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-Library assets and project cloud instances are loaded from the backend. The Settings button opens renderer, grid, Gaussian DPR controls.
+Library assets and project cloud instances are loaded from the backend.
+Project model downloads run in parallel. Each model appears independently after its Rust/WASM
+mipmap cut is ready to render. Pending visible instances show a horizontal loading ring at their
+saved translation: a faint full ring and a brighter progress arc. The ring diameter is 0.6 m
+(the same proportions as the anchor platform, at a larger size). Download byte progress occupies
+0–90%; the remaining segment stays pending during parsing, mipmap construction and render
+preparation, then the ring is replaced by the model. If the server does not provide a usable total
+size, the download arc rotates instead of displaying a made-up percentage.
+Initial framing includes pending model positions and expands as real bounds arrive, until the
+user starts orbiting/panning/zooming. Failed models do not block others; their errors remain in the
+viewport. Removing a pending model or leaving the project aborts its download.
+The Settings button opens renderer, grid, Gaussian DPR controls.
 A separate Profile button opens the sign-in dialog for guests or the logout menu for editors.
 The theme toggle stays beside Settings and Profile. Unchecking the WebGPU
 option selects the Spark/WebGL reference adapter, which has no feature parity guarantee.

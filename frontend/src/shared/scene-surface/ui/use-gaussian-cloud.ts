@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import type { GaussianCloudLoadProgress } from "../model/gaussian-cloud-load-progress";
 import type { GaussianCloudInstance } from "../model/gaussian-rendering-backend";
 import type { GaussianCloudSource } from "../model/scene-surface-types";
 import { useGaussianCloudResourceCache } from "./scene-surface-provider";
@@ -15,6 +16,7 @@ interface LoadedGaussianCloud {
 
 interface UseGaussianCloudOptions {
   name?: string;
+  initialWorldMatrix?: readonly number[];
   resourceKey?: string;
   source: GaussianCloudSource;
 }
@@ -23,14 +25,22 @@ type UseGaussianCloudResult = readonly [
   cloud: GaussianCloudInstance | null,
   loading: boolean,
   error: Error | null,
+  progress: GaussianCloudLoadProgress | null,
 ];
 
 export function useGaussianCloud({
   name,
+  initialWorldMatrix,
   resourceKey,
   source,
 }: UseGaussianCloudOptions): UseGaussianCloudResult {
   const cache = useGaussianCloudResourceCache();
+  const [progressState, setProgressState] = useState<{
+    source: GaussianCloudSource;
+    resourceKey: string | undefined;
+    name: string | undefined;
+    value: GaussianCloudLoadProgress;
+  } | null>(null);
   const [loaded, setLoaded] = useState<LoadedGaussianCloud | null>(null);
   const [failed, setFailed] = useState<{
     error: Error;
@@ -51,7 +61,14 @@ export function useGaussianCloud({
 
   useEffect(() => {
     let active = true;
-    const lease = cache.acquire(source, { name }, resourceKey);
+    const lease = cache.acquire(
+      source,
+      { name, worldMatrix: initialWorldMatrix },
+      resourceKey,
+    );
+    const unsubscribeProgress = lease.subscribeProgress((value) => {
+      if (active) setProgressState({ source, resourceKey, name, value });
+    });
     void lease.promise
       .then((result) => {
         if (!active) return;
@@ -67,9 +84,19 @@ export function useGaussianCloud({
 
     return () => {
       active = false;
+      unsubscribeProgress();
       lease.release();
     };
-  }, [cache, name, resourceKey, source]);
+  }, [cache, name, initialWorldMatrix, resourceKey, source]);
 
-  return [cloud, cloud === null && error === null, error];
+  const progress =
+    progressState &&
+    (resourceKey === undefined
+      ? progressState.resourceKey === undefined &&
+        progressState.source === source &&
+        progressState.name === name
+      : progressState.resourceKey === resourceKey)
+      ? progressState.value
+      : null;
+  return [cloud, cloud === null && error === null, error, progress];
 }

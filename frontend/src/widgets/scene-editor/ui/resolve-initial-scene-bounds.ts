@@ -2,23 +2,18 @@ import type { SceneSurfaceBounds } from "@/shared/scene-surface";
 
 import { mergeSurfaceBounds } from "./merge-surface-bounds";
 
-/** Undefined means that at least one initial cloud has not settled yet. */
+/** Ready models and pending model positions can be framed without waiting for downloads. */
 export function resolveInitialSceneBounds(
   initialIds: readonly string[],
   currentIds: ReadonlySet<string>,
   ready: ReadonlyMap<string, SceneSurfaceBounds>,
   failed: ReadonlySet<string>,
-): SceneSurfaceBounds | null | undefined {
-  if (
-    initialIds.some(
-      (id) => currentIds.has(id) && !ready.has(id) && !failed.has(id),
-    )
-  )
-    return undefined;
+  pending: ReadonlyMap<string, SceneSurfaceBounds> = new Map(),
+): SceneSurfaceBounds | null {
   return mergeSurfaceBounds(
     initialIds.flatMap((id) => {
-      if (!currentIds.has(id)) return [];
-      const bounds = ready.get(id);
+      if (!currentIds.has(id) || failed.has(id)) return [];
+      const bounds = ready.get(id) ?? pending.get(id);
       return bounds ? [bounds] : [];
     }),
   );

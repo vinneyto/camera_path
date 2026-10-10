@@ -1,3 +1,4 @@
+import type { GaussianCloudLoadProgress } from "./gaussian-cloud-load-progress";
 import type { ThreeElement } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { Object3D } from "three";
@@ -32,6 +33,9 @@ export interface SceneSurfaceProps extends Omit<
 > {
   onError?: (error: Error) => void;
   onLoading?: () => void;
+  onProgress?: (progress: GaussianCloudLoadProgress) => void;
+  /** Initial pose for the first view-dependent cut, before the object mounts. */
+  initialWorldMatrix?: readonly number[];
   onReady?: (surface: SceneSurfaceReady) => void;
   onSurfaceClick?: (hit: SceneSurfaceHit) => void;
   onSurfacePointerDown?: SceneSurfacePointerHandler;

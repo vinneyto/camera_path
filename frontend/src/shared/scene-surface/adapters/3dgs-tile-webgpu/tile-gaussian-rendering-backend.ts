@@ -20,6 +20,7 @@ import type {
 } from "../../model/gaussian-rendering-backend";
 import type { GaussianCloudSource } from "../../model/scene-surface-types";
 import { enableAdditionalObjectLayers } from "../../model/enable-additional-object-layers";
+import { downloadGaussianCloud } from "./download-gaussian-cloud";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
 import { LoggingGaussianBackend } from "./logging-gaussian-backend";
@@ -28,6 +29,7 @@ import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 
 export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   readonly container = null;
+  private readonly loads = new Set<AbortController>();
   private readonly clouds = new Set<TileGaussianCloudInstance>();
   private depthEnabled = false;
   private disposed = false;
@@ -62,45 +64,83 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (this.disposed)
       throw new Error("TileGaussianRenderingBackend is disposed");
 
-    let cloud: GaussianCloud;
-    if (source.kind === "url") {
-      cloud = await this.store.load(source.url, {
-        name: options.name,
-        format: source.format,
-        mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
-      });
-    } else {
-      cloud = await this.store.loadBuffer(source.buffer, {
-        name: options.name ?? source.name,
-        fileName: source.name,
-        mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
-      });
-    }
-
-    if (this.disposed) {
-      cloud.dispose();
-      throw new Error(
-        "TileGaussianRenderingBackend was disposed while loading a cloud",
-      );
-    }
-
-    enableAdditionalObjectLayers(cloud, this.additionalCloudLayers);
+    const controller = new AbortController();
+    const cancel = () => controller.abort();
+    options.signal?.addEventListener("abort", cancel, { once: true });
+    if (options.signal?.aborted) cancel();
+    this.loads.add(controller);
+    const signal = controller.signal;
+    let cloud: GaussianCloud | null = null;
     try {
+      signal.throwIfAborted();
+      const buffer =
+        source.kind === "url"
+          ? await downloadGaussianCloud(source.url, signal, options.onProgress)
+          : source.buffer;
+      signal.throwIfAborted();
+      options.onProgress?.({
+        fraction: 0.9,
+        loadedBytes: buffer.byteLength,
+        totalBytes: buffer.byteLength,
+        phase: "processing",
+      });
+      // Register capabilities BEFORE any model enters the serial compute queue.
+      // Network requests stay parallel and never block an already prepared model.
       this.ensurePass();
+      cloud = await this.store.loadBuffer(
+        buffer,
+        {
+          name:
+            options.name ??
+            (source.kind === "buffer" ? source.name : undefined),
+          fileName: source.kind === "url" ? source.url : source.name,
+          format: source.kind === "url" ? source.format : undefined,
+          worldMatrix: options.worldMatrix,
+          mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
+        },
+        signal,
+      );
+      const loadedCloud = cloud;
+      const abortReady = () => loadedCloud.dispose();
+      signal.addEventListener("abort", abortReady, { once: true });
+      try {
+        signal.throwIfAborted();
+        await this.store.whenRenderReady(cloud);
+        signal.throwIfAborted();
+      } finally {
+        signal.removeEventListener("abort", abortReady);
+      }
+      // The initial world pose is only a loading hint; React owns the local pose.
+      cloud.position.set(0, 0, 0);
+      cloud.quaternion.identity();
+      cloud.scale.set(1, 1, 1);
+      cloud.updateWorldMatrix(false, false);
+      enableAdditionalObjectLayers(cloud, this.additionalCloudLayers);
+      const instance = new TileGaussianCloudInstance(
+        cloud,
+        this.store.getBounds(cloud),
+        () => {
+          this.clouds.delete(instance);
+          if (this.clouds.size === 0 && this.loads.size === 0)
+            this.disposePass();
+        },
+      );
+      this.clouds.add(instance);
+      options.onProgress?.({
+        fraction: 1,
+        loadedBytes: buffer.byteLength,
+        totalBytes: buffer.byteLength,
+        phase: "ready",
+      });
+      return instance;
     } catch (reason) {
-      cloud.dispose();
+      cloud?.dispose();
       throw reason;
+    } finally {
+      options.signal?.removeEventListener("abort", cancel);
+      this.loads.delete(controller);
+      if (this.clouds.size === 0 && this.loads.size === 0) this.disposePass();
     }
-    const instance = new TileGaussianCloudInstance(
-      cloud,
-      this.store.getBounds(cloud),
-      () => {
-        this.clouds.delete(instance);
-        if (this.clouds.size === 0) this.disposePass();
-      },
-    );
-    this.clouds.add(instance);
-    return instance;
   }
 
   createHighlightVolume(
@@ -141,6 +181,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    for (const controller of this.loads) controller.abort();
     this.highlightVolume?.dispose();
     for (const cloud of [...this.clouds]) cloud.dispose();
     this.disposePass();

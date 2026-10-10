@@ -1,3 +1,4 @@
+import type { GaussianCloudLoadProgress } from "./gaussian-cloud-load-progress";
 import type { Intersection, Object3D, Ray } from "three";
 
 import type {
@@ -9,6 +10,9 @@ import type {
 
 export interface GaussianCloudOptions {
   name?: string;
+  worldMatrix?: readonly number[];
+  signal?: AbortSignal;
+  onProgress?: (progress: GaussianCloudLoadProgress) => void;
 }
 
 interface GaussianHighlightVolumeBaseOptions {
