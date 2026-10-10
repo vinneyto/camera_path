@@ -7,7 +7,7 @@ import {
   useSetActiveEditorTool,
 } from "@/features/project-editor";
 import { useAnchorPlacement } from "@/widgets/scene-editor/ui/use-anchor-placement";
-import { GaussianStore, WasmGaussianBackend } from "3dgs-tile-webgpu";
+import type { GaussianCloud } from "3dgs-tile-webgpu";
 import {
   GridHelper,
   Group,
@@ -15,6 +15,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
+  PerspectiveCamera,
   Raycaster,
   Scene,
   Vector3,
@@ -23,8 +24,8 @@ import {
 import { afterEach, expect, it, vi } from "vitest";
 import type { LibraryAsset, ProjectCloud } from "@/shared/api/generated/model";
 import { SceneSurfaceProvider } from "@/shared/scene-surface";
-import type { GaussianRenderingBackend } from "@/shared/scene-surface/model/gaussian-rendering-backend";
-import { TileGaussianCloudInstance } from "@/shared/scene-surface/adapters/3dgs-tile-webgpu/tile-gaussian-cloud-instance";
+import type { SceneRenderPipeline } from "@/shared/three";
+import { TileGaussianRenderingBackend } from "./tile-gaussian-rendering-backend";
 import { SceneGrid } from "@/widgets/scene-editor/ui/scene-grid";
 import { SceneClouds } from "@/widgets/scene-editor/ui/scene-clouds";
 import { raycastPlacementSurfaces } from "@/widgets/scene-editor/ui/raycast-placement-surfaces";
@@ -37,6 +38,30 @@ vi.mock("@/shared/three", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/three")>()),
   useOptionalRenderPipeline: () => ({}),
 }));
+
+// Use the real adapter and WASM store; substitute only worker transport and GPU pass setup.
+vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("3dgs-tile-webgpu")>();
+  return {
+    ...actual,
+    GaussianStore: class extends actual.GaussianStore {
+      constructor() {
+        super(new actual.WasmGaussianBackend({}));
+      }
+    },
+    gaussianPass: () => {
+      let resolutionScale = 1;
+      return {
+        depthSortMode: "float32",
+        dispose: vi.fn(),
+        getResolutionScale: () => resolutionScale,
+        setResolutionScale: (value: number) => {
+          resolutionScale = value;
+        },
+      };
+    },
+  };
+});
 
 // Exercise the renderer's real Rust parser, mipmap snapshot and alpha raycast, without a GPU.
 const ply = new TextEncoder().encode(
@@ -73,25 +98,21 @@ it.each([
       MeshBasicMaterial,
       PlaneGeometry,
     });
-    const store = new GaussianStore(new WasmGaussianBackend({}));
-    const backend: GaussianRenderingBackend = {
-      container: null,
-      createCloud: vi.fn(async (_source, options) => {
-        const cloud = await store.loadBuffer(bytes.slice().buffer, {
-          fileName: `cloud.${format}`,
-          name: options?.name,
-          mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
-        });
-        return new TileGaussianCloudInstance(
-          cloud,
-          store.getBounds(cloud),
-          () => undefined,
-        );
-      }),
-      createHighlightVolume: vi.fn(),
-      invalidate: vi.fn(),
-      dispose: () => store.dispose(),
-    };
+    const downloadUrl = "/api/v1/library/asset/content";
+    const fetchCloud = vi.fn(async () => new Response(bytes.slice().buffer));
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith(downloadUrl)
+        ? fetchCloud()
+        : originalFetch(input, init),
+    );
+    const backend = new TileGaussianRenderingBackend({
+      camera: new PerspectiveCamera(),
+      renderer: { getPixelRatio: () => 1 },
+      getOpaqueViewDepth: vi.fn(() => ({})),
+      registerLayer: vi.fn(() => vi.fn()),
+    } as unknown as SceneRenderPipeline);
+    vi.spyOn(backend, "createCloud");
     const canvas = document.createElement("canvas");
     const scene = new Scene();
     const root = createRoot(canvas);
@@ -120,7 +141,7 @@ it.each([
       format: format as "ply" | "sog",
       size_bytes: bytes.byteLength,
       status: "ready",
-      download_url: `/one.${format}`,
+      download_url: downloadUrl,
       name: "cloud",
       default_rotation_deg: [0, 0, 0],
       default_scale: 1,
@@ -240,6 +261,7 @@ it.each([
         project_id: "project",
         library_asset_id: asset.id,
         download_url: asset.download_url!,
+        format: asset.format,
         translation: [0, 0, 0],
         rotation_deg: [0, 0, 0],
         scale: 1,
@@ -258,7 +280,10 @@ it.each([
           resourceKey: `placement-${index}`,
         };
         await renderScene();
-        const object = store.clouds[index - 1];
+        const instance = await vi.mocked(backend.createCloud).mock.results[
+          index - 1
+        ].value;
+        const object = instance.object as GaussianCloud;
         expect(object.getRaycastIndex()).not.toBeNull();
         // The preview is rendered, but never targets itself during placement.
         expect(
@@ -283,7 +308,7 @@ it.each([
         await renderScene();
         placed = null;
         await renderScene();
-        expect(store.clouds[index - 1]).toBe(object);
+        expect(backend.createCloud).toHaveBeenCalledTimes(index);
         expect(hit(x)?.object).toBe(object);
         expect(state!.getState().internal.interaction).toContain(object);
         expect((object as unknown as { __r3f?: unknown }).__r3f).toBeDefined();
@@ -341,13 +366,16 @@ it.each([
       await pickAnchor(4, "touch", 0);
       expect(onPlaceAnchor.mock.calls[0][0][1]).toBeCloseTo(0);
       expect(backend.createCloud).toHaveBeenCalledTimes(3);
+      expect(fetchCloud).toHaveBeenCalledTimes(3);
+      for (const [source] of vi.mocked(backend.createCloud).mock.calls) {
+        expect(source).toEqual({ kind: "url", url: downloadUrl, format });
+      }
       showGrid = false;
       clouds[0] = { ...clouds[0], translation: [4, 0, -1], visible: true };
       clouds[2] = { ...clouds[2], translation: [4, 0, 0], visible: true };
       clouds.splice(1, 1);
       await renderScene();
       expect(hit(2)).toBeUndefined();
-      expect(store.clouds).toHaveLength(2);
       expect(hit(4)).toBeDefined();
     } finally {
       await act(async () => {

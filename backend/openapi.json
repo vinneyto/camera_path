@@ -1739,6 +1739,14 @@
             "title": "Download Url",
             "type": "string"
           },
+          "format": {
+            "enum": [
+              "ply",
+              "sog"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1824,6 +1832,7 @@
           "project_id",
           "library_asset_id",
           "name",
+          "format",
           "position",
           "visible",
           "download_url",

@@ -71,6 +71,7 @@ export * from './orientationTimeline';
 export * from './orientationTimelineKeyframes';
 export * from './projectCloud';
 export * from './projectCloudCreate';
+export * from './projectCloudFormat';
 export * from './projectCloudUpdate';
 export * from './projectCreate';
 export * from './projectMetadata';

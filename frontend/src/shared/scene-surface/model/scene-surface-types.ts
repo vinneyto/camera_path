@@ -47,5 +47,5 @@ export interface SceneSurfaceProps extends Omit<
 }
 
 export type GaussianCloudSource =
-  | { kind: "url"; url: string }
+  | { kind: "url"; url: string; format?: "ply" | "sog" }
   | { buffer: ArrayBuffer; kind: "buffer"; name?: string };

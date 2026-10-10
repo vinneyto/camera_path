@@ -107,6 +107,8 @@ is performed by the renderer. Loose `meta.json` plus separate SOG textures are u
 Each loaded cloud requests a standard mipmap tree with a picking snapshot of up to
 25,000 frontier Gaussians. Picking is approximate at that resolution and independent
 of the current GPU draw cut. Buffer loads pass the source filename as a format hint.
+URL loads pass the library asset's format explicitly through preview and project-cloud
+responses, so local `/content` endpoints and signed URLs do not need a file extension.
 
 ### Dependency audit
 

@@ -66,6 +66,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (source.kind === "url") {
       cloud = await this.store.load(source.url, {
         name: options.name,
+        format: source.format,
         mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
       });
     } else {

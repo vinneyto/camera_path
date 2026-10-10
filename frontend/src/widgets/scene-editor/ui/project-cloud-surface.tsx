@@ -19,8 +19,12 @@ export function ProjectCloudSurface({
 }: ProjectCloudSurfaceProps) {
   // Keep the source stable so editing another part of the scene does not reload the file.
   const source = useMemo(
-    () => ({ kind: "url" as const, url: cloud.download_url }),
-    [cloud.download_url],
+    () => ({
+      kind: "url" as const,
+      url: cloud.download_url,
+      format: cloud.format,
+    }),
+    [cloud.download_url, cloud.format],
   );
   function handleReady(surface: Parameters<NonNullable<typeof onReady>>[0]) {
     onReady?.({ bounds: transformProjectCloudBounds(surface.bounds, cloud) });

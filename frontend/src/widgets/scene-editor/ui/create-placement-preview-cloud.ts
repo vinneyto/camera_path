@@ -10,6 +10,7 @@ export function createPlacementPreviewCloud({
     project_id: "",
     library_asset_id: asset.id,
     name: asset.name,
+    format: asset.format,
     position: 0,
     visible: true,
     download_url: asset.download_url!,

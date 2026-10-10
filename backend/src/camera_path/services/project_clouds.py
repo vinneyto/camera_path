@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
@@ -15,6 +17,7 @@ class ProjectCloud(BaseModel):
     project_id: str
     library_asset_id: str
     name: str
+    format: Literal["ply", "sog"]
     position: int
     visible: bool
     download_url: str
@@ -60,6 +63,7 @@ class ProjectCloudService:
             project_id=record.project_id,
             library_asset_id=asset.id,
             name=asset.name,
+            format=asset.format,
             position=record.position,
             visible=record.visible,
             download_url=await self.storage.download_url(asset.id, asset.object_key, request),

@@ -94,6 +94,7 @@ describe("SceneViewportFrame trajectory context menu", () => {
       id: "one",
       name: "First PLY",
       download_url: "http://test/one.ply",
+      format: "ply" as const,
       library_asset_id: "asset",
       project_id: "project",
       position: 0,
