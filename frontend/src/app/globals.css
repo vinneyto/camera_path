@@ -116,3 +116,43 @@ input,
 textarea {
   font: inherit;
 }
+
+@keyframes chat-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes chat-slide-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.mobile-chat-drawer[data-state="open"] {
+  animation: chat-slide-up 180ms ease-out;
+}
+
+.mobile-chat-drawer[data-state="closed"] {
+  animation: chat-slide-down 140ms ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-chat-drawer {
+    animation: none;
+  }
+}
+
+/* Keep software keyboards from zooming the mobile forms. */
+@media (width < 768px) {
+  input,
+  textarea {
+    font-size: 16px;
+  }
+}

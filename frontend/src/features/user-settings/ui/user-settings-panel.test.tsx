@@ -16,7 +16,9 @@ import {
   useUserSettings,
   EDITOR_SETTINGS_KEY,
 } from "../model/user-settings-provider";
-import { SignOutButton } from "@/features/auth/ui/sign-out-button";
+import { ProfileControl } from "@/features/auth/ui/profile-control";
+import { ThemeProvider } from "@/features/theme-switcher";
+import { useChatComposer } from "@/features/chat-agent/model/use-chat-composer";
 import { UserSettingsPanel } from "./user-settings-panel";
 import {
   AnchorToolShortcut,
@@ -42,6 +44,7 @@ let guestReads = 0;
 
 function Controls() {
   const auth = useAuth();
+  const composer = useChatComposer({ pending: false, onSend: async () => {} });
   const settings = useUserSettings();
   const tool = useActiveEditorTool();
   return (
@@ -52,11 +55,8 @@ function Controls() {
       </button>
 
       <span data-testid="tool">{tool ?? "none"}</span>
-      <UserSettingsPanel>
-        <EditorOnly>
-          <SignOutButton />
-        </EditorOnly>
-      </UserSettingsPanel>
+      <UserSettingsPanel />
+      <ProfileControl />
       <EditorOnly>
         <AnchorToolShortcut />
         <ProjectCreateForm onCreate={async () => true} />
@@ -67,7 +67,7 @@ function Controls() {
         messages={[]}
         error={null}
         pending={false}
-        onSend={async () => {}}
+        composer={composer}
       />
     </>
   );
@@ -79,34 +79,40 @@ function mount() {
   });
   const result = render(
     <QueryClientProvider client={client}>
-      <AuthProvider>
-        <UserSettingsProvider>
-          <EditorStoreProvider>
-            <Controls />
-          </EditorStoreProvider>
-        </UserSettingsProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <UserSettingsProvider>
+            <EditorStoreProvider>
+              <Controls />
+            </EditorStoreProvider>
+          </UserSettingsProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>,
   );
   return { ...result, client };
 }
 
 async function openSettings() {
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Profile settings" }),
-  );
+  fireEvent.click(await screen.findByRole("button", { name: "Settings" }));
   return (await screen.findByRole("checkbox", {
     name: "Show grid",
   })) as HTMLInputElement;
 }
 
 async function signOut() {
-  if (!screen.queryByRole("dialog")) await openSettings();
-  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  if (screen.queryByRole("dialog"))
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+  fireEvent.pointerDown(screen.getByRole("button", { name: "Profile" }), {
+    button: 0,
+    ctrlKey: false,
+    pointerType: "mouse",
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Sign out" }));
+  await waitFor(() => expect(signedIn).toBe(false));
   await waitFor(() =>
-    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull(),
+    expect(screen.queryByRole("menuitem", { name: "Sign out" })).toBeNull(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 }
 
 beforeEach(() => {
@@ -371,7 +377,7 @@ it.each([
   },
 );
 
-it("closes profile settings with the cross and Escape", async () => {
+it("closes settings with the cross and Escape", async () => {
   signedIn = true;
   mount();
   await openSettings();
@@ -394,4 +400,62 @@ it("closes on the overlay without activating the page", async () => {
   fireEvent.click(overlay);
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   expect(signedIn).toBe(true);
+});
+
+it("keeps two icons for guests, separates settings from sign-in, and opens a logout menu after login", async () => {
+  mount();
+  await waitFor(() => expect(guestReads).toBe(1));
+  expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Profile" })).toBeTruthy();
+  await openSettings();
+  expect(screen.queryByText("Sign out")).toBeNull();
+  expect(screen.getByRole("combobox", { name: "Gaussian DPR" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+  fireEvent.click(screen.getByRole("button", { name: "Profile" }));
+  expect(
+    await screen.findByRole("dialog", { name: "Editor sign in" }),
+  ).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Username"), {
+    target: { value: "editor" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  await screen.findByRole("textbox", { name: "Project name" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await openSettings();
+  expect(screen.queryByText("Sign out")).toBeNull();
+  await signOut();
+  expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Profile" })).toBeTruthy();
+});
+
+it("shows logout errors next to profile and keeps the session available for retry", async () => {
+  signedIn = true;
+  const fetch = globalThis.fetch;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: string, options: RequestInit) =>
+      url.endsWith("/auth/logout")
+        ? Promise.resolve(
+            Response.json({ detail: "Logout failed" }, { status: 500 }),
+          )
+        : fetch(url, options),
+    ),
+  );
+  mount();
+  await screen.findByRole("textbox", { name: "Project name" });
+  fireEvent.pointerDown(screen.getByRole("button", { name: "Profile" }), {
+    button: 0,
+    ctrlKey: false,
+    pointerType: "mouse",
+  });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Sign out" }));
+  expect(await screen.findByRole("alert")).toHaveProperty(
+    "textContent",
+    "Logout failed",
+  );
+  expect(signedIn).toBe(true);
+  expect(screen.getByRole("textbox", { name: "Project name" })).toBeTruthy();
 });

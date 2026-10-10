@@ -29,13 +29,14 @@ keeps the backend compiler as the single source of geometry sampling truth.
 ## Run
 
 The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-Library assets and project cloud instances are loaded from the backend. The Profile settings panel
-controls renderer and grid visibility; Gaussian DPR is in the project header. Unchecking the WebGPU
+Library assets and project cloud instances are loaded from the backend. The Settings button opens renderer, grid, Gaussian DPR controls.
+A separate Profile button opens the sign-in dialog for guests or the logout menu for editors.
+The theme toggle stays beside Settings and Profile. Unchecking the WebGPU
 option selects the Spark/WebGL reference adapter, which has no feature parity guarantee.
 
-Visitors can browse projects, library details/downloads, scenes, playback and all chat history.
+Visitors can browse projects, library details/downloads, scenes and playback. Chat history and the agent composer are available only to signed-in editors.
 Sign in with the editor account to create/delete projects, upload/delete library assets, edit
-clouds/anchors/timelines, change profile settings, send messages and run the agent. The backend
+clouds/anchors/timelines, send messages and run the agent. The backend
 enforces these permissions for direct API requests too. Create the account with the backend's
 `editor-create` command before signing in.
 
@@ -43,13 +44,20 @@ Wrap editing forms, menus and controls in `EditorOnly` at their composition boun
 the shared content and read-only anchor markers; the anchor keyboard shortcut mounts only for editors.
 
 `features/auth` checks the server session on startup, window focus and once a minute. A 401 drops
-editor mode immediately. Profile settings remain available to guests. Renderer/grid/DPR choices
+editor mode immediately. Settings remain available to guests. Renderer/grid/DPR choices
 are always stored under `camera-path-editor-settings` in localStorage (the existing key is retained).
 Local values take priority over the backend fallback, survive login/logout and session expiry, and
 remain usable when backend profile reads fail. Guests only edit local preferences; editors also
 publish changed fields to the backend. Failed saves show an error without reverting local choices.
-Profile and sign-in windows use the shared modal, with a lightly blurred overlay, focus trapping,
+Settings and sign-in windows use the shared modal, with a lightly blurred overlay, focus trapping,
 and dismissal by clicking outside, the close button, or Escape.
+
+The workspace uses a compact header with Settings, Profile and theme icons on desktop and mobile. Below 768 px, the cloud
+command field moves to a second header row, and chat becomes a bottom drawer opened from the
+input-style bar below the scene. The drawer traps focus, closes with its cross, outside tap or
+Escape, and fits the visual viewport when the software keyboard opens. Chat drafts and retry IDs
+survive closing and desktop/mobile resizing; logout or session expiry removes the entire chat.
+Mobile controls respect bottom safe-area insets and reduced-motion preferences.
 
 Start the backend first, then:
 

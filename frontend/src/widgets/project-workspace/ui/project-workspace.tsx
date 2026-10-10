@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/features/auth";
 import { LoaderCircle } from "lucide-react";
 
 import {
@@ -24,6 +25,7 @@ interface ProjectWorkspaceProps {
 }
 
 export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
+  const { canEdit } = useAuth();
   const { webGpuTileRenderer, loading: settingsLoading } = useUserSettings();
   const projectQuery = useProjectQuery(projectId);
   const trajectoryQuery = useCompiledTrajectoryQuery(projectId);
@@ -67,7 +69,9 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
   }
 
   return (
-    <main className="grid h-screen min-h-0 grid-cols-[minmax(0,1fr)_320px] overflow-hidden">
+    <main
+      className={`grid h-dvh min-h-0 grid-cols-1 overflow-hidden ${canEdit ? "grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_300px] md:grid-rows-1" : ""}`}
+    >
       <TrajectoryPlaybackLoop trajectory={trajectory} />
       <div className="flex min-h-0 min-w-0 flex-col">
         <ProjectHeader project={project} projectId={projectId} />
@@ -80,11 +84,13 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
           trajectory={trajectory}
         />
       </div>
-      <ChatPanelContainer
-        project={project}
-        projectId={projectId}
-        queryError={queryError instanceof Error ? queryError : null}
-      />
+      {canEdit && (
+        <ChatPanelContainer
+          project={project}
+          projectId={projectId}
+          queryError={queryError instanceof Error ? queryError : null}
+        />
+      )}
     </main>
   );
 }

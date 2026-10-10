@@ -10,7 +10,6 @@ import {
   ProjectList,
   useCreateProject,
 } from "@/features/project-selection";
-import { ThemeToggle } from "@/features/theme-switcher";
 import { AuthControl, EditorOnly } from "@/features/auth";
 
 export function ProjectListPage() {
@@ -53,7 +52,7 @@ export function ProjectListPage() {
             Choose a saved scene or start a new trajectory.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             className="text-xs text-muted-foreground hover:underline"
             href="/library"
@@ -61,7 +60,6 @@ export function ProjectListPage() {
             Library
           </Link>
           <AuthControl />
-          <ThemeToggle />
         </div>
       </div>
       <EditorOnly>

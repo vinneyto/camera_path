@@ -45,7 +45,7 @@ export function ProjectScene({
     : 0;
 
   return (
-    <div className="relative min-h-[260px] flex-1">
+    <div className="relative min-h-0 flex-1">
       <SceneViewportContainer
         bottomOverlayHeight={bottomOverlayHeight}
         deletingTrajectory={deletingTrajectory}
