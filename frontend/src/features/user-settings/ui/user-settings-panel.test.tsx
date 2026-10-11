@@ -50,6 +50,13 @@ function Controls() {
   return (
     <>
       <span data-testid="preferences">{`${settings.webGpuTileRenderer}/${settings.showGrid}/${settings.gaussianDpr}`}</span>
+      <button
+        onClick={() =>
+          settings.save({ webgpu_tile_renderer: settings.webGpuTileRenderer })
+        }
+      >
+        Save current renderer
+      </button>
       <button onClick={() => void auth.login("editor", "password")}>
         Login
       </button>
@@ -162,6 +169,152 @@ afterEach(() => {
   localStorage.clear();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+it.each([true, false])(
+  "persists the guest renderer switch from %s before reloading the current page",
+  async (initialRenderer) => {
+    localStorage.setItem(
+      EDITOR_SETTINGS_KEY,
+      JSON.stringify({ ...DEFAULTS, webgpu_tile_renderer: initialRenderer }),
+    );
+    const href = window.location.href;
+    const reload = vi
+      .spyOn(window.location, "reload")
+      .mockImplementation(() => {
+        expect(
+          JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!)
+            .webgpu_tile_renderer,
+        ).toBe(!initialRenderer);
+        expect(window.location.href).toBe(href);
+      });
+    const first = mount();
+    await openSettings();
+    const renderer = screen.getByRole("checkbox", {
+      name: "Use WebGPU renderer (off: WebGL)",
+    }) as HTMLInputElement;
+    await waitFor(() => expect(renderer.disabled).toBe(false));
+    fireEvent.click(renderer);
+    expect(reload).toHaveBeenCalledOnce();
+    expect(patches).toEqual([]);
+    // Simulate the new document's settings provider reading the saved choice.
+    first.unmount();
+    first.client.clear();
+    mount();
+    await openSettings();
+    await waitFor(() =>
+      expect(screen.getByTestId("preferences").textContent).toBe(
+        `${!initialRenderer}/true/1x`,
+      ),
+    );
+    expect(reload).toHaveBeenCalledOnce();
+  },
+);
+
+it("waits for an editor renderer save without mounting the other renderer", async () => {
+  signedIn = true;
+  holdWrite = true;
+  const reload = vi.spyOn(window.location, "reload").mockImplementation(() => {
+    expect(server.webgpu_tile_renderer).toBe(false);
+    expect(
+      JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!)
+        .webgpu_tile_renderer,
+    ).toBe(false);
+  });
+  mount();
+  await openSettings();
+  const renderer = screen.getByRole("checkbox", {
+    name: "Use WebGPU renderer (off: WebGL)",
+  }) as HTMLInputElement;
+  await waitFor(() => expect(renderer.disabled).toBe(false));
+  fireEvent.click(renderer);
+  await waitFor(() => expect(releaseWrite).toBeDefined());
+  expect(reload).not.toHaveBeenCalled();
+  expect(renderer.disabled).toBe(true);
+  expect(screen.getByTestId("preferences").textContent).toBe("true/true/1x");
+  expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!)).toEqual(
+    DEFAULTS,
+  );
+  await act(async () => releaseWrite!());
+  await waitFor(() => expect(reload).toHaveBeenCalledOnce());
+  expect(patches).toEqual([{ webgpu_tile_renderer: false }]);
+});
+
+it("keeps the current renderer after a failed save and reloads on a successful retry", async () => {
+  signedIn = true;
+  failWrite = true;
+  const reload = vi
+    .spyOn(window.location, "reload")
+    .mockImplementation(() => {});
+  mount();
+  await openSettings();
+  const renderer = screen.getByRole("checkbox", {
+    name: "Use WebGPU renderer (off: WebGL)",
+  }) as HTMLInputElement;
+  await waitFor(() => expect(renderer.disabled).toBe(false));
+  fireEvent.click(renderer);
+  await screen.findByText("Save failed");
+  expect(reload).not.toHaveBeenCalled();
+  expect(renderer.checked).toBe(true);
+  expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!)).toEqual(
+    DEFAULTS,
+  );
+  failWrite = false;
+  fireEvent.click(renderer);
+  await waitFor(() => expect(reload).toHaveBeenCalledOnce());
+});
+
+it.each([false, true])(
+  "does not reload for unchanged renderer, grid or DPR settings (editor: %s)",
+  async (editor) => {
+    signedIn = editor;
+    const reload = vi
+      .spyOn(window.location, "reload")
+      .mockImplementation(() => {});
+    mount();
+    const grid = await openSettings();
+    await waitFor(() => expect(grid.disabled).toBe(false));
+    fireEvent.click(screen.getByText("Save current renderer"));
+    if (editor) await waitFor(() => expect(patches).toHaveLength(1));
+    await waitFor(() => expect(grid.disabled).toBe(false));
+    fireEvent.click(grid);
+    await waitFor(() => expect(grid.checked).toBe(false));
+    await waitFor(() => expect(grid.disabled).toBe(false));
+    fireEvent.change(screen.getByRole("combobox", { name: "Gaussian DPR" }), {
+      target: { value: "system" },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("preferences").textContent).toBe(
+        "true/false/system",
+      ),
+    );
+    expect(reload).not.toHaveBeenCalled();
+  },
+);
+
+it("ignores a late renderer save after newer guest preferences are applied", async () => {
+  signedIn = true;
+  holdWrite = true;
+  const reload = vi
+    .spyOn(window.location, "reload")
+    .mockImplementation(() => {});
+  mount();
+  await openSettings();
+  const renderer = screen.getByRole("checkbox", {
+    name: "Use WebGPU renderer (off: WebGL)",
+  }) as HTMLInputElement;
+  await waitFor(() => expect(renderer.disabled).toBe(false));
+  fireEvent.click(renderer);
+  await waitFor(() => expect(releaseWrite).toBeDefined());
+  await signOut();
+  fireEvent.click(await openSettings());
+  await act(async () => releaseWrite!());
+  await waitFor(() => expect(server.webgpu_tile_renderer).toBe(false));
+  expect(reload).not.toHaveBeenCalled();
+  expect(JSON.parse(localStorage.getItem(EDITOR_SETTINGS_KEY)!)).toEqual({
+    ...DEFAULTS,
+    show_grid: false,
+  });
 });
 
 it("guests restore and edit local preferences without backend writes", async () => {
