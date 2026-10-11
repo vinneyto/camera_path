@@ -7,7 +7,14 @@ interface DebugAttribute {
 }
 
 interface DebugRenderObject {
-  object: { id: number; name: string; geometry: { id: number } };
+  object: {
+    id: number;
+    name: string;
+    geometry: {
+      id: number;
+      getAttribute?: (name: string) => DebugAttribute | undefined;
+    };
+  };
   material: { id: number; name: string; type: string };
   geometry: { id: number };
   context: { id: number };
@@ -84,6 +91,8 @@ export function installWebGpuDrawDiagnostics(
           materialId: renderObject.material.id,
           geometryId: renderObject.geometry.id,
           currentGeometryId: renderObject.object.geometry.id,
+          currentPositionAttributeId:
+            renderObject.object.geometry.getAttribute?.("position")?.id,
           contextId: renderObject.context.id,
           parameters,
           slots,
