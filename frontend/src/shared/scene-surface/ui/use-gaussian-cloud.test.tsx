@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type {
   GaussianCloudInstance,
+  GaussianCloudOptions,
   GaussianRenderingBackend,
 } from "../model/gaussian-rendering-backend";
 import { SceneSurfaceProvider } from "./scene-surface-provider";
@@ -119,5 +120,45 @@ describe("useGaussianCloud", () => {
     });
 
     expect(result.current).toEqual([null, false, error, null]);
+  });
+
+  it("uses the latest progress callback without reacquiring and unsubscribes on removal", async () => {
+    let options: GaussianCloudOptions | undefined;
+    const backend: GaussianRenderingBackend = {
+      container: null,
+      createCloud: vi.fn((_source, loadOptions) => {
+        options = loadOptions;
+        return new Promise<GaussianCloudInstance>(() => {});
+      }),
+      createHighlightVolume: vi.fn(),
+      dispose: vi.fn(),
+      invalidate: vi.fn(),
+    };
+    const first = vi.fn(),
+      next = vi.fn();
+    const { rerender, unmount } = renderHook(
+      ({ onProgress }) => useGaussianCloud({ source, onProgress }),
+      { initialProps: { onProgress: first }, wrapper: createWrapper(backend) },
+    );
+    const progress = {
+      phase: "download" as const,
+      fraction: 0.5,
+      loadedBytes: 5,
+      totalBytes: 10,
+    };
+    act(() => options?.onProgress?.(progress));
+    expect(first).toHaveBeenCalledOnce();
+    rerender({ onProgress: next });
+    act(() => options?.onProgress?.({ ...progress, loadedBytes: 6 }));
+    expect(next).toHaveBeenCalledOnce();
+    expect(first).toHaveBeenCalledOnce();
+    expect(backend.createCloud).toHaveBeenCalledOnce();
+    unmount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    options?.onProgress?.({ ...progress, loadedBytes: 7 });
+    expect(next).toHaveBeenCalledOnce();
+    expect(options?.signal?.aborted).toBe(true);
   });
 });

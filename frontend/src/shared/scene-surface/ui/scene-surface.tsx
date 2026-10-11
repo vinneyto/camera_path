@@ -35,8 +35,9 @@ export function SceneSurface({
   source,
   ...objectProps
 }: SceneSurfaceProps) {
-  const [cloud, loading, error, progress] = useGaussianCloud({
+  const [cloud, loading, error] = useGaussianCloud({
     name,
+    onProgress,
     initialWorldMatrix,
     resourceKey,
     source,
@@ -51,13 +52,6 @@ export function SceneSurface({
   useEffect(() => {
     notifyStatus();
   }, [cloud, error, loading, name, source, resourceKey]);
-
-  const notifyProgress = useEffectEvent(() => {
-    if (progress) onProgress?.(progress);
-  });
-  useEffect(() => {
-    notifyProgress();
-  }, [progress]);
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     if (cloud === null) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 import type { GaussianCloudLoadProgress } from "../model/gaussian-cloud-load-progress";
 import type { GaussianCloudInstance } from "../model/gaussian-rendering-backend";
@@ -16,6 +16,7 @@ interface LoadedGaussianCloud {
 
 interface UseGaussianCloudOptions {
   name?: string;
+  onProgress?: (progress: GaussianCloudLoadProgress) => void;
   initialWorldMatrix?: readonly number[];
   resourceKey?: string;
   source: GaussianCloudSource;
@@ -30,6 +31,7 @@ type UseGaussianCloudResult = readonly [
 
 export function useGaussianCloud({
   name,
+  onProgress,
   initialWorldMatrix,
   resourceKey,
   source,
@@ -58,6 +60,9 @@ export function useGaussianCloud({
       : null;
   const error =
     failed?.source === source && failed.name === name ? failed.error : null;
+  const notifyProgress = useEffectEvent((value: GaussianCloudLoadProgress) => {
+    onProgress?.(value);
+  });
 
   useEffect(() => {
     let active = true;
@@ -67,7 +72,11 @@ export function useGaussianCloud({
       resourceKey,
     );
     const unsubscribeProgress = lease.subscribeProgress((value) => {
-      if (active) setProgressState({ source, resourceKey, name, value });
+      if (!active) return;
+      setProgressState({ source, resourceKey, name, value });
+      // Forward the subscription event directly. Relaying it through a passive
+      // effect creates a second state update for every streamed network chunk.
+      notifyProgress(value);
     });
     void lease.promise
       .then((result) => {
