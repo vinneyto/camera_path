@@ -568,8 +568,8 @@ it("keeps two icons for guests, separates settings from sign-in, and opens a log
   expect(
     await screen.findByRole("dialog", { name: "Editor sign in" }),
   ).toBeTruthy();
-  fireEvent.change(screen.getByLabelText("Username"), {
-    target: { value: "editor" },
+  fireEvent.change(screen.getByLabelText("Email"), {
+    target: { value: "editor@example.com" },
   });
   fireEvent.change(screen.getByLabelText("Password"), {
     target: { value: "password" },

@@ -6,6 +6,7 @@ from camera_path.config import settings
 from camera_path.persistence.database import create_engine_and_session_factory
 from camera_path.repositories.auth import AuthRepository
 from camera_path.services.auth import AuthService
+from camera_path.services.auth_email import normalize_email
 
 
 def run() -> None:
@@ -14,8 +15,10 @@ def run() -> None:
     )
     parser.add_argument("username")
     args = parser.parse_args()
-    if not 1 <= len(args.username) <= 128:
-        parser.error("Username must contain 1–128 characters")
+    try:
+        args.username = normalize_email(args.username)
+    except ValueError as error:
+        parser.error(str(error))
     password = getpass.getpass("Password: ")
     if not 12 <= len(password) <= 1024:
         parser.error("Password must contain 12–1024 characters")

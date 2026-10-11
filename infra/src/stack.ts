@@ -11,6 +11,7 @@ import { configureBackend, DeploymentConfig } from './configureBackend';
 import { createApi } from './createApi';
 import { createRelease } from './createRelease';
 import { DomainConfig } from './getDomainConfig';
+import { createAuthEmail } from './createAuthEmail';
 import { createLocalAccess } from './createLocalAccess';
 
 export interface BackendStackProps extends StackProps {
@@ -33,6 +34,7 @@ export class BackendStack extends Stack {
     const backups = createBackups(this);
     const { jwt, openai } = createSecrets(this, name);
     const role = createBackendRole(this);
+    const authEmail = createAuthEmail(this, role, props.domain);
     grantLibraryAccess(library, role);
     grantBackupUploads(backups, role);
     jwt.grantRead(role);
@@ -43,6 +45,7 @@ export class BackendStack extends Stack {
     const api = createApi(this, instance, props.domain);
     const config: DeploymentConfig = {
       region: this.region, library_bucket: library.bucketName, backups_bucket: backups.bucketName,
+      auth_email_from: authEmail.sender,
       jwt_secret: jwt.secretArn, openai_secret: openai.secretArn,
       volume_id: volume.ref, repository: 'https://github.com/vinneyto/camera_path.git',
       api_domain: api.apiDomain, public_ip: api.address.ref, tls_email: props.domain.tlsEmail,
@@ -51,12 +54,13 @@ export class BackendStack extends Stack {
     const release = createRelease(this, {
       instance, config, revision: props.revision, releaseToken: props.releaseToken,
     });
-    release.node.addDependency(attachment, api.association, api.record);
+    release.node.addDependency(attachment, api.association, api.record, authEmail.identity);
 
     if (props.localAccess) {
       const user = createLocalAccess(this, name, library);
       new CfnOutput(this, 'LocalBackendUserName', { value: user.userName });
     }
+    new CfnOutput(this, 'AuthEmailFrom', { value: authEmail.sender });
     new CfnOutput(this, 'ApiUrl', { value: api.apiUrl });
     new CfnOutput(this, 'InstanceId', { value: instance.instanceId });
     new CfnOutput(this, 'DataVolumeId', { value: volume.ref });

@@ -143,3 +143,17 @@ class DeploymentTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class AuthenticationEnvironmentTests(unittest.TestCase):
+    def test_release_requires_ses_and_disables_forwarded_ip_trust(self):
+        secrets = Mock()
+        secrets.get_secret_value.return_value = {"SecretString": "x" * 40}
+        with patch.object(d.boto3, "client", return_value=secrets):
+            env = d.environment({"region": "us-east-1", "jwt_secret": "jwt",
+                                 "openai_secret": "openai", "library_bucket": "library",
+                                 "auth_email_from": "noreply@example.com"})
+        self.assertEqual(env["CAMERA_PATH_ENVIRONMENT"], "production")
+        self.assertEqual(env["CAMERA_PATH_AUTH_SECOND_FACTOR"], "email")
+        self.assertEqual(env["CAMERA_PATH_AUTH_EMAIL_DELIVERY"], "ses")
+        self.assertEqual(env["CAMERA_PATH_AUTH_EMAIL_FROM"], "noreply@example.com")
+        self.assertEqual(env["FORWARDED_ALLOW_IPS"], "")

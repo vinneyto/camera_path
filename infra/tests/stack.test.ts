@@ -91,3 +91,25 @@ test('EC2 permissions are restricted to library prefix, backup uploads, secrets 
   assert.ok(!JSON.stringify(statements).includes('route53:'));
   assert.ok(!JSON.stringify(statements).includes('ssm:GetParameter'));
 });
+
+test('SES identity manages DKIM/MAIL FROM DNS and grants only the configured sender', () => {
+  const t = template();
+  t.resourceCountIs('AWS::SES::EmailIdentity', 1);
+  t.hasResourceProperties('AWS::SES::EmailIdentity', {
+    EmailIdentity: 'example.com',
+    MailFromAttributes: Match.objectLike({ MailFromDomain: 'auth-mail.example.com' }),
+  });
+  const resources = Object.values<any>(t.toJSON().Resources);
+  const dns = resources.filter(r => r.Type === 'AWS::Route53::RecordSet');
+  assert.equal(dns.filter(r => r.Properties.Type === 'CNAME').length, 3);
+  assert.ok(dns.some(r => r.Properties.Type === 'MX' && r.Properties.Name === 'auth-mail.example.com.'));
+  assert.ok(dns.some(r => r.Properties.Type === 'TXT' && r.Properties.Name === 'auth-mail.example.com.'));
+  assert.ok(!dns.some(r => r.Properties.Name === '_dmarc.example.com.'));
+  const policies = resources.filter(r => r.Type === 'AWS::IAM::Policy');
+  const statements = policies.flatMap(p => p.Properties.PolicyDocument.Statement);
+  const send = statements.find(s => s.Action === 'ses:SendEmail');
+  assert.deepEqual(send.Condition, { StringEquals: { 'ses:FromAddress': 'noreply@example.com' } });
+  assert.notEqual(send.Resource, '*');
+  const release = resources.find(r => r.Type === 'AWS::CloudFormation::CustomResource');
+  assert.equal(release.Properties.Config.auth_email_from, 'noreply@example.com');
+});

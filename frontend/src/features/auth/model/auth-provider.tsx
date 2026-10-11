@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ChallengeResponse } from "@/shared/api/generated/model";
 import { ApiError, orvalFetch } from "@/shared/api/orval-fetch";
 
 interface AuthContextValue {
@@ -10,7 +11,11 @@ interface AuthContextValue {
   username: string | null;
   error: Error | null;
   pending: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  challenge: ChallengeResponse | null;
+  login: (username: string, password: string) => Promise<boolean>;
+  verify: (code: string) => Promise<void>;
+  resend: () => Promise<void>;
+  cancelLogin: () => void;
   logout: () => Promise<void>;
 }
 
@@ -19,6 +24,7 @@ const SESSION_KEY = ["editor-session"];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
+  const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const session = useQuery({
@@ -51,17 +57,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     await queryClient.cancelQueries({ queryKey: SESSION_KEY });
     try {
-      await orvalFetch("/api/v1/auth/login", {
+      const response = await orvalFetch<{
+        data: ChallengeResponse | { expires_in: number };
+      }>("/api/v1/auth/login", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
+      if ("challenge_id" in response.data) {
+        setChallenge(response.data);
+        queryClient.setQueryData(SESSION_KEY, null);
+        return false;
+      }
+      setChallenge(null);
       await queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+      return true;
     } catch (error) {
       setError(error instanceof Error ? error : new Error("Sign in failed"));
       throw error;
     } finally {
       setPending(false);
     }
+  }
+
+  async function verify(code: string) {
+    if (!challenge || pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      await orvalFetch("/api/v1/auth/verify", {
+        method: "POST",
+        body: JSON.stringify({ challenge_id: challenge.challenge_id, code }),
+      });
+      setChallenge(null);
+      await queryClient.invalidateQueries({ queryKey: SESSION_KEY });
+    } catch (error) {
+      setError(
+        error instanceof Error ? error : new Error("Verification failed"),
+      );
+      throw error;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function resend() {
+    if (!challenge || pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      const response = await orvalFetch<{ data: ChallengeResponse }>(
+        "/api/v1/auth/resend",
+        {
+          method: "POST",
+          body: JSON.stringify({ challenge_id: challenge.challenge_id }),
+        },
+      );
+      setChallenge(response.data);
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error("Resend failed"));
+      throw error;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function cancelLogin() {
+    setChallenge(null);
+    setError(null);
   }
 
   async function logout() {
@@ -89,7 +151,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         username: session.data?.username ?? null,
         error: error ?? session.error,
         pending,
+        challenge,
         login,
+        verify,
+        resend,
+        cancelLogin,
         logout,
       }}
     >

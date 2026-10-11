@@ -205,3 +205,36 @@ it("accepts loopback browser Origin even when NextURL normalizes 127.0.0.1 to lo
   expect((await proxyApiRequest(request)).status).toBe(204);
   expect(fetchMock).toHaveBeenCalledOnce();
 });
+
+it("does not create an authenticated cookie after password-only challenge issuance", async () => {
+  const challenge = {
+    challenge_id: "pending-id",
+    expires_in: 300,
+    resend_after: 60,
+  };
+  fetchMock.mockResolvedValue(Response.json(challenge));
+  const response = await proxyApiRequest(
+    new NextRequest(`${origin}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { origin, cookie: "camera-path-session=old-token" },
+    }),
+  );
+  expect(await response.json()).toEqual(challenge);
+  expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
+  expect(response.headers.get("set-cookie")).not.toContain("pending-id");
+});
+
+it("only sets the HttpOnly session cookie after code verification", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({ access_token: "verified-jwt", expires_in: 28800 }),
+  );
+  const response = await proxyApiRequest(
+    new NextRequest(`${origin}/api/v1/auth/verify`, {
+      method: "POST",
+      headers: { origin },
+    }),
+  );
+  expect(await response.json()).toEqual({ expires_in: 28800 });
+  expect(response.headers.get("set-cookie")).toContain("verified-jwt");
+  expect(response.headers.get("set-cookie")).toContain("HttpOnly");
+});

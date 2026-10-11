@@ -64,7 +64,11 @@ export async function orvalFetch<T>(
     if (
       response.status === 401 &&
       typeof window !== "undefined" &&
-      url !== "/api/v1/auth/login"
+      ![
+        "/api/v1/auth/login",
+        "/api/v1/auth/verify",
+        "/api/v1/auth/resend",
+      ].includes(url)
     ) {
       window.dispatchEvent(new Event("camera-path-auth-expired"));
     }

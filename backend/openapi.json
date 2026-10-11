@@ -659,6 +659,45 @@
         "title": "CenterWeightedDepthOfFieldFocus",
         "type": "object"
       },
+      "ChallengeRequest": {
+        "properties": {
+          "challenge_id": {
+            "maxLength": 64,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id"
+        ],
+        "title": "ChallengeRequest",
+        "type": "object"
+      },
+      "ChallengeResponse": {
+        "properties": {
+          "challenge_id": {
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "resend_after": {
+            "title": "Resend After",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "expires_in",
+          "resend_after"
+        ],
+        "title": "ChallengeResponse",
+        "type": "object"
+      },
       "ChatHistoryMessage": {
         "properties": {
           "content": {
@@ -2708,6 +2747,31 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "VerifyRequest": {
+        "properties": {
+          "challenge_id": {
+            "maxLength": 64,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "code": {
+            "format": "password",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "challenge_id",
+          "code"
+        ],
+        "title": "VerifyRequest",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -2727,7 +2791,7 @@
   "paths": {
     "/api/v1/auth/login": {
       "post": {
-        "description": "Verify credentials and issue a revocable JWT.",
+        "description": "Verify email/password and send a code; no JWT until confirmation.",
         "operationId": "loginEditor",
         "requestBody": {
           "content": {
@@ -2744,7 +2808,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ChallengeResponse"
+                    }
+                  ],
+                  "title": "Response Logineditor"
                 }
               }
             },
@@ -2790,6 +2862,48 @@
         ]
       }
     },
+    "/api/v1/auth/resend": {
+      "post": {
+        "description": "Replace the code after cooldown; preserve failed-attempt and sending budgets.",
+        "operationId": "resendEditorCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChallengeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChallengeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace and resend the email code",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/v1/auth/session": {
       "get": {
         "description": "Validate the JWT and return the editor name.",
@@ -2812,6 +2926,48 @@
           }
         ],
         "summary": "Read the editor session",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/verify": {
+      "post": {
+        "description": "Consume an unexpired one-time email code and issue the editor JWT.",
+        "operationId": "verifyEditorCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm the one-time email code",
         "tags": [
           "Auth"
         ]

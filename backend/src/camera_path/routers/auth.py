@@ -61,6 +61,26 @@ class TokenResponse(BaseModel):
     expires_in: int
 
 
+class ChallengeResponse(BaseModel):
+    challenge_id: str
+    expires_in: int
+    resend_after: int
+
+
+class ChallengeRequest(BaseModel):
+    challenge_id: str = Field(min_length=32, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+class VerifyRequest(ChallengeRequest):
+    code: SecretStr = Field(min_length=6, max_length=6)
+
+
+def request_source(request: Request) -> str:
+    # Use the immediate peer, never client-supplied X-Forwarded-For.
+    # Behind Next/Nginx this deliberately shares a conservative proxy budget.
+    return request.client.host if request.client else "unknown"
+
+
 class SessionResponse(BaseModel):
     username: str
 
@@ -70,14 +90,46 @@ router = APIRouter(prefix="/auth", tags=["Auth"], route_class=AuthenticatedRoute
 
 @router.post(
     "/login",
-    response_model=TokenResponse,
+    response_model=TokenResponse | ChallengeResponse,
     operation_id="loginEditor",
     summary="Sign in as the editor",
-    description="Verify credentials and issue a revocable JWT.",
+    description="Verify email/password and send a code; no JWT until confirmation.",
 )
-async def login(data: LoginRequest, service: AuthServiceDep) -> TokenResponse:
-    token, expires = await service.login(data.username, data.password.get_secret_value())
-    return TokenResponse(access_token=token, expires_in=expires)
+async def login(
+    data: LoginRequest, service: AuthServiceDep, request: Request
+) -> TokenResponse | ChallengeResponse:
+    result = await service.login(
+        data.username, data.password.get_secret_value(), request_source(request)
+    )
+    return TokenResponse(**result) if "access_token" in result else ChallengeResponse(**result)
+
+
+@router.post(
+    "/verify",
+    response_model=TokenResponse,
+    operation_id="verifyEditorCode",
+    summary="Confirm the one-time email code",
+)
+async def verify(data: VerifyRequest, service: AuthServiceDep, request: Request) -> TokenResponse:
+    """Consume an unexpired one-time email code and issue the editor JWT."""
+    return TokenResponse(
+        **await service.verify(
+            data.challenge_id, data.code.get_secret_value(), request_source(request)
+        )
+    )
+
+
+@router.post(
+    "/resend",
+    response_model=ChallengeResponse,
+    operation_id="resendEditorCode",
+    summary="Replace and resend the email code",
+)
+async def resend(
+    data: ChallengeRequest, service: AuthServiceDep, request: Request
+) -> ChallengeResponse:
+    """Replace the code after cooldown; preserve failed-attempt and sending budgets."""
+    return ChallengeResponse(**await service.resend(data.challenge_id, request_source(request)))
 
 
 @router.get(

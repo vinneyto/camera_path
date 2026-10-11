@@ -33,16 +33,22 @@ async def auth_app(tmp_path):
     repo = ProjectRepository(f"sqlite+aiosqlite:///{tmp_path / 'auth.sqlite3'}")
     await repo.initialize()
     app = create_app(
-        Settings(_env_file=None, jwt_secret=SECRET, library_directory=tmp_path / "library"), repo
+        Settings(
+            _env_file=None,
+            jwt_secret=SECRET,
+            auth_second_factor="off",
+            library_directory=tmp_path / "library",
+        ),
+        repo,
     )
-    await app.state.auth_service.create_editor("leonid", PASSWORD)
+    await app.state.auth_service.create_editor("leonid@example.com", PASSWORD)
     yield app
     await repo.close()
 
 
 async def sign_in(client):
     result = await client.post(
-        "/api/v1/auth/login", json={"username": "leonid", "password": PASSWORD}
+        "/api/v1/auth/login", json={"username": "leonid@example.com", "password": PASSWORD}
     )
     assert result.status_code == 200
     return result.json()["access_token"]
@@ -50,7 +56,7 @@ async def sign_in(client):
 
 async def test_credentials_write_and_revocation(auth_app):
     async with AsyncClient(transport=ASGITransport(app=auth_app), base_url="http://test") as client:
-        for username, password in [("leonid", "wrong"), ("unknown", PASSWORD)]:
+        for username, password in [("leonid@example.com", "wrong"), ("unknown", PASSWORD)]:
             response = await client.post(
                 "/api/v1/auth/login", json={"username": username, "password": password}
             )
@@ -59,7 +65,7 @@ async def test_credentials_write_and_revocation(auth_app):
         token = await sign_in(client)
         headers = {"Authorization": f"Bearer {token}"}
         assert (await client.get("/api/v1/auth/session", headers=headers)).json() == {
-            "username": "leonid"
+            "username": "leonid@example.com"
         }
         created = await client.post("/api/v1/projects", json={"name": "Shared"}, headers=headers)
         assert created.status_code == 201
@@ -101,7 +107,11 @@ async def test_every_write_route_authenticates_before_validation(auth_app):
         ]
         routes = [(prefix, route) for prefix, router in routers for route in router.routes]
         for prefix, route in routes:
-            if not isinstance(route, APIRoute) or route.path == "/auth/login":
+            if not isinstance(route, APIRoute) or route.path in {
+                "/auth/login",
+                "/auth/verify",
+                "/auth/resend",
+            }:
                 continue
             for method in route.methods & {"POST", "PUT", "PATCH", "DELETE"}:
                 assert any(dep.call is require_editor for dep in route.dependant.dependencies), (
@@ -141,7 +151,7 @@ async def test_invalid_expired_and_wrong_algorithm_tokens_are_rejected(auth_app)
             )
             assert response.status_code == 401
         # Resetting the editor password revokes tokens issued with old credentials.
-        await auth_app.state.auth_service.create_editor("leonid", PASSWORD)
+        await auth_app.state.auth_service.create_editor("leonid@example.com", PASSWORD)
         assert (
             await client.get("/api/v1/auth/session", headers={"Authorization": f"Bearer {token}"})
         ).status_code == 401
@@ -152,18 +162,19 @@ async def test_login_throttling_and_unconfigured_secret(auth_app):
         for _ in range(10):
             assert (
                 await client.post(
-                    "/api/v1/auth/login", json={"username": "leonid", "password": "wrong"}
+                    "/api/v1/auth/login",
+                    json={"username": "leonid@example.com", "password": "wrong"},
                 )
             ).status_code == 401
         limited = await client.post(
-            "/api/v1/auth/login", json={"username": "leonid", "password": PASSWORD}
+            "/api/v1/auth/login", json={"username": "leonid@example.com", "password": PASSWORD}
         )
         assert limited.status_code == 429
         assert limited.headers["retry-after"] == "60"
         auth_app.state.auth_service.secret = None
         assert (
             await client.post(
-                "/api/v1/auth/login", json={"username": "leonid", "password": PASSWORD}
+                "/api/v1/auth/login", json={"username": "leonid@example.com", "password": PASSWORD}
             )
         ).status_code == 503
         assert (await client.get("/api/v1/projects")).status_code == 200
