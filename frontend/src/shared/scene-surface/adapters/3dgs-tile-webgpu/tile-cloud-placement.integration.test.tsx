@@ -543,6 +543,9 @@ it.each([
       expect(rings[0].getWorldPosition(new Vector3()).toArray()).toEqual([
         8, 0, 0,
       ]);
+      const geometryBeforeProgress = (
+        scene.getObjectByName("cloud-loading-progress") as Mesh<RingGeometry>
+      ).geometry;
       const halfway = Math.floor(bytes.byteLength / 2);
       await act(async () => {
         slowController.enqueue(bytes.slice(0, halfway));
@@ -551,9 +554,12 @@ it.each([
       const arc = scene.getObjectByName("cloud-loading-progress") as Mesh<
         import("three").RingGeometry
       >;
-      expect(arc.geometry.parameters.thetaLength).toBeCloseTo(
-        (Math.PI * 2 * 0.9 * halfway) / bytes.byteLength,
-      );
+      expect(arc.geometry).toBe(geometryBeforeProgress);
+      const endAngle =
+        Math.PI / 2 + (Math.PI * 2 * 0.9 * halfway) / bytes.byteLength;
+      const position = arc.geometry.getAttribute("position");
+      expect(position.getX(96)).toBeCloseTo(0.21 * Math.cos(endAngle));
+      expect(position.getY(96)).toBeCloseTo(0.21 * Math.sin(endAngle));
       expect(ready).toHaveBeenCalledTimes(1);
       await act(async () => {
         slowController.enqueue(bytes.slice(halfway));
