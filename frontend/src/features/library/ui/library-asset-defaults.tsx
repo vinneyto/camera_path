@@ -54,54 +54,56 @@ export function LibraryAssetDefaults({ asset }: LibraryAssetDefaultsProps) {
       </p>
       <div className="flex flex-wrap items-end gap-2">
         {(["X", "Y", "Z"] as const).map((axis, index) => (
-          <label className="w-20 text-xs" key={axis}>
-            {axis} (°)
-            <Input
-              aria-label={`${asset.name} rotation ${axis} in degrees`}
-              required
-              step="any"
-              type="number"
-              value={angles[index]}
-              onChange={(event) =>
-                setAngles((current) =>
-                  current.map((value, i) =>
-                    i === index ? event.target.value : value,
-                  ),
-                )
-              }
-            />
-          </label>
-        ))}
-        <label className="w-24 text-xs">
-          Uniform scale
           <Input
-            aria-label={`${asset.name} uniform scale`}
-            min="0.000001"
+            key={axis}
+            className="w-20"
+            placeholder={`${axis} (°)`}
+            title={`Rotation ${axis} (°)`}
+            aria-label={`${asset.name} rotation ${axis} in degrees`}
             required
             step="any"
             type="number"
-            value={scale}
-            onChange={(event) => setScale(event.target.value)}
+            value={angles[index]}
+            onChange={(event) =>
+              setAngles((current) =>
+                current.map((value, i) =>
+                  i === index ? event.target.value : value,
+                ),
+              )
+            }
           />
-        </label>
+        ))}
+        <Input
+          className="w-28"
+          placeholder="Uniform scale"
+          title="Uniform scale"
+          aria-label={`${asset.name} uniform scale`}
+          min="0.000001"
+          required
+          step="any"
+          type="number"
+          value={scale}
+          onChange={(event) => setScale(event.target.value)}
+        />
         {(["X", "Y", "Z"] as const).map((axis, index) => (
-          <label className="w-24 text-xs" key={`offset-${axis}`}>
-            Offset {axis}
-            <Input
-              aria-label={`${asset.name} offset ${axis}`}
-              required
-              step="any"
-              type="number"
-              value={offset[index]}
-              onChange={(event) =>
-                setOffset((current) =>
-                  current.map((value, i) =>
-                    i === index ? event.target.value : value,
-                  ),
-                )
-              }
-            />
-          </label>
+          <Input
+            key={`offset-${axis}`}
+            className="w-24"
+            placeholder={`Offset ${axis}`}
+            title={`Offset ${axis}`}
+            aria-label={`${asset.name} offset ${axis}`}
+            required
+            step="any"
+            type="number"
+            value={offset[index]}
+            onChange={(event) =>
+              setOffset((current) =>
+                current.map((value, i) =>
+                  i === index ? event.target.value : value,
+                ),
+              )
+            }
+          />
         ))}
         <Button disabled={save.isPending} size="sm" type="submit">
           {save.isPending ? "Saving…" : "Save defaults"}

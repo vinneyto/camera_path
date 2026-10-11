@@ -37,6 +37,8 @@ import type {
   CameraOrientationKeyframeCreate,
   CameraOrientationKeyframeUpdate,
   CameraTrackUpdate,
+  ChallengeRequest,
+  ChallengeResponse,
   ChatHistoryMessage,
   ChatMessage,
   ChatResponse,
@@ -79,7 +81,8 @@ import type {
   TokenResponse,
   Trajectory,
   UserSettings,
-  UserSettingsUpdate
+  UserSettingsUpdate,
+  VerifyRequest
 } from './model';
 
 import { orvalFetch } from '../orval-fetch';
@@ -103,7 +106,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export type loginEditorResponse200 = {
-  data: TokenResponse
+  data: TokenResponse | ChallengeResponse
   status: 200
 }
 
@@ -130,7 +133,7 @@ export const getLoginEditorUrl = () => {
 }
 
 /**
- * Verify credentials and issue a revocable JWT.
+ * Verify email/password and send a code; no JWT until confirmation.
  * @summary Sign in as the editor
  */
 export const loginEditor = async (loginRequest: LoginRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<loginEditorResponse> => {
@@ -304,6 +307,114 @@ export const useLogoutEditor = <TError = void,
       return useMutation(getLogoutEditorMutationOptions(options), queryClient);
     }
 
+export type resendEditorCodeResponse200 = {
+  data: ChallengeResponse
+  status: 200
+}
+
+export type resendEditorCodeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type resendEditorCodeResponseSuccess = (resendEditorCodeResponse200) & {
+  headers: Headers;
+};
+export type resendEditorCodeResponseError = (resendEditorCodeResponse422) & {
+  headers: Headers;
+};
+
+export type resendEditorCodeResponse = (resendEditorCodeResponseSuccess | resendEditorCodeResponseError)
+
+export const getResendEditorCodeUrl = () => {
+
+
+
+
+  return `/api/v1/auth/resend`
+}
+
+/**
+ * Replace the code after cooldown; preserve failed-attempt and sending budgets.
+ * @summary Replace and resend the email code
+ */
+export const resendEditorCode = async (challengeRequest: ChallengeRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<resendEditorCodeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<resendEditorCodeResponse>(getResendEditorCodeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(challengeRequest)
+  }
+);}
+
+
+
+
+
+export const getResendEditorCodeMutationKey = () => ['resendEditorCode'] as const;
+
+export const getResendEditorCodeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resendEditorCode>>, TError,ResendEditorCodeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resendEditorCode>>, TError,ResendEditorCodeMutationVariables, TContext> => {
+
+const mutationKey = getResendEditorCodeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resendEditorCode>>, ResendEditorCodeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  resendEditorCode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResendEditorCodeMutationResult = NonNullable<Awaited<ReturnType<typeof resendEditorCode>>>
+    export type ResendEditorCodeMutationBody = ChallengeRequest
+    export type ResendEditorCodeMutationError = HTTPValidationError
+    export type ResendEditorCodeMutationVariables = {data: ChallengeRequest}
+
+    /**
+ * @summary Replace and resend the email code
+ */
+export const useResendEditorCode = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resendEditorCode>>, TError,ResendEditorCodeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resendEditorCode>>,
+        TError,
+        ResendEditorCodeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResendEditorCodeMutationOptions(options), queryClient);
+    }
+
 export type getEditorSessionResponse200 = {
   data: SessionResponse
   status: 200
@@ -417,6 +528,114 @@ export function useGetEditorSession<TData = Awaited<ReturnType<typeof getEditorS
 
 
 
+
+export type verifyEditorCodeResponse200 = {
+  data: TokenResponse
+  status: 200
+}
+
+export type verifyEditorCodeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type verifyEditorCodeResponseSuccess = (verifyEditorCodeResponse200) & {
+  headers: Headers;
+};
+export type verifyEditorCodeResponseError = (verifyEditorCodeResponse422) & {
+  headers: Headers;
+};
+
+export type verifyEditorCodeResponse = (verifyEditorCodeResponseSuccess | verifyEditorCodeResponseError)
+
+export const getVerifyEditorCodeUrl = () => {
+
+
+
+
+  return `/api/v1/auth/verify`
+}
+
+/**
+ * Consume an unexpired one-time email code and issue the editor JWT.
+ * @summary Confirm the one-time email code
+ */
+export const verifyEditorCode = async (verifyRequest: VerifyRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<verifyEditorCodeResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<verifyEditorCodeResponse>(getVerifyEditorCodeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(verifyRequest)
+  }
+);}
+
+
+
+
+
+export const getVerifyEditorCodeMutationKey = () => ['verifyEditorCode'] as const;
+
+export const getVerifyEditorCodeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyEditorCode>>, TError,VerifyEditorCodeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyEditorCode>>, TError,VerifyEditorCodeMutationVariables, TContext> => {
+
+const mutationKey = getVerifyEditorCodeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyEditorCode>>, VerifyEditorCodeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyEditorCode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyEditorCodeMutationResult = NonNullable<Awaited<ReturnType<typeof verifyEditorCode>>>
+    export type VerifyEditorCodeMutationBody = VerifyRequest
+    export type VerifyEditorCodeMutationError = HTTPValidationError
+    export type VerifyEditorCodeMutationVariables = {data: VerifyRequest}
+
+    /**
+ * @summary Confirm the one-time email code
+ */
+export const useVerifyEditorCode = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyEditorCode>>, TError,VerifyEditorCodeMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof verifyEditorCode>>,
+        TError,
+        VerifyEditorCodeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getVerifyEditorCodeMutationOptions(options), queryClient);
+    }
 
 export type listLibraryAssetsResponse200 = {
   data: LibraryAsset[]

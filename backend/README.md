@@ -162,7 +162,7 @@ Set the printed value as `CAMERA_PATH_JWT_SECRET`, then prepare the database and
 
 ```bash
 uv run alembic upgrade head
-uv run editor-create your-login
+uv run editor-create you@example.com
 ```
 
 The command asks for a password twice (12–1024 characters), stores a salted Argon2 hash and
@@ -170,14 +170,16 @@ revokes all previous sessions when replacing credentials. There is no public reg
 The new migration `20261006_0011` preserves project/library/profile data and adds editor sessions.
 Missing/short signing secrets disable login and authenticated requests; public reads still work.
 
-`POST /api/v1/auth/login` accepts JSON `{ "username": "...", "password": "..." }` and returns
-`access_token`, `token_type` and `expires_in` to direct API clients. Use `Authorization: Bearer ...`
+`POST /api/v1/auth/login` accepts JSON `{ "username": "you@example.com", "password": "..." }`
+and returns an email challenge. `/api/v1/auth/verify` consumes the emailed code and returns
+`access_token`, `token_type` and `expires_in` to direct API clients. In explicit development
+off mode, login returns the token directly. Use `Authorization: Bearer ...`
 for writes and `GET /api/v1/auth/session`. JWT validation fixes HS256 and checks signature, issuer,
 audience, required claims, expiry and the active server session. Default lifetime is eight hours;
 `CAMERA_PATH_JWT_TTL_SECONDS` accepts 60–86400 seconds. No refresh token is issued.
 `POST /api/v1/auth/logout` revokes only the current session, so replaying that JWT fails immediately.
-Sign-in is limited to ten attempts per minute per backend process; use one process for this initial
-single-editor deployment. A request already authenticated/in flight may finish after logout.
+Sign-in and code delivery/check limits are persisted across backend processes and restarts
+(see the email second factor section below). A request already authenticated/in flight may finish after logout.
 
 The Next.js proxy stores the JWT in an HttpOnly, SameSite=Strict cookie (Secure in production),
 adds Bearer authorization for the backend, and validates the Origin of every browser write.
@@ -344,3 +346,93 @@ native `EventSource` cannot send a POST body.
 
 The non-streaming `/api/v1/projects/{id}/chat/messages` returns the same resource-oriented result.
 Unversioned aggregate chat endpoints remain temporarily available for CP-39 migration.
+
+## Email second factor (M3-10)
+
+The editor signs in with an email address and password, then confirms a six-digit
+code. `/api/v1/auth/login` returns a challenge, **not a token**. Only
+`/api/v1/auth/verify` issues a session; `/api/v1/auth/resend` replaces its code.
+Codes expire after five minutes, allow five failed checks, and can be resent after
+60 seconds. Resends keep the failed-attempt count. Challenges and rate budgets are
+persisted in SQLite and survive restarts; successful consumption and session
+creation use one serialized database transaction across processes. This repository
+implementation currently targets SQLite (including its UPSERT and write lock).
+
+Limits: 10 password attempts/minute, 30 code checks/minute, five email sends/minute
+and 20 sends/hour for the single editor. Minute/hour limits use fixed time windows.
+Source budgets use the immediate connection peer, never arbitrary forwarded
+headers. Production sets `FORWARDED_ALLOW_IPS=""` for Uvicorn; local launches must
+use `--no-proxy-headers`. Next.js/Nginx clients share the proxy's source budget;
+the persisted single-editor account budget still applies to every request.
+Delivery failures do not issue a token or enable a challenge. Codes, passwords and
+JWTs are never logged. Delivery uses a stored editor address, not a request-supplied
+recipient. Email addresses are trimmed/lowercased and checked with a simple regex;
+this is not a full RFC validator or a claim of inbox ownership before confirmation.
+
+### Local verification before any CDK deployment
+
+Use Mailpit as a local inbox. This exercises the full email-code flow without
+creating AWS resources or sending to a real mailbox:
+
+```bash
+docker run --rm --name camera-path-mailpit \
+  -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 axllent/mailpit
+```
+
+In a separate terminal, from `backend/`, add these settings to `.env` (keep your
+existing JWT secret, or generate a new random secret of at least 32 bytes):
+
+```dotenv
+CAMERA_PATH_ENVIRONMENT=development
+CAMERA_PATH_AUTH_SECOND_FACTOR=email
+CAMERA_PATH_AUTH_EMAIL_DELIVERY=smtp
+CAMERA_PATH_AUTH_SMTP_HOST=127.0.0.1
+CAMERA_PATH_AUTH_SMTP_PORT=1025
+CAMERA_PATH_AUTH_EMAIL_FROM=noreply@camerapath.dev
+CAMERA_PATH_AWS_LIBRARY_STORAGE=local
+CAMERA_PATH_DATABASE_URL=sqlite+aiosqlite:///./camera_path_2fa.sqlite3
+CAMERA_PATH_JWT_SECRET=<your-random-secret-at-least-32-bytes>
+```
+
+Use a fresh trial database to keep your normal local projects separate. To use an
+existing database instead, back it up and keep its configured URL. The new migration
+revokes existing editor sessions, but preserves the editor record and project data.
+A legacy non-email login will no longer work; explicitly replace it with your email:
+
+```bash
+uv sync --frozen
+uv run alembic upgrade head
+uv run editor-create you@example.com
+uv run uvicorn camera_path.api:app --host 127.0.0.1 --port 8000 --no-proxy-headers
+```
+
+The CLI asks for the password interactively (minimum 12 characters). It revokes
+existing sessions and unfinished sign-ins when replacing credentials. No placeholder
+email is assigned during migration.
+
+Run the frontend with `CAMERA_PATH_BACKEND_URL=http://127.0.0.1:8000` and `npm run dev`.
+Open its Profile dialog, enter email/password, then read the code at
+`http://127.0.0.1:8025`. Before confirming, editing must remain unavailable. Verify a
+wrong code, a correct code, sign out, and inability to reuse the previous code.
+For a new challenge, test resend after 60 seconds (the previous code stops working),
+and expiry after five minutes. Mailpit is a development inbox; it does not demonstrate
+AWS IAM, DNS verification, production delivery or inbox spam placement.
+
+For ordinary development without a code, explicitly set
+`CAMERA_PATH_AUTH_SECOND_FACTOR=off` with `CAMERA_PATH_ENVIRONMENT=development`.
+Email/password remain required; SMTP and SES are not called. Off-mode tokens are
+rejected when the backend runs with the email second factor. Production requires
+`email` and `ses`; using `off` or the SMTP sink in production fails configuration
+validation. Switching storage or browser hostnames does not select these modes.
+
+### Optional real SES test from a local backend
+
+If a verified SES sender already exists, no app-stack deployment is needed to test
+real delivery: install `uv sync --frozen --extra aws`, select
+`CAMERA_PATH_AUTH_EMAIL_DELIVERY=ses`, set `CAMERA_PATH_AUTH_EMAIL_FROM` to that
+verified sender, and set `CAMERA_PATH_AWS_REGION` plus your existing AWS profile/SSO
+credentials. Its IAM role must allow `ses:SendEmail` for the sender identity.
+In sandbox, verify the editor's recipient email in that **same region** first.
+If no identity is verified yet, local SMTP checks can proceed immediately; real
+SES requires creating/verifying the identity and DNS separately or with CDK.
+See `infra/README.md` for the post-review deployment and delivery checks.

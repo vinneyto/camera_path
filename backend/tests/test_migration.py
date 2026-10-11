@@ -239,3 +239,27 @@ def test_existing_normalized_data_moves_to_columns(tmp_path, monkeypatch) -> Non
             columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
             assert "payload" not in columns
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_email_auth_migration_preserves_editor_and_revokes_password_only_sessions(
+    tmp_path, monkeypatch
+):
+    database_path = tmp_path / "email-migration.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20261011_0012")
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO editors VALUES ('editor', 'legacy', 'hash', 'version')")
+        connection.execute("INSERT INTO editor_sessions VALUES ('old-session', 9999999999)")
+        connection.execute("INSERT INTO projects (id,name,revision) VALUES ('p','Keep me',0)")
+    command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute(
+            "SELECT username,password_hash,credential_version FROM editors"
+        ).fetchone() == ("legacy", "hash", "version")
+        assert connection.execute("SELECT COUNT(*) FROM editor_sessions").fetchone() == (0,)
+        assert connection.execute("SELECT name FROM projects").fetchone() == ("Keep me",)
+        assert connection.execute("SELECT COUNT(*) FROM auth_challenges").fetchone() == (0,)
+    command.downgrade(config, "20261011_0012")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT username FROM editors").fetchone() == ("legacy",)

@@ -438,3 +438,21 @@ class ChatMessageRecord(ProjectChildRecord, Base):
         enum_column(ChatRole, "ck_chat_messages_role"), nullable=False
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AuthChallengeRecord(Base):
+    __tablename__ = "auth_challenges"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    credential_version: Mapped[str] = mapped_column(Text, nullable=False)
+    code_digest: Mapped[str] = mapped_column(Text, nullable=False)
+    expires_at: Mapped[int] = mapped_column(Integer, nullable=False)
+    resend_at: Mapped[int] = mapped_column(Integer, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    delivered: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+
+class AuthRateLimitRecord(Base):
+    __tablename__ = "auth_rate_limits"
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    count: Mapped[int] = mapped_column(Integer, nullable=False)
+    expires_at: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -87,9 +87,14 @@ export async function proxyApiRequest(
       status: upstream.status,
       headers: responseHeaders,
     });
-  } else if (path === "/api/v1/auth/login" && upstream.ok) {
+  } else if (
+    ["/api/v1/auth/login", "/api/v1/auth/verify"].includes(path) &&
+    upstream.ok
+  ) {
     const result = (await upstream.json()) as {
-      access_token: string;
+      access_token?: string;
+      challenge_id?: string;
+      resend_after?: number;
       expires_in: number;
     };
     // The browser sees session metadata only; the JWT stays in an HttpOnly cookie.
@@ -97,10 +102,16 @@ export async function proxyApiRequest(
       { expires_in: result.expires_in },
       { headers: responseHeaders },
     );
-    response.cookies.set(COOKIE, result.access_token, {
-      ...cookieOptions,
-      maxAge: result.expires_in,
-    });
+    if (result.access_token) {
+      response.cookies.set(COOKIE, result.access_token, {
+        ...cookieOptions,
+        maxAge: result.expires_in,
+      });
+    } else {
+      response = NextResponse.json(result, { headers: responseHeaders });
+      // Password verification alone must never grant/retain editor access.
+      response.cookies.set(COOKIE, "", { ...cookieOptions, maxAge: 0 });
+    }
   } else if (
     upstream.headers.get("content-type")?.includes("application/json")
   ) {

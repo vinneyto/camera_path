@@ -221,3 +221,65 @@ Renewal verification is a real-network check, not part of the local unit tests.
 Port 80 must remain reachable for HTTP-01 renewal. Keep the registrar's name servers
 pointing to this hosted zone. Changing the domain changes the endpoint; old DNS
 records/certificates are not a frontend migration strategy.
+
+## Email authentication infrastructure and deployment
+
+Review and exercise the local SMTP flow from `backend/README.md` before deploying.
+`npm run build` and the Node synth tests validate the SES/DNS/IAM declaration without
+AWS access. The stack creates a SES domain identity for `CP_DOMAIN`, three Easy DKIM
+CNAME records in `CP_HOSTED_ZONE_ID`, and MX/SPF records on `auth-mail.<CP_DOMAIN>`.
+The existing API/frontend records remain in place. An existing domain DMARC record
+is deliberately left untouched; manage any desired DMARC policy separately. Check
+for pre-existing DKIM/MAIL FROM resources before deployment/import to avoid DNS or
+SES identity conflicts.
+
+EC2 gets only `ses:SendEmail` on that identity, restricted by `ses:FromAddress` to
+`noreply@<CP_DOMAIN>`. DNS management remains with CloudFormation. The release writes
+production/email/SES settings and the region to `backend.env`; no AWS access keys
+or passwords are added. `AuthEmailFrom` is a non-secret stack output.
+
+After the PR is merged and locally accepted, use your existing deployment variables
+(`CP_DEPLOYMENT_ID`, `CP_DOMAIN`, `CP_HOSTED_ZONE_ID`, `CP_TLS_EMAIL`, frontend origins,
+AWS account/profile) and the exact desired published commit:
+
+```bash
+export CP_BACKEND_REVISION=$(git rev-parse HEAD)
+cd infra
+npm ci
+npm run cdk -- diff
+npm run cdk -- deploy
+```
+
+Wait for actual SES identity verification, not merely CloudFormation completion:
+
+```bash
+aws sesv2 get-email-identity --email-identity "$CP_DOMAIN" --region us-east-1
+aws sesv2 get-account --region us-east-1
+```
+
+`VerifiedForSendingStatus` must be true; check DKIM status as well. If the account
+is still in sandbox, verify the sole editor's recipient address (the CLI sends an
+AWS confirmation message which the recipient must accept):
+
+```bash
+aws sesv2 create-email-identity --email-identity you@example.com --region us-east-1
+```
+
+For the initial single-editor deployment, sandbox is sufficient once both the
+sender domain and recipient are verified. Production access is a separate,
+one-time SES account/region request, reviewed by AWS; do not submit it on every
+CDK deployment. Request it through the SES console when unverified recipients are
+needed. See https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html.
+
+After successful deploy, use SSM Session Manager to replace a legacy editor login
+with an email. Keep the password interactive (never in command arguments/outputs):
+
+```bash
+sudo -u camera-path sh -c 'set -a; . /etc/camera-path/backend.env; set +a; cd /opt/camera-path/current/backend; .venv/bin/editor-create you@example.com'
+```
+
+Deploy the updated frontend too: it understands challenge responses and sets the
+HttpOnly cookie only after code confirmation. Browser acceptance: login sends a
+real email, password alone cannot edit, correct code enables editing, sign out
+revokes the session, resend invalidates the previous code, and a delivery error
+never grants access. Domain attachment for the frontend is a separate M3-7 task.

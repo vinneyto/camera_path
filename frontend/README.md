@@ -167,3 +167,14 @@ transform is retained, and external links open with `noopener noreferrer`.
 Code and tables have local horizontal scroll; formatting uses the existing theme colors.
 The same renderer handles partial content updates and saved history without changing message
 content or the existing chat request transport.
+
+### Email confirmation during editor sign-in
+
+Profile sign-in asks for the editor email/password, then a six-digit email code.
+The challenge step shows expiry and resend cooldown, handles incorrect codes and
+allows starting again or cancellation without retaining the password. The proxy
+exposes no JWT to browser JavaScript: it creates the HttpOnly session cookie only
+after successful confirmation (or explicit local off mode). Password-only challenge
+responses clear any prior authenticated cookie. See `../backend/README.md` for a
+Mailpit local inbox setup requiring no AWS deployment. Deploy backend and frontend
+together after accepting the PR locally.

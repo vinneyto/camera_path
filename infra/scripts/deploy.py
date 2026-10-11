@@ -164,6 +164,12 @@ def environment(config):
         "CAMERA_PATH_AWS_S3_PREFIX": "library/",
         "CAMERA_PATH_AWS_REGION": config["region"],
         "CAMERA_PATH_JWT_SECRET": jwt,
+        "CAMERA_PATH_ENVIRONMENT": "production",
+        "CAMERA_PATH_AUTH_SECOND_FACTOR": "email",
+        "CAMERA_PATH_AUTH_EMAIL_DELIVERY": "ses",
+        "CAMERA_PATH_AUTH_EMAIL_FROM": config["auth_email_from"],
+        # Existing systemd units also pick this up: never trust forwarded IPs.
+        "FORWARDED_ALLOW_IPS": "",
     }
     try:
         values["OPENAI_API_KEY"] = secrets.get_secret_value(
@@ -172,8 +178,8 @@ def environment(config):
     except ClientError as exc:
         if exc.response["Error"]["Code"] != "ResourceNotFoundException":
             raise
-    for value in values.values():
-        if not value or any(char in value for char in '\n\r"\\'):
+    for key, value in values.items():
+        if (not value and key != "FORWARDED_ALLOW_IPS") or any(char in value for char in '\n\r"\\'):
             raise ValueError("Secret/config must be a nonempty single-line value")
     return values
 

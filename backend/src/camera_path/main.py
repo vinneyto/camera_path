@@ -2,7 +2,9 @@ import uvicorn
 
 
 def run() -> None:
-    uvicorn.run("camera_path.api:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run(
+        "camera_path.api:app", host="127.0.0.1", port=8000, reload=False, proxy_headers=False
+    )
 
 
 if __name__ == "__main__":
