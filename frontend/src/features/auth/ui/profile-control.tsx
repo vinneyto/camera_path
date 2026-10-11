@@ -104,19 +104,18 @@ export function ProfileControl() {
             <p className="text-xs">
               Enter the code sent to your email. Expires in {expiresSeconds}s.
             </p>
-            <label className="block text-xs">
-              Email code
-              <Input
-                required
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                value={code}
-                className="h-10 text-base md:h-8 md:text-xs"
-                onChange={(event) => setCode(event.target.value)}
-              />
-            </label>
+            <Input
+              aria-label="Email code"
+              placeholder="Email code"
+              required
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={code}
+              className="h-10 text-base md:h-8 md:text-xs"
+              onChange={(event) => setCode(event.target.value)}
+            />
             <Button
               type="button"
               size="sm"
@@ -148,28 +147,26 @@ export function ProfileControl() {
           </div>
         ) : (
           <>
-            <label className="block text-xs">
-              Email
-              <Input
-                type="email"
-                autoComplete="username"
-                className="h-10 text-base md:h-8 md:text-xs"
-                required
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-              />
-            </label>
-            <label className="block text-xs">
-              Password
-              <Input
-                type="password"
-                autoComplete="current-password"
-                className="h-10 text-base md:h-8 md:text-xs"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
+            <Input
+              aria-label="Email"
+              placeholder="Email"
+              type="email"
+              autoComplete="username"
+              className="h-10 text-base md:h-8 md:text-xs"
+              required
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+            <Input
+              aria-label="Password"
+              placeholder="Password"
+              type="password"
+              autoComplete="current-password"
+              className="h-10 text-base md:h-8 md:text-xs"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           </>
         )}
         <div className="flex gap-2">
