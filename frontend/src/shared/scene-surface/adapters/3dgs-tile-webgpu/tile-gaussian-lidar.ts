@@ -7,7 +7,7 @@ import {
   Camera,
   InstancedMesh,
   Matrix4,
-  MeshBasicNodeMaterial,
+  MeshStandardNodeMaterial,
   SphereGeometry,
   StorageInstancedBufferAttribute,
   type WebGPURenderer,
@@ -24,9 +24,12 @@ export class TileGaussianLidar implements GaussianLidarInstance {
   readonly object: InstancedMesh;
   private readonly camera = new Camera();
   private readonly pass;
-  private readonly geometry = new SphereGeometry(0.025, 6, 4);
-  private readonly material = new MeshBasicNodeMaterial({
+  private readonly geometry = new SphereGeometry(0.01, 8, 6);
+  private readonly material = new MeshStandardNodeMaterial({
     color: 0x35f2a1,
+    roughness: 0.65,
+    metalness: 0,
+    opacity: 0.45,
     transparent: true,
     depthWrite: false,
   });
