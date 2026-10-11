@@ -24,6 +24,7 @@ import { downloadGaussianCloud } from "./download-gaussian-cloud";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
 import { LoggingGaussianBackend } from "./logging-gaussian-backend";
+import { installWebGpuDrawDiagnostics } from "./install-webgpu-draw-diagnostics";
 import { TileGaussianLidar } from "./tile-gaussian-lidar";
 import { TileLidarFrameNode } from "./tile-lidar-frame-node";
 import type {
@@ -54,6 +55,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private unregisterPass: (() => void) | null = null;
   private dprMode: GaussianDprMode = "1x";
   private readonly additionalCloudLayers: readonly number[];
+  private readonly uninstallDrawDiagnostics: () => void;
 
   constructor(
     private readonly pipeline: SceneRenderPipeline,
@@ -63,6 +65,9 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (!(pipeline.camera instanceof PerspectiveCamera)) {
       throw new TypeError("3dgs-tile-webgpu requires a PerspectiveCamera");
     }
+    this.uninstallDrawDiagnostics = this.debugEnabled
+      ? installWebGpuDrawDiagnostics(pipeline.renderer)
+      : () => undefined;
   }
 
   async createCloud(
@@ -217,6 +222,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.uninstallDrawDiagnostics();
     for (const controller of this.loads) controller.abort();
     for (const sensor of [...this.lidars]) sensor.dispose();
     this.highlightVolume?.dispose();

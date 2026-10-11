@@ -34,6 +34,7 @@ export function CloudLoadingRing({
         <mesh name="cloud-loading-background" raycast={() => undefined}>
           <ringGeometry args={[0.21, 0.3, 96]} />
           <meshBasicMaterial
+            name="cloud-loading-background-material"
             color="white"
             opacity={0.18}
             transparent
@@ -52,6 +53,7 @@ export function CloudLoadingRing({
           >
             <ringGeometry args={[0.21, 0.3, 96, 1, Math.PI / 2, angle]} />
             <meshBasicMaterial
+              name="cloud-loading-progress-material"
               color="white"
               opacity={0.65}
               transparent
