@@ -233,8 +233,12 @@ is deliberately left untouched; manage any desired DMARC policy separately. Chec
 for pre-existing DKIM/MAIL FROM resources before deployment/import to avoid DNS or
 SES identity conflicts.
 
-EC2 gets only `ses:SendEmail` on that identity, restricted by `ses:FromAddress` to
-`noreply@<CP_DOMAIN>`. DNS management remains with CloudFormation. The release writes
+EC2 gets only `ses:SendEmail` on SES identities in this AWS account and region,
+restricted by `ses:FromAddress` to `noreply@<CP_DOMAIN>`. This includes verified
+recipient identities which SES may also authorize in sandbox; a sender-domain-only
+resource scope can fail with `AccessDeniedException` on the recipient identity.
+There are no identity-management or `SendRawEmail` permissions. The application
+always sends to the stored editor address. DNS management remains with CloudFormation. The release writes
 production/email/SES settings and the region to `backend.env`; no AWS access keys
 or passwords are added. `AuthEmailFrom` is a non-secret stack output.
 
