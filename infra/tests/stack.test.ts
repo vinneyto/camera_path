@@ -113,6 +113,9 @@ test('SES identity manages DKIM/MAIL FROM DNS and grants only the configured sen
   const send = statements.find(s => s.Action === 'ses:SendEmail');
   assert.deepEqual(send.Condition, { StringEquals: { 'ses:FromAddress': 'noreply@example.com' } });
   assert.notEqual(send.Resource, '*');
+  assert.deepEqual(send.Resource, {
+    'Fn::Join': ['', ['arn:', { Ref: 'AWS::Partition' }, ':ses:us-east-1:992382434156:identity/*']],
+  });
   const release = resources.find(r => r.Type === 'AWS::CloudFormation::CustomResource');
   assert.equal(release.Properties.Config.auth_email_from, 'noreply@example.com');
   const instance = resources.find(r => r.Type === 'AWS::EC2::Instance');
