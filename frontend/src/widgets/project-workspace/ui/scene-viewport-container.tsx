@@ -112,6 +112,7 @@ export function SceneViewportContainer({
       </EditorOnly>
       <Viewport
         key={projectId}
+        lidar={project.camera_track.lidar_keyframe}
         anchors={anchors}
         clouds={clouds}
         initialCloudIds={initialCloudIds}

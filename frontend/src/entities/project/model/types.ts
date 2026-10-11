@@ -48,6 +48,7 @@ export interface Project extends Api.ProjectMetadata {
     default_orientation: CameraOrientation;
     orientation_keyframes: Record<string, CameraOrientationKeyframe>;
     depth_of_field_keyframes: Record<string, DepthOfFieldKeyframe>;
+    lidar_keyframe?: Required<Api.LidarKeyframe> | null;
     world_up: Vec3;
   };
   motion_profile: {

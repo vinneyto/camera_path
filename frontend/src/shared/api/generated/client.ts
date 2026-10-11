@@ -53,6 +53,8 @@ import type {
   LibraryAssetsDelete,
   LibraryUpload,
   LibraryUploadCreate,
+  LidarSettings,
+  LidarTimeline,
   LoginRequest,
   MotionProfile,
   MotionProfileUpdate,
@@ -3635,6 +3637,370 @@ export const useUpdateCameraAimKeyframe = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateCameraAimKeyframeMutationOptions(options), queryClient);
+    }
+
+export type deleteLidarTimelineResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteLidarTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type deleteLidarTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteLidarTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteLidarTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteLidarTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteLidarTimelineResponseSuccess = (deleteLidarTimelineResponse204) & {
+  headers: Headers;
+};
+export type deleteLidarTimelineResponseError = (deleteLidarTimelineResponse401 | deleteLidarTimelineResponse404 | deleteLidarTimelineResponse409 | deleteLidarTimelineResponse422 | deleteLidarTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type deleteLidarTimelineResponse = (deleteLidarTimelineResponseSuccess | deleteLidarTimelineResponseError)
+
+export const getDeleteLidarTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera/lidar`
+}
+
+/**
+ * Remove the presence keyframe and disable the sensor for the whole trajectory.
+ * @summary Remove the LiDAR timeline
+ */
+export const deleteLidarTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteLidarTimelineResponse> => {
+
+  return orvalFetch<deleteLidarTimelineResponse>(getDeleteLidarTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLidarTimelineMutationKey = () => ['deleteLidarTimeline'] as const;
+
+export const getDeleteLidarTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLidarTimeline>>, TError,DeleteLidarTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLidarTimeline>>, TError,DeleteLidarTimelineMutationVariables, TContext> => {
+
+const mutationKey = getDeleteLidarTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLidarTimeline>>, DeleteLidarTimelineMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  deleteLidarTimeline(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLidarTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLidarTimeline>>>
+
+    export type DeleteLidarTimelineMutationError = void | ErrorResponse
+    export type DeleteLidarTimelineMutationVariables = {projectId: string}
+
+    /**
+ * @summary Remove the LiDAR timeline
+ */
+export const useDeleteLidarTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLidarTimeline>>, TError,DeleteLidarTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLidarTimeline>>,
+        TError,
+        DeleteLidarTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteLidarTimelineMutationOptions(options), queryClient);
+    }
+
+export type getLidarTimelineResponse200 = {
+  data: LidarTimeline
+  status: 200
+}
+
+export type getLidarTimelineResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getLidarTimelineResponseSuccess = (getLidarTimelineResponse200) & {
+  headers: Headers;
+};
+export type getLidarTimelineResponseError = (getLidarTimelineResponse422) & {
+  headers: Headers;
+};
+
+export type getLidarTimelineResponse = (getLidarTimelineResponseSuccess | getLidarTimelineResponseError)
+
+export const getGetLidarTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera/lidar`
+}
+
+/**
+ * Return the optional presence keyframe and static angular configuration.
+ * @summary Get the LiDAR timeline
+ */
+export const getLidarTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getLidarTimelineResponse> => {
+
+  return orvalFetch<getLidarTimelineResponse>(getGetLidarTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLidarTimelineQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/camera/lidar`
+    ] as const;
+    }
+
+
+export const getGetLidarTimelineQueryOptions = <TData = Awaited<ReturnType<typeof getLidarTimeline>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLidarTimeline>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLidarTimelineQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLidarTimeline>>> = ({ signal }) => getLidarTimeline(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLidarTimeline>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLidarTimelineQueryResult = NonNullable<Awaited<ReturnType<typeof getLidarTimeline>>>
+export type GetLidarTimelineQueryError = HTTPValidationError
+
+
+export function useGetLidarTimeline<TData = Awaited<ReturnType<typeof getLidarTimeline>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLidarTimeline>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLidarTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getLidarTimeline>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLidarTimeline<TData = Awaited<ReturnType<typeof getLidarTimeline>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLidarTimeline>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLidarTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getLidarTimeline>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLidarTimeline<TData = Awaited<ReturnType<typeof getLidarTimeline>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLidarTimeline>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the LiDAR timeline
+ */
+
+export function useGetLidarTimeline<TData = Awaited<ReturnType<typeof getLidarTimeline>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLidarTimeline>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLidarTimelineQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type setLidarTimelineResponse200 = {
+  data: LidarTimeline
+  status: 200
+}
+
+export type setLidarTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type setLidarTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type setLidarTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type setLidarTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type setLidarTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type setLidarTimelineResponseSuccess = (setLidarTimelineResponse200) & {
+  headers: Headers;
+};
+export type setLidarTimelineResponseError = (setLidarTimelineResponse401 | setLidarTimelineResponse404 | setLidarTimelineResponse409 | setLidarTimelineResponse422 | setLidarTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type setLidarTimelineResponse = (setLidarTimelineResponseSuccess | setLidarTimelineResponseError)
+
+export const getSetLidarTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera/lidar`
+}
+
+/**
+ * Upsert one presence keyframe at position zero. Parameters are static for the whole trajectory.
+ * @summary Enable or configure the LiDAR timeline
+ */
+export const setLidarTimeline = async (projectId: string,
+    lidarSettings: LidarSettings, options?: Parameters<typeof orvalFetch>[1]): Promise<setLidarTimelineResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<setLidarTimelineResponse>(getSetLidarTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lidarSettings)
+  }
+);}
+
+
+
+
+
+export const getSetLidarTimelineMutationKey = () => ['setLidarTimeline'] as const;
+
+export const getSetLidarTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setLidarTimeline>>, TError,SetLidarTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setLidarTimeline>>, TError,SetLidarTimelineMutationVariables, TContext> => {
+
+const mutationKey = getSetLidarTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setLidarTimeline>>, SetLidarTimelineMutationVariables> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  setLidarTimeline(projectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetLidarTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof setLidarTimeline>>>
+    export type SetLidarTimelineMutationBody = LidarSettings
+    export type SetLidarTimelineMutationError = void | ErrorResponse
+    export type SetLidarTimelineMutationVariables = {projectId: string;data: LidarSettings}
+
+    /**
+ * @summary Enable or configure the LiDAR timeline
+ */
+export const useSetLidarTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setLidarTimeline>>, TError,SetLidarTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setLidarTimeline>>,
+        TError,
+        SetLidarTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetLidarTimelineMutationOptions(options), queryClient);
     }
 
 export type getOrientationTimelineResponse200 = {

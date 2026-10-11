@@ -34,6 +34,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
         >
           <CameraViewOffset bottomInset={props.bottomOverlayHeight ?? 0} />
           <SceneContents
+            lidar={props.lidar}
             anchors={props.anchors}
             clouds={props.clouds}
             initialCloudIds={props.initialCloudIds}

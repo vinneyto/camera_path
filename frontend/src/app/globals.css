@@ -24,6 +24,7 @@
   --chart-aim: #13a4a8;
   --chart-dof: #22a55b;
   --chart-orientation: #8b5cf6;
+  --chart-lidar: #189669;
   --chart-grid: color-mix(in oklab, var(--foreground) 11%, transparent);
   --scene-background: #ebe9e5;
   --scene-ground: #d9d6d0;
@@ -55,6 +56,7 @@
   --chart-aim: #27b8bb;
   --chart-dof: #36c878;
   --chart-orientation: #a78bfa;
+  --chart-lidar: #35f2a1;
   --chart-grid: color-mix(in oklab, var(--foreground) 13%, transparent);
   --scene-background: #0c1017;
   --scene-ground: #171c24;

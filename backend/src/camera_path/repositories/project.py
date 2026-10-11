@@ -9,6 +9,7 @@ from camera_path.models import (
     AimTimeline,
     CameraTrack,
     DepthOfFieldTimeline,
+    LidarTimeline,
     OrientationTimeline,
     Project,
     ProjectMetadata,
@@ -29,6 +30,7 @@ from camera_path.repositories.depth_of_field_timeline import (
     DepthOfFieldTimelineRepository,
 )
 from camera_path.repositories.exceptions import ProjectNotFoundError, RevisionConflictError
+from camera_path.repositories.lidar_timeline import LidarTimelineRepository
 from camera_path.repositories.orientation_timeline import (
     OrientationTimelineRepository,
 )
@@ -171,6 +173,7 @@ class ProjectRepository:
         aim = await AimTimelineRepository(session).get(project_id)
         orientation = await OrientationTimelineRepository(session).get(project_id)
         depth_of_field = await DepthOfFieldTimelineRepository(session).get(project_id)
+        lidar = await LidarTimelineRepository(session).get(project_id)
         chat_history = await ChatMessageRepository(session).list(project_id)
 
         return Project(
@@ -188,6 +191,7 @@ class ProjectRepository:
                 default_orientation=orientation.default_orientation,
                 orientation_keyframes=orientation.keyframes,
                 depth_of_field_keyframes=depth_of_field.keyframes,
+                lidar_keyframe=lidar.lidar_keyframe,
             ),
             chat_history=chat_history,
         )
@@ -218,6 +222,9 @@ class ProjectRepository:
         await DepthOfFieldTimelineRepository(session).replace(
             project.id,
             DepthOfFieldTimeline(keyframes=project.camera_track.depth_of_field_keyframes),
+        )
+        await LidarTimelineRepository(session).replace(
+            project.id, LidarTimeline(lidar_keyframe=project.camera_track.lidar_keyframe)
         )
         await ChatMessageRepository(session).replace(project.id, project.chat_history)
 
@@ -288,5 +295,9 @@ class ProjectRepository:
             await AnchorRepository(session).replace(project_id, after.anchors)
         if before.scene_points != after.scene_points:
             await ScenePointRepository(session).replace(project_id, after.scene_points)
+        if before.camera_track.lidar_keyframe != after.camera_track.lidar_keyframe:
+            await LidarTimelineRepository(session).replace(
+                project_id, LidarTimeline(lidar_keyframe=after.camera_track.lidar_keyframe)
+            )
         if before.chat_history != after.chat_history:
             await ChatMessageRepository(session).replace(project_id, after.chat_history)

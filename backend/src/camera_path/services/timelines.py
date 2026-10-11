@@ -13,6 +13,9 @@ from camera_path.models import (
     DepthOfFieldKeyframeCreate,
     DepthOfFieldKeyframeUpdate,
     DepthOfFieldTimeline,
+    LidarKeyframe,
+    LidarSettings,
+    LidarTimeline,
     MotionProfileUpdate,
     OrientationTimeline,
     Project,
@@ -24,12 +27,27 @@ from camera_path.models import (
 from camera_path.repositories.aim_timeline import AimTimelineRepository
 from camera_path.repositories.camera_track import CameraTrackRepository
 from camera_path.repositories.depth_of_field_timeline import DepthOfFieldTimelineRepository
+from camera_path.repositories.lidar_timeline import LidarTimelineRepository
 from camera_path.repositories.orientation_timeline import OrientationTimelineRepository
 from camera_path.repositories.speed_timeline import SpeedTimelineRepository
 from camera_path.services.base import ServiceBase
 
 
 class TimelineService(ServiceBase):
+    async def set_lidar(self, project_id: str, data: LidarSettings | None) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        old = draft.camera_track.lidar_keyframe
+        values = {} if old is None else old.model_dump()
+        if data is not None:
+            values.update(data.model_dump(exclude_unset=True))
+        draft.camera_track.lidar_keyframe = None if data is None else LidarKeyframe(**values)
+        async with self._transaction(draft, expected) as session:
+            await LidarTimelineRepository(session).replace(
+                project_id, LidarTimeline(lidar_keyframe=draft.camera_track.lidar_keyframe)
+            )
+        return draft
+
     async def _save_speed(self, draft: Project, expected: int) -> Project:
         async with self._transaction(draft, expected) as session:
             await SpeedTimelineRepository(session).replace(draft.id, draft.motion_profile)

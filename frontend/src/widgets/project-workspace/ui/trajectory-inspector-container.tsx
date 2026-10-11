@@ -10,6 +10,7 @@ import {
   useDeleteSpeedKeyframe,
   useDeleteDepthOfFieldKeyframe,
 } from "@/features/object-deletion";
+import { useLidarTimeline } from "@/features/lidar/api/use-lidar-timeline";
 import { TrajectoryInspector } from "@/widgets/trajectory-panels";
 
 interface TrajectoryInspectorContainerProps {
@@ -25,6 +26,7 @@ export function TrajectoryInspectorContainer({
   projectId,
   trajectory,
 }: TrajectoryInspectorContainerProps) {
+  const lidarMutation = useLidarTimeline(projectId);
   const playback = useTrajectoryPlayback(trajectory);
   const addDepthOfFieldKeyframeMutation = useAddDepthOfFieldKeyframe(projectId);
   const deleteSpeedKeyframeMutation = useDeleteSpeedKeyframe(projectId);
@@ -56,6 +58,9 @@ export function TrajectoryInspectorContainer({
 
   return (
     <TrajectoryInspector
+      onSetLidar={(settings) => lidarMutation.mutate(settings)}
+      lidarPending={lidarMutation.isPending}
+      lidarError={lidarMutation.error?.message}
       deletingAimKeyframeId={deleteCameraKeyframeMutation.variables}
       deletingOrientationKeyframeId={
         deleteCameraOrientationKeyframeMutation.variables

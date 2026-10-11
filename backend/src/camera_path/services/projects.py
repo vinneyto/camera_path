@@ -3,6 +3,7 @@ from sqlalchemy import delete
 from camera_path.models import (
     AimTimeline,
     DepthOfFieldTimeline,
+    LidarTimeline,
     OrientationTimeline,
     Project,
     ProjectCreate,
@@ -16,6 +17,7 @@ from camera_path.repositories.anchor import AnchorRepository
 from camera_path.repositories.camera_track import CameraTrackRepository
 from camera_path.repositories.chat_message import ChatMessageRepository
 from camera_path.repositories.depth_of_field_timeline import DepthOfFieldTimelineRepository
+from camera_path.repositories.lidar_timeline import LidarTimelineRepository
 from camera_path.repositories.orientation_timeline import OrientationTimelineRepository
 from camera_path.repositories.scene_point import ScenePointRepository
 from camera_path.repositories.speed_timeline import SpeedTimelineRepository
@@ -76,6 +78,7 @@ class ProjectService(ServiceBase):
             await DepthOfFieldTimelineRepository(session).replace(
                 project_id, DepthOfFieldTimeline()
             )
+            await LidarTimelineRepository(session).replace(project_id, LidarTimeline())
             await TrajectoryRepository(session).replace(project_id, [])
             await session.flush()
             await AnchorRepository(session).replace(project_id, {})
