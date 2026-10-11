@@ -1,8 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { App } from 'aws-cdk-lib';
+import { App, aws_ec2 as ec2 } from 'aws-cdk-lib';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Template, Match } from 'aws-cdk-lib/assertions';
 import { BackendStack } from '../src/stack';
+import { configureBackend } from '../src/configureBackend';
 
 function template(revision = 'a'.repeat(40), localAccess = false) {
   const app = new App({ context: {
@@ -112,4 +115,26 @@ test('SES identity manages DKIM/MAIL FROM DNS and grants only the configured sen
   assert.notEqual(send.Resource, '*');
   const release = resources.find(r => r.Type === 'AWS::CloudFormation::CustomResource');
   assert.equal(release.Properties.Config.auth_email_from, 'noreply@example.com');
+  const instance = resources.find(r => r.Type === 'AWS::EC2::Instance');
+  assert.ok(!JSON.stringify(instance.Properties.UserData).includes('auth_email_from'));
+});
+
+test('email release settings preserve the pre-SES bootstrap payload byte for byte', () => {
+  const legacyConfig = {
+    region: 'us-east-1', library_bucket: 'library', backups_bucket: 'backups',
+    jwt_secret: 'jwt', openai_secret: 'openai', volume_id: 'vol-test',
+    repository: 'https://github.com/vinneyto/camera_path.git',
+    api_domain: 'api.example.com', public_ip: '192.0.2.1', tls_email: 'ops@example.com',
+  };
+  const expected = [
+    'install -d -m 0755 /etc/camera-path',
+    `cat > /etc/camera-path/deployment.json <<'CP_CONFIG'\n${JSON.stringify(legacyConfig)}\nCP_CONFIG`,
+    readFileSync(resolve(__dirname, '../scripts/bootstrap.sh'), 'utf8'),
+  ];
+  for (const sender of ['noreply@example.com', 'editor@example.com']) {
+    let commands: string[] = [];
+    const instance = { addUserData: (...lines: string[]) => { commands = lines; } } as unknown as ec2.Instance;
+    configureBackend(instance, { ...legacyConfig, auth_email_from: sender });
+    assert.deepEqual(commands, expected);
+  }
 });
