@@ -12,6 +12,7 @@ import {
   useGetOrientationTimeline,
   useGetDepthOfFieldTimeline,
   useListChatMessages,
+  useGetLidarTimeline,
 } from "@/shared/api/generated/client";
 import { rememberProjectRevision } from "@/shared/api/orval-fetch";
 import type { Project } from "../model/types";
@@ -27,6 +28,7 @@ export function useProjectQuery(projectId: string) {
   const aim = useGetAimTimeline(projectId);
   const orientation = useGetOrientationTimeline(projectId);
   const depthOfField = useGetDepthOfFieldTimeline(projectId);
+  const lidar = useGetLidarTimeline(projectId);
   const chat = useListChatMessages(projectId);
   const queries = [
     metadata,
@@ -37,6 +39,7 @@ export function useProjectQuery(projectId: string) {
     aim,
     orientation,
     depthOfField,
+    lidar,
     chat,
   ];
   const revisionSignature = queries
@@ -58,6 +61,7 @@ export function useProjectQuery(projectId: string) {
       projectKeys.aim(projectId),
       projectKeys.orientation(projectId),
       projectKeys.depthOfField(projectId),
+      projectKeys.lidar(projectId),
       projectKeys.chat(projectId),
     ];
     revisions.forEach((revision, index) => {
@@ -93,6 +97,7 @@ export function useProjectQuery(projectId: string) {
               ...(aim.data!.data as object),
               ...(orientation.data!.data as object),
               ...(depthOfField.data!.data as object),
+              ...(lidar.data!.data as object),
             },
             chat_history: chat.data!.data,
           } as Project;

@@ -10,6 +10,7 @@ type Resource =
   | "aim"
   | "orientation"
   | "depthOfField"
+  | "lidar"
   | "chat"
   | "all";
 
@@ -27,6 +28,7 @@ export async function invalidateProjectResource(
     projectKeys.aim(projectId),
     projectKeys.orientation(projectId),
     projectKeys.depthOfField(projectId),
+    projectKeys.lidar(projectId),
     projectKeys.chat(projectId),
   ];
   const target = {
@@ -37,7 +39,8 @@ export async function invalidateProjectResource(
     aim: 5,
     orientation: 6,
     depthOfField: 7,
-    chat: 8,
+    lidar: 8,
+    chat: 9,
   } as const;
   const affected = resource === "all" ? keys : [keys[target[resource]]];
   if (resource !== "chat") {

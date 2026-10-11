@@ -3,6 +3,7 @@ from camera_path.models import (
     CameraTrack,
     CompiledTrajectory,
     DepthOfFieldTimeline,
+    LidarTimeline,
     MotionProfile,
     OrientationTimeline,
     Project,
@@ -18,6 +19,7 @@ from camera_path.repositories.anchor import AnchorRepository
 from camera_path.repositories.camera_track import CameraTrackRepository
 from camera_path.repositories.chat_message import ChatMessageRepository
 from camera_path.repositories.depth_of_field_timeline import DepthOfFieldTimelineRepository
+from camera_path.repositories.lidar_timeline import LidarTimelineRepository
 from camera_path.repositories.orientation_timeline import OrientationTimelineRepository
 from camera_path.repositories.scene_point import ScenePointRepository
 from camera_path.repositories.speed_timeline import SpeedTimelineRepository
@@ -91,6 +93,10 @@ class TrajectoryService(ServiceBase):
                     draft.id,
                     DepthOfFieldTimeline(keyframes=draft.camera_track.depth_of_field_keyframes),
                 )
+            if before.camera_track.lidar_keyframe != draft.camera_track.lidar_keyframe:
+                await LidarTimelineRepository(session).replace(
+                    draft.id, LidarTimeline(lidar_keyframe=draft.camera_track.lidar_keyframe)
+                )
             await session.flush()
             if before.anchors != draft.anchors:
                 await AnchorRepository(session).replace(draft.id, draft.anchors)
@@ -132,6 +138,7 @@ class TrajectoryService(ServiceBase):
                     draft.id,
                     DepthOfFieldTimeline(keyframes=draft.camera_track.depth_of_field_keyframes),
                 )
+                await LidarTimelineRepository(session).replace(draft.id, LidarTimeline())
         return draft
 
     async def clear_trajectory(self, project_id: str) -> Project:

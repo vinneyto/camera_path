@@ -173,12 +173,31 @@ class DepthOfFieldKeyframeUpdate(BaseModel):
     bokeh_scale: float | None = Field(default=None, ge=0.0)
 
 
+class LidarSettings(BaseModel):
+    """Static angular sampling configuration; no interpolated sensor parameters."""
+
+    model_config = {"extra": "forbid"}
+    vertical_fov_deg: FiniteFloat = Field(default=60.0, gt=0.0, lt=180.0)
+    horizontal_resolution: int = Field(default=512, ge=1, le=4096, strict=True)
+    vertical_resolution: int = Field(default=32, ge=1, le=256, strict=True)
+
+
+class LidarKeyframe(LidarSettings):
+    id: str = Field(default_factory=new_id)
+    path_position: Literal[0.0] = 0.0
+
+
+class LidarTimeline(BaseModel):
+    lidar_keyframe: LidarKeyframe | None = None
+
+
 class CameraTrack(BaseModel):
     default_aim: CameraAim = Field(default_factory=FollowPathAim)
     keyframes: dict[str, CameraKeyframe] = Field(default_factory=dict)
     default_orientation: CameraOrientation = Field(default_factory=CameraOrientation)
     orientation_keyframes: dict[str, CameraOrientationKeyframe] = Field(default_factory=dict)
     depth_of_field_keyframes: dict[str, DepthOfFieldKeyframe] = Field(default_factory=dict)
+    lidar_keyframe: LidarKeyframe | None = None
     world_up: Vec3 = (0.0, 1.0, 0.0)
 
 

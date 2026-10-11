@@ -22,7 +22,7 @@
     "@sparkjsdev/spark": "^2.1.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-query": "^5.102.8",
-    "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#f86dc96c6c1f84f5f681c24f6cbeb8a7507b31f6",
+    "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#cb92e16e28b512d06f5774712e530dd2fbfb3520",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.39.0",
@@ -49,6 +49,7 @@
     "orval": "^8.41.0",
     "prettier": "^3.9.6",
     "typescript": "^5.9.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "wgsl_reflect": "^1.6.0"
   }
 }

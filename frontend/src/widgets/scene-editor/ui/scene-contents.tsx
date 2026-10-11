@@ -45,6 +45,7 @@ import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 import { frameSurface } from "./frame-surface";
 import { isGaussianSurfacePickActive } from "../lib/is-gaussian-surface-pick-active";
 import { resolveInitialSceneBounds } from "./resolve-initial-scene-bounds";
+import { LidarCloud } from "@/features/lidar/ui/lidar-cloud";
 import { PlaybackCamera } from "./playback-camera";
 import { SceneGrid } from "./scene-grid";
 import { TrajectoryLine } from "./trajectory-line";
@@ -57,6 +58,7 @@ import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
 const GAUSSIAN_CLOUD_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 
 interface SceneContentsProps {
+  lidar?: import("@/shared/api/generated/model").LidarKeyframe | null;
   anchors: Anchor[];
   clouds: ProjectCloud[];
   initialCloudIds: string[] | null;
@@ -78,6 +80,7 @@ interface SceneContentsProps {
 }
 
 export function SceneContents({
+  lidar,
   anchors,
   clouds,
   initialCloudIds,
@@ -247,6 +250,14 @@ export function SceneContents({
 
   return (
     <SceneSurfaceProvider backend={renderingBackend}>
+      {lidar && trajectoryAvailable && trajectory && (
+        <LidarCloud
+          backend={renderingBackend}
+          settings={lidar}
+          trajectory={trajectory}
+          pathPosition={pathPosition}
+        />
+      )}
       <SceneClouds
         clouds={clouds}
         preview={editorVisible ? cloudPlacement.preview : null}

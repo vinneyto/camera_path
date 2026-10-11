@@ -11,6 +11,9 @@ import { Button } from "@/shared/ui";
 import { createAimTrack } from "../lib/create-aim-track";
 import { createOrientationTrack } from "../lib/create-orientation-track";
 import { createDepthOfFieldTrack } from "../lib/create-depth-of-field-track";
+import { createLidarTrack } from "../lib/create-lidar-track";
+import { LidarSettingsControl } from "./lidar-settings-control";
+import type { LidarSettings } from "@/shared/api/generated/model";
 import { SpeedGraph } from "./speed-graph";
 import { TimelineStack } from "./timeline-stack";
 import { RenderEffectsControl } from "./render-effects-control";
@@ -29,6 +32,9 @@ interface TrajectoryInspectorProps {
   project: Project;
   trajectory: CompiledTrajectory;
   onClose: () => void;
+  lidarPending?: boolean;
+  lidarError?: string;
+  onSetLidar?: (settings: LidarSettings | null) => void;
   effectsPending?: boolean;
   onAddDepthOfField: () => void;
 }
@@ -38,6 +44,9 @@ export function TrajectoryInspector({
   deletingOrientationKeyframeId,
   deletingSpeedKeyframeId,
   deletingDepthOfFieldKeyframeId,
+  lidarPending = false,
+  lidarError,
+  onSetLidar,
   effectsPending,
   onAddDepthOfField,
   onClose,
@@ -70,6 +79,10 @@ export function TrajectoryInspector({
     }),
   ].filter((track) => track.keyframes.length > 0);
 
+  const lidar = project.camera_track.lidar_keyframe;
+  if (lidar && onSetLidar)
+    keyframeTracks.push(createLidarTrack(lidar, () => onSetLidar(null)));
+
   return (
     <section className="border-t bg-muted/35 p-2">
       <div className="mb-1.5 flex items-center justify-between px-0.5">
@@ -87,6 +100,9 @@ export function TrajectoryInspector({
                 trajectory.camera_track.depth_of_field_keyframes.length > 0
               }
               onAddDepthOfField={onAddDepthOfField}
+              hasLidar={Boolean(lidar)}
+              onAddLidar={onSetLidar ? () => onSetLidar({}) : undefined}
+              lidarPending={lidarPending}
             />
           </EditorOnly>
           <Button
@@ -113,7 +129,22 @@ export function TrajectoryInspector({
             tracks={keyframeTracks}
           />
         )}
+        {lidar && onSetLidar && (
+          <EditorOnly>
+            <LidarSettingsControl
+              key={`${lidar.id}:${lidar.vertical_fov_deg}:${lidar.horizontal_resolution}:${lidar.vertical_resolution}`}
+              settings={lidar}
+              pending={lidarPending}
+              onSave={onSetLidar}
+            />
+          </EditorOnly>
+        )}
       </div>
+      {lidarError && (
+        <p role="alert" className="text-xs text-destructive">
+          {lidarError}
+        </p>
+      )}
     </section>
   );
 }

@@ -55,6 +55,9 @@ export interface GaussianCloudInstance {
 }
 
 export interface GaussianRenderingBackend {
+  createLidar?(
+    settings: import("./gaussian-lidar").GaussianLidarSettings,
+  ): import("./gaussian-lidar").GaussianLidarInstance;
   /** Optional scene object that must contain every cloud object (Spark uses it). */
   readonly container: Object3D | null;
   createCloud(

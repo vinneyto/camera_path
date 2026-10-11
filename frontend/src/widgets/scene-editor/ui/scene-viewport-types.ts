@@ -7,6 +7,7 @@ import type { SceneSurfaceBackground } from "@/shared/scene-surface";
 import type { ContextMenuPosition } from "@/shared/ui";
 
 export interface SceneViewportProps {
+  lidar?: import("@/shared/api/generated/model").LidarKeyframe | null;
   anchors: Anchor[];
   clouds: ProjectCloud[];
   initialCloudIds: string[] | null;

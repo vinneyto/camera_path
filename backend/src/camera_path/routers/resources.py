@@ -30,6 +30,8 @@ from camera_path.models import (
     DepthOfFieldKeyframeCreate,
     DepthOfFieldKeyframeUpdate,
     DepthOfFieldTimeline,
+    LidarSettings,
+    LidarTimeline,
     MotionProfile,
     MotionProfileUpdate,
     OrientationTimeline,
@@ -929,6 +931,65 @@ async def delete_depth_of_field_keyframe(
         return _deleted(await service.delete_depth_of_field_keyframe(project_id, keyframe_id))
     except KeyError as error:
         raise _not_found(error) from error
+
+
+@router.get(
+    "/projects/{project_id}/camera/lidar",
+    response_model=LidarTimeline,
+    tags=["Timelines"],
+    summary="Get the LiDAR timeline",
+    description="Return the optional presence keyframe and static angular configuration.",
+    operation_id="getLidarTimeline",
+)
+async def get_lidar_timeline(
+    project_id: str, service: ProjectServiceDep, response: Response
+) -> LidarTimeline:
+    project = await service.get_project(project_id)
+    _with_revision(response, project)
+    return LidarTimeline(lidar_keyframe=project.camera_track.lidar_keyframe)
+
+
+@router.patch(
+    "/projects/{project_id}/camera/lidar",
+    response_model=LidarTimeline,
+    tags=["Timelines"],
+    summary="Enable or configure the LiDAR timeline",
+    description=(
+        "Upsert one presence keyframe at position zero. "
+        "Parameters are static for the whole trajectory."
+    ),
+    operation_id="setLidarTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def set_lidar_timeline(
+    project_id: str,
+    data: LidarSettings,
+    service: TimelineServiceDep,
+    response: Response,
+    _guard: MutationGuard,
+) -> LidarTimeline:
+    project = await service.set_lidar(project_id, data)
+    _with_revision(response, project)
+    return LidarTimeline(lidar_keyframe=project.camera_track.lidar_keyframe)
+
+
+@router.delete(
+    "/projects/{project_id}/camera/lidar",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Timelines"],
+    summary="Remove the LiDAR timeline",
+    description="Remove the presence keyframe and disable the sensor for the whole trajectory.",
+    operation_id="deleteLidarTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def delete_lidar_timeline(
+    project_id: str,
+    service: TimelineServiceDep,
+    _guard: MutationGuard,
+) -> Response:
+    return _deleted(await service.set_lidar(project_id, None))
 
 
 @router.get(

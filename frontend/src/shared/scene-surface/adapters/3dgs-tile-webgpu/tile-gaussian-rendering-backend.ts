@@ -24,11 +24,19 @@ import { downloadGaussianCloud } from "./download-gaussian-cloud";
 import { createTileRasterDepthNodes } from "./create-tile-raster-depth-nodes";
 import { getGaussianResolutionScale } from "./get-gaussian-resolution-scale";
 import { LoggingGaussianBackend } from "./logging-gaussian-backend";
+import { TileGaussianLidar } from "./tile-gaussian-lidar";
+import { TileLidarFrameNode } from "./tile-lidar-frame-node";
+import type {
+  GaussianLidarSettings,
+  GaussianLidarInstance,
+} from "../../model/gaussian-lidar";
 import { TileGaussianCloudInstance } from "./tile-gaussian-cloud-instance";
 import { TileGaussianHighlightVolume } from "./tile-gaussian-highlight-volume";
 
 export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   readonly container = null;
+  private readonly lidars = new Set<TileGaussianLidar>();
+  private unregisterLidarFrame: (() => void) | null = null;
   private readonly loads = new Set<AbortController>();
   private readonly clouds = new Set<TileGaussianCloudInstance>();
   private depthEnabled = false;
@@ -162,6 +170,34 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     return volume;
   }
 
+  createLidar(settings: GaussianLidarSettings): GaussianLidarInstance {
+    if (this.disposed)
+      throw new Error("TileGaussianRenderingBackend is disposed");
+    const sensor = new TileGaussianLidar(
+      this.pipeline.renderer,
+      this.store,
+      settings,
+      () => {
+        this.lidars.delete(sensor);
+        this.syncLidarFrame();
+      },
+    );
+    this.lidars.add(sensor);
+    this.syncLidarFrame();
+    return sensor;
+  }
+
+  private syncLidarFrame(): void {
+    this.unregisterLidarFrame?.();
+    this.unregisterLidarFrame = null;
+    if (this.pass !== null && this.lidars.size > 0 && !this.disposed) {
+      this.unregisterLidarFrame = this.pipeline.registerLayer(
+        new TileLidarFrameNode(this.pass, this.lidars),
+        { order: -99 },
+      );
+    }
+  }
+
   invalidate(): void {
     if (!this.disposed) this.pass?.invalidate();
   }
@@ -182,6 +218,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (this.disposed) return;
     this.disposed = true;
     for (const controller of this.loads) controller.abort();
+    for (const sensor of [...this.lidars]) sensor.dispose();
     this.highlightVolume?.dispose();
     for (const cloud of [...this.clouds]) cloud.dispose();
     this.disposePass();
@@ -203,6 +240,9 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   }
 
   private disposePass(): void {
+    this.unregisterLidarFrame?.();
+    this.unregisterLidarFrame = null;
+    for (const sensor of this.lidars) sensor.hide();
     this.highlightVolume?.dispose();
     this.unregisterPass?.();
     this.unregisterPass = null;
@@ -242,6 +282,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       ...(this.depthEnabled ? { depth: pass.getTextureNode("depth").r } : {}),
       order: -100,
     });
+    this.syncLidarFrame();
     this.highlightVolume?.replacePass(pass);
     unregisterPreviousPass?.();
     previousPass?.dispose();

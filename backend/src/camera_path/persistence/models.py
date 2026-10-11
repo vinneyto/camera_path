@@ -397,6 +397,23 @@ class DepthOfFieldKeyframeRecord(ProjectScopedKeyframeRecord, Base):
     bokeh_scale: Mapped[float] = mapped_column(Float, nullable=False)
 
 
+class LidarKeyframeRecord(Base):
+    __tablename__ = "lidar_keyframes"
+    __table_args__ = (
+        CheckConstraint("vertical_fov_deg > 0 AND vertical_fov_deg < 180", name="ck_lidar_fov"),
+        CheckConstraint("horizontal_resolution BETWEEN 1 AND 4096", name="ck_lidar_width"),
+        CheckConstraint("vertical_resolution BETWEEN 1 AND 256", name="ck_lidar_height"),
+    )
+    # A project can have exactly one presence keyframe, implicitly at position zero.
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    id: Mapped[str] = mapped_column(Text, nullable=False)
+    vertical_fov_deg: Mapped[float] = mapped_column(Float, nullable=False)
+    horizontal_resolution: Mapped[int] = mapped_column(Integer, nullable=False)
+    vertical_resolution: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
 class EditorRecord(Base):
     __tablename__ = "editors"
     id: Mapped[str] = mapped_column(Text, primary_key=True)

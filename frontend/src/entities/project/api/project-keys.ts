@@ -10,6 +10,7 @@ import {
   getGetAimTimelineQueryKey,
   getGetOrientationTimelineQueryKey,
   getGetDepthOfFieldTimelineQueryKey,
+  getGetLidarTimelineQueryKey,
 } from "@/shared/api/generated/client";
 
 export const projectKeys = {
@@ -23,6 +24,7 @@ export const projectKeys = {
   aim: getGetAimTimelineQueryKey,
   orientation: getGetOrientationTimelineQueryKey,
   depthOfField: getGetDepthOfFieldTimelineQueryKey,
+  lidar: getGetLidarTimelineQueryKey,
   chat: getListChatMessagesQueryKey,
   trajectory: getGetCompiledTrajectoryQueryKey,
 };

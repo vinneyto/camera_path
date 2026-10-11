@@ -1641,6 +1641,89 @@
         "title": "LibraryUploadCreate",
         "type": "object"
       },
+      "LidarKeyframe": {
+        "additionalProperties": false,
+        "properties": {
+          "horizontal_resolution": {
+            "default": 512,
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Horizontal Resolution",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path_position": {
+            "const": 0.0,
+            "default": 0.0,
+            "title": "Path Position",
+            "type": "number"
+          },
+          "vertical_fov_deg": {
+            "default": 60.0,
+            "exclusiveMaximum": 180.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Vertical Fov Deg",
+            "type": "number"
+          },
+          "vertical_resolution": {
+            "default": 32,
+            "maximum": 256.0,
+            "minimum": 1.0,
+            "title": "Vertical Resolution",
+            "type": "integer"
+          }
+        },
+        "title": "LidarKeyframe",
+        "type": "object"
+      },
+      "LidarSettings": {
+        "additionalProperties": false,
+        "description": "Static angular sampling configuration; no interpolated sensor parameters.",
+        "properties": {
+          "horizontal_resolution": {
+            "default": 512,
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Horizontal Resolution",
+            "type": "integer"
+          },
+          "vertical_fov_deg": {
+            "default": 60.0,
+            "exclusiveMaximum": 180.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Vertical Fov Deg",
+            "type": "number"
+          },
+          "vertical_resolution": {
+            "default": 32,
+            "maximum": 256.0,
+            "minimum": 1.0,
+            "title": "Vertical Resolution",
+            "type": "integer"
+          }
+        },
+        "title": "LidarSettings",
+        "type": "object"
+      },
+      "LidarTimeline": {
+        "properties": {
+          "lidar_keyframe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LidarKeyframe"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "LidarTimeline",
+        "type": "object"
+      },
       "LoginRequest": {
         "properties": {
           "password": {
@@ -4757,6 +4840,265 @@
           }
         ],
         "summary": "Update an aim keyframe",
+        "tags": [
+          "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/camera/lidar": {
+      "delete": {
+        "description": "Remove the presence keyframe and disable the sensor for the whole trajectory.",
+        "operationId": "deleteLidarTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found.",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove the LiDAR timeline",
+        "tags": [
+          "Timelines"
+        ]
+      },
+      "get": {
+        "description": "Return the optional presence keyframe and static angular configuration.",
+        "operationId": "getLidarTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LidarTimeline"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the LiDAR timeline",
+        "tags": [
+          "Timelines"
+        ]
+      },
+      "patch": {
+        "description": "Upsert one presence keyframe at position zero. Parameters are static for the whole trajectory.",
+        "operationId": "setLidarTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LidarSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LidarTimeline"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Enable or configure the LiDAR timeline",
         "tags": [
           "Timelines"
         ]
