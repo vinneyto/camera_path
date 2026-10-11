@@ -15,6 +15,8 @@ from camera_path.models import (
     ChatResult,
     DepthOfFieldKeyframe,
     FollowPathAim,
+    LidarKeyframe,
+    LidarSettings,
     LookAtPointAim,
     Project,
     ScenePoint,
@@ -41,8 +43,15 @@ roll (around the view axis) on top of that base aim frame. Angles are unwrapped 
 0-to-360 transition is a full turn; with no orientation keys all three offsets are zero.
 Depth-of-field keys select either center-weighted nine-ray autofocus or a concrete scene point.
 With no depth-of-field keys the effect is disabled. With one key its focus mode applies across the
-whole trajectory; multiple keys switch focus mode at their path positions. Prefer incremental
-create/update/delete operations; do not
+whole trajectory; multiple keys switch focus mode at their path positions.
+LiDAR has exactly one presence key at path position zero and static settings for the whole path.
+Use set_lidar_timeline to enable it or edit its settings, and delete_lidar_timeline to disable it.
+Null settings preserve existing values, or use defaults when enabling: 60 degrees vertically,
+512 horizontal azimuth samples and 32 vertical elevation samples. The horizontal span is always
+360 degrees; the vertical span is symmetric about the horizon (60 means -30 to +30 degrees).
+Its pose follows the evaluated trajectory camera and hits appear in overview and playback.
+LiDAR is experimental: it uses the main camera's Gaussian selection, with no independent LOD.
+Prefer incremental create/update/delete operations; do not
 clear unrelated user work.
 Explain every resulting change briefly after the tools finish."""
 
@@ -64,7 +73,8 @@ TOOLS: list[dict[str, Any]] = [
         "type": "function",
         "name": "get_project_state",
         "description": (
-            "Read anchors, segments, scene points, speed, aim, orientation and depth-of-field keys."
+            "Read anchors, segments, scene points, speed, aim, orientation, depth-of-field "
+            "keys and the static LiDAR presence key/settings."
         ),
         "parameters": _object({}, []),
         "strict": True,
@@ -401,6 +411,46 @@ TOOLS: list[dict[str, Any]] = [
         "parameters": ID_PARAMETERS,
         "strict": True,
     },
+    {
+        "type": "function",
+        "name": "set_lidar_timeline",
+        "description": (
+            "Enable LiDAR or update its static angular sampling settings. There is exactly "
+            "one presence key at position zero, with no animated settings. Null preserves "
+            "the existing setting or uses its default when enabling."
+        ),
+        "parameters": _object(
+            {
+                "vertical_fov_deg": {
+                    "type": ["number", "null"],
+                    "exclusiveMinimum": 0,
+                    "exclusiveMaximum": 180,
+                    "description": "Symmetric vertical span in degrees; default 60 (-30..+30).",
+                },
+                "horizontal_resolution": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 4096,
+                    "description": "Azimuth samples across 360 degrees; default 512.",
+                },
+                "vertical_resolution": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "maximum": 256,
+                    "description": "Elevation samples across the vertical span; default 32.",
+                },
+            },
+            ["vertical_fov_deg", "horizontal_resolution", "vertical_resolution"],
+        ),
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "delete_lidar_timeline",
+        "description": "Disable LiDAR by removing its sole presence key; preserve other tracks.",
+        "parameters": _object({}, []),
+        "strict": True,
+    },
 ]
 
 
@@ -686,6 +736,21 @@ class TrajectoryAgent:
                 arguments["id"],
                 "depth of field keyframe",
             )
+        elif name == "set_lidar_timeline":
+            settings = LidarSettings.model_validate(
+                {key: value for key, value in arguments.items() if value is not None}
+            )
+            old = draft.camera_track.lidar_keyframe
+            item = LidarKeyframe.model_validate(
+                {
+                    **(old.model_dump() if old is not None else {}),
+                    **settings.model_dump(exclude_unset=True),
+                }
+            )
+            draft.camera_track.lidar_keyframe = item
+        elif name == "delete_lidar_timeline":
+            item = draft.camera_track.lidar_keyframe
+            draft.camera_track.lidar_keyframe = None
         else:
             raise ValueError(f"unknown tool: {name}")
         validate_project(draft)
