@@ -77,6 +77,19 @@ export function UserSettingsProvider({
     save: (changes) => {
       if (!preferences || (auth.canEdit && mutation.isPending)) return;
       const next: UserSettings = { ...preferences, ...changes };
+      if (next.webgpu_tile_renderer !== preferences.webgpu_tile_renderer) {
+        const reloadWithRenderer = () => {
+          // A late editor response must not overwrite newer viewer preferences.
+          if (queryClient.getQueryData(key) !== preferences) return;
+          localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(next));
+          // Keep the current renderer mounted until a fresh document takes over.
+          window.location.reload();
+        };
+        if (auth.canEdit)
+          mutation.mutate(changes, { onSuccess: reloadWithRenderer });
+        else reloadWithRenderer();
+        return;
+      }
       // Viewer preferences survive login/logout and failed backend saves.
       localStorage.setItem(EDITOR_SETTINGS_KEY, JSON.stringify(next));
       queryClient.setQueryData(key, next);
