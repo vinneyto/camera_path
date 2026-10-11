@@ -8,7 +8,7 @@ export function createLidarTrack(
   return {
     id: "lidar",
     title: "LiDAR",
-    color: "var(--chart-2)",
+    color: "var(--chart-lidar)",
     height: 24,
     lineY: 10,
     deleteLabel: "Remove LiDAR",
@@ -24,7 +24,7 @@ export function createLidarTrack(
       },
     ],
     renderMarker: () => (
-      <span className="absolute inset-[4px] rounded-sm border-2 border-[var(--chart-2)] bg-card" />
+      <span className="absolute inset-[4px] rounded-sm border-2 border-[var(--chart-lidar)] bg-card" />
     ),
   };
 }

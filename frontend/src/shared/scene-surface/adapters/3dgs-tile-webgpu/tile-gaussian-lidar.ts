@@ -27,9 +27,11 @@ export class TileGaussianLidar implements GaussianLidarInstance {
   private readonly geometry = new SphereGeometry(0.01, 8, 6);
   private readonly material = new MeshStandardNodeMaterial({
     color: 0x35f2a1,
+    emissive: 0x35f2a1,
+    emissiveIntensity: 0.12,
     roughness: 0.65,
     metalness: 0,
-    opacity: 0.45,
+    opacity: 0.55,
     transparent: true,
     depthWrite: false,
   });
