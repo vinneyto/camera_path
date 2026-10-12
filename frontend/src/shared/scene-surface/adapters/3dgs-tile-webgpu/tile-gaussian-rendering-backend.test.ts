@@ -30,18 +30,14 @@ vi.mock("./create-tile-raster-depth-nodes", () => ({
 }));
 
 describe("TileGaussianRenderingBackend pass", () => {
-  it("waits for shared warmup before any concurrent load enters model preparation", async () => {
+  it("prepares concurrent models without invoking or waiting for explicit warmup", async () => {
     gaussianPassMock.mockReset();
-    let finishWarmup!: () => void;
-    const prepared = new Promise<void>((resolve) => {
-      finishWarmup = resolve;
-    });
     const pass = {
       depthSortMode: "float32",
       dispose: vi.fn(),
       getResolutionScale: () => 1,
       setResolutionScale: vi.fn(),
-      warmup: vi.fn(() => prepared),
+      warmup: vi.fn(() => new Promise<void>(() => {})),
     } as unknown as GaussianPass;
     gaussianPassMock.mockReturnValue(pass);
     const backend = new TileGaussianRenderingBackend({
@@ -65,9 +61,7 @@ describe("TileGaussianRenderingBackend pass", () => {
       ),
     );
     expect(gaussianPassMock).toHaveBeenCalledOnce();
-    expect(pass.warmup).toHaveBeenCalledTimes(3);
-    expect(loadBuffer).not.toHaveBeenCalled();
-    finishWarmup();
+    expect(pass.warmup).not.toHaveBeenCalled();
     expect(await completed).toEqual(
       Array.from({ length: 3 }, () => ({ status: "rejected", reason: error })),
     );

@@ -86,14 +86,13 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     let cloud: GaussianCloud | null = null;
     try {
       signal.throwIfAborted();
-      // Compile the configured pass while the model downloads. Every concurrent
-      // load shares the pass's warmup promise, before entering the serial queue.
+      // Register the configured pass before model preparation. Explicit shader
+      // warmup is temporarily disabled; readiness depends only on the model.
       this.ensurePass();
-      const download =
+      const buffer =
         source.kind === "url"
-          ? downloadGaussianCloud(source.url, signal, options.onProgress)
-          : Promise.resolve(source.buffer);
-      const [buffer] = await Promise.all([download, this.pass!.warmup()]);
+          ? await downloadGaussianCloud(source.url, signal, options.onProgress)
+          : source.buffer;
       signal.throwIfAborted();
       options.onProgress?.({
         fraction: 0.9,
