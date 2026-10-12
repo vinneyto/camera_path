@@ -86,10 +86,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     let cloud: GaussianCloud | null = null;
     try {
       signal.throwIfAborted();
-      const buffer =
+      // Compile the configured pass while the model downloads. Every concurrent
+      // load shares the pass's warmup promise, before entering the serial queue.
+      this.ensurePass();
+      const download =
         source.kind === "url"
-          ? await downloadGaussianCloud(source.url, signal, options.onProgress)
-          : source.buffer;
+          ? downloadGaussianCloud(source.url, signal, options.onProgress)
+          : Promise.resolve(source.buffer);
+      const [buffer] = await Promise.all([download, this.pass!.warmup()]);
       signal.throwIfAborted();
       options.onProgress?.({
         fraction: 0.9,
@@ -97,9 +101,6 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
         totalBytes: buffer.byteLength,
         phase: "processing",
       });
-      // Register capabilities BEFORE any model enters the serial compute queue.
-      // Network requests stay parallel and never block an already prepared model.
-      this.ensurePass();
       cloud = await this.store.loadBuffer(
         buffer,
         {

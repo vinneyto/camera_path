@@ -70,6 +70,7 @@ vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
       return {
         depthSortMode: "float32",
         dispose: vi.fn(),
+        warmup: vi.fn(async () => undefined),
         getResolutionScale: () => resolutionScale,
         setResolutionScale: (value: number) => {
           resolutionScale = value;
