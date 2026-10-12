@@ -87,6 +87,7 @@ export class TileGaussianLidar implements GaussianLidarInstance {
       height,
       fov,
       10000,
+      this.pass.outputReadyNode,
     );
   }
 

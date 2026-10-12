@@ -22,7 +22,7 @@
     "@sparkjsdev/spark": "^2.1.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-query": "^5.102.8",
-    "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#edcc01ecee3fa68596058ccb6256e9ac071f401a",
+    "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#49267c4ba10c71539525bb2d1215045a4dedd01c",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.39.0",

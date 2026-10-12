@@ -30,6 +30,45 @@ vi.mock("./create-tile-raster-depth-nodes", () => ({
 }));
 
 describe("TileGaussianRenderingBackend pass", () => {
+  it("prepares concurrent models without invoking or waiting for explicit warmup", async () => {
+    gaussianPassMock.mockReset();
+    const pass = {
+      depthSortMode: "float32",
+      dispose: vi.fn(),
+      getResolutionScale: () => 1,
+      setResolutionScale: vi.fn(),
+      warmup: vi.fn(() => new Promise<void>(() => {})),
+    } as unknown as GaussianPass;
+    gaussianPassMock.mockReturnValue(pass);
+    const backend = new TileGaussianRenderingBackend({
+      camera: new PerspectiveCamera(),
+      renderer: { getPixelRatio: () => 1 },
+      getOpaqueViewDepth: vi.fn(() => ({})),
+      registerLayer: vi.fn(() => vi.fn()),
+    } as unknown as SceneRenderPipeline);
+    const error = new Error("stop after entering the model queue");
+    const loadBuffer = vi.fn().mockRejectedValue(error);
+    Object.assign((backend as unknown as { store: object }).store, {
+      loadBuffer,
+    });
+    const completed = Promise.allSettled(
+      Array.from({ length: 3 }, () =>
+        backend.createCloud({
+          kind: "buffer",
+          buffer: new ArrayBuffer(0),
+          name: "test.ply",
+        }),
+      ),
+    );
+    expect(gaussianPassMock).toHaveBeenCalledOnce();
+    expect(pass.warmup).not.toHaveBeenCalled();
+    expect(await completed).toEqual(
+      Array.from({ length: 3 }, () => ({ status: "rejected", reason: error })),
+    );
+    expect(loadBuffer).toHaveBeenCalledTimes(3);
+    backend.dispose();
+  });
+
   it("enables automatic redraw caching only for the Gaussian layer", () => {
     gaussianPassMock.mockReset();
     let resolutionScale = 1;
