@@ -5,6 +5,9 @@ import type {
 } from "three/webgpu";
 import {
   Fn,
+  If,
+  bool,
+  vec4,
   instanceIndex,
   storage,
   textureLoad,
@@ -23,6 +26,7 @@ export function createLidarHitKernel(
   height: number,
   verticalFovRadians: number,
   maxRange: number,
+  outputReady?: Node<"bool">,
 ) {
   const output = storage(hits, "vec4", width * height);
   return Fn(() => {
@@ -38,6 +42,11 @@ export function createLidarHitKernel(
       height,
       verticalFovRadians,
     );
-    hit.assign(createLidarHitNode(range, ray, worldMatrix, maxRange));
+    If(outputReady ?? bool(true), () => {
+      hit.assign(createLidarHitNode(range, ray, worldMatrix, maxRange));
+    }).Else(() => {
+      // Old depth belongs to an earlier pose; suppress it during overflow.
+      hit.assign(vec4(0));
+    });
   })().compute(width * height);
 }
