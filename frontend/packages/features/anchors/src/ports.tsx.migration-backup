@@ -1,9 +1,0 @@
-"use client";
-import type {ReactNode} from "react";
-import {useData,useDataQuery,useRequestAction} from "@camera-path/extension-api";
-import {manifest} from "./manifest";
-import {editorTool} from "@camera-path/contracts/host-data";
-import {clearHoveredAnchor,hoverAnchor,setActiveTool} from "@camera-path/contracts/host-requests";
-export function useActiveEditorTool() {return useData(manifest, editorTool).activeTool;}
-export function useHoveredAnchor() {const state = useData(manifest, editorTool); const clear = useRequestAction(manifest, clearHoveredAnchor); const hover = useRequestAction(manifest, hoverAnchor); return {hoveredAnchorId: state.hoveredObject?.type === "anchor" ? state.hoveredObject.id : null, clearHoveredAnchor: clear, hoverAnchor: hover};}
-export function useSetActiveEditorTool() {return useRequestAction(manifest, setActiveTool);}

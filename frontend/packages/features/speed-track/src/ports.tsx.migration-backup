@@ -1,6 +1,0 @@
-"use client";
-import type {ReactNode} from "react";
-import {useData,useDataQuery,useRequestAction} from "@camera-path/extension-api";
-import {manifest} from "./manifest";
-import {projectPermissions} from "@camera-path/contracts/host-data";
-export function EditorOnly({children,fallback=null}:{children:ReactNode;fallback?:ReactNode}) {return useData(manifest,projectPermissions).canEdit?children:fallback;}
