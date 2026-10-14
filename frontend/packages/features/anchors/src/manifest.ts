@@ -35,6 +35,8 @@ export const manifest = {
   ],
   frames: [],
   contributions: [
+    { id: "anchors.status", kind: "ui", slot: "project.header.status" },
+    { id: "anchors.hint", kind: "ui", slot: "scene.hints" },
     { id: "anchors.scene", kind: "scene", slot: "scene.root", order: 30 },
   ],
   capabilities: [],

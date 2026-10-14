@@ -1,4 +1,6 @@
 "use client";
+import { ExtensionProvider } from "@camera-path/extension-api/extension-provider";
+import { ExtensionSlot } from "@camera-path/extension-api/extension-slot";
 import { applicationFeatures } from "@host/composition/application-features";
 import { useActivateFeatures } from "./use-activate-features";
 
@@ -117,7 +119,12 @@ export function ApplicationHostProvider({ children }: { children: ReactNode }) {
   useActivateFeatures(runtime, applicationFeatures);
   return (
     <HostProvider runtime={runtime}>
-      <EditableProvider editable={auth.canEdit}>{children}</EditableProvider>
+      <ExtensionProvider extensions={applicationFeatures}>
+        <EditableProvider editable={auth.canEdit}>
+          <ExtensionSlot name="application.root" />
+          {children}
+        </EditableProvider>
+      </ExtensionProvider>
     </HostProvider>
   );
 }

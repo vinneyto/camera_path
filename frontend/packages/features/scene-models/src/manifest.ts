@@ -1,4 +1,5 @@
 import {
+  cameraMode,
   editorTool,
   libraryCatalog,
   projectPermissions,
@@ -14,10 +15,17 @@ export const manifest = {
   manifestVersion: 1,
   id: "scene-models",
   scope: "project",
-  reads: [projectPermissions, libraryCatalog, sceneModels, editorTool],
+  reads: [
+    cameraMode,
+    projectPermissions,
+    libraryCatalog,
+    sceneModels,
+    editorTool,
+  ],
   calls: [projectCloudAction, startCloudPlacement, setActiveTool],
   frames: [],
   contributions: [
+    { id: "scene-models.hint", kind: "ui", slot: "scene.hints" },
     {
       id: "scene-models.commands",
       kind: "command",

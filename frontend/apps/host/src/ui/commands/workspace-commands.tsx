@@ -1,13 +1,11 @@
 "use client";
 import { CommandProvider } from "@camera-path/extension-api/command-provider";
-import { commandContributions } from "@host/composition/commands";
+import { ExtensionSlot } from "@camera-path/extension-api";
 import { CommandPaletteHost } from "./command-palette-host";
-export function WorkspaceCommands({ projectId }: { projectId: string }) {
+export function WorkspaceCommands() {
   return (
     <CommandProvider>
-      {commandContributions.map(({ id, Component }) => (
-        <Component key={id} projectId={projectId} />
-      ))}
+      <ExtensionSlot name="workspace.commands" />
       <CommandPaletteHost />
     </CommandProvider>
   );

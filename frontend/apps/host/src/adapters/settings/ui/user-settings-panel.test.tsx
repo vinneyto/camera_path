@@ -1,3 +1,4 @@
+import { AnchorToolShortcut } from "@camera-path/feature-anchors/ui/anchor-tool-shortcut";
 import { ApplicationHostProvider } from "@host/runtime/application-host-provider";
 import { ProjectHostProvider } from "@host/runtime/project-host-provider";
 // @vitest-environment happy-dom
@@ -5,8 +6,8 @@ import { ProjectHostProvider } from "@host/runtime/project-host-provider";
 import { useChatComposer } from "@camera-path/feature-chat-agent/model/use-chat-composer";
 import { ChatPanel } from "@camera-path/feature-chat-agent/ui/chat-panel";
 import { ProfileControl } from "@camera-path/feature-identity/ui/profile-control";
-import { LibraryUploadForm } from "@camera-path/feature-library";
-import { ProjectCreateForm } from "@camera-path/feature-projects";
+import { LibraryUploadForm } from "@camera-path/feature-library/ui/library-upload-form";
+import { ProjectCreateForm } from "@camera-path/feature-projects/ui/project-create-form";
 import { ThemeProvider } from "@host/adapters/appearance/theme-provider";
 import {
   EDITOR_SETTINGS_KEY,
@@ -14,11 +15,7 @@ import {
   useUserSettings,
 } from "@host/adapters/settings/model/user-settings-provider";
 import { UserSettingsPanel } from "@host/adapters/settings/ui/user-settings-panel";
-import {
-  AnchorToolShortcut,
-  EditorStoreProvider,
-  useActiveEditorTool,
-} from "@host/editor";
+import { EditorStoreProvider, useActiveEditorTool } from "@host/editor";
 import { AuthProvider, EditorOnly, useAuth } from "@host/ui/header";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {

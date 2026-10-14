@@ -1,79 +1,43 @@
 // @vitest-environment happy-dom
-
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import type { Project } from "@camera-path/contracts/project";
-import type { CompiledTrajectory } from "@camera-path/trajectory-math";
-
-import { ProjectScene } from "@host/ui/project-workspace/ui/project-scene";
-
-const editorState = vi.hoisted(() => ({ trajectorySelected: false }));
-
-vi.mock("@host/editor", () => ({
-  useTrajectorySelection: () => ({
-    closeTrajectory: vi.fn(),
-    selectTrajectory: vi.fn(),
-    trajectorySelected: editorState.trajectorySelected,
-  }),
-}));
-
-vi.mock("@host/ui/project-workspace/ui/use-element-height", () => ({
+import { afterEach, expect, it, vi } from "vitest";
+import { ExtensionProvider } from "@camera-path/extension-api/extension-provider";
+import type { Extension } from "@camera-path/extension-api";
+import { ProjectScene } from "./project-scene";
+vi.mock("./use-element-height", () => ({
   useElementHeight: () => ({ elementRef: { current: null }, height: 100 }),
 }));
-
-vi.mock("@host/ui/project-workspace/ui/scene-viewport-container", () => ({
+vi.mock("./scene-viewport-container", () => ({
   SceneViewportContainer: ({
     bottomOverlayHeight,
   }: {
     bottomOverlayHeight: number;
-  }) => (
-    <div
-      data-bottom-overlay-height={bottomOverlayHeight}
-      data-testid="scene-viewport"
-    />
-  ),
+  }) => <div data-testid="viewport" data-inset={bottomOverlayHeight} />,
 }));
-
-vi.mock("@host/ui/project-workspace/ui/playback-controls-container", () => ({
-  PlaybackControlsContainer: () => null,
-}));
-
-vi.mock("@host/ui/project-workspace/ui/trajectory-inspector-container", () => ({
-  TrajectoryInspectorContainer: () => null,
-}));
-
-const project = { id: "project-1" } as Project;
-const trajectory = {
-  position_segments: [{}],
-} as unknown as CompiledTrajectory;
-
-describe("ProjectScene", () => {
-  afterEach(() => {
-    editorState.trajectorySelected = false;
-    cleanup();
-  });
-
-  it("shifts the frustum only while trajectory controls are expanded", () => {
-    const props = {
-      deletingTrajectory: false,
-      onDeleteTrajectory: vi.fn(),
-      project,
-      projectId: project.id,
-      rendererBackend: "webgpu" as const,
-      trajectory,
-    };
-    const { rerender } = render(<ProjectScene {...props} />);
-
-    expect(screen.getByTestId("scene-viewport").dataset).toMatchObject({
-      bottomOverlayHeight: "0",
-    });
-
-    editorState.trajectorySelected = true;
-    rerender(<ProjectScene {...props} />);
-
-    expect(screen.getByTestId("scene-viewport").dataset).toMatchObject({
-      bottomOverlayHeight: "112",
-    });
-  });
+afterEach(cleanup);
+const extension: Extension = {
+  manifest: {
+    manifestVersion: 1,
+    id: "unknown",
+    scope: "project",
+    reads: [],
+    calls: [],
+    frames: [],
+    capabilities: [],
+    contributions: [
+      { id: "unknown.overlay", kind: "ui", slot: "scene.overlay" },
+    ],
+  },
+  contributions: [
+    { id: "unknown.overlay", Component: () => <div>Unknown overlay</div> },
+  ],
+};
+it("mounts an unknown overlay without feature-specific props and reserves its measured height", () => {
+  render(
+    <ExtensionProvider extensions={[extension]}>
+      <ProjectScene rendererBackend="webgpu" />
+    </ExtensionProvider>,
+  );
+  expect(screen.getByText("Unknown overlay")).toBeTruthy();
+  expect(screen.getByTestId("viewport").dataset.inset).toBe("112");
 });

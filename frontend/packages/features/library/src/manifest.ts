@@ -22,6 +22,9 @@ export const manifest = {
     navigate,
   ],
   frames: [],
-  contributions: [],
+  contributions: [
+    { id: "library.content", kind: "ui", slot: "library.content" },
+    { id: "library.details", kind: "ui", slot: "library.details" },
+  ],
   capabilities: [],
 } as const satisfies FeatureManifest<"library">;

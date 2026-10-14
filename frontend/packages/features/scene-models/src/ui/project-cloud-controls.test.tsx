@@ -1,3 +1,6 @@
+import { EditorTestHost } from "@host/testing/editor-host";
+import { ExtensionProvider } from "@camera-path/extension-api/extension-provider";
+import { extension } from "../extension";
 import { useCloudPlacement as hostCloudPlacement } from "@host/editor";
 import { WorkspaceCommands } from "@host/ui/commands/workspace-commands";
 // @vitest-environment happy-dom
@@ -5,11 +8,7 @@ import { WorkspaceCommands } from "@host/ui/commands/workspace-commands";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  EditorStoreProvider,
-  useCloudPlacement,
-  useSceneGrid,
-} from "@host/editor";
+import { useCloudPlacement, useSceneGrid } from "@host/editor";
 
 const mutate = vi.hoisted(() => vi.fn());
 let showGrid = true;
@@ -35,7 +34,21 @@ vi.mock("@host/adapters/settings", async () => {
 vi.mock("@camera-path/feature-scene-models/ports", () => ({
   useCloudPlacement: () => hostCloudPlacement(),
   useListLibraryAssets: () => ({
-    data: { data: [{ id: "asset", name: "Mug", status: "ready" }] },
+    data: {
+      data: [
+        {
+          id: "asset",
+          name: "Mug",
+          status: "ready",
+          format: "ply",
+          size_bytes: 10,
+          created_at: "now",
+          default_rotation_deg: [0, 0, 0],
+          default_scale: 1,
+          default_offset: [0, 0, 0],
+        },
+      ],
+    },
     isPending: false,
     error: null,
   }),
@@ -84,10 +97,12 @@ afterEach(() => {
 describe("project cloud controls", () => {
   it("places the first cloud on the enabled grid", () => {
     render(
-      <EditorStoreProvider>
-        <WorkspaceCommands projectId="project" />
-        <PlacementState />
-      </EditorStoreProvider>,
+      <EditorTestHost>
+        <ExtensionProvider extensions={[extension]}>
+          <WorkspaceCommands />
+          <PlacementState />
+        </ExtensionProvider>
+      </EditorTestHost>,
     );
     fireEvent.focus(screen.getByRole("combobox"));
     expect(
@@ -100,10 +115,12 @@ describe("project cloud controls", () => {
 
   it("starts placement even when the scene is empty and the grid is off", () => {
     render(
-      <EditorStoreProvider>
-        <WorkspaceCommands projectId="project" />
-        <PlacementState />
-      </EditorStoreProvider>,
+      <EditorTestHost>
+        <ExtensionProvider extensions={[extension]}>
+          <WorkspaceCommands />
+          <PlacementState />
+        </ExtensionProvider>
+      </EditorTestHost>,
     );
     fireEvent.focus(screen.getByRole("combobox"));
     fireEvent.click(

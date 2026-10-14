@@ -1,5 +1,5 @@
 "use client";
-import type { PointerEvent } from "react";
+import type { PointerEvent, ReactNode } from "react";
 
 import type { KeyframeTrackDescriptor } from "@camera-path/contracts/timeline-track";
 import {
@@ -12,13 +12,15 @@ import { pathPositionFromClientX } from "@camera-path/ui-kit/timeline/path-posit
 interface TimelineStackProps {
   onScrub: (pathPosition: number) => void;
   pathPosition: number;
-  tracks: KeyframeTrackDescriptor[];
+  tracks?: KeyframeTrackDescriptor[];
+  children?: ReactNode;
 }
 
 export function TimelineStack({
   onScrub,
   pathPosition,
-  tracks,
+  tracks = [],
+  children,
 }: TimelineStackProps) {
   const scrub = (event: PointerEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -64,6 +66,7 @@ export function TimelineStack({
       }}
       tabIndex={0}
     >
+      {children}
       {tracks.map((track, index) => (
         <div
           className={index < tracks.length - 1 ? "border-b" : undefined}

@@ -1,3 +1,4 @@
+import type { PathPosition } from "../path-position";
 import { generatedSchema } from "../generated-schema";
 import { voidSchema } from "../basic-schemas";
 import { defineRequest } from "../define-request";
@@ -14,7 +15,7 @@ export interface PlaybackFrameInput {
    * @minimum 0
    * @maximum 1
    */
-  pathPosition: number;
+  pathPosition: PathPosition;
   /** @minimum 0 */
   elapsed: number;
 }

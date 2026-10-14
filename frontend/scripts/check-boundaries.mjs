@@ -46,15 +46,65 @@ export function checkSource(fileName, source, resolve) {
         specifier === "next/navigation")
     )
       report(node, "Feature bypasses scoped host ports");
-    if (
-      !feature &&
-      !platform &&
-      targetFeature &&
-      specifier !== `@camera-path/feature-${targetFeature}`
-    )
-      report(node, "Host must import a feature's public entrypoint");
+    if (!feature && !platform && targetFeature) {
+      const catalog =
+        /\/apps\/host\/src\/composition\/(application|project)-features\.ts$/.test(
+          normalized,
+        );
+      const bindings = ts.isImportDeclaration(node)
+        ? node.importClause?.namedBindings
+        : undefined;
+      const descriptorOnly =
+        bindings &&
+        ts.isNamedImports(bindings) &&
+        !node.importClause?.name &&
+        bindings.elements.length === 1 &&
+        (bindings.elements[0].propertyName ?? bindings.elements[0].name)
+          .text === "extension";
+      if (
+        !catalog ||
+        !descriptorOnly ||
+        specifier !== `@camera-path/feature-${targetFeature}`
+      )
+        report(
+          node,
+          "Host may load only an extension descriptor in the composition catalog; feature implementations are private",
+        );
+    }
   }
   function visit(node) {
+    if (
+      feature &&
+      /\/packages\/features\/[^/]+\/src\/index\.ts$/.test(normalized)
+    ) {
+      if (ts.isExportDeclaration(node)) {
+        const entries = node.exportClause;
+        if (
+          !entries ||
+          !ts.isNamedExports(entries) ||
+          entries.elements.length !== 1 ||
+          entries.elements[0].name.text !== "extension" ||
+          (entries.elements[0].propertyName ?? entries.elements[0].name)
+            .text !== "extension" ||
+          !node.moduleSpecifier ||
+          !ts.isStringLiteral(node.moduleSpecifier) ||
+          node.moduleSpecifier.text !== "./extension"
+        )
+          report(
+            node,
+            "A feature entrypoint exports only its extension descriptor",
+          );
+      } else if (
+        ts.isExportAssignment(node) ||
+        node.modifiers?.some(
+          (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+        )
+      )
+        report(
+          node,
+          "A feature entrypoint exports only its extension descriptor",
+        );
+    }
     if (
       (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
       node.moduleSpecifier &&

@@ -1,21 +1,16 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
-
-import { CameraViewOffset } from "@camera-path/feature-camera-view";
-import { SceneContents } from "@host/ui/scene-editor/ui/scene-contents";
-import { SceneViewportFrame } from "@host/ui/scene-editor/ui/scene-viewport-frame";
-import type { SceneViewportProps } from "@host/ui/scene-editor/ui/scene-viewport-types";
+import { SceneContents } from "./scene-contents";
+import { SceneViewportFrame } from "./scene-viewport-frame";
+import type { SceneViewportProps } from "./scene-viewport-types";
 
 export function SceneViewport(props: SceneViewportProps) {
+  const available = true;
   return (
     <SceneViewportFrame
+      available={available}
       onScenePointerLeave={props.onScenePointerLeave}
-      available
-      clouds={props.clouds}
-      deletingTrajectory={props.deletingTrajectory}
-      onDeleteAnchor={props.onDeleteAnchor}
-      onDeleteTrajectory={props.onDeleteTrajectory}
-      trajectoryAvailable={Boolean(props.trajectory?.position_segments.length)}
+      unavailableMessage="This renderer is unavailable in this browser"
       renderScene={(context) => (
         <Canvas
           onPointerMissed={props.onScenePointerMissed}
@@ -23,26 +18,18 @@ export function SceneViewport(props: SceneViewportProps) {
           dpr={[1, 2]}
           gl={{ antialias: false }}
           shadows
+          style={{
+            backgroundColor: `rgb(${context.background
+              .slice(0, 3)
+              .map((c) => Math.round(c * 255))
+              .join(" ")})`,
+          }}
         >
-          <CameraViewOffset bottomInset={props.bottomOverlayHeight ?? 0} />
           <SceneContents
-            anchors={props.anchors}
-            clouds={props.clouds}
-            initialCloudIds={props.initialCloudIds}
             background={context.background}
             dark={context.dark}
-            onAddAnchor={props.onAddAnchor}
-            onAddCloud={props.onAddCloud}
-            onOpenAnchorMenu={context.onOpenAnchorMenu}
-            onOpenTrajectoryMenu={context.onOpenTrajectoryMenu}
-            onSelectTrajectory={props.onSelectTrajectory}
-            onSurfaceError={context.onSurfaceError}
-            onSurfaceLoading={context.onSurfaceLoading}
-            onSurfaceReady={context.onSurfaceReady}
-            onUpdateAnchorLift={props.onUpdateAnchorLift}
-            pathPosition={props.pathPosition}
-            selected={props.selected}
-            trajectory={props.trajectory}
+            bottomInset={props.bottomOverlayHeight}
+            depthSupported={false}
           />
         </Canvas>
       )}

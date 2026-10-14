@@ -6,7 +6,9 @@ Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The fr
 
 Feature manifests declare `calls` (actions/operations they invoke), `reads` (data they consume, including subscriptions), and optional `handles` (services they implement). Current features omit `handles`; action handlers and data publication belong to the host. Frame handlers and UI/scene/GPU contributions are declared separately. Typed DTOs and validated contract objects live in `packages/contracts`. Features receive a scoped API from `packages/extension-api`; imports of sibling features, private host code, raw transport and the shared query cache are rejected by CI.
 
-`apps/host` owns composition, layout, resource/query adapters, auth/preferences, tool arbitration and cross-feature workflows. `src/app` keeps the existing Next.js/Vercel route and deployment boundary. Generic UI, scene adapters and pure trajectory math live in their own packages. Playback and camera mode have separate feature controllers per project; the host owns shared scene hover and selection by object ID; temporary form and chat state stays local.
+`apps/host` loads opaque extension descriptors, mounts generic slots, and owns resource/query adapters, auth/preferences, tool arbitration and cross-feature workflows. `src/app` keeps the existing Next.js/Vercel route and deployment boundary. Generic UI, scene adapters and pure trajectory math live in their own packages. Playback and camera state are owned by host controllers per project; the host owns shared scene hover and selection by object ID; temporary form and chat state stays local.
+
+Each feature exports only `extension` (manifest plus `{ id, Component }` contributions). Only the two composition catalogs import feature entrypoints. Timeline, scene, chat, settings, header and page components read their own host contracts and dispatch their own actions; slot containers receive no feature-specific props. Adding a contribution requires no container changes. CI enforces this boundary and checks each descriptor against its manifest.
 
 See [the architecture and review guide](docs/feature-host-architecture.md) and the generated [contract graph](docs/frontend-contract-graph.json). Run `npm run boundaries:check`, `npm run graph:check` and `npm run typecheck` alongside the standard lint/test/build checks. Regenerate the graph after changing manifests or host bindings with `npm run graph:generate`.
 
@@ -42,7 +44,7 @@ clouds/anchors/timelines, send messages and run the agent. The backend
 enforces these permissions for direct API requests too. Create the account with the backend's
 `editor-create` command before signing in.
 
-Wrap editing forms, menus and controls in `EditorOnly` at their composition boundary. Guests see
+Features own permission-dependent visibility of their editing forms, menus and controls. Guests see
 the shared content and read-only anchor markers; the anchor keyboard shortcut mounts only for editors.
 
 The identity host adapter checks the server session on startup, window focus and once a minute. A 401 drops

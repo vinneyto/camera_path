@@ -96,6 +96,59 @@ for (const folder of fs
   }
   visit(source);
 }
+// A feature's public descriptor must implement every declared mountable contribution.
+for (const feature of features) {
+  const file = path.join(
+    root,
+    "packages/features",
+    feature.id,
+    "src/extension.ts",
+  );
+  const source = ts.createSourceFile(
+    file,
+    fs.readFileSync(file, "utf8"),
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const registered = [];
+  function visit(node) {
+    if (
+      ts.isPropertyAssignment(node) &&
+      node.name.getText(source) === "contributions" &&
+      ts.isArrayLiteralExpression(node.initializer)
+    )
+      for (const entry of node.initializer.elements) {
+        if (!ts.isObjectLiteralExpression(entry))
+          throw new Error(
+            "Extension contributions must be explicit descriptors",
+          );
+        const id = entry.properties.find(
+          (p) => ts.isPropertyAssignment(p) && p.name.getText(source) === "id",
+        );
+        const component = entry.properties.find(
+          (p) =>
+            ts.isPropertyAssignment(p) &&
+            p.name.getText(source) === "Component",
+        );
+        if (!id || !ts.isStringLiteral(id.initializer) || !component)
+          throw new Error(`Invalid contribution in ${file}`);
+        registered.push(id.initializer.text);
+      }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  const expected = feature.contributions
+    .filter((c) => !["gpu-pass", "picking-provider"].includes(c.kind))
+    .map((c) => c.id);
+  if (
+    new Set(registered).size !== registered.length ||
+    registered.some((id) => !expected.includes(id)) ||
+    expected.some((id) => !registered.includes(id))
+  )
+    throw new Error(
+      `Extension contributions differ from manifest: ${feature.id}`,
+    );
+}
 const bindings = [];
 function inspect(folder) {
   for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
@@ -162,6 +215,20 @@ const nodes = [
     data: contract,
   })),
 ];
+const slots = [
+  ...new Set(
+    features.flatMap((feature) =>
+      feature.contributions.flatMap((c) => (c.slot ? [c.slot] : [])),
+    ),
+  ),
+].sort();
+nodes.push(
+  ...slots.map((slot) => ({
+    id: `slot:${slot}`,
+    type: "slot",
+    data: { label: slot },
+  })),
+);
 const edges = [];
 for (const feature of features) {
   for (const read of feature.reads)
@@ -186,6 +253,13 @@ for (const feature of features) {
       data: { kind: "handles" },
     });
   for (const contribution of feature.contributions) {
+    if (contribution.slot)
+      edges.push({
+        id: `${contribution.id}->slot:${contribution.slot}`,
+        source: feature.id,
+        target: `slot:${contribution.slot}`,
+        data: { kind: "contributes", contribution: contribution.id },
+      });
     for (const input of contribution.inputs ?? [])
       edges.push({
         id: `${input}->${contribution.id}`,
@@ -203,7 +277,8 @@ for (const feature of features) {
   }
 }
 const graph = {
-  schemaVersion: 2,
+  schemaVersion: 3,
+  slots,
   features,
   contracts,
   nodes,

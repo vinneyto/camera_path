@@ -1,75 +1,79 @@
 # Фичи и хост frontend camera_path (CP-80)
 
-Источник решения: архитектурное описание CP-80. Эта реализация относится к frontend. Backend, OpenAPI endpoints и инфраструктура не меняются.
+Источник решения: архитектурное описание CP-80. Изменения относятся к frontend; backend, OpenAPI endpoints и инфраструктура сохраняются.
+
+## Граница расширения
+
+Каждая фича — закрытый модуль. Её `src/index.ts` экспортирует только `extension`: манифест, список вкладов `{ id, Component }` и опциональную регистрацию сервисов. Hooks, controllers, track factories и компоненты деталей остаются приватными. Рабочий код хоста импортирует descriptors только в двух каталогах `apps/host/src/composition/application-features.ts` и `project-features.ts`. Каталоги не адаптируют inputs фич и не вызывают их hooks.
+
+`ExtensionProvider` регистрирует единый набор вкладов на lifetime application/project scope. `ExtensionSlot` получает только имя слота, сортирует вклады по общему order/ID и монтирует их компоненты без специализированных props. Вклады application и project объединяются с сохранением общего порядка. Компонент фичи самостоятельно читает разрешённые данные, вызывает actions и хранит состояние UI. Добавление фичи требует её включения в каталог; контейнеры слотов и существующие фичи не меняются.
+
+Манифест описывает доступ к хосту:
+
+- `calls`: actions или операции, которые фича может вызвать.
+- `reads`: данные, которые фича может читать, включая snapshot, readiness и subscribe.
+- `handles?`: сервисные операции, которые фича предоставляет. Текущие фичи не имеют handles; неиспользуемые forwarding handlers удалены.
+
+Хост реализует бизнес-операции и публикацию data contracts. Владение REST/query cache, авторизацией, preferences и playback/camera state остаётся в host adapters/runtime. Хост может координировать общие workflows через контракты, но UI-контейнеры не собирают поведение конкретных фич. Фича может иметь собственный приватный React/Zustand store.
 
 ## Структура
 
-| Путь                        | Ответственность                                                                                                                                  |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/app`                   | Совместимые с текущим Next/Vercel entrypoints: маршруты, layout, API proxy. Сохранены корень приложения, команды запуска и расположение `.next`. |
-| `apps/host/src/composition` | Состав фич, разрешённые связи и проекции, сборка команд, настроек, сцены и таймлайнов.                                                           |
-| `apps/host/src/runtime`     | Application/project lifecycle, связывание data/request ports с REST и платформой, вычисление общей позы камеры.                                  |
-| `apps/host/src/adapters`    | REST-клиент, query cache, ETag/revision reconciliation, auth, preference persistence, ресурсные операции. Доступны хосту.                        |
-| `packages/contracts`        | DTO из OpenAPI, схемы проверки, типизированные data/request/GPU определения и props вкладов.                                                     |
-| `packages/extension-api`    | Ограниченный контекст, runtime проверки, immutable DTO, регистрация вкладов, кадры, GPU leases, command registry.                                |
-| `packages/ui-kit`           | Общие примитивы, command palette, timeline stack, графическое размещение ключей. Нет импортов фич/хоста.                                         |
-| `packages/scene-runtime`    | Renderer adapters, render pipeline, generic surface/picking и ресурсы Three.js.                                                                  |
-| `packages/trajectory-math`  | Чистые функции геометрии, оценки ключей и отображения времени на путь.                                                                           |
-| `packages/features/*`       | Manifest, локальные порты, компоненты и приватное состояние фичи. Опциональная регистрация сервисов.                                             |
+| Путь                        | Ответственность                                                                                           |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `src/app`                   | Next/Vercel entrypoints, маршруты и API proxy.                                                            |
+| `apps/host/src/composition` | Два каталога единых descriptors.                                                                          |
+| `apps/host/src/runtime`     | Scope lifecycle, data/request bindings, REST adapters и общая поза камеры.                                |
+| `apps/host/src/ui`          | Размещение универсальных слотов, canvas, навигация и общая оболочка.                                      |
+| `packages/contracts`        | Валидируемые data/request/GPU контракты и общие DTO.                                                      |
+| `packages/extension-api`    | Scoped host API, тип Extension, регистрация/монтирование вкладов, общие slot shells, frames/GPU/commands. |
+| `packages/ui-kit`           | Общие UI-примитивы, modal, timeline axis и generic lane rendering.                                        |
+| `packages/scene-runtime`    | Renderer adapters и общие сервисы viewport/поверхностей.                                                  |
+| `packages/trajectory-math`  | Чистые геометрические и временные преобразования.                                                         |
+| `packages/features/*`       | Манифест, descriptor, приватные компоненты/порты/состояние.                                               |
 
-Application-фичи: projects, library, identity, appearance, renderer-preferences и scene-grid (общая preference сетки; геометрия монтируется в сцене проекта). Project-фичи: scene-models, anchors, trajectory, speed-track, camera-aim, camera-orientation, depth-of-field, lidar, playback, camera-view. Scope проекта создаётся с ключом projectId. Детали library asset используют отдельную ограниченную route projection поверх application-адаптеров.
+## Вклады UI
 
-## Ревью потока данных
+Таймлайны camera-aim, orientation, speed, DOF и LiDAR регистрируют самостоятельные компоненты в `timeline.tracks`. Состояния mutations, подтверждение удаления и ошибки принадлежат соответствующей фиче. DOF/LiDAR регистрируют собственные пункты `timeline.effects` и определяют их доступность. Общий TimelineStack знает только ось pathPosition, scrub и children; он не знает виды фич.
 
-1. Прочитать `packages/features/<feature>/src/manifest.ts`: `calls`, `reads`, опциональный `handles`, frames, contributions и capabilities.
-2. Перейти к объектам контрактов в `packages/contracts/src/host-data/` и `host-requests/`: каждый контракт объявлен в отдельном файле и экспортирован через `index.ts`. Второй аргумент `defineDataContract` и `defineRequest` — обязательное краткое английское описание, доступное в `contract.description` и генерируемом графе вместе с путём исходного файла. GPU-определения находятся в `gpu-resources.ts`. `schema.parse` выполняет проверку; API DTO проверяются по JSON Schema из того же OpenAPI, что и generated TypeScript.
+Фича trajectory монтирует собственную панель в `scene.overlay` и размещает внутри универсальные слоты controls/tracks/effects. Playback предоставляет `timeline.controls` и `project.root`; он самостоятельно подписывается на compiled trajectory и playback state. `seekPlayback` пересчитывает положение в elapsed через текущий motion profile в хосте.
 
-3. Прочитать локальные порты фичи: они вызывают объявленные actions и читают разрешённые данные. Контекст не содержит общего Project, REST-клиента, QueryClient или editor store. Обработчики actions и бизнес-логика подключены в хосте.
-4. Проверить host bindings в `apps/host/src/runtime` и явные преобразования в `apps/host/src/composition`. Например, aim lane получает только scene-point labels и compiled aim; orientation и DOF не получают весь Project. Составной Project остаётся приватной проекцией оболочки хоста.
-5. Открыть `docs/frontend-contract-graph.json`. Он генерируется из текстовых деклараций и фактических binding sites; ссылки на контракты нормализуются до канонических ID. Изменение деклараций без обновления графа отклоняется CI.
+Chat-agent владеет composer, чтением anchors/history, отправкой и pending/error UI в `project.sidebar`. Sidebar монтируется без привязки к авторизации в оболочке; фича сама решает, когда возвращать UI. Ширина/строки layout зависят от наличия содержимого слота. Projects/library реализуют свои content/details slots и самостоятельно выполняют операции. Header/status, настройки, подсказки и команды также подключаются через общие слоты. SettingsMenu содержит только slot shell; ошибки и сохранение preferences отображает фича renderer-preferences.
 
-Frontend DTO описываются TypeScript-интерфейсами и type aliases. `host-schema-types.ts` связывает имена generated-схем с типами, а `generatedSchema("identityState")` выводит тип результата из этого реестра. `npm run schemas:generate` использует закреплённый `ts-json-schema-generator` и сохраняет JSON Schema 2020-12 в `packages/contracts/src/generated/host-schemas.json`; runtime AJV читает готовый файл, генератор в браузер не включается. Поля, required, nullable unions и кортежи выводятся из TS. Диапазоны и целочисленность задаются JSDoc-аннотациями; для закрытого объекта permissions применяется `@additionalProperties false`. Генератор сохраняет ссылки на OpenAPI для вложенных API DTO, поэтому серверные ограничения не заменяются более слабыми TS-типами. Функции запрещены в реестре JSON DTO; File и callback остаются отдельными runtime validators.
+## Сцена и кадры
 
-Манифест объявляет три направления доступа:
+SceneContents монтирует `scene.root` и предоставляет renderer/environment services. Фичи anchors, scene-models, grid, trajectory, camera-view, DOF и LiDAR самостоятельно собирают свои сцены. Хост не создаёт marker props и не передаёт callbacks вроде onAddAnchor/onSetLidar/onDeleteDepthOfField.
 
-- `calls`: actions или операции, которые фича может вызвать.
-- `reads`: данные, которые фича может читать. Один контракт разрешает `read`, `state`, `readAsync` и `subscribe`.
-- `handles?`: сервисные операции, которые фича реализует для внешнего вызова. Отсутствие поля равнозначно пустому списку.
+Общие scene services предоставляют backend, environment, bounds/framing, camera target, bottom inset и запрос depth resources. Viewport services предоставляют context menu, сообщения загрузки/ошибок, cursor и event bus. События surfacePointerDown/Move/Up/Out/Cancel и controlsChange/Start не содержат ссылок на фичи. Grid/cloud surfaces публикуют события; anchors подписывается на них через общий сервис. Cloud placement выполняет raycast через платформенный picking API. Фичи не импортируют друг друга. Регистрации, сообщения, cursor, listeners и GPU resources освобождаются при cleanup соответствующего компонента/scope.
 
-Например, appearance использует `reads: [themeState]` и `calls: [toggleTheme]`. Кнопка вызывает хостовый action, хост меняет тему и публикует новое значение. Все 17 текущих фич не предоставляют сервисных операций и не объявляют `handles`; неиспользуемые перенаправления и их дублирующие контракты удалены. Для будущего сервиса `register(host)` может подключить объявленный обработчик через `host.requests.handle`; хост активирует и освобождает такую регистрацию. ID сервиса принадлежит фиче, а вызывающий модуль должен объявить его в `calls`.
+CPU frame registry проверяет порядок и циклы. Хост вычисляет trajectoryCameraPose один раз за кадр; camera-view, DOF helper и LiDAR читают разрешённую проекцию с frameId/revision. after-render выполняется после отправки RenderPipeline.render, без обещания завершения GPU.
 
-`read` синхронно возвращает готовое значение; loading/error доступны через `state`/`useDataQuery`. `readAsync` подписывается на уже зарегистрированный provider и ждёт готовности; если значение уже готово, возвращает его, а не ждёт следующего изменения. HTTP-запрос он не запускает; отсутствие provider является ошибкой. `subscribe` освобождается при dispose. React использует `useSyncExternalStore` и стабильную идентичность состояния до публикации следующего значения. DTO копируются и рекурсивно замораживаются; File и одноразовый callback принятия chat-запроса объявлены отдельно в request schemas и не попадают в data store.
+GPU-порты отделены от DTO. LiDAR читает ограниченный Gaussian scene view и публикует ranges/hit instances через generation leases. Неготовые и инвалидированные leases нельзя читать. Gaussian prepare → sensor render/compute → scene остаются частью native pipeline; ядра `3dgs-tile-webgpu` не меняются. WebGPU — поддерживаемый путь; Spark/WebGL остаётся примером адаптера без требования feature parity.
 
-Requests возвращают типизированный результат с ожидаемым кодом ошибки. Проверяются input/output, permission и право вызова. AbortSignal, timeout, logout и уничтожение scope завершают ожидание. Host adapters сохраняют существующий cache invalidation и If-Match механизм. Отмена ожидающего вызова не откатывает уже принятую сервером запись: её reconciliation выполняется по ресурсам соответствующего projectId.
+## Контракты и runtime
 
-Playback и camera mode создаются отдельными feature controllers для каждого проекта. Хост держит их проекцию для платформенных hooks и координирует camera/tool arbitration и placement. Hover и выбор объектов принадлежат общему состоянию sceneInteraction в хосте. Неиспользуемые DTO-публикации controllers и статуса LiDAR удалены; данные наружу предоставляет хост. Черновик чата и состояние редакторов остаются внутри своих компонентов; responsive-chat сохраняет один composer при смене раскладки. Фича может иметь приватный React/Zustand store на экземпляр; его внутренние изменения не требуют calls/handles или публикации данных.
+Каждый host data/request объявлен в отдельном файле под `packages/contracts/src/host-data` или `host-requests` и экспортирован через index.ts. Второй аргумент defineDataContract/defineRequest — обязательное краткое английское описание.
 
-Манифест описывает доступ через контракты. Некоторые scene/timeline inputs пока передаются хостом через props и не являются читателями host.data. Например, aimTimeline и chatHistory зарегистрированы в хосте, но их контрактные проекции не имеют читателей. Текущая смена схемы не переносит эти сценарии или владельцев состояния.
+Frontend JSON Schema генерируются из TS через закреплённый ts-json-schema-generator 2.9.0. HostSchemaTypes связывает имена с типами; generatedSchema выводит тип результата и использует committed JSON Schema 2020-12. Диапазоны, integer и tuple ограничения задаются TS/JSDoc. API DTO сохраняют OpenAPI refs и API validation. Типы сериализованных response views отражают defaults, которые Pydantic включает в ответ. File/callback inputs имеют отдельные runtime validators.
 
-## Слоты и кадры
+read возвращает готовое значение синхронно. readAsync ждёт готовности уже зарегистрированного provider, а не следующего события или HTTP-запроса. Отсутствие provider — ошибка. useDataQuery предоставляет loading/error; subscribe освобождается при dispose. DTO копируются и рекурсивно замораживаются.
 
-Settings sections и timeline lanes собираются через `ContributionRegistry`; команды публикуются фичей в command registry, а общую палитру рисует хост. Реестр сцены расположен в host composition, а camera/tool orchestration остаётся в отдельной оболочке сцены. Новый provider подключается в composition root; существующие feature packages не редактируются.
+Requests проверяют canonical contract, declarations, input/output/error schemas и права. AbortSignal, timeout, logout и уничтожение scope завершают ожидание. Отмена ожидания не откатывает уже принятую сервером запись: host adapters сохраняют resource/revision reconciliation и If-Match.
 
-CPU frame registry проверяет before/after зависимости и циклы. `host.trajectoryCamera.update` вычисляет pose один раз в кадре; camera-view, DOF helper и LiDAR читают разрешённую проекцию с frameId/revision. Update/before-render выполняются до native renderer; after-render вызывается после отправки `RenderPipeline.render`, без обещания завершения GPU.
+## Hover и выбор
 
-GPU-порты отделены от DTO. LiDAR получает ограниченный Gaussian scene view, публикует ranges и world-space hit buffer, имеет одного производителя на ID и generation leases. Невалидный или неготовый lease нельзя читать; release/renderer teardown инвалидируют leases. Текущий angular pass + hit reconstruction остаются атомарной реализацией sensor adapter: порядок Gaussian prepare → sensor render/compute → scene обеспечивается существующим native TSL/pipeline узлом. Этот рефакторинг не меняет ядра рендерера `3dgs-tile-webgpu`.
+sceneInteraction хранит один hoveredObjectId и один selectedObjectId независимо, на проект. Якорь имеет ID anchor:<anchorId>, траектория — trajectory. Общие hoverObject/selectObject принимают id; null очищает состояние. ifCurrentId выполняет атомарную условную очистку и защищает от запоздалого pointer-out/удаления другого объекта. Выбор якоря заменяет выбор траектории. Нажатие на пустое место без активного инструмента снимает выбор; выход из viewport очищает hover.
 
-## Проверки
+## Ревью и проверки
 
-- `npm run boundaries:check`: feature → feature, private host, type-only/dynamic imports, re-exports, computed require/import, raw transport и общий query cache.
-- `npm run graph:generate` / `npm run graph:check`: актуальность сериализованного графа.
-- `npm run api:check`: generated DTO/client/schema соответствуют OpenAPI.
-- `npm run schemas:generate` / `npm run schemas:check`: frontend JSON Schema соответствуют TS-типам и аннотациям. После изменения OpenAPI сначала выполнить `api:generate`, затем `schemas:generate`.
-- `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run format:check`.
+1. Прочитать manifest.ts: reads/calls/handles, slots, frames и GPU declarations.
+2. Прочитать extension.ts: какие приватные компоненты монтируются.
+3. Прочитать компонент вклада: его SDK reads/calls и приватный UI state.
+4. Прочитать host bindings: бизнес-операции, адаптеры и публикации.
+5. Открыть docs/frontend-contract-graph.json: schemaVersion 3 содержит permissions, bindings и slot topology.
 
-Runtime tests проверяют denied access, duplicate providers, immutable snapshots, scope isolation, cancellation, deterministic frame order и GPU generations. Сохранены regression tests авторизации, preference reload, model placement/grid/Escape, trajectory/playback, chat layout, DOF и LiDAR resource lifetime. Реальное качество рендеринга и производительность на пользовательском GPU требуют отдельного прогона с настоящими моделями; сборка и CPU/WGSL тесты его не заменяют.
+- boundaries:check запрещает feature → feature, private host/raw transport/query cache и импорты реализации фич из хоста; entrypoint может экспортировать только descriptor.
+- graph:check проверяет актуальность графа и соответствие реализованных вкладов манифесту.
+- api:check и schemas:check проверяют актуальность generated API и frontend schemas.
+- typecheck, lint, test, build, format:check и git diff --check выполняются перед публикацией.
 
-## Scene interaction
-
-`sceneInteraction` хранит один `hoveredObjectId` и один `selectedObjectId` для текущего проекта. Hover и выбор независимы. Якорь имеет ID `anchor:<anchorId>`, траектория — `trajectory`. Фичи читают этот контракт через `reads`; отдельных hover-контрактов для разных видов объектов нет.
-
-- `hoverObject({ id })` устанавливает hover; `id: null` очищает его.
-- `selectObject({ id })` устанавливает выбор; `id: null` снимает выбор.
-- Необязательный `ifCurrentId` применяет изменение только при совпадении текущего ID. Это атомарная проверка в хосте: запоздалый pointer-out или завершение удаления не очищают состояние другого объекта.
-
-Нажатие на якорь выбирает его и заменяет выбор траектории. Панель траектории определяется сравнением `selectedObjectId` с `trajectory`. Удаление объекта очищает только совпадающие ID. Нажатие на пустое место без активного инструмента снимает выбор, выход указателя из viewport очищает hover. Смена camera mode очищает hover и сохраняет выбор. Store создаётся отдельно для каждого проекта.
+Тесты включают неизвестный хосту timeline/overlay/sidebar, порядок application/project вкладов, cleanup и undeclared registration; реальный DOF add/delete через host API и обновления data cells; anchor placement через нейтральные surface events; прежние auth/preferences, placement, frame/GPU, timelines и renderer regression tests. Визуальное поведение и производительность WebGPU требуют отдельного прогона с настоящими моделями на пользовательском GPU.

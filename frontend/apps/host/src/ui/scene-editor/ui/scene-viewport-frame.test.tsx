@@ -1,164 +1,94 @@
 // @vitest-environment happy-dom
-
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-} from "@testing-library/react";
+import { useEffect } from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { SceneViewportFrame } from "@host/ui/scene-editor/ui/scene-viewport-frame";
-
-vi.mock("@host/editor", () => ({
-  CameraModeToggle: () => null,
-  useCameraMode: () => ({ cameraMode: "orbit" }),
-}));
-
+import { SceneViewportFrame } from "./scene-viewport-frame";
+import { useViewportServices } from "@camera-path/scene-runtime/viewport/viewport-provider";
 vi.mock("@host/adapters/appearance/theme-provider", () => ({
   useTheme: () => ({ theme: "dark" }),
 }));
-
-describe("SceneViewportFrame trajectory context menu", () => {
-  afterEach(cleanup);
-
-  it("clears scene hover when the pointer leaves the viewport", () => {
+afterEach(cleanup);
+function UnknownContribution({ pending = false }: { pending?: boolean }) {
+  const viewport = useViewportServices();
+  useEffect(() => {
+    viewport.setMessage("unknown", { text: "Unknown resource: Loading…" });
+    return () => viewport.setMessage("unknown", null);
+  }, [viewport]);
+  return (
+    <button
+      onContextMenu={() =>
+        viewport.openMenu(
+          [
+            {
+              label: "Delete unknown object",
+              disabled: pending,
+              onSelect: () =>
+                viewport.setMessage("unknown", { text: "Deleted" }),
+            },
+          ],
+          { x: 40, y: 60 },
+        )
+      }
+      onClick={() =>
+        viewport.setMessage("unknown", { text: "Network error", error: true })
+      }
+    >
+      unknown object
+    </button>
+  );
+}
+describe("generic viewport services", () => {
+  it("clears hover on viewport leave", () => {
     const leave = vi.fn();
     const { container } = render(
       <SceneViewportFrame
         available
-        clouds={[]}
-        deletingTrajectory={false}
-        onDeleteAnchor={vi.fn()}
-        onDeleteTrajectory={vi.fn()}
         onScenePointerLeave={leave}
         renderScene={() => null}
-        trajectoryAvailable={false}
       />,
     );
     fireEvent.pointerLeave(container.firstElementChild!);
     expect(leave).toHaveBeenCalledOnce();
   });
-
-  it("opens, closes with Escape, and invokes delete once", () => {
-    const onDeleteTrajectory = vi.fn();
+  it("hosts a menu supplied by an unknown extension and closes it with Escape", () => {
     render(
       <SceneViewportFrame
         available
-        clouds={[]}
-        deletingTrajectory={false}
-        onDeleteAnchor={vi.fn()}
-        onDeleteTrajectory={onDeleteTrajectory}
-        renderScene={(context) => (
-          <button
-            onContextMenu={(event) => {
-              event.preventDefault();
-              context.onOpenTrajectoryMenu({ x: 40, y: 60 });
-            }}
-          >
-            trajectory
-          </button>
-        )}
-        trajectoryAvailable
+        renderScene={() => <UnknownContribution />}
       />,
     );
-
-    fireEvent.contextMenu(screen.getByText("trajectory"));
-    expect(screen.getByRole("menu")).not.toBeNull();
-
+    fireEvent.contextMenu(screen.getByText("unknown object"));
+    expect(
+      screen.getByRole("menuitem", { name: "Delete unknown object" }),
+    ).toBeTruthy();
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("menu")).toBeNull();
-
-    fireEvent.contextMenu(screen.getByText("trajectory"));
-    fireEvent.click(
-      screen.getByRole("menuitem", { name: "Delete trajectory" }),
-    );
-
-    expect(onDeleteTrajectory).toHaveBeenCalledOnce();
+    fireEvent.contextMenu(screen.getByText("unknown object"));
+    fireEvent.click(screen.getByRole("menuitem"));
+    expect(screen.getByText("Deleted")).toBeTruthy();
     expect(screen.queryByRole("menu")).toBeNull();
   });
-
-  it("disables repeated deletion while the mutation is pending", () => {
+  it("honors a contribution's disabled operation", () => {
     render(
       <SceneViewportFrame
         available
-        clouds={[]}
-        deletingTrajectory
-        onDeleteAnchor={vi.fn()}
-        onDeleteTrajectory={vi.fn()}
-        renderScene={(context) => (
-          <button
-            onContextMenu={() => context.onOpenTrajectoryMenu({ x: 40, y: 60 })}
-          >
-            trajectory
-          </button>
-        )}
-        trajectoryAvailable
+        renderScene={() => <UnknownContribution pending />}
       />,
     );
-
-    fireEvent.contextMenu(screen.getByText("trajectory"));
-
-    expect(
-      screen.getByRole<HTMLButtonElement>("menuitem", {
-        name: "Delete trajectory",
-      }).disabled,
-    ).toBe(true);
+    fireEvent.contextMenu(screen.getByText("unknown object"));
+    expect(screen.getByRole<HTMLButtonElement>("menuitem").disabled).toBe(true);
   });
-
-  it("keeps an empty scene usable and reports loading errors per cloud", () => {
-    const cloud = {
-      id: "one",
-      name: "First PLY",
-      download_url: "http://test/one.ply",
-      format: "ply" as const,
-      library_asset_id: "asset",
-      project_id: "project",
-      position: 0,
-      visible: true,
-      translation: [0, 0, 0] as [number, number, number],
-      rotation_deg: [0, 0, 0] as [number, number, number],
-      scale: 1,
-      offset: [0, 0, 0] as [number, number, number],
-    };
-    const shared = {
-      available: true,
-      deletingTrajectory: false,
-      onDeleteAnchor: vi.fn(),
-      onDeleteTrajectory: vi.fn(),
-      trajectoryAvailable: false,
-    };
-    let reportError: ((id: string, error: Error) => void) | undefined;
-    const renderScene = (context: {
-      onSurfaceError: (id: string, error: Error) => void;
-    }) => {
-      reportError = context.onSurfaceError;
-      return null;
-    };
+  it("reports resource errors and releases messages when the contribution unmounts", () => {
     const { rerender } = render(
-      <SceneViewportFrame {...shared} clouds={[]} renderScene={renderScene} />,
-    );
-    expect(screen.queryByText(/Loading mug/)).toBeNull();
-    rerender(
       <SceneViewportFrame
-        {...shared}
-        clouds={[cloud]}
-        renderScene={renderScene}
+        available
+        renderScene={() => <UnknownContribution />}
       />,
     );
-    expect(screen.getByText("First PLY: Loading…")).not.toBeNull();
-    act(() => reportError?.(cloud.id, new Error("Network error")));
-    expect(screen.getByRole("alert").textContent).toContain(
-      "First PLY: Network error",
-    );
-    rerender(
-      <SceneViewportFrame {...shared} clouds={[]} renderScene={renderScene} />,
-    );
+    expect(screen.getByText("Unknown resource: Loading…")).toBeTruthy();
+    fireEvent.click(screen.getByText("unknown object"));
+    expect(screen.getByRole("alert").textContent).toBe("Network error");
+    rerender(<SceneViewportFrame available renderScene={() => null} />);
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
-
-vi.mock("@host/ui/header", () => ({
-  EditorOnly: ({ children }: { children: React.ReactNode }) => children,
-}));

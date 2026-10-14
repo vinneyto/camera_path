@@ -17,6 +17,8 @@ export const manifest = {
   reads: [identityState, projectPermissions],
   calls: [login, verify, resend, cancelLogin, logout],
   frames: [],
-  contributions: [],
+  contributions: [
+    { id: "identity.profile", kind: "ui", slot: "header.controls", order: 10 },
+  ],
   capabilities: [],
 } as const satisfies FeatureManifest<"identity">;

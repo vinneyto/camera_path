@@ -1,5 +1,6 @@
 "use client";
 import { useUserSettings } from "../ports";
+import { Button } from "@camera-path/ui-kit";
 import { GaussianDprSelect } from "./gaussian-dpr-select";
 export function RendererSettings() {
   const settings = useUserSettings();
@@ -18,6 +19,23 @@ export function RendererSettings() {
         Use WebGPU renderer (off: WebGL)
       </label>
       <GaussianDprSelect />
+      {(settings.loading || settings.saving) && (
+        <p className="mt-3 text-xs text-muted-foreground" role="status">
+          {settings.loading ? "Loading settings…" : "Saving…"}
+        </p>
+      )}
+      {settings.error && (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs text-destructive" role="alert">
+            {settings.error.message}
+          </p>
+          {!settings.ready && (
+            <Button onClick={settings.retry} size="sm" variant="outline">
+              Retry
+            </Button>
+          )}
+        </div>
+      )}
     </>
   );
 }

@@ -1,85 +1,27 @@
 "use client";
-import type { Project } from "@camera-path/contracts/project";
-import type { CompiledTrajectory } from "@camera-path/trajectory-math";
+import { ExtensionSlot } from "@camera-path/extension-api";
 import { FLOATING_PANEL_Z_INDEX } from "@camera-path/ui-kit";
-import { useTrajectorySelection } from "@host/editor";
-
-import { PlaybackControlsContainer } from "@host/ui/project-workspace/ui/playback-controls-container";
-import { SceneViewportContainer } from "@host/ui/project-workspace/ui/scene-viewport-container";
-import { TrajectoryInspectorContainer } from "@host/ui/project-workspace/ui/trajectory-inspector-container";
-import { useElementHeight } from "@host/ui/project-workspace/ui/use-element-height";
-
-interface ProjectSceneProps {
-  project: Project;
-  projectId: string;
-  deletingTrajectory: boolean;
-  onDeleteTrajectory: () => void;
-  rendererBackend: "webgl" | "webgpu";
-  trajectory: CompiledTrajectory | null;
-}
-
-const TRAJECTORY_CONTROLS_BOTTOM_INSET = 12;
-
+import { SceneViewportContainer } from "./scene-viewport-container";
+import { useElementHeight } from "./use-element-height";
 export function ProjectScene({
-  project,
-  projectId,
-  deletingTrajectory,
-  onDeleteTrajectory,
   rendererBackend,
-  trajectory,
-}: ProjectSceneProps) {
-  const { closeTrajectory, selectTrajectory, trajectorySelected } =
-    useTrajectorySelection();
-  const trajectoryControlsAvailable = Boolean(
-    trajectory && trajectory.position_segments.length > 0,
-  );
-  const trajectoryControlsExpanded =
-    trajectorySelected && trajectoryControlsAvailable;
-  const {
-    elementRef: trajectoryControlsRef,
-    height: trajectoryControlsHeight,
-  } = useElementHeight(trajectoryControlsExpanded);
-  const bottomOverlayHeight = trajectoryControlsExpanded
-    ? trajectoryControlsHeight + TRAJECTORY_CONTROLS_BOTTOM_INSET
-    : 0;
-
+}: {
+  rendererBackend: "webgl" | "webgpu";
+}) {
+  const { elementRef, height } = useElementHeight(true);
   return (
     <div className="relative min-h-0 flex-1">
       <SceneViewportContainer
-        bottomOverlayHeight={bottomOverlayHeight}
-        deletingTrajectory={deletingTrajectory}
-        onDeleteTrajectory={onDeleteTrajectory}
-        onSelectTrajectory={selectTrajectory}
-        project={project}
-        projectId={projectId}
         rendererBackend={rendererBackend}
-        selected={trajectorySelected}
-        trajectory={trajectory}
+        bottomOverlayHeight={height ? height + 12 : 0}
       />
-      {trajectoryControlsAvailable && trajectory && (
-        <div
-          className="absolute left-3 right-3 overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md"
-          ref={trajectoryControlsRef}
-          style={{
-            bottom: TRAJECTORY_CONTROLS_BOTTOM_INSET,
-            zIndex: FLOATING_PANEL_Z_INDEX,
-          }}
-        >
-          <PlaybackControlsContainer
-            collapsed={!trajectoryControlsExpanded}
-            onExpand={trajectoryControlsExpanded ? undefined : selectTrajectory}
-            trajectory={trajectory}
-          />
-          {trajectoryControlsExpanded && (
-            <TrajectoryInspectorContainer
-              onClose={closeTrajectory}
-              project={project}
-              projectId={projectId}
-              trajectory={trajectory}
-            />
-          )}
-        </div>
-      )}
+      <div
+        ref={elementRef}
+        className="absolute bottom-3 left-3 right-3"
+        style={{ zIndex: FLOATING_PANEL_Z_INDEX }}
+      >
+        <ExtensionSlot name="scene.overlay" />
+      </div>
     </div>
   );
 }

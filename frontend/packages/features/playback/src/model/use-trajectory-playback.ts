@@ -1,16 +1,14 @@
 "use client";
 import type { PlaybackTrajectory } from "@camera-path/contracts/timeline-views";
 
-import {
-  createPlaybackTable,
-  timeAtPathPosition,
-} from "@camera-path/trajectory-math";
+import { createPlaybackTable } from "@camera-path/trajectory-math";
 
 import { playbackState } from "@camera-path/contracts/host-data";
 import {
   resetPlayback,
   setPlaybackFrame,
   setPlaying,
+  seekPlayback,
 } from "@camera-path/contracts/host-requests";
 import { useData, useRequestAction } from "@camera-path/extension-api";
 import { manifest } from "../manifest";
@@ -21,14 +19,12 @@ export function useTrajectoryPlayback(trajectory: PlaybackTrajectory | null) {
   const { elapsed, pathPosition, playing } = useData(manifest, playbackState);
   const reset = useRequestAction(manifest, resetPlayback);
   const frame = useRequestAction(manifest, setPlaybackFrame);
+  const seekAction = useRequestAction(manifest, seekPlayback);
   const play = useRequestAction(manifest, setPlaying);
 
   function seek(position: number) {
     const clamped = Math.min(1, Math.max(0, position));
-    void frame({
-      pathPosition: clamped,
-      elapsed: timeAtPathPosition(table, clamped),
-    });
+    void seekAction(clamped);
   }
 
   function toggle() {

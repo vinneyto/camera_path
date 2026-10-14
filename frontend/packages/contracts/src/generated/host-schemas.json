@@ -2,6 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "seekPlayback": {
+      "$ref": "#/definitions/PathPosition",
+      "minimum": 0,
+      "maximum": 1
+    },
     "projectPermissions": {
       "$ref": "#/definitions/ProjectPermissions"
     },
@@ -130,6 +135,7 @@
     }
   },
   "required": [
+    "seekPlayback",
     "projectPermissions",
     "identityState",
     "preferencesState",
@@ -282,11 +288,16 @@
       },
       "required": ["username", "password"]
     },
+    "PathPosition": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
     "PlaybackFrameInput": {
       "type": "object",
       "properties": {
         "pathPosition": {
-          "type": "number",
+          "$ref": "#/definitions/PathPosition",
           "minimum": 0,
           "maximum": 1
         },
@@ -305,7 +316,7 @@
           "minimum": 0
         },
         "pathPosition": {
-          "type": "number",
+          "$ref": "#/definitions/PathPosition",
           "minimum": 0,
           "maximum": 1
         },

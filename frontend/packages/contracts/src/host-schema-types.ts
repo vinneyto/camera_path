@@ -1,3 +1,5 @@
+import type { PathPosition } from "./path-position";
+import type { Anchor, ScenePoint, ChatHistoryMessage } from "./project";
 import type * as Api from "./api";
 import type { TrajectoryCameraPose } from "./camera-pose";
 import type { ProjectPermissions } from "./host-data/project-permissions";
@@ -22,6 +24,9 @@ import type { UpdateLibraryDefaultsInput } from "./host-requests/update-library-
 
 // Only serializable frontend DTOs belong here. API DTOs keep their OpenAPI schemas.
 export interface HostSchemaTypes {
+  /** @minimum 0
+   * @maximum 1 */
+  seekPlayback: PathPosition;
   projectPermissions: ProjectPermissions;
   identityState: IdentityState;
   preferencesState: PreferencesState;
@@ -35,9 +40,9 @@ export interface HostSchemaTypes {
   projectsCatalog: Api.ProjectMetadata[];
   libraryCatalog: Api.LibraryAsset[];
   sceneModels: Api.ProjectCloud[];
-  anchors: Api.Anchor[];
-  scenePoints: Api.ScenePoint[];
-  chatHistory: Api.ChatHistoryMessage[];
+  anchors: Anchor[];
+  scenePoints: ScenePoint[];
+  chatHistory: ChatHistoryMessage[];
   trajectoryCameraPose: TrajectoryCameraPose | null;
   updateAnchor: UpdateAnchorInput;
   updateCameraOrientationKeyframe: UpdateCameraOrientationKeyframeInput;

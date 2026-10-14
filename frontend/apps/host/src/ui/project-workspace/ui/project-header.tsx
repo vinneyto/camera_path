@@ -1,17 +1,17 @@
-import { ArrowLeft, Boxes, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-import type { Project } from "@camera-path/contracts/project";
-import { Badge, Button, FLOATING_PANEL_Z_INDEX } from "@camera-path/ui-kit";
+import { ExtensionSlot } from "@camera-path/extension-api";
+import { Button, FLOATING_PANEL_Z_INDEX } from "@camera-path/ui-kit";
 import { WorkspaceCommands } from "@host/ui/commands/workspace-commands";
-import { AuthControl, EditorOnly } from "@host/ui/header";
+import { AuthControl } from "@host/ui/header";
 
 interface ProjectHeaderProps {
-  project: Project;
-  projectId: string;
+  title: string;
+  revision: number;
 }
 
-export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
+export function ProjectHeader({ title, revision }: ProjectHeaderProps) {
   return (
     <header
       className="relative grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 border-b bg-background px-2 py-1 md:h-11 md:grid-cols-[minmax(0,1fr)_minmax(0,min(360px,28vw))_minmax(0,1fr)] md:px-2.5 md:py-0"
@@ -31,27 +31,18 @@ export function ProjectHeader({ project, projectId }: ProjectHeaderProps) {
           </Button>
         </Link>
         <div className="min-w-0">
-          <h1 className="truncate text-xs font-semibold">{project.name}</h1>
+          <h1 className="truncate text-xs font-semibold">{title}</h1>
           <p className="text-[9px] text-muted-foreground">
-            Revision {project.revision}
+            Revision {revision}
           </p>
         </div>
       </div>
-      <EditorOnly>
-        <div className="order-3 col-span-2 min-w-0 md:order-none md:col-span-1">
-          <WorkspaceCommands projectId={projectId} />
-        </div>
-      </EditorOnly>
+      <div className="order-3 col-span-2 min-w-0 md:order-none md:col-span-1">
+        <WorkspaceCommands />
+      </div>
       <div className="col-start-2 flex min-w-0 items-center justify-end gap-2 md:col-start-3">
         <AuthControl />
-        <Badge className="hidden gap-1 2xl:inline-flex">
-          <MapPin className="size-2.5" />
-          {Object.keys(project.anchors).length}
-        </Badge>
-        <Badge className="hidden gap-1 2xl:inline-flex">
-          <Boxes className="size-2.5" />
-          {project.segments.length}
-        </Badge>
+        <ExtensionSlot name="project.header.status" />
       </div>
     </header>
   );

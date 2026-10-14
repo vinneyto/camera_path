@@ -1,4 +1,6 @@
 import {
+  compiledTrajectory,
+  playbackState,
   projectPermissions,
   speedTimeline,
 } from "@camera-path/contracts/host-data";
@@ -8,7 +10,7 @@ export const manifest = {
   manifestVersion: 1,
   id: "speed-track",
   scope: "project",
-  reads: [projectPermissions, speedTimeline],
+  reads: [compiledTrajectory, playbackState, projectPermissions, speedTimeline],
   calls: [deleteSpeedKeyframe],
   frames: [],
   contributions: [

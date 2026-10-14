@@ -1,8 +1,31 @@
+import { ExtensionProvider } from "@camera-path/extension-api/extension-provider";
+import type { Extension } from "@camera-path/extension-api";
 // @vitest-environment happy-dom
 
 import { ProjectWorkspace } from "@host/ui/project-workspace/ui/project-workspace";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+
+const extension: Extension = {
+  manifest: {
+    manifestVersion: 1,
+    id: "unknown",
+    scope: "project",
+    reads: [],
+    calls: [],
+    frames: [],
+    capabilities: [],
+    contributions: [
+      { id: "unknown.sidebar", kind: "ui", slot: "project.sidebar" },
+    ],
+  },
+  contributions: [
+    {
+      id: "unknown.sidebar",
+      Component: () => (auth.canEdit ? <aside>Chat and composer</aside> : null),
+    },
+  ],
+};
 
 const auth = vi.hoisted(() => ({ canEdit: false }));
 vi.mock("@host/adapters/identity/auth-provider", () => ({
@@ -39,16 +62,34 @@ afterEach(() => {
 });
 
 it("mounts chat only during an authenticated session and frees its column on logout or expiry", () => {
-  const { rerender } = render(<ProjectWorkspace projectId="project" />);
+  const { rerender } = render(
+    <ExtensionProvider extensions={[extension]}>
+      <ProjectWorkspace projectId="project" />
+    </ExtensionProvider>,
+  );
   expect(screen.queryByRole("complementary")).toBeNull();
-  expect(screen.getByRole("main").className).not.toContain("300px");
+  expect(
+    document.querySelector("[data-extension-sidebar]")?.children,
+  ).toHaveLength(0);
   auth.canEdit = true;
-  rerender(<ProjectWorkspace projectId="project" />);
+  rerender(
+    <ExtensionProvider extensions={[extension]}>
+      <ProjectWorkspace projectId="project" />
+    </ExtensionProvider>,
+  );
   expect(screen.getByRole("complementary")).toBeTruthy();
-  expect(screen.getByRole("main").className).toContain("300px");
+  expect(
+    document.querySelector("[data-extension-sidebar]")?.children,
+  ).toHaveLength(1);
   auth.canEdit = false;
-  rerender(<ProjectWorkspace projectId="project" />);
+  rerender(
+    <ExtensionProvider extensions={[extension]}>
+      <ProjectWorkspace projectId="project" />
+    </ExtensionProvider>,
+  );
   expect(screen.queryByRole("complementary")).toBeNull();
-  expect(screen.getByRole("main").className).not.toContain("300px");
+  expect(
+    document.querySelector("[data-extension-sidebar]")?.children,
+  ).toHaveLength(0);
   expect(screen.getByText("Scene")).toBeTruthy();
 });

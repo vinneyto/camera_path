@@ -1,4 +1,5 @@
 import {
+  compiledTrajectory,
   orientationTimeline,
   projectPermissions,
 } from "@camera-path/contracts/host-data";
@@ -13,7 +14,7 @@ export const manifest = {
   manifestVersion: 1,
   id: "camera-orientation",
   scope: "project",
-  reads: [projectPermissions, orientationTimeline],
+  reads: [compiledTrajectory, projectPermissions, orientationTimeline],
   calls: [
     addCameraOrientationKeyframe,
     updateCameraOrientationKeyframe,

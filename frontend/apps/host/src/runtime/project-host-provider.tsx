@@ -1,4 +1,10 @@
 "use client";
+import {
+  createPlaybackTable,
+  timeAtPathPosition,
+} from "@camera-path/trajectory-math";
+import { ExtensionProvider } from "@camera-path/extension-api/extension-provider";
+import { ExtensionSlot } from "@camera-path/extension-api/extension-slot";
 import { trajectoryObjectId } from "@camera-path/contracts/trajectory-object-id";
 import { anchorObjectId } from "@camera-path/contracts/anchor-object-id";
 import { projectFeatures } from "@host/composition/project-features";
@@ -74,11 +80,21 @@ export function ProjectHostProvider({
   );
   useBindQuery(runtime, data.lidarTimeline, api.useGetLidarTimeline(projectId));
   useBindQuery(runtime, data.chatHistory, api.useListChatMessages(projectId));
-  useBindQuery(
-    runtime,
-    data.compiledTrajectory,
-    api.useGetCompiledTrajectory(projectId),
-  );
+  const compiled = api.useGetCompiledTrajectory(projectId);
+  useBindQuery(runtime, data.compiledTrajectory, compiled);
+  useBindRequest(runtime, requests.seekPlayback, (position) => {
+    const trajectory =
+      compiled.data?.status === 200
+        ? data.compiledTrajectory.schema.parse(compiled.data.data)
+        : null;
+    const table = trajectory ? createPlaybackTable(trajectory) : [];
+    store
+      .getState()
+      .playbackActions.setPlaybackFrame(
+        position,
+        timeAtPathPosition(table, position),
+      );
+  });
   const addAnchorMutation = useAddAnchor(projectId);
   useBindRequest(runtime, requests.addAnchor, async (input) => {
     await addAnchorMutation.mutateAsync(input);
@@ -229,5 +245,12 @@ export function ProjectHostProvider({
       store.getState().playbackActions.setPlaybackFrame(pathPosition, elapsed),
   );
   useActivateFeatures(runtime, projectFeatures);
-  return <HostProvider runtime={runtime}>{children}</HostProvider>;
+  return (
+    <HostProvider runtime={runtime}>
+      <ExtensionProvider extensions={projectFeatures}>
+        <ExtensionSlot name="project.root" />
+        {children}
+      </ExtensionProvider>
+    </HostProvider>
+  );
 }

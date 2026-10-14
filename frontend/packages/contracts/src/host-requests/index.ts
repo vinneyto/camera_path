@@ -37,3 +37,5 @@ export type { SendChatMessageInput } from "./send-chat-message-input";
 export { sendChatMessage } from "./send-chat-message";
 export { hoverObject } from "./hover-object";
 export { selectObject } from "./select-object";
+
+export { seekPlayback } from "./seek-playback";

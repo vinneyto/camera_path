@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { CompiledTrajectory } from "@camera-path/trajectory-math";
 
-import { useTrajectoryPlayback } from "@host/editor/model/use-trajectory-playback";
+import { useTrajectoryPlayback } from "@camera-path/feature-playback/model/use-trajectory-playback";
 
 const trajectory: CompiledTrajectory = {
   arc_length_table: [],

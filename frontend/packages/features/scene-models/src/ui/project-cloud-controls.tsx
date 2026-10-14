@@ -1,7 +1,12 @@
 "use client";
 import type { LibraryAsset, ProjectCloud } from "@camera-path/contracts/api";
 import type { CommandPaletteCommand } from "@camera-path/contracts/commands";
-import { usePublishCommands } from "@camera-path/extension-api";
+import {
+  useData,
+  useFeatureHost,
+  usePublishCommands,
+} from "@camera-path/extension-api";
+import { projectPermissions } from "@camera-path/contracts/host-data";
 import { manifest } from "../manifest";
 import {
   useCloudPlacement,
@@ -11,7 +16,9 @@ import {
 
 import { useProjectCloudActions } from "@camera-path/feature-scene-models/api/use-project-cloud-actions";
 
-export function ProjectCloudControls({ projectId }: { projectId: string }) {
+export function ProjectCloudControls() {
+  const canEdit = useData(manifest, projectPermissions).canEdit;
+  const projectId = useFeatureHost(manifest).scopeId;
   const library = useListLibraryAssets();
   const projectClouds = useListProjectClouds(projectId);
   const actions = useProjectCloudActions(projectId);
@@ -50,7 +57,7 @@ export function ProjectCloudControls({ projectId }: { projectId: string }) {
   ];
 
   usePublishCommands(manifest, "scene-models.commands", {
-    commands,
+    commands: canEdit ? commands : [],
     disabled: actions.isPending,
     error: actions.error?.message ?? null,
   });

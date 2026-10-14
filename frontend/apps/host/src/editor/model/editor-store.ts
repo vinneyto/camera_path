@@ -7,8 +7,8 @@ import type {
   ToolState,
 } from "@camera-path/contracts/host-state";
 import type { SceneObjectUpdate } from "@camera-path/contracts/scene-object-update";
-import { CameraController } from "@camera-path/feature-camera-view";
-import { PlaybackController } from "@camera-path/feature-playback";
+import { CameraController } from "./cameraController";
+import { PlaybackController } from "./playbackController";
 import { createStore, type StoreApi } from "zustand/vanilla";
 
 export type { CameraMode, EditorTool };

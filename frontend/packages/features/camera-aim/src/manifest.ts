@@ -1,4 +1,5 @@
 import {
+  compiledTrajectory,
   aimTimeline,
   projectPermissions,
   scenePoints,
@@ -9,7 +10,7 @@ export const manifest = {
   manifestVersion: 1,
   id: "camera-aim",
   scope: "project",
-  reads: [projectPermissions, aimTimeline, scenePoints],
+  reads: [compiledTrajectory, projectPermissions, aimTimeline, scenePoints],
   calls: [deleteCameraKeyframe],
   frames: [],
   contributions: [

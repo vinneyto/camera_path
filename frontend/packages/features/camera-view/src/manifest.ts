@@ -1,4 +1,7 @@
 import {
+  compiledTrajectory,
+  playbackState,
+  editorTool,
   cameraMode,
   projectPermissions,
   trajectoryCameraPose,
@@ -9,7 +12,14 @@ export const manifest = {
   manifestVersion: 1,
   id: "camera-view",
   scope: "project",
-  reads: [trajectoryCameraPose, projectPermissions, cameraMode],
+  reads: [
+    compiledTrajectory,
+    playbackState,
+    editorTool,
+    trajectoryCameraPose,
+    projectPermissions,
+    cameraMode,
+  ],
   calls: [setCameraMode],
   frames: [
     {
@@ -19,6 +29,7 @@ export const manifest = {
     },
   ],
   contributions: [
+    { id: "camera-view.toolbar", kind: "ui", slot: "scene.toolbar" },
     { id: "camera-view.scene", kind: "scene", slot: "scene.root" },
   ],
   capabilities: [],

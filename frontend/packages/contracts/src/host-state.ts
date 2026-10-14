@@ -1,3 +1,4 @@
+import type { PathPosition } from "./path-position";
 import type { ChallengeResponse, LibraryAsset } from "./api";
 export type Theme = "light" | "dark";
 export type EditorTool = "anchor" | "anchor-height" | "cloud";
@@ -13,7 +14,7 @@ export interface PlaybackState {
    * @minimum 0
    * @maximum 1
    */
-  readonly pathPosition: number;
+  readonly pathPosition: PathPosition;
   readonly playing: boolean;
 }
 export interface IdentityState {

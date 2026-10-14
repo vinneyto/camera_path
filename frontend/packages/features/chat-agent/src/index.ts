@@ -1,12 +1,1 @@
-export { useSendChatMessage } from "./api/use-send-chat-message";
-export { manifest } from "./manifest";
-export { useChatComposer } from "./model/use-chat-composer";
-export { AnchorReferencePicker } from "./ui/anchor-reference-picker";
-export { AutoGrowingTextarea } from "./ui/auto-growing-textarea";
-export { ChatMarkdown } from "./ui/chat-markdown";
-export { ChatMarkdownCodeBlock } from "./ui/chat-markdown-code-block";
-export { ChatMarkdownLink } from "./ui/chat-markdown-link";
-export { ChatMarkdownTable } from "./ui/chat-markdown-table";
-export { ChatMessage } from "./ui/chat-message";
-export { ChatPanel } from "./ui/chat-panel";
-export { ResponsiveChatPanel } from "./ui/responsive-chat-panel";
+export { extension } from "./extension";

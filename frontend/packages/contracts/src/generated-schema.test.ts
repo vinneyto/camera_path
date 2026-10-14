@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { generatedSchema } from "./generated-schema";
 
 describe("generated host DTO validation", () => {
+  it("validates the scalar playback seek position", () => {
+    const schema = generatedSchema("seekPlayback");
+    expect(schema.parse(0.5)).toBe(0.5);
+    expect(() => schema.parse(-0.1)).toThrow();
+    expect(() => schema.parse(1.1)).toThrow();
+    expect(() => schema.parse({ pathPosition: 0.5 })).toThrow();
+  });
   it("accepts scene object IDs and guarded clears but rejects invalid IDs", () => {
     const hover = generatedSchema("hoverObject");
     expect(hover.parse({ id: "anchor:a" })).toEqual({ id: "anchor:a" });

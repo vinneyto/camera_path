@@ -1,4 +1,7 @@
 import {
+  compiledTrajectory,
+  playbackState,
+  cameraMode,
   depthOfFieldTimeline,
   projectPermissions,
   scenePoints,
@@ -14,6 +17,9 @@ export const manifest = {
   id: "depth-of-field",
   scope: "project",
   reads: [
+    compiledTrajectory,
+    playbackState,
+    cameraMode,
     trajectoryCameraPose,
     projectPermissions,
     depthOfFieldTimeline,
@@ -28,6 +34,12 @@ export const manifest = {
     },
   ],
   contributions: [
+    {
+      id: "depth-of-field.effect",
+      kind: "ui",
+      slot: "timeline.effects",
+      order: 80,
+    },
     { id: "depth-of-field.scene", kind: "scene", slot: "scene.root" },
     {
       id: "depth-of-field.track",

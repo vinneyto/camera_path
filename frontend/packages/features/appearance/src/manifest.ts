@@ -9,12 +9,7 @@ export const manifest = {
   calls: [toggleTheme],
   frames: [],
   contributions: [
-    {
-      id: "appearance.settings",
-      kind: "ui",
-      slot: "settings.content",
-      order: 150,
-    },
+    { id: "appearance.toggle", kind: "ui", slot: "header.controls", order: 20 },
   ],
   capabilities: [],
 } as const satisfies FeatureManifest<"appearance">;
