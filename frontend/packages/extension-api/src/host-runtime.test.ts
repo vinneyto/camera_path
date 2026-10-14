@@ -7,11 +7,25 @@ import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { DataCell } from "./data-cell";
 import type { Handled } from "./feature-context";
 import { HostRuntime } from "./host-runtime";
-const value = defineDataContract("host.test.value@1", numberSchema);
-const privateValue = defineDataContract("host.test.private@1", numberSchema);
-const write = defineRequest("host.test.write@1", numberSchema, numberSchema);
+const value = defineDataContract(
+  "host.test.value@1",
+  "Numeric state used by host runtime tests.",
+  numberSchema,
+);
+const privateValue = defineDataContract(
+  "host.test.private@1",
+  "Undeclared numeric state used to test access restrictions.",
+  numberSchema,
+);
+const write = defineRequest(
+  "host.test.write@1",
+  "Numeric action used to test host request handling.",
+  numberSchema,
+  numberSchema,
+);
 const undeclared = defineRequest(
   "host.test.private@1",
+  "Undeclared action used to test access restrictions.",
   voidSchema,
   voidSchema,
   false,
@@ -73,6 +87,7 @@ describe("scoped host runtime", () => {
     const runtime = new HostRuntime("services", "project");
     const service = defineRequest(
       "provider.compute@1",
+      "Numeric service used to test feature service registration.",
       numberSchema,
       numberSchema,
       false,
@@ -177,6 +192,7 @@ describe("scoped host runtime", () => {
   it("validates and freezes recursively published DTOs", () => {
     const dto = defineDataContract(
       "host.test.dto@1",
+      "Nested data used to test immutable snapshots.",
       jsonSchema<{ items: number[] }>({
         type: "object",
         required: ["items"],

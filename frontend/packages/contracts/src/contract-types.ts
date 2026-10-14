@@ -4,6 +4,7 @@ export interface RuntimeSchema<T> {
 export interface DataContract<Id extends string = string, T = unknown> {
   readonly kind: "data";
   readonly id: Id;
+  readonly description: string;
   readonly schema: RuntimeSchema<T>;
 }
 export interface RequestDefinition<
@@ -13,6 +14,7 @@ export interface RequestDefinition<
 > {
   readonly kind: "request";
   readonly id: Id;
+  readonly description: string;
   readonly inputSchema: RuntimeSchema<Input>;
   readonly outputSchema: RuntimeSchema<Output>;
   readonly errorSchema: RuntimeSchema<RequestErrorCode>;

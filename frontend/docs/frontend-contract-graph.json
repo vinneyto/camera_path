@@ -428,99 +428,147 @@
   "contracts": [
     {
       "symbol": "addAnchor",
-      "id": "host.addAnchor@1"
+      "id": "host.addAnchor@1",
+      "description": "Add an anchor to the current project.",
+      "source": "packages/contracts/src/host-requests/add-anchor.ts"
     },
     {
       "symbol": "addCameraOrientationKeyframe",
-      "id": "host.addCameraOrientationKeyframe@1"
+      "id": "host.addCameraOrientationKeyframe@1",
+      "description": "Add a camera orientation keyframe.",
+      "source": "packages/contracts/src/host-requests/add-camera-orientation-keyframe.ts"
     },
     {
       "symbol": "addDepthOfFieldKeyframe",
-      "id": "host.addDepthOfFieldKeyframe@1"
+      "id": "host.addDepthOfFieldKeyframe@1",
+      "description": "Add a depth-of-field keyframe.",
+      "source": "packages/contracts/src/host-requests/add-depth-of-field-keyframe.ts"
     },
     {
       "symbol": "aimTimeline",
-      "id": "host.aimTimeline@1"
+      "id": "host.aimTimeline@1",
+      "description": "Camera aim targets and keyframes along the trajectory.",
+      "source": "packages/contracts/src/host-data/aim-timeline.ts"
     },
     {
       "symbol": "anchors",
-      "id": "host.anchors@1"
+      "id": "host.anchors@1",
+      "description": "Anchors defining the current project path.",
+      "source": "packages/contracts/src/host-data/anchors.ts"
     },
     {
       "symbol": "themeState",
-      "id": "host.appearance.theme@1"
+      "id": "host.appearance.theme@1",
+      "description": "Current light or dark appearance theme.",
+      "source": "packages/contracts/src/host-data/theme-state.ts"
     },
     {
       "symbol": "cameraMode",
-      "id": "host.camera.mode@1"
+      "id": "host.camera.mode@1",
+      "description": "Current orbit or trajectory camera mode.",
+      "source": "packages/contracts/src/host-data/camera-mode.ts"
     },
     {
       "symbol": "cancelLogin",
-      "id": "host.cancelLogin@1"
+      "id": "host.cancelLogin@1",
+      "description": "Cancel the pending sign-in and clear its error.",
+      "source": "packages/contracts/src/host-requests/cancel-login.ts"
     },
     {
       "symbol": "sendChatMessage",
-      "id": "host.chat.send@1"
+      "id": "host.chat.send@1",
+      "description": "Send a message to the trajectory agent and return the resulting trajectory.",
+      "source": "packages/contracts/src/host-requests/send-chat-message.ts"
     },
     {
       "symbol": "chatHistory",
-      "id": "host.chatHistory@1"
+      "id": "host.chatHistory@1",
+      "description": "Persisted messages in the trajectory agent conversation.",
+      "source": "packages/contracts/src/host-data/chat-history.ts"
     },
     {
       "symbol": "clearHoveredAnchor",
-      "id": "host.clearHoveredAnchor@1"
+      "id": "host.clearHoveredAnchor@1",
+      "description": "Clear hover if the specified anchor is currently hovered.",
+      "source": "packages/contracts/src/host-requests/clear-hovered-anchor.ts"
     },
     {
       "symbol": "clearHoveredTrajectory",
-      "id": "host.clearHoveredTrajectory@1"
+      "id": "host.clearHoveredTrajectory@1",
+      "description": "Clear trajectory hover.",
+      "source": "packages/contracts/src/host-requests/clear-hovered-trajectory.ts"
     },
     {
       "symbol": "clearTrajectory",
-      "id": "host.clearTrajectory@1"
+      "id": "host.clearTrajectory@1",
+      "description": "Clear the trajectory and reset related editor state.",
+      "source": "packages/contracts/src/host-requests/clear-trajectory.ts"
     },
     {
       "symbol": "closeTrajectory",
-      "id": "host.closeTrajectory@1"
+      "id": "host.closeTrajectory@1",
+      "description": "Clear trajectory selection and collapse its controls.",
+      "source": "packages/contracts/src/host-requests/close-trajectory.ts"
     },
     {
       "symbol": "compiledTrajectory",
-      "id": "host.compiledTrajectory@1"
+      "id": "host.compiledTrajectory@1",
+      "description": "Compiled trajectory geometry, motion, and camera tracks.",
+      "source": "packages/contracts/src/host-data/compiled-trajectory.ts"
     },
     {
       "symbol": "createProject",
-      "id": "host.createProject@1"
+      "id": "host.createProject@1",
+      "description": "Create a project with the given name.",
+      "source": "packages/contracts/src/host-requests/create-project.ts"
     },
     {
       "symbol": "deleteAnchor",
-      "id": "host.deleteAnchor@1"
+      "id": "host.deleteAnchor@1",
+      "description": "Delete an anchor from the current project.",
+      "source": "packages/contracts/src/host-requests/delete-anchor.ts"
     },
     {
       "symbol": "deleteCameraKeyframe",
-      "id": "host.deleteCameraKeyframe@1"
+      "id": "host.deleteCameraKeyframe@1",
+      "description": "Delete a camera aim keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-camera-keyframe.ts"
     },
     {
       "symbol": "deleteCameraOrientationKeyframe",
-      "id": "host.deleteCameraOrientationKeyframe@1"
+      "id": "host.deleteCameraOrientationKeyframe@1",
+      "description": "Delete a camera orientation keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-camera-orientation-keyframe.ts"
     },
     {
       "symbol": "deleteDepthOfFieldKeyframe",
-      "id": "host.deleteDepthOfFieldKeyframe@1"
+      "id": "host.deleteDepthOfFieldKeyframe@1",
+      "description": "Delete a depth-of-field keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-depth-of-field-keyframe.ts"
     },
     {
       "symbol": "deleteLibraryAssets",
-      "id": "host.deleteLibraryAssets@1"
+      "id": "host.deleteLibraryAssets@1",
+      "description": "Delete library clouds by their IDs.",
+      "source": "packages/contracts/src/host-requests/delete-library-assets.ts"
     },
     {
       "symbol": "deleteProject",
-      "id": "host.deleteProject@1"
+      "id": "host.deleteProject@1",
+      "description": "Delete a project by its ID.",
+      "source": "packages/contracts/src/host-requests/delete-project.ts"
     },
     {
       "symbol": "deleteSpeedKeyframe",
-      "id": "host.deleteSpeedKeyframe@1"
+      "id": "host.deleteSpeedKeyframe@1",
+      "description": "Delete a trajectory speed keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-speed-keyframe.ts"
     },
     {
       "symbol": "depthOfFieldTimeline",
-      "id": "host.depthOfFieldTimeline@1"
+      "id": "host.depthOfFieldTimeline@1",
+      "description": "Depth-of-field focus and blur keyframes.",
+      "source": "packages/contracts/src/host-data/depth-of-field-timeline.ts"
     },
     {
       "symbol": "gaussianScene",
@@ -528,163 +576,243 @@
     },
     {
       "symbol": "hoverAnchor",
-      "id": "host.hoverAnchor@1"
+      "id": "host.hoverAnchor@1",
+      "description": "Mark an anchor as hovered.",
+      "source": "packages/contracts/src/host-requests/hover-anchor.ts"
     },
     {
       "symbol": "hoverTrajectory",
-      "id": "host.hoverTrajectory@1"
+      "id": "host.hoverTrajectory@1",
+      "description": "Mark the trajectory as hovered.",
+      "source": "packages/contracts/src/host-requests/hover-trajectory.ts"
     },
     {
       "symbol": "identityState",
-      "id": "host.identity.state@1"
+      "id": "host.identity.state@1",
+      "description": "Current session and sign-in progress.",
+      "source": "packages/contracts/src/host-data/identity-state.ts"
     },
     {
       "symbol": "libraryAsset",
-      "id": "host.libraryAsset@1"
+      "id": "host.libraryAsset@1",
+      "description": "Details and placement defaults of the current library cloud.",
+      "source": "packages/contracts/src/host-data/library-asset.ts"
     },
     {
       "symbol": "libraryCatalog",
-      "id": "host.libraryCatalog@1"
+      "id": "host.libraryCatalog@1",
+      "description": "Library clouds available for browsing and placement.",
+      "source": "packages/contracts/src/host-data/library-catalog.ts"
     },
     {
       "symbol": "lidarTimeline",
-      "id": "host.lidarTimeline@1"
+      "id": "host.lidarTimeline@1",
+      "description": "LiDAR scan settings and their trajectory position.",
+      "source": "packages/contracts/src/host-data/lidar-timeline.ts"
     },
     {
       "symbol": "login",
-      "id": "host.login@1"
+      "id": "host.login@1",
+      "description": "Start sign-in with a username and password.",
+      "source": "packages/contracts/src/host-requests/login.ts"
     },
     {
       "symbol": "logout",
-      "id": "host.logout@1"
+      "id": "host.logout@1",
+      "description": "Sign out of the current editor session.",
+      "source": "packages/contracts/src/host-requests/logout.ts"
     },
     {
       "symbol": "navigate",
-      "id": "host.navigate@1"
+      "id": "host.navigate@1",
+      "description": "Navigate to a supported application route.",
+      "source": "packages/contracts/src/host-requests/navigate.ts"
     },
     {
       "symbol": "orientationTimeline",
-      "id": "host.orientationTimeline@1"
+      "id": "host.orientationTimeline@1",
+      "description": "Default camera orientation and orientation keyframes.",
+      "source": "packages/contracts/src/host-data/orientation-timeline.ts"
     },
     {
       "symbol": "playbackState",
-      "id": "host.playback.state@1"
+      "id": "host.playback.state@1",
+      "description": "Trajectory playback time, position, and playing state.",
+      "source": "packages/contracts/src/host-data/playback-state.ts"
     },
     {
       "symbol": "preferencesState",
-      "id": "host.preferences.state@1"
+      "id": "host.preferences.state@1",
+      "description": "Renderer and grid preferences with loading and save status.",
+      "source": "packages/contracts/src/host-data/preferences-state.ts"
     },
     {
       "symbol": "projectPermissions",
-      "id": "host.project.permissions@1"
+      "id": "host.project.permissions@1",
+      "description": "Permissions for editing the current project.",
+      "source": "packages/contracts/src/host-data/project-permissions.ts"
     },
     {
       "symbol": "projectCloudAction",
-      "id": "host.projectCloudAction@1"
+      "id": "host.projectCloudAction@1",
+      "description": "Add, remove, or update a cloud in the current project.",
+      "source": "packages/contracts/src/host-requests/project-cloud-action.ts"
     },
     {
       "symbol": "projectsCatalog",
-      "id": "host.projectsCatalog@1"
+      "id": "host.projectsCatalog@1",
+      "description": "Projects available in the project list.",
+      "source": "packages/contracts/src/host-data/projects-catalog.ts"
     },
     {
       "symbol": "resend",
-      "id": "host.resend@1"
+      "id": "host.resend@1",
+      "description": "Resend the email code for the pending sign-in.",
+      "source": "packages/contracts/src/host-requests/resend.ts"
     },
     {
       "symbol": "resetPlayback",
-      "id": "host.resetPlayback@1"
+      "id": "host.resetPlayback@1",
+      "description": "Stop playback and reset time and position to the start.",
+      "source": "packages/contracts/src/host-requests/reset-playback.ts"
     },
     {
       "symbol": "retryPreferences",
-      "id": "host.retryPreferences@1"
+      "id": "host.retryPreferences@1",
+      "description": "Reload user preferences.",
+      "source": "packages/contracts/src/host-requests/retry-preferences.ts"
     },
     {
       "symbol": "savePreferences",
-      "id": "host.savePreferences@1"
+      "id": "host.savePreferences@1",
+      "description": "Save renderer and grid preferences.",
+      "source": "packages/contracts/src/host-requests/save-preferences.ts"
     },
     {
       "symbol": "sceneModels",
-      "id": "host.sceneModels@1"
+      "id": "host.sceneModels@1",
+      "description": "Cloud instances placed in the current project.",
+      "source": "packages/contracts/src/host-data/scene-models.ts"
     },
     {
       "symbol": "scenePoints",
-      "id": "host.scenePoints@1"
+      "id": "host.scenePoints@1",
+      "description": "Named scene points used as camera aim and focus targets.",
+      "source": "packages/contracts/src/host-data/scene-points.ts"
     },
     {
       "symbol": "selectTrajectory",
-      "id": "host.selectTrajectory@1"
+      "id": "host.selectTrajectory@1",
+      "description": "Select the trajectory and expand its controls.",
+      "source": "packages/contracts/src/host-requests/select-trajectory.ts"
     },
     {
       "symbol": "setActiveTool",
-      "id": "host.setActiveTool@1"
+      "id": "host.setActiveTool@1",
+      "description": "Select or clear the active editor tool.",
+      "source": "packages/contracts/src/host-requests/set-active-tool.ts"
     },
     {
       "symbol": "setCameraMode",
-      "id": "host.setCameraMode@1"
+      "id": "host.setCameraMode@1",
+      "description": "Switch between orbit and trajectory camera modes.",
+      "source": "packages/contracts/src/host-requests/set-camera-mode.ts"
     },
     {
       "symbol": "setLidarTimeline",
-      "id": "host.setLidarTimeline@1"
+      "id": "host.setLidarTimeline@1",
+      "description": "Set or remove the LiDAR timeline settings.",
+      "source": "packages/contracts/src/host-requests/set-lidar-timeline.ts"
     },
     {
       "symbol": "setPlaybackFrame",
-      "id": "host.setPlaybackFrame@1"
+      "id": "host.setPlaybackFrame@1",
+      "description": "Set the current trajectory playback position and elapsed time.",
+      "source": "packages/contracts/src/host-requests/set-playback-frame.ts"
     },
     {
       "symbol": "setPlaying",
-      "id": "host.setPlaying@1"
+      "id": "host.setPlaying@1",
+      "description": "Start or pause trajectory playback.",
+      "source": "packages/contracts/src/host-requests/set-playing.ts"
     },
     {
       "symbol": "speedTimeline",
-      "id": "host.speedTimeline@1"
+      "id": "host.speedTimeline@1",
+      "description": "Speed keyframes and motion settings along the trajectory.",
+      "source": "packages/contracts/src/host-data/speed-timeline.ts"
     },
     {
       "symbol": "startCloudPlacement",
-      "id": "host.startCloudPlacement@1"
+      "id": "host.startCloudPlacement@1",
+      "description": "Start placing the selected library cloud in the scene.",
+      "source": "packages/contracts/src/host-requests/start-cloud-placement.ts"
     },
     {
       "symbol": "toggleTheme",
-      "id": "host.toggleTheme@1"
+      "id": "host.toggleTheme@1",
+      "description": "Switch between light and dark themes.",
+      "source": "packages/contracts/src/host-requests/toggle-theme.ts"
     },
     {
       "symbol": "editorTool",
-      "id": "host.tools.state@1"
+      "id": "host.tools.state@1",
+      "description": "Active editor tool, hovered object, and pending cloud placement.",
+      "source": "packages/contracts/src/host-data/editor-tool.ts"
     },
     {
       "symbol": "trajectorySelection",
-      "id": "host.trajectory.selection@1"
+      "id": "host.trajectory.selection@1",
+      "description": "Whether the trajectory is selected in the editor.",
+      "source": "packages/contracts/src/host-data/trajectory-selection.ts"
     },
     {
       "symbol": "trajectoryCameraPose",
-      "id": "host.trajectoryCamera.pose@1"
+      "id": "host.trajectoryCamera.pose@1",
+      "description": "Camera pose evaluated for the current frame and project revision.",
+      "source": "packages/contracts/src/host-data/trajectory-camera-pose.ts"
     },
     {
       "symbol": "trajectoryGeometry",
-      "id": "host.trajectoryGeometry@1"
+      "id": "host.trajectoryGeometry@1",
+      "description": "Editable trajectory segments of the current project.",
+      "source": "packages/contracts/src/host-data/trajectory-geometry.ts"
     },
     {
       "symbol": "updateAnchor",
-      "id": "host.updateAnchor@1"
+      "id": "host.updateAnchor@1",
+      "description": "Update the lift of an existing anchor.",
+      "source": "packages/contracts/src/host-requests/update-anchor.ts"
     },
     {
       "symbol": "updateCameraOrientationKeyframe",
-      "id": "host.updateCameraOrientationKeyframe@1"
+      "id": "host.updateCameraOrientationKeyframe@1",
+      "description": "Update an existing camera orientation keyframe.",
+      "source": "packages/contracts/src/host-requests/update-camera-orientation-keyframe.ts"
     },
     {
       "symbol": "updateDefaultCameraOrientation",
-      "id": "host.updateDefaultCameraOrientation@1"
+      "id": "host.updateDefaultCameraOrientation@1",
+      "description": "Set the default orientation of the trajectory camera.",
+      "source": "packages/contracts/src/host-requests/update-default-camera-orientation.ts"
     },
     {
       "symbol": "updateLibraryDefaults",
-      "id": "host.updateLibraryDefaults@1"
+      "id": "host.updateLibraryDefaults@1",
+      "description": "Update the placement defaults of a library cloud.",
+      "source": "packages/contracts/src/host-requests/update-library-defaults.ts"
     },
     {
       "symbol": "uploadLibraryFile",
-      "id": "host.uploadLibraryFile@1"
+      "id": "host.uploadLibraryFile@1",
+      "description": "Upload a cloud file to the library.",
+      "source": "packages/contracts/src/host-requests/upload-library-file.ts"
     },
     {
       "symbol": "verify",
-      "id": "host.verify@1"
+      "id": "host.verify@1",
+      "description": "Verify the email code for the pending sign-in.",
+      "source": "packages/contracts/src/host-requests/verify.ts"
     },
     {
       "symbol": "lidarHitInstances",
@@ -854,7 +982,9 @@
       "type": "contract",
       "data": {
         "symbol": "addAnchor",
-        "id": "host.addAnchor@1"
+        "id": "host.addAnchor@1",
+        "description": "Add an anchor to the current project.",
+        "source": "packages/contracts/src/host-requests/add-anchor.ts"
       }
     },
     {
@@ -862,7 +992,9 @@
       "type": "contract",
       "data": {
         "symbol": "addCameraOrientationKeyframe",
-        "id": "host.addCameraOrientationKeyframe@1"
+        "id": "host.addCameraOrientationKeyframe@1",
+        "description": "Add a camera orientation keyframe.",
+        "source": "packages/contracts/src/host-requests/add-camera-orientation-keyframe.ts"
       }
     },
     {
@@ -870,7 +1002,9 @@
       "type": "contract",
       "data": {
         "symbol": "addDepthOfFieldKeyframe",
-        "id": "host.addDepthOfFieldKeyframe@1"
+        "id": "host.addDepthOfFieldKeyframe@1",
+        "description": "Add a depth-of-field keyframe.",
+        "source": "packages/contracts/src/host-requests/add-depth-of-field-keyframe.ts"
       }
     },
     {
@@ -878,7 +1012,9 @@
       "type": "contract",
       "data": {
         "symbol": "aimTimeline",
-        "id": "host.aimTimeline@1"
+        "id": "host.aimTimeline@1",
+        "description": "Camera aim targets and keyframes along the trajectory.",
+        "source": "packages/contracts/src/host-data/aim-timeline.ts"
       }
     },
     {
@@ -886,7 +1022,9 @@
       "type": "contract",
       "data": {
         "symbol": "anchors",
-        "id": "host.anchors@1"
+        "id": "host.anchors@1",
+        "description": "Anchors defining the current project path.",
+        "source": "packages/contracts/src/host-data/anchors.ts"
       }
     },
     {
@@ -894,7 +1032,9 @@
       "type": "contract",
       "data": {
         "symbol": "themeState",
-        "id": "host.appearance.theme@1"
+        "id": "host.appearance.theme@1",
+        "description": "Current light or dark appearance theme.",
+        "source": "packages/contracts/src/host-data/theme-state.ts"
       }
     },
     {
@@ -902,7 +1042,9 @@
       "type": "contract",
       "data": {
         "symbol": "cameraMode",
-        "id": "host.camera.mode@1"
+        "id": "host.camera.mode@1",
+        "description": "Current orbit or trajectory camera mode.",
+        "source": "packages/contracts/src/host-data/camera-mode.ts"
       }
     },
     {
@@ -910,7 +1052,9 @@
       "type": "contract",
       "data": {
         "symbol": "cancelLogin",
-        "id": "host.cancelLogin@1"
+        "id": "host.cancelLogin@1",
+        "description": "Cancel the pending sign-in and clear its error.",
+        "source": "packages/contracts/src/host-requests/cancel-login.ts"
       }
     },
     {
@@ -918,7 +1062,9 @@
       "type": "contract",
       "data": {
         "symbol": "sendChatMessage",
-        "id": "host.chat.send@1"
+        "id": "host.chat.send@1",
+        "description": "Send a message to the trajectory agent and return the resulting trajectory.",
+        "source": "packages/contracts/src/host-requests/send-chat-message.ts"
       }
     },
     {
@@ -926,7 +1072,9 @@
       "type": "contract",
       "data": {
         "symbol": "chatHistory",
-        "id": "host.chatHistory@1"
+        "id": "host.chatHistory@1",
+        "description": "Persisted messages in the trajectory agent conversation.",
+        "source": "packages/contracts/src/host-data/chat-history.ts"
       }
     },
     {
@@ -934,7 +1082,9 @@
       "type": "contract",
       "data": {
         "symbol": "clearHoveredAnchor",
-        "id": "host.clearHoveredAnchor@1"
+        "id": "host.clearHoveredAnchor@1",
+        "description": "Clear hover if the specified anchor is currently hovered.",
+        "source": "packages/contracts/src/host-requests/clear-hovered-anchor.ts"
       }
     },
     {
@@ -942,7 +1092,9 @@
       "type": "contract",
       "data": {
         "symbol": "clearHoveredTrajectory",
-        "id": "host.clearHoveredTrajectory@1"
+        "id": "host.clearHoveredTrajectory@1",
+        "description": "Clear trajectory hover.",
+        "source": "packages/contracts/src/host-requests/clear-hovered-trajectory.ts"
       }
     },
     {
@@ -950,7 +1102,9 @@
       "type": "contract",
       "data": {
         "symbol": "clearTrajectory",
-        "id": "host.clearTrajectory@1"
+        "id": "host.clearTrajectory@1",
+        "description": "Clear the trajectory and reset related editor state.",
+        "source": "packages/contracts/src/host-requests/clear-trajectory.ts"
       }
     },
     {
@@ -958,7 +1112,9 @@
       "type": "contract",
       "data": {
         "symbol": "closeTrajectory",
-        "id": "host.closeTrajectory@1"
+        "id": "host.closeTrajectory@1",
+        "description": "Clear trajectory selection and collapse its controls.",
+        "source": "packages/contracts/src/host-requests/close-trajectory.ts"
       }
     },
     {
@@ -966,7 +1122,9 @@
       "type": "contract",
       "data": {
         "symbol": "compiledTrajectory",
-        "id": "host.compiledTrajectory@1"
+        "id": "host.compiledTrajectory@1",
+        "description": "Compiled trajectory geometry, motion, and camera tracks.",
+        "source": "packages/contracts/src/host-data/compiled-trajectory.ts"
       }
     },
     {
@@ -974,7 +1132,9 @@
       "type": "contract",
       "data": {
         "symbol": "createProject",
-        "id": "host.createProject@1"
+        "id": "host.createProject@1",
+        "description": "Create a project with the given name.",
+        "source": "packages/contracts/src/host-requests/create-project.ts"
       }
     },
     {
@@ -982,7 +1142,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteAnchor",
-        "id": "host.deleteAnchor@1"
+        "id": "host.deleteAnchor@1",
+        "description": "Delete an anchor from the current project.",
+        "source": "packages/contracts/src/host-requests/delete-anchor.ts"
       }
     },
     {
@@ -990,7 +1152,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteCameraKeyframe",
-        "id": "host.deleteCameraKeyframe@1"
+        "id": "host.deleteCameraKeyframe@1",
+        "description": "Delete a camera aim keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-camera-keyframe.ts"
       }
     },
     {
@@ -998,7 +1162,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteCameraOrientationKeyframe",
-        "id": "host.deleteCameraOrientationKeyframe@1"
+        "id": "host.deleteCameraOrientationKeyframe@1",
+        "description": "Delete a camera orientation keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-camera-orientation-keyframe.ts"
       }
     },
     {
@@ -1006,7 +1172,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteDepthOfFieldKeyframe",
-        "id": "host.deleteDepthOfFieldKeyframe@1"
+        "id": "host.deleteDepthOfFieldKeyframe@1",
+        "description": "Delete a depth-of-field keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-depth-of-field-keyframe.ts"
       }
     },
     {
@@ -1014,7 +1182,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteLibraryAssets",
-        "id": "host.deleteLibraryAssets@1"
+        "id": "host.deleteLibraryAssets@1",
+        "description": "Delete library clouds by their IDs.",
+        "source": "packages/contracts/src/host-requests/delete-library-assets.ts"
       }
     },
     {
@@ -1022,7 +1192,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteProject",
-        "id": "host.deleteProject@1"
+        "id": "host.deleteProject@1",
+        "description": "Delete a project by its ID.",
+        "source": "packages/contracts/src/host-requests/delete-project.ts"
       }
     },
     {
@@ -1030,7 +1202,9 @@
       "type": "contract",
       "data": {
         "symbol": "deleteSpeedKeyframe",
-        "id": "host.deleteSpeedKeyframe@1"
+        "id": "host.deleteSpeedKeyframe@1",
+        "description": "Delete a trajectory speed keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-speed-keyframe.ts"
       }
     },
     {
@@ -1038,7 +1212,9 @@
       "type": "contract",
       "data": {
         "symbol": "depthOfFieldTimeline",
-        "id": "host.depthOfFieldTimeline@1"
+        "id": "host.depthOfFieldTimeline@1",
+        "description": "Depth-of-field focus and blur keyframes.",
+        "source": "packages/contracts/src/host-data/depth-of-field-timeline.ts"
       }
     },
     {
@@ -1054,7 +1230,9 @@
       "type": "contract",
       "data": {
         "symbol": "hoverAnchor",
-        "id": "host.hoverAnchor@1"
+        "id": "host.hoverAnchor@1",
+        "description": "Mark an anchor as hovered.",
+        "source": "packages/contracts/src/host-requests/hover-anchor.ts"
       }
     },
     {
@@ -1062,7 +1240,9 @@
       "type": "contract",
       "data": {
         "symbol": "hoverTrajectory",
-        "id": "host.hoverTrajectory@1"
+        "id": "host.hoverTrajectory@1",
+        "description": "Mark the trajectory as hovered.",
+        "source": "packages/contracts/src/host-requests/hover-trajectory.ts"
       }
     },
     {
@@ -1070,7 +1250,9 @@
       "type": "contract",
       "data": {
         "symbol": "identityState",
-        "id": "host.identity.state@1"
+        "id": "host.identity.state@1",
+        "description": "Current session and sign-in progress.",
+        "source": "packages/contracts/src/host-data/identity-state.ts"
       }
     },
     {
@@ -1078,7 +1260,9 @@
       "type": "contract",
       "data": {
         "symbol": "libraryAsset",
-        "id": "host.libraryAsset@1"
+        "id": "host.libraryAsset@1",
+        "description": "Details and placement defaults of the current library cloud.",
+        "source": "packages/contracts/src/host-data/library-asset.ts"
       }
     },
     {
@@ -1086,7 +1270,9 @@
       "type": "contract",
       "data": {
         "symbol": "libraryCatalog",
-        "id": "host.libraryCatalog@1"
+        "id": "host.libraryCatalog@1",
+        "description": "Library clouds available for browsing and placement.",
+        "source": "packages/contracts/src/host-data/library-catalog.ts"
       }
     },
     {
@@ -1094,7 +1280,9 @@
       "type": "contract",
       "data": {
         "symbol": "lidarTimeline",
-        "id": "host.lidarTimeline@1"
+        "id": "host.lidarTimeline@1",
+        "description": "LiDAR scan settings and their trajectory position.",
+        "source": "packages/contracts/src/host-data/lidar-timeline.ts"
       }
     },
     {
@@ -1102,7 +1290,9 @@
       "type": "contract",
       "data": {
         "symbol": "login",
-        "id": "host.login@1"
+        "id": "host.login@1",
+        "description": "Start sign-in with a username and password.",
+        "source": "packages/contracts/src/host-requests/login.ts"
       }
     },
     {
@@ -1110,7 +1300,9 @@
       "type": "contract",
       "data": {
         "symbol": "logout",
-        "id": "host.logout@1"
+        "id": "host.logout@1",
+        "description": "Sign out of the current editor session.",
+        "source": "packages/contracts/src/host-requests/logout.ts"
       }
     },
     {
@@ -1118,7 +1310,9 @@
       "type": "contract",
       "data": {
         "symbol": "navigate",
-        "id": "host.navigate@1"
+        "id": "host.navigate@1",
+        "description": "Navigate to a supported application route.",
+        "source": "packages/contracts/src/host-requests/navigate.ts"
       }
     },
     {
@@ -1126,7 +1320,9 @@
       "type": "contract",
       "data": {
         "symbol": "orientationTimeline",
-        "id": "host.orientationTimeline@1"
+        "id": "host.orientationTimeline@1",
+        "description": "Default camera orientation and orientation keyframes.",
+        "source": "packages/contracts/src/host-data/orientation-timeline.ts"
       }
     },
     {
@@ -1134,7 +1330,9 @@
       "type": "contract",
       "data": {
         "symbol": "playbackState",
-        "id": "host.playback.state@1"
+        "id": "host.playback.state@1",
+        "description": "Trajectory playback time, position, and playing state.",
+        "source": "packages/contracts/src/host-data/playback-state.ts"
       }
     },
     {
@@ -1142,7 +1340,9 @@
       "type": "contract",
       "data": {
         "symbol": "preferencesState",
-        "id": "host.preferences.state@1"
+        "id": "host.preferences.state@1",
+        "description": "Renderer and grid preferences with loading and save status.",
+        "source": "packages/contracts/src/host-data/preferences-state.ts"
       }
     },
     {
@@ -1150,7 +1350,9 @@
       "type": "contract",
       "data": {
         "symbol": "projectPermissions",
-        "id": "host.project.permissions@1"
+        "id": "host.project.permissions@1",
+        "description": "Permissions for editing the current project.",
+        "source": "packages/contracts/src/host-data/project-permissions.ts"
       }
     },
     {
@@ -1158,7 +1360,9 @@
       "type": "contract",
       "data": {
         "symbol": "projectCloudAction",
-        "id": "host.projectCloudAction@1"
+        "id": "host.projectCloudAction@1",
+        "description": "Add, remove, or update a cloud in the current project.",
+        "source": "packages/contracts/src/host-requests/project-cloud-action.ts"
       }
     },
     {
@@ -1166,7 +1370,9 @@
       "type": "contract",
       "data": {
         "symbol": "projectsCatalog",
-        "id": "host.projectsCatalog@1"
+        "id": "host.projectsCatalog@1",
+        "description": "Projects available in the project list.",
+        "source": "packages/contracts/src/host-data/projects-catalog.ts"
       }
     },
     {
@@ -1174,7 +1380,9 @@
       "type": "contract",
       "data": {
         "symbol": "resend",
-        "id": "host.resend@1"
+        "id": "host.resend@1",
+        "description": "Resend the email code for the pending sign-in.",
+        "source": "packages/contracts/src/host-requests/resend.ts"
       }
     },
     {
@@ -1182,7 +1390,9 @@
       "type": "contract",
       "data": {
         "symbol": "resetPlayback",
-        "id": "host.resetPlayback@1"
+        "id": "host.resetPlayback@1",
+        "description": "Stop playback and reset time and position to the start.",
+        "source": "packages/contracts/src/host-requests/reset-playback.ts"
       }
     },
     {
@@ -1190,7 +1400,9 @@
       "type": "contract",
       "data": {
         "symbol": "retryPreferences",
-        "id": "host.retryPreferences@1"
+        "id": "host.retryPreferences@1",
+        "description": "Reload user preferences.",
+        "source": "packages/contracts/src/host-requests/retry-preferences.ts"
       }
     },
     {
@@ -1198,7 +1410,9 @@
       "type": "contract",
       "data": {
         "symbol": "savePreferences",
-        "id": "host.savePreferences@1"
+        "id": "host.savePreferences@1",
+        "description": "Save renderer and grid preferences.",
+        "source": "packages/contracts/src/host-requests/save-preferences.ts"
       }
     },
     {
@@ -1206,7 +1420,9 @@
       "type": "contract",
       "data": {
         "symbol": "sceneModels",
-        "id": "host.sceneModels@1"
+        "id": "host.sceneModels@1",
+        "description": "Cloud instances placed in the current project.",
+        "source": "packages/contracts/src/host-data/scene-models.ts"
       }
     },
     {
@@ -1214,7 +1430,9 @@
       "type": "contract",
       "data": {
         "symbol": "scenePoints",
-        "id": "host.scenePoints@1"
+        "id": "host.scenePoints@1",
+        "description": "Named scene points used as camera aim and focus targets.",
+        "source": "packages/contracts/src/host-data/scene-points.ts"
       }
     },
     {
@@ -1222,7 +1440,9 @@
       "type": "contract",
       "data": {
         "symbol": "selectTrajectory",
-        "id": "host.selectTrajectory@1"
+        "id": "host.selectTrajectory@1",
+        "description": "Select the trajectory and expand its controls.",
+        "source": "packages/contracts/src/host-requests/select-trajectory.ts"
       }
     },
     {
@@ -1230,7 +1450,9 @@
       "type": "contract",
       "data": {
         "symbol": "setActiveTool",
-        "id": "host.setActiveTool@1"
+        "id": "host.setActiveTool@1",
+        "description": "Select or clear the active editor tool.",
+        "source": "packages/contracts/src/host-requests/set-active-tool.ts"
       }
     },
     {
@@ -1238,7 +1460,9 @@
       "type": "contract",
       "data": {
         "symbol": "setCameraMode",
-        "id": "host.setCameraMode@1"
+        "id": "host.setCameraMode@1",
+        "description": "Switch between orbit and trajectory camera modes.",
+        "source": "packages/contracts/src/host-requests/set-camera-mode.ts"
       }
     },
     {
@@ -1246,7 +1470,9 @@
       "type": "contract",
       "data": {
         "symbol": "setLidarTimeline",
-        "id": "host.setLidarTimeline@1"
+        "id": "host.setLidarTimeline@1",
+        "description": "Set or remove the LiDAR timeline settings.",
+        "source": "packages/contracts/src/host-requests/set-lidar-timeline.ts"
       }
     },
     {
@@ -1254,7 +1480,9 @@
       "type": "contract",
       "data": {
         "symbol": "setPlaybackFrame",
-        "id": "host.setPlaybackFrame@1"
+        "id": "host.setPlaybackFrame@1",
+        "description": "Set the current trajectory playback position and elapsed time.",
+        "source": "packages/contracts/src/host-requests/set-playback-frame.ts"
       }
     },
     {
@@ -1262,7 +1490,9 @@
       "type": "contract",
       "data": {
         "symbol": "setPlaying",
-        "id": "host.setPlaying@1"
+        "id": "host.setPlaying@1",
+        "description": "Start or pause trajectory playback.",
+        "source": "packages/contracts/src/host-requests/set-playing.ts"
       }
     },
     {
@@ -1270,7 +1500,9 @@
       "type": "contract",
       "data": {
         "symbol": "speedTimeline",
-        "id": "host.speedTimeline@1"
+        "id": "host.speedTimeline@1",
+        "description": "Speed keyframes and motion settings along the trajectory.",
+        "source": "packages/contracts/src/host-data/speed-timeline.ts"
       }
     },
     {
@@ -1278,7 +1510,9 @@
       "type": "contract",
       "data": {
         "symbol": "startCloudPlacement",
-        "id": "host.startCloudPlacement@1"
+        "id": "host.startCloudPlacement@1",
+        "description": "Start placing the selected library cloud in the scene.",
+        "source": "packages/contracts/src/host-requests/start-cloud-placement.ts"
       }
     },
     {
@@ -1286,7 +1520,9 @@
       "type": "contract",
       "data": {
         "symbol": "toggleTheme",
-        "id": "host.toggleTheme@1"
+        "id": "host.toggleTheme@1",
+        "description": "Switch between light and dark themes.",
+        "source": "packages/contracts/src/host-requests/toggle-theme.ts"
       }
     },
     {
@@ -1294,7 +1530,9 @@
       "type": "contract",
       "data": {
         "symbol": "editorTool",
-        "id": "host.tools.state@1"
+        "id": "host.tools.state@1",
+        "description": "Active editor tool, hovered object, and pending cloud placement.",
+        "source": "packages/contracts/src/host-data/editor-tool.ts"
       }
     },
     {
@@ -1302,7 +1540,9 @@
       "type": "contract",
       "data": {
         "symbol": "trajectorySelection",
-        "id": "host.trajectory.selection@1"
+        "id": "host.trajectory.selection@1",
+        "description": "Whether the trajectory is selected in the editor.",
+        "source": "packages/contracts/src/host-data/trajectory-selection.ts"
       }
     },
     {
@@ -1310,7 +1550,9 @@
       "type": "contract",
       "data": {
         "symbol": "trajectoryCameraPose",
-        "id": "host.trajectoryCamera.pose@1"
+        "id": "host.trajectoryCamera.pose@1",
+        "description": "Camera pose evaluated for the current frame and project revision.",
+        "source": "packages/contracts/src/host-data/trajectory-camera-pose.ts"
       }
     },
     {
@@ -1318,7 +1560,9 @@
       "type": "contract",
       "data": {
         "symbol": "trajectoryGeometry",
-        "id": "host.trajectoryGeometry@1"
+        "id": "host.trajectoryGeometry@1",
+        "description": "Editable trajectory segments of the current project.",
+        "source": "packages/contracts/src/host-data/trajectory-geometry.ts"
       }
     },
     {
@@ -1326,7 +1570,9 @@
       "type": "contract",
       "data": {
         "symbol": "updateAnchor",
-        "id": "host.updateAnchor@1"
+        "id": "host.updateAnchor@1",
+        "description": "Update the lift of an existing anchor.",
+        "source": "packages/contracts/src/host-requests/update-anchor.ts"
       }
     },
     {
@@ -1334,7 +1580,9 @@
       "type": "contract",
       "data": {
         "symbol": "updateCameraOrientationKeyframe",
-        "id": "host.updateCameraOrientationKeyframe@1"
+        "id": "host.updateCameraOrientationKeyframe@1",
+        "description": "Update an existing camera orientation keyframe.",
+        "source": "packages/contracts/src/host-requests/update-camera-orientation-keyframe.ts"
       }
     },
     {
@@ -1342,7 +1590,9 @@
       "type": "contract",
       "data": {
         "symbol": "updateDefaultCameraOrientation",
-        "id": "host.updateDefaultCameraOrientation@1"
+        "id": "host.updateDefaultCameraOrientation@1",
+        "description": "Set the default orientation of the trajectory camera.",
+        "source": "packages/contracts/src/host-requests/update-default-camera-orientation.ts"
       }
     },
     {
@@ -1350,7 +1600,9 @@
       "type": "contract",
       "data": {
         "symbol": "updateLibraryDefaults",
-        "id": "host.updateLibraryDefaults@1"
+        "id": "host.updateLibraryDefaults@1",
+        "description": "Update the placement defaults of a library cloud.",
+        "source": "packages/contracts/src/host-requests/update-library-defaults.ts"
       }
     },
     {
@@ -1358,7 +1610,9 @@
       "type": "contract",
       "data": {
         "symbol": "uploadLibraryFile",
-        "id": "host.uploadLibraryFile@1"
+        "id": "host.uploadLibraryFile@1",
+        "description": "Upload a cloud file to the library.",
+        "source": "packages/contracts/src/host-requests/upload-library-file.ts"
       }
     },
     {
@@ -1366,7 +1620,9 @@
       "type": "contract",
       "data": {
         "symbol": "verify",
-        "id": "host.verify@1"
+        "id": "host.verify@1",
+        "description": "Verify the email code for the pending sign-in.",
+        "source": "packages/contracts/src/host-requests/verify.ts"
       }
     },
     {

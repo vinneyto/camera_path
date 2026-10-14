@@ -1,4 +1,5 @@
 import type { ChallengeResponse, LibraryAsset } from "./api";
+export type Theme = "light" | "dark";
 export type EditorTool = "anchor" | "anchor-height" | "cloud";
 export type CameraMode = "orbit" | "trajectory";
 export interface ToolState {
@@ -10,7 +11,12 @@ export interface ToolState {
   readonly pendingCloud: LibraryAsset | null;
 }
 export interface PlaybackState {
+  /** @minimum 0 */
   readonly elapsed: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
   readonly pathPosition: number;
   readonly playing: boolean;
 }

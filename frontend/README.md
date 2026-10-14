@@ -10,6 +10,8 @@ Feature manifests declare `calls` (actions/operations they invoke), `reads` (dat
 
 See [the architecture and review guide](docs/feature-host-architecture.md) and the generated [contract graph](docs/frontend-contract-graph.json). Run `npm run boundaries:check`, `npm run graph:check` and `npm run typecheck` alongside the standard lint/test/build checks. Regenerate the graph after changing manifests or host bindings with `npm run graph:generate`.
 
+Host data and request contracts live in individual files under `packages/contracts/src/host-data` and `host-requests`, with barrel exports and short English descriptions. Serializable frontend DTO schemas are generated from TypeScript types via `npm run schemas:generate`; `npm run schemas:check` verifies freshness in CI. Runtime validation uses committed JSON Schema and AJV. Numeric constraints live in JSDoc annotations, while imported API DTOs retain their OpenAPI schemas. File and callback inputs use explicit runtime validators.
+
 Trajectory geometry uses the backend's adaptive arc-length table to map path distance to Bezier `t`. The host computes a shared camera pose per frame for camera-view, DOF and LiDAR.
 
 ## Run

@@ -22,10 +22,13 @@ Application-фичи: projects, library, identity, appearance, renderer-preferen
 ## Ревью потока данных
 
 1. Прочитать `packages/features/<feature>/src/manifest.ts`: `calls`, `reads`, опциональный `handles`, frames, contributions и capabilities.
-2. Перейти к объектам контрактов в `packages/contracts/src/{host-data,host-requests,gpu-resources}.ts`. `schema.parse` выполняет проверку; API DTO проверяются по JSON Schema из того же OpenAPI, что и generated TypeScript.
+2. Перейти к объектам контрактов в `packages/contracts/src/host-data/` и `host-requests/`: каждый контракт объявлен в отдельном файле и экспортирован через `index.ts`. Второй аргумент `defineDataContract` и `defineRequest` — обязательное краткое английское описание, доступное в `contract.description` и генерируемом графе вместе с путём исходного файла. GPU-определения находятся в `gpu-resources.ts`. `schema.parse` выполняет проверку; API DTO проверяются по JSON Schema из того же OpenAPI, что и generated TypeScript.
+
 3. Прочитать локальные порты фичи: они вызывают объявленные actions и читают разрешённые данные. Контекст не содержит общего Project, REST-клиента, QueryClient или editor store. Обработчики actions и бизнес-логика подключены в хосте.
 4. Проверить host bindings в `apps/host/src/runtime` и явные преобразования в `apps/host/src/composition`. Например, aim lane получает только scene-point labels и compiled aim; orientation и DOF не получают весь Project. Составной Project остаётся приватной проекцией оболочки хоста.
 5. Открыть `docs/frontend-contract-graph.json`. Он генерируется из текстовых деклараций и фактических binding sites; ссылки на контракты нормализуются до канонических ID. Изменение деклараций без обновления графа отклоняется CI.
+
+Frontend DTO описываются TypeScript-интерфейсами и type aliases. `host-schema-types.ts` связывает имена generated-схем с типами, а `generatedSchema("identityState")` выводит тип результата из этого реестра. `npm run schemas:generate` использует закреплённый `ts-json-schema-generator` и сохраняет JSON Schema 2020-12 в `packages/contracts/src/generated/host-schemas.json`; runtime AJV читает готовый файл, генератор в браузер не включается. Поля, required, nullable unions и кортежи выводятся из TS. Диапазоны и целочисленность задаются JSDoc-аннотациями; для закрытого объекта permissions применяется `@additionalProperties false`. Генератор сохраняет ссылки на OpenAPI для вложенных API DTO, поэтому серверные ограничения не заменяются более слабыми TS-типами. Функции запрещены в реестре JSON DTO; File и callback остаются отдельными runtime validators.
 
 Манифест объявляет три направления доступа:
 
@@ -56,6 +59,7 @@ GPU-порты отделены от DTO. LiDAR получает огранич�
 - `npm run boundaries:check`: feature → feature, private host, type-only/dynamic imports, re-exports, computed require/import, raw transport и общий query cache.
 - `npm run graph:generate` / `npm run graph:check`: актуальность сериализованного графа.
 - `npm run api:check`: generated DTO/client/schema соответствуют OpenAPI.
+- `npm run schemas:generate` / `npm run schemas:check`: frontend JSON Schema соответствуют TS-типам и аннотациям. После изменения OpenAPI сначала выполнить `api:generate`, затем `schemas:generate`.
 - `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run format:check`.
 
 Runtime tests проверяют denied access, duplicate providers, immutable snapshots, scope isolation, cancellation, deterministic frame order и GPU generations. Сохранены regression tests авторизации, preference reload, model placement/grid/Escape, trajectory/playback, chat layout, DOF и LiDAR resource lifetime. Реальное качество рендеринга и производительность на пользовательском GPU требуют отдельного прогона с настоящими моделями; сборка и CPU/WGSL тесты его не заменяют.

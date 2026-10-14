@@ -4,7 +4,19 @@ import path from "node:path";
 import ts from "typescript";
 const root = path.resolve(".");
 const ids = new Map();
-for (const name of ["host-data.ts", "host-requests.ts", "gpu-resources.ts"]) {
+const details = new Map();
+const contractRoot = path.join(root, "packages/contracts/src");
+const files = [
+  ...["host-data", "host-requests"].flatMap((folder) =>
+    fs
+      .readdirSync(path.join(contractRoot, folder))
+      .sort()
+      .filter((name) => name.endsWith(".ts") && name !== "index.ts")
+      .map((name) => `${folder}/${name}`),
+  ),
+  "gpu-resources.ts",
+];
+for (const name of files) {
   const file = path.join(root, "packages/contracts/src", name);
   const source = ts.createSourceFile(
     file,
@@ -19,9 +31,20 @@ for (const name of ["host-data.ts", "host-requests.ts", "gpu-resources.ts"]) {
       node.initializer
     ) {
       const init = node.initializer;
-      if (ts.isCallExpression(init) && ts.isStringLiteral(init.arguments[0]))
+      if (ts.isCallExpression(init) && ts.isStringLiteral(init.arguments[0])) {
         ids.set(node.name.text, init.arguments[0].text);
-      else if (ts.isObjectLiteralExpression(init)) {
+        const description = init.arguments[1];
+        if (
+          !description ||
+          !ts.isStringLiteral(description) ||
+          !description.text.trim()
+        )
+          throw new Error(`Missing contract description: ${name}`);
+        details.set(node.name.text, {
+          description: description.text,
+          source: path.relative(root, file),
+        });
+      } else if (ts.isObjectLiteralExpression(init)) {
         const id = init.properties.find(
           (p) => ts.isPropertyAssignment(p) && p.name.getText(source) === "id",
         );
@@ -125,7 +148,7 @@ function inspect(folder) {
 }
 inspect(path.join(root, "apps/host/src/runtime"));
 const contracts = [...ids]
-  .map(([symbol, id]) => ({ symbol, id }))
+  .map(([symbol, id]) => ({ symbol, id, ...details.get(symbol) }))
   .sort((a, b) => a.id.localeCompare(b.id));
 const nodes = [
   ...features.map((feature) => ({
