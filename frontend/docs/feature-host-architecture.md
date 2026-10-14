@@ -1,6 +1,6 @@
 # Фичи и хост frontend camera_path (CP-80)
 
-Источник решения: [CP-80](https://docs.google.com/document/d/1tIYboWpNQqHeR9MRoy-mcfQszNb1G2Wt-y6XnK1eO1w/edit). Эта реализация относится к frontend. Backend, OpenAPI endpoints и инфраструктура не меняются.
+Источник решения: архитектурное описание CP-80. Эта реализация относится к frontend. Backend, OpenAPI endpoints и инфраструктура не меняются.
 
 ## Структура
 
@@ -42,9 +42,9 @@ Frontend DTO описываются TypeScript-интерфейсами и type 
 
 Requests возвращают типизированный результат с ожидаемым кодом ошибки. Проверяются input/output, permission и право вызова. AbortSignal, timeout, logout и уничтожение scope завершают ожидание. Host adapters сохраняют существующий cache invalidation и If-Match механизм. Отмена ожидающего вызова не откатывает уже принятую сервером запись: её reconciliation выполняется по ресурсам соответствующего projectId.
 
-Playback, camera mode и trajectory selection создаются отдельными feature controllers для каждого проекта. Хост держит их проекцию для платформенных hooks и координирует camera/tool arbitration и placement. Неиспользуемые DTO-публикации controllers и статуса LiDAR удалены; данные наружу предоставляет хост. Черновик чата и состояние редакторов остаются внутри своих компонентов; responsive-chat сохраняет один composer при смене раскладки. Фича может иметь приватный React/Zustand store на экземпляр; его внутренние изменения не требуют calls/handles или публикации данных.
+Playback и camera mode создаются отдельными feature controllers для каждого проекта. Хост держит их проекцию для платформенных hooks и координирует camera/tool arbitration и placement. Hover и выбор объектов принадлежат общему состоянию sceneInteraction в хосте. Неиспользуемые DTO-публикации controllers и статуса LiDAR удалены; данные наружу предоставляет хост. Черновик чата и состояние редакторов остаются внутри своих компонентов; responsive-chat сохраняет один composer при смене раскладки. Фича может иметь приватный React/Zustand store на экземпляр; его внутренние изменения не требуют calls/handles или публикации данных.
 
-Манифест описывает доступ через контракты. Некоторые scene/timeline inputs пока передаются хостом через props и не являются читателями host.data. Например, aimTimeline, chatHistory и trajectorySelection зарегистрированы в хосте, но их контрактные проекции не имеют читателей. Текущая смена схемы не переносит эти сценарии или владельцев состояния.
+Манифест описывает доступ через контракты. Некоторые scene/timeline inputs пока передаются хостом через props и не являются читателями host.data. Например, aimTimeline и chatHistory зарегистрированы в хосте, но их контрактные проекции не имеют читателей. Текущая смена схемы не переносит эти сценарии или владельцев состояния.
 
 ## Слоты и кадры
 
@@ -63,3 +63,13 @@ GPU-порты отделены от DTO. LiDAR получает огранич�
 - `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, `npm run format:check`.
 
 Runtime tests проверяют denied access, duplicate providers, immutable snapshots, scope isolation, cancellation, deterministic frame order и GPU generations. Сохранены regression tests авторизации, preference reload, model placement/grid/Escape, trajectory/playback, chat layout, DOF и LiDAR resource lifetime. Реальное качество рендеринга и производительность на пользовательском GPU требуют отдельного прогона с настоящими моделями; сборка и CPU/WGSL тесты его не заменяют.
+
+## Scene interaction
+
+`sceneInteraction` хранит один `hoveredObjectId` и один `selectedObjectId` для текущего проекта. Hover и выбор независимы. Якорь имеет ID `anchor:<anchorId>`, траектория — `trajectory`. Фичи читают этот контракт через `reads`; отдельных hover-контрактов для разных видов объектов нет.
+
+- `hoverObject({ id })` устанавливает hover; `id: null` очищает его.
+- `selectObject({ id })` устанавливает выбор; `id: null` снимает выбор.
+- Необязательный `ifCurrentId` применяет изменение только при совпадении текущего ID. Это атомарная проверка в хосте: запоздалый pointer-out или завершение удаления не очищают состояние другого объекта.
+
+Нажатие на якорь выбирает его и заменяет выбор траектории. Панель траектории определяется сравнением `selectedObjectId` с `trajectory`. Удаление объекта очищает только совпадающие ID. Нажатие на пустое место без активного инструмента снимает выбор, выход указателя из viewport очищает hover. Смена camera mode очищает hover и сохраняет выбор. Store создаётся отдельно для каждого проекта.

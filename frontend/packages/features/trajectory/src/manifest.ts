@@ -2,33 +2,20 @@ import {
   editorTool,
   projectPermissions,
   trajectoryGeometry,
-  trajectorySelection,
+  sceneInteraction,
 } from "@camera-path/contracts/host-data";
 import {
-  clearHoveredTrajectory,
+  hoverObject,
   clearTrajectory,
-  closeTrajectory,
-  hoverTrajectory,
-  selectTrajectory,
+  selectObject,
 } from "@camera-path/contracts/host-requests";
 import type { FeatureManifest } from "@camera-path/extension-api";
 export const manifest = {
   manifestVersion: 1,
   id: "trajectory",
   scope: "project",
-  reads: [
-    projectPermissions,
-    trajectoryGeometry,
-    editorTool,
-    trajectorySelection,
-  ],
-  calls: [
-    clearTrajectory,
-    hoverTrajectory,
-    clearHoveredTrajectory,
-    selectTrajectory,
-    closeTrajectory,
-  ],
+  reads: [projectPermissions, trajectoryGeometry, editorTool, sceneInteraction],
+  calls: [clearTrajectory, hoverObject, selectObject],
   frames: [],
   contributions: [
     { id: "trajectory.scene", kind: "scene", slot: "scene.root", order: 40 },

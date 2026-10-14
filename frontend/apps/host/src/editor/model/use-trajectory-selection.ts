@@ -1,8 +1,19 @@
 "use client";
-import { useEditorStore } from "@host/editor/model/editor-store-provider";
-
+import { trajectoryObjectId } from "@camera-path/contracts/trajectory-object-id";
+import { useCallback } from "react";
+import { useEditorStore } from "./editor-store-provider";
 export function useTrajectorySelection() {
-  const state = useEditorStore((store) => store.selection);
-  const actions = useEditorStore((store) => store.selectionActions);
-  return { ...state, ...actions };
+  const trajectorySelected = useEditorStore(
+    (s) => s.sceneInteraction.selectedObjectId === trajectoryObjectId,
+  );
+  const select = useEditorStore((s) => s.sceneInteractionActions.selectObject);
+  const selectTrajectory = useCallback(
+    () => select({ id: trajectoryObjectId }),
+    [select],
+  );
+  const closeTrajectory = useCallback(
+    () => select({ id: null, ifCurrentId: trajectoryObjectId }),
+    [select],
+  );
+  return { trajectorySelected, selectTrajectory, closeTrajectory };
 }

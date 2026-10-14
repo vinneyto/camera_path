@@ -129,6 +129,7 @@ export function SceneRootContributions({
               <AnchorMarker
                 anchor={markerAnchor}
                 hovered={heightEditing.hoveredAnchorId === anchor.id}
+                selected={heightEditing.selectedAnchorId === anchor.id}
                 key={anchor.id}
                 {...heightEditing.getAnchorInteractionProps(anchor)}
                 onContextMenu={(event) => {

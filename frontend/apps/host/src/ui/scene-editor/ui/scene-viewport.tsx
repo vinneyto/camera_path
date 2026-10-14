@@ -9,6 +9,7 @@ import type { SceneViewportProps } from "@host/ui/scene-editor/ui/scene-viewport
 export function SceneViewport(props: SceneViewportProps) {
   return (
     <SceneViewportFrame
+      onScenePointerLeave={props.onScenePointerLeave}
       available
       clouds={props.clouds}
       deletingTrajectory={props.deletingTrajectory}
@@ -17,6 +18,7 @@ export function SceneViewport(props: SceneViewportProps) {
       trajectoryAvailable={Boolean(props.trajectory?.position_segments.length)}
       renderScene={(context) => (
         <Canvas
+          onPointerMissed={props.onScenePointerMissed}
           camera={{ far: 100, fov: 42, near: 0.01, position: [4, 3, 6] }}
           dpr={[1, 2]}
           gl={{ antialias: false }}

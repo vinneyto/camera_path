@@ -4,11 +4,7 @@ export {
   useAnchorToolShortcut,
 } from "@camera-path/feature-anchors";
 export { CameraModeToggle } from "@camera-path/feature-camera-view";
-export type {
-  CameraMode,
-  EditorHoveredObject,
-  EditorTool,
-} from "@host/editor/model/editor-store";
+export type { CameraMode, EditorTool } from "@host/editor/model/editor-store";
 export { EditorStoreProvider } from "@host/editor/model/editor-store-provider";
 export { useActiveEditorTool } from "@host/editor/model/use-active-editor-tool";
 export { useCameraMode } from "@host/editor/model/use-camera-mode";

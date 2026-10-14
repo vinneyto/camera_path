@@ -4,10 +4,6 @@ export type EditorTool = "anchor" | "anchor-height" | "cloud";
 export type CameraMode = "orbit" | "trajectory";
 export interface ToolState {
   readonly activeTool: EditorTool | null;
-  readonly hoveredObject:
-    | { readonly type: "anchor"; readonly id: string }
-    | { readonly type: "trajectory" }
-    | null;
   readonly pendingCloud: LibraryAsset | null;
 }
 export interface PlaybackState {

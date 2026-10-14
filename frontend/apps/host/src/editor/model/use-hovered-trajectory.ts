@@ -1,15 +1,19 @@
 "use client";
-import { useEditorStore } from "@host/editor/model/editor-store-provider";
-
+import { trajectoryObjectId } from "@camera-path/contracts/trajectory-object-id";
+import { useCallback } from "react";
+import { useEditorStore } from "./editor-store-provider";
 export function useHoveredTrajectory() {
   const hovered = useEditorStore(
-    (store) => store.tool.hoveredObject?.type === "trajectory",
+    (s) => s.sceneInteraction.hoveredObjectId === trajectoryObjectId,
   );
-  const clearHoveredTrajectory = useEditorStore(
-    (store) => store.toolActions.clearHoveredTrajectory,
+  const hover = useEditorStore((s) => s.sceneInteractionActions.hoverObject);
+  const hoverTrajectory = useCallback(
+    () => hover({ id: trajectoryObjectId }),
+    [hover],
   );
-  const hoverTrajectory = useEditorStore(
-    (store) => store.toolActions.hoverTrajectory,
+  const clearHoveredTrajectory = useCallback(
+    () => hover({ id: null, ifCurrentId: trajectoryObjectId }),
+    [hover],
   );
-  return { clearHoveredTrajectory, hoverTrajectory, hovered };
+  return { hovered, hoverTrajectory, clearHoveredTrajectory };
 }

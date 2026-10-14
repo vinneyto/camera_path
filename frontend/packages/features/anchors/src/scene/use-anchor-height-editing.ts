@@ -45,8 +45,14 @@ export function useAnchorHeightEditing({
   onCommit,
 }: UseAnchorHeightEditingOptions) {
   const activeTool = useActiveEditorTool();
-  const { clearHoveredAnchor, hoveredAnchorId, hoverAnchor } =
-    useHoveredAnchor();
+  const {
+    clearHoveredAnchor,
+    hoveredAnchorId,
+    hoverAnchor,
+    selectedAnchorId,
+    selectAnchor,
+    clearSelectedAnchor,
+  } = useHoveredAnchor();
   const setActiveTool = useSetActiveEditorTool();
   const dragRef = useRef<AnchorHeightDrag | null>(null);
   const [preview, setPreview] = useState<AnchorHeightPreview | null>(null);
@@ -78,6 +84,14 @@ export function useAnchorHeightEditing({
     }
   }, [anchors, clearHoveredAnchor, hoveredAnchorId]);
 
+  useEffect(() => {
+    if (
+      selectedAnchorId !== null &&
+      !anchors.some((anchor) => anchor.id === selectedAnchorId)
+    )
+      clearSelectedAnchor(selectedAnchorId);
+  }, [anchors, selectedAnchorId, clearSelectedAnchor]);
+
   function handlePointerOver(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
     if (activeTool !== null || event.nativeEvent.pointerType === "touch")
       return;
@@ -106,6 +120,7 @@ export function useAnchorHeightEditing({
       pointerId: event.pointerId,
       target,
     };
+    selectAnchor(anchor.id);
     hoverAnchor(anchor.id);
     setPreview({ anchorId: anchor.id, dragging: true, lift: anchor.lift });
     setActiveTool("anchor-height");
@@ -169,6 +184,7 @@ export function useAnchorHeightEditing({
     activeAnchor,
     getAnchorInteractionProps,
     hoveredAnchorId,
+    selectedAnchorId,
     preview,
   };
 }

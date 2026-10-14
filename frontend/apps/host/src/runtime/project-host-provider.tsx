@@ -1,4 +1,6 @@
 "use client";
+import { trajectoryObjectId } from "@camera-path/contracts/trajectory-object-id";
+import { anchorObjectId } from "@camera-path/contracts/anchor-object-id";
 import { projectFeatures } from "@host/composition/project-features";
 import { useActivateFeatures } from "./use-activate-features";
 
@@ -45,11 +47,11 @@ export function ProjectHostProvider({
   const tool = useEditorStore((s) => s.tool);
   const camera = useEditorStore((s) => s.camera.cameraMode);
   const playback = useEditorStore((s) => s.playback);
-  const selection = useEditorStore((s) => s.selection);
+  const interaction = useEditorStore((s) => s.sceneInteraction);
   useBindValue(runtime, data.editorTool, tool);
   useBindValue(runtime, data.cameraMode, camera);
   useBindValue(runtime, data.playbackState, playback);
-  useBindValue(runtime, data.trajectorySelection, selection);
+  useBindValue(runtime, data.sceneInteraction, interaction);
   useBindQuery(runtime, data.sceneModels, api.useListProjectClouds(projectId));
   useBindQuery(runtime, data.anchors, api.useListAnchors(projectId));
   useBindQuery(runtime, data.scenePoints, api.useListScenePoints(projectId));
@@ -138,12 +140,23 @@ export function ProjectHostProvider({
       },
     });
     if (!signal.aborted && response.compiled.position_segments.length)
-      store.getState().selectionActions.selectTrajectory();
+      store
+        .getState()
+        .sceneInteractionActions.selectObject({ id: trajectoryObjectId });
     return response;
   });
   const deleteAnchorMutation = deletions.useDeleteAnchor(projectId);
-  useBindRequest(runtime, requests.deleteAnchor, async (input) => {
+  useBindRequest(runtime, requests.deleteAnchor, async (input, signal) => {
     await deleteAnchorMutation.mutateAsync(input);
+    if (!signal.aborted) {
+      const id = anchorObjectId(input);
+      store
+        .getState()
+        .sceneInteractionActions.hoverObject({ id: null, ifCurrentId: id });
+      store
+        .getState()
+        .sceneInteractionActions.selectObject({ id: null, ifCurrentId: id });
+    }
   });
   const deleteSpeedKeyframeMutation =
     deletions.useDeleteSpeedKeyframe(projectId);
@@ -177,8 +190,14 @@ export function ProjectHostProvider({
   useBindRequest(runtime, requests.clearTrajectory, async (input, signal) => {
     await clearTrajectoryMutation.mutateAsync(input);
     if (!signal.aborted) {
-      store.getState().selectionActions.closeTrajectory();
-      store.getState().toolActions.clearHoveredTrajectory();
+      store.getState().sceneInteractionActions.selectObject({
+        id: null,
+        ifCurrentId: trajectoryObjectId,
+      });
+      store.getState().sceneInteractionActions.hoverObject({
+        id: null,
+        ifCurrentId: trajectoryObjectId,
+      });
       store.getState().playbackActions.resetPlayback();
     }
   });
@@ -188,26 +207,14 @@ export function ProjectHostProvider({
   useBindRequest(runtime, requests.startCloudPlacement, (input) =>
     store.getState().toolActions.startCloudPlacement(input),
   );
-  useBindRequest(runtime, requests.hoverAnchor, (input) =>
-    store.getState().toolActions.hoverAnchor(input),
+  useBindRequest(runtime, requests.hoverObject, (input) =>
+    store.getState().sceneInteractionActions.hoverObject(input),
   );
-  useBindRequest(runtime, requests.clearHoveredAnchor, (input) =>
-    store.getState().toolActions.clearHoveredAnchor(input),
-  );
-  useBindRequest(runtime, requests.hoverTrajectory, () =>
-    store.getState().toolActions.hoverTrajectory(),
-  );
-  useBindRequest(runtime, requests.clearHoveredTrajectory, () =>
-    store.getState().toolActions.clearHoveredTrajectory(),
+  useBindRequest(runtime, requests.selectObject, (input) =>
+    store.getState().sceneInteractionActions.selectObject(input),
   );
   useBindRequest(runtime, requests.setCameraMode, (mode) =>
     store.getState().cameraActions.setCameraMode(mode),
-  );
-  useBindRequest(runtime, requests.selectTrajectory, () =>
-    store.getState().selectionActions.selectTrajectory(),
-  );
-  useBindRequest(runtime, requests.closeTrajectory, () =>
-    store.getState().selectionActions.closeTrajectory(),
   );
   useBindRequest(runtime, requests.resetPlayback, () =>
     store.getState().playbackActions.resetPlayback(),

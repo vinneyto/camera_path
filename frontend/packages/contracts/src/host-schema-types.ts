@@ -1,7 +1,8 @@
 import type * as Api from "./api";
 import type { TrajectoryCameraPose } from "./camera-pose";
 import type { ProjectPermissions } from "./host-data/project-permissions";
-import type { TrajectorySelectionState } from "./host-data/trajectory-selection";
+import type { SceneInteractionState } from "./host-data/scene-interaction";
+import type { SceneObjectUpdate } from "./scene-object-update";
 import type {
   CameraMode,
   EditorTool,
@@ -28,7 +29,9 @@ export interface HostSchemaTypes {
   editorTool: ToolState;
   cameraMode: CameraMode;
   playbackState: PlaybackState;
-  trajectorySelection: TrajectorySelectionState;
+  sceneInteraction: SceneInteractionState;
+  hoverObject: SceneObjectUpdate;
+  selectObject: SceneObjectUpdate;
   projectsCatalog: Api.ProjectMetadata[];
   libraryCatalog: Api.LibraryAsset[];
   sceneModels: Api.ProjectCloud[];

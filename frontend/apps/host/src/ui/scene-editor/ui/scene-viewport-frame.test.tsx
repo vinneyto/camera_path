@@ -23,6 +23,24 @@ vi.mock("@host/adapters/appearance/theme-provider", () => ({
 describe("SceneViewportFrame trajectory context menu", () => {
   afterEach(cleanup);
 
+  it("clears scene hover when the pointer leaves the viewport", () => {
+    const leave = vi.fn();
+    const { container } = render(
+      <SceneViewportFrame
+        available
+        clouds={[]}
+        deletingTrajectory={false}
+        onDeleteAnchor={vi.fn()}
+        onDeleteTrajectory={vi.fn()}
+        onScenePointerLeave={leave}
+        renderScene={() => null}
+        trajectoryAvailable={false}
+      />,
+    );
+    fireEvent.pointerLeave(container.firstElementChild!);
+    expect(leave).toHaveBeenCalledOnce();
+  });
+
   it("opens, closes with Escape, and invokes delete once", () => {
     const onDeleteTrajectory = vi.fn();
     render(

@@ -36,6 +36,7 @@ export function SceneViewportFrame({
   renderScene,
   trajectoryAvailable,
   unavailableMessage = "This renderer is unavailable in this browser",
+  onScenePointerLeave,
 }: SceneViewportFrameProps) {
   const { theme } = useTheme();
   const { cameraMode } = useCameraMode();
@@ -60,7 +61,10 @@ export function SceneViewportFrame({
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      className="relative h-full w-full"
+      onPointerLeave={onScenePointerLeave}
+    >
       {available &&
         renderScene({
           background: dark ? DARK_BACKGROUND : LIGHT_BACKGROUND,

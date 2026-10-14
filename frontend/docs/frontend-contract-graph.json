@@ -9,15 +9,16 @@
         "host.project.permissions@1",
         "host.anchors@1",
         "host.tools.state@1",
-        "host.camera.mode@1"
+        "host.camera.mode@1",
+        "host.scene.interaction@1"
       ],
       "calls": [
         "host.addAnchor@1",
         "host.updateAnchor@1",
         "host.deleteAnchor@1",
         "host.setActiveTool@1",
-        "host.hoverAnchor@1",
-        "host.clearHoveredAnchor@1"
+        "host.hoverObject@1",
+        "host.selectObject@1"
       ],
       "frames": [],
       "contributions": [
@@ -403,14 +404,12 @@
         "host.project.permissions@1",
         "host.trajectoryGeometry@1",
         "host.tools.state@1",
-        "host.trajectory.selection@1"
+        "host.scene.interaction@1"
       ],
       "calls": [
         "host.clearTrajectory@1",
-        "host.hoverTrajectory@1",
-        "host.clearHoveredTrajectory@1",
-        "host.selectTrajectory@1",
-        "host.closeTrajectory@1"
+        "host.hoverObject@1",
+        "host.selectObject@1"
       ],
       "frames": [],
       "contributions": [
@@ -487,28 +486,10 @@
       "source": "packages/contracts/src/host-data/chat-history.ts"
     },
     {
-      "symbol": "clearHoveredAnchor",
-      "id": "host.clearHoveredAnchor@1",
-      "description": "Clear hover if the specified anchor is currently hovered.",
-      "source": "packages/contracts/src/host-requests/clear-hovered-anchor.ts"
-    },
-    {
-      "symbol": "clearHoveredTrajectory",
-      "id": "host.clearHoveredTrajectory@1",
-      "description": "Clear trajectory hover.",
-      "source": "packages/contracts/src/host-requests/clear-hovered-trajectory.ts"
-    },
-    {
       "symbol": "clearTrajectory",
       "id": "host.clearTrajectory@1",
       "description": "Clear the trajectory and reset related editor state.",
       "source": "packages/contracts/src/host-requests/clear-trajectory.ts"
-    },
-    {
-      "symbol": "closeTrajectory",
-      "id": "host.closeTrajectory@1",
-      "description": "Clear trajectory selection and collapse its controls.",
-      "source": "packages/contracts/src/host-requests/close-trajectory.ts"
     },
     {
       "symbol": "compiledTrajectory",
@@ -575,16 +556,10 @@
       "id": "host.gaussians.scene@1"
     },
     {
-      "symbol": "hoverAnchor",
-      "id": "host.hoverAnchor@1",
-      "description": "Mark an anchor as hovered.",
-      "source": "packages/contracts/src/host-requests/hover-anchor.ts"
-    },
-    {
-      "symbol": "hoverTrajectory",
-      "id": "host.hoverTrajectory@1",
-      "description": "Mark the trajectory as hovered.",
-      "source": "packages/contracts/src/host-requests/hover-trajectory.ts"
+      "symbol": "hoverObject",
+      "id": "host.hoverObject@1",
+      "description": "Set or clear the hovered scene object, optionally checking its current ID.",
+      "source": "packages/contracts/src/host-requests/hover-object.ts"
     },
     {
       "symbol": "identityState",
@@ -689,6 +664,12 @@
       "source": "packages/contracts/src/host-requests/save-preferences.ts"
     },
     {
+      "symbol": "sceneInteraction",
+      "id": "host.scene.interaction@1",
+      "description": "The single hovered and selected scene object IDs in the current project.",
+      "source": "packages/contracts/src/host-data/scene-interaction.ts"
+    },
+    {
       "symbol": "sceneModels",
       "id": "host.sceneModels@1",
       "description": "Cloud instances placed in the current project.",
@@ -701,10 +682,10 @@
       "source": "packages/contracts/src/host-data/scene-points.ts"
     },
     {
-      "symbol": "selectTrajectory",
-      "id": "host.selectTrajectory@1",
-      "description": "Select the trajectory and expand its controls.",
-      "source": "packages/contracts/src/host-requests/select-trajectory.ts"
+      "symbol": "selectObject",
+      "id": "host.selectObject@1",
+      "description": "Set or clear the selected scene object, optionally checking its current ID.",
+      "source": "packages/contracts/src/host-requests/select-object.ts"
     },
     {
       "symbol": "setActiveTool",
@@ -759,12 +740,6 @@
       "id": "host.tools.state@1",
       "description": "Active editor tool, hovered object, and pending cloud placement.",
       "source": "packages/contracts/src/host-data/editor-tool.ts"
-    },
-    {
-      "symbol": "trajectorySelection",
-      "id": "host.trajectory.selection@1",
-      "description": "Whether the trajectory is selected in the editor.",
-      "source": "packages/contracts/src/host-data/trajectory-selection.ts"
     },
     {
       "symbol": "trajectoryCameraPose",
@@ -1078,26 +1053,6 @@
       }
     },
     {
-      "id": "host.clearHoveredAnchor@1",
-      "type": "contract",
-      "data": {
-        "symbol": "clearHoveredAnchor",
-        "id": "host.clearHoveredAnchor@1",
-        "description": "Clear hover if the specified anchor is currently hovered.",
-        "source": "packages/contracts/src/host-requests/clear-hovered-anchor.ts"
-      }
-    },
-    {
-      "id": "host.clearHoveredTrajectory@1",
-      "type": "contract",
-      "data": {
-        "symbol": "clearHoveredTrajectory",
-        "id": "host.clearHoveredTrajectory@1",
-        "description": "Clear trajectory hover.",
-        "source": "packages/contracts/src/host-requests/clear-hovered-trajectory.ts"
-      }
-    },
-    {
       "id": "host.clearTrajectory@1",
       "type": "contract",
       "data": {
@@ -1105,16 +1060,6 @@
         "id": "host.clearTrajectory@1",
         "description": "Clear the trajectory and reset related editor state.",
         "source": "packages/contracts/src/host-requests/clear-trajectory.ts"
-      }
-    },
-    {
-      "id": "host.closeTrajectory@1",
-      "type": "contract",
-      "data": {
-        "symbol": "closeTrajectory",
-        "id": "host.closeTrajectory@1",
-        "description": "Clear trajectory selection and collapse its controls.",
-        "source": "packages/contracts/src/host-requests/close-trajectory.ts"
       }
     },
     {
@@ -1226,23 +1171,13 @@
       }
     },
     {
-      "id": "host.hoverAnchor@1",
+      "id": "host.hoverObject@1",
       "type": "contract",
       "data": {
-        "symbol": "hoverAnchor",
-        "id": "host.hoverAnchor@1",
-        "description": "Mark an anchor as hovered.",
-        "source": "packages/contracts/src/host-requests/hover-anchor.ts"
-      }
-    },
-    {
-      "id": "host.hoverTrajectory@1",
-      "type": "contract",
-      "data": {
-        "symbol": "hoverTrajectory",
-        "id": "host.hoverTrajectory@1",
-        "description": "Mark the trajectory as hovered.",
-        "source": "packages/contracts/src/host-requests/hover-trajectory.ts"
+        "symbol": "hoverObject",
+        "id": "host.hoverObject@1",
+        "description": "Set or clear the hovered scene object, optionally checking its current ID.",
+        "source": "packages/contracts/src/host-requests/hover-object.ts"
       }
     },
     {
@@ -1416,6 +1351,16 @@
       }
     },
     {
+      "id": "host.scene.interaction@1",
+      "type": "contract",
+      "data": {
+        "symbol": "sceneInteraction",
+        "id": "host.scene.interaction@1",
+        "description": "The single hovered and selected scene object IDs in the current project.",
+        "source": "packages/contracts/src/host-data/scene-interaction.ts"
+      }
+    },
+    {
       "id": "host.sceneModels@1",
       "type": "contract",
       "data": {
@@ -1436,13 +1381,13 @@
       }
     },
     {
-      "id": "host.selectTrajectory@1",
+      "id": "host.selectObject@1",
       "type": "contract",
       "data": {
-        "symbol": "selectTrajectory",
-        "id": "host.selectTrajectory@1",
-        "description": "Select the trajectory and expand its controls.",
-        "source": "packages/contracts/src/host-requests/select-trajectory.ts"
+        "symbol": "selectObject",
+        "id": "host.selectObject@1",
+        "description": "Set or clear the selected scene object, optionally checking its current ID.",
+        "source": "packages/contracts/src/host-requests/select-object.ts"
       }
     },
     {
@@ -1533,16 +1478,6 @@
         "id": "host.tools.state@1",
         "description": "Active editor tool, hovered object, and pending cloud placement.",
         "source": "packages/contracts/src/host-data/editor-tool.ts"
-      }
-    },
-    {
-      "id": "host.trajectory.selection@1",
-      "type": "contract",
-      "data": {
-        "symbol": "trajectorySelection",
-        "id": "host.trajectory.selection@1",
-        "description": "Whether the trajectory is selected in the editor.",
-        "source": "packages/contracts/src/host-data/trajectory-selection.ts"
       }
     },
     {
@@ -1676,6 +1611,14 @@
       }
     },
     {
+      "id": "host.scene.interaction@1->anchors",
+      "source": "host.scene.interaction@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
       "id": "anchors->host.addAnchor@1",
       "source": "anchors",
       "target": "host.addAnchor@1",
@@ -1708,17 +1651,17 @@
       }
     },
     {
-      "id": "anchors->host.hoverAnchor@1",
+      "id": "anchors->host.hoverObject@1",
       "source": "anchors",
-      "target": "host.hoverAnchor@1",
+      "target": "host.hoverObject@1",
       "data": {
         "kind": "calls"
       }
     },
     {
-      "id": "anchors->host.clearHoveredAnchor@1",
+      "id": "anchors->host.selectObject@1",
       "source": "anchors",
-      "target": "host.clearHoveredAnchor@1",
+      "target": "host.selectObject@1",
       "data": {
         "kind": "calls"
       }
@@ -2319,8 +2262,8 @@
       }
     },
     {
-      "id": "host.trajectory.selection@1->trajectory",
-      "source": "host.trajectory.selection@1",
+      "id": "host.scene.interaction@1->trajectory",
+      "source": "host.scene.interaction@1",
       "target": "trajectory",
       "data": {
         "kind": "reads"
@@ -2335,33 +2278,17 @@
       }
     },
     {
-      "id": "trajectory->host.hoverTrajectory@1",
+      "id": "trajectory->host.hoverObject@1",
       "source": "trajectory",
-      "target": "host.hoverTrajectory@1",
+      "target": "host.hoverObject@1",
       "data": {
         "kind": "calls"
       }
     },
     {
-      "id": "trajectory->host.clearHoveredTrajectory@1",
+      "id": "trajectory->host.selectObject@1",
       "source": "trajectory",
-      "target": "host.clearHoveredTrajectory@1",
-      "data": {
-        "kind": "calls"
-      }
-    },
-    {
-      "id": "trajectory->host.selectTrajectory@1",
-      "source": "trajectory",
-      "target": "host.selectTrajectory@1",
-      "data": {
-        "kind": "calls"
-      }
-    },
-    {
-      "id": "trajectory->host.closeTrajectory@1",
-      "source": "trajectory",
-      "target": "host.closeTrajectory@1",
+      "target": "host.selectObject@1",
       "data": {
         "kind": "calls"
       }
@@ -2372,35 +2299,35 @@
       "contract": "host.addAnchor@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 81,
+      "line": 83,
       "adapter": "async (input) => { await addAnchorMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.addCameraOrientationKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 90,
+      "line": 92,
       "adapter": "async (input) => { await addCameraOrientationKeyframeMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.addDepthOfFieldKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 120,
+      "line": 122,
       "adapter": "async (input) => { await addDepthOfFieldKeyframeMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.aimTimeline@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 62,
+      "line": 64,
       "adapter": "api.useGetAimTimeline(projectId)"
     },
     {
       "contract": "host.anchors@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 54,
+      "line": 56,
       "adapter": "api.useListAnchors(projectId)"
     },
     {
@@ -2414,7 +2341,7 @@
       "contract": "host.camera.mode@1",
       "kind": "useBindValue",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 50,
+      "line": 52,
       "adapter": "camera"
     },
     {
@@ -2428,49 +2355,28 @@
       "contract": "host.chat.send@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 133,
-      "adapter": "async (input, signal) => { const response = await sendChatMessageMutation.mutateAsync({ ...input, onAccepted: () => { if (!signal.aborted) input.onAccepted(); }, }); if (!signal.aborted && response.compiled.position_segments.length) store.getState().selectionActions.selectTrajectory(); return response; }"
+      "line": 135,
+      "adapter": "async (input, signal) => { const response = await sendChatMessageMutation.mutateAsync({ ...input, onAccepted: () => { if (!signal.aborted) input.onAccepted(); }, }); if (!signal.aborted && response.compiled.position_segments.length) store .getState() .sceneInteractionActions.selectObject({ id: trajectoryObjectId }); return response; }"
     },
     {
       "contract": "host.chatHistory@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 74,
+      "line": 76,
       "adapter": "api.useListChatMessages(projectId)"
-    },
-    {
-      "contract": "host.clearHoveredAnchor@1",
-      "kind": "useBindRequest",
-      "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 194,
-      "adapter": "(input) => store.getState().toolActions.clearHoveredAnchor(input)"
-    },
-    {
-      "contract": "host.clearHoveredTrajectory@1",
-      "kind": "useBindRequest",
-      "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 200,
-      "adapter": "() => store.getState().toolActions.clearHoveredTrajectory()"
     },
     {
       "contract": "host.clearTrajectory@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 177,
-      "adapter": "async (input, signal) => { await clearTrajectoryMutation.mutateAsync(input); if (!signal.aborted) { store.getState().selectionActions.closeTrajectory(); store.getState().toolActions.clearHoveredTrajectory(); store.getState().playbackActions.resetPlayback(); } }"
-    },
-    {
-      "contract": "host.closeTrajectory@1",
-      "kind": "useBindRequest",
-      "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 209,
-      "adapter": "() => store.getState().selectionActions.closeTrajectory()"
+      "line": 190,
+      "adapter": "async (input, signal) => { await clearTrajectoryMutation.mutateAsync(input); if (!signal.aborted) { store .getState() .sceneInteractionActions.selectObject({ id: null, ifCurrentId: trajectoryObjectId, }); store .getState() .sceneInteractionActions.hoverObject({ id: null, ifCurrentId: trajectoryObjectId, }); store.getState().playbackActions.resetPlayback(); } }"
     },
     {
       "contract": "host.compiledTrajectory@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 75,
+      "line": 77,
       "adapter": "api.useGetCompiledTrajectory(projectId)"
     },
     {
@@ -2484,28 +2390,28 @@
       "contract": "host.deleteAnchor@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 145,
-      "adapter": "async (input) => { await deleteAnchorMutation.mutateAsync(input); }"
+      "line": 149,
+      "adapter": "async (input, signal) => { await deleteAnchorMutation.mutateAsync(input); if (!signal.aborted) { const id = anchorObjectId(input); store .getState() .sceneInteractionActions.hoverObject({ id: null, ifCurrentId: id }); store .getState() .sceneInteractionActions.selectObject({ id: null, ifCurrentId: id }); } }"
     },
     {
       "contract": "host.deleteCameraKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 155,
+      "line": 168,
       "adapter": "async (input) => { await deleteCameraKeyframeMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.deleteCameraOrientationKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 160,
+      "line": 173,
       "adapter": "async (input) => { await deleteCameraOrientationKeyframeMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.deleteDepthOfFieldKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 169,
+      "line": 182,
       "adapter": "async (input) => { await deleteDepthOfFieldKeyframeMutation.mutateAsync(input); }"
     },
     {
@@ -2526,29 +2432,22 @@
       "contract": "host.deleteSpeedKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 150,
+      "line": 163,
       "adapter": "async (input) => { await deleteSpeedKeyframeMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.depthOfFieldTimeline@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 68,
+      "line": 70,
       "adapter": "api.useGetDepthOfFieldTimeline(projectId)"
     },
     {
-      "contract": "host.hoverAnchor@1",
+      "contract": "host.hoverObject@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 191,
-      "adapter": "(input) => store.getState().toolActions.hoverAnchor(input)"
-    },
-    {
-      "contract": "host.hoverTrajectory@1",
-      "kind": "useBindRequest",
-      "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 197,
-      "adapter": "() => store.getState().toolActions.hoverTrajectory()"
+      "line": 214,
+      "adapter": "(input) => store.getState().sceneInteractionActions.hoverObject(input)"
     },
     {
       "contract": "host.identity.state@1",
@@ -2575,7 +2474,7 @@
       "contract": "host.lidarTimeline@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 73,
+      "line": 75,
       "adapter": "api.useGetLidarTimeline(projectId)"
     },
     {
@@ -2603,14 +2502,14 @@
       "contract": "host.orientationTimeline@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 63,
+      "line": 65,
       "adapter": "api.useGetOrientationTimeline(projectId)"
     },
     {
       "contract": "host.playback.state@1",
       "kind": "useBindValue",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 51,
+      "line": 53,
       "adapter": "playback"
     },
     {
@@ -2631,7 +2530,7 @@
       "contract": "host.projectCloudAction@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 124,
+      "line": 126,
       "adapter": "async (input) => { const response = await projectCloudActionMutation.mutateAsync(input); return { status: response.status }; }"
     },
     {
@@ -2652,7 +2551,7 @@
       "contract": "host.resetPlayback@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 212,
+      "line": 223,
       "adapter": "() => store.getState().playbackActions.resetPlayback()"
     },
     {
@@ -2670,73 +2569,80 @@
       "adapter": "(changes) => settings.save(changes)"
     },
     {
+      "contract": "host.scene.interaction@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 54,
+      "adapter": "interaction"
+    },
+    {
       "contract": "host.sceneModels@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 53,
+      "line": 55,
       "adapter": "api.useListProjectClouds(projectId)"
     },
     {
       "contract": "host.scenePoints@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 55,
+      "line": 57,
       "adapter": "api.useListScenePoints(projectId)"
     },
     {
-      "contract": "host.selectTrajectory@1",
+      "contract": "host.selectObject@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 206,
-      "adapter": "() => store.getState().selectionActions.selectTrajectory()"
+      "line": 217,
+      "adapter": "(input) => store.getState().sceneInteractionActions.selectObject(input)"
     },
     {
       "contract": "host.setActiveTool@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 185,
+      "line": 208,
       "adapter": "(input) => store.getState().toolActions.setActiveTool(input)"
     },
     {
       "contract": "host.setCameraMode@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 203,
+      "line": 220,
       "adapter": "(mode) => store.getState().cameraActions.setCameraMode(mode)"
     },
     {
       "contract": "host.setLidarTimeline@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 129,
+      "line": 131,
       "adapter": "async (input) => { await setLidarTimelineMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.setPlaybackFrame@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 218,
+      "line": 229,
       "adapter": "({ pathPosition, elapsed }) => store.getState().playbackActions.setPlaybackFrame(pathPosition, elapsed)"
     },
     {
       "contract": "host.setPlaying@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 215,
+      "line": 226,
       "adapter": "(input) => store.getState().playbackActions.setPlaying(input)"
     },
     {
       "contract": "host.speedTimeline@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 61,
+      "line": 63,
       "adapter": "api.useGetSpeedTimeline(projectId)"
     },
     {
       "contract": "host.startCloudPlacement@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 188,
+      "line": 211,
       "adapter": "(input) => store.getState().toolActions.startCloudPlacement(input)"
     },
     {
@@ -2750,15 +2656,8 @@
       "contract": "host.tools.state@1",
       "kind": "useBindValue",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 49,
+      "line": 51,
       "adapter": "tool"
-    },
-    {
-      "contract": "host.trajectory.selection@1",
-      "kind": "useBindValue",
-      "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 52,
-      "adapter": "selection"
     },
     {
       "contract": "host.trajectoryCamera.pose@1",
@@ -2771,28 +2670,28 @@
       "contract": "host.trajectoryGeometry@1",
       "kind": "useBindQuery",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 56,
+      "line": 58,
       "adapter": "api.useGetTrajectory(projectId)"
     },
     {
       "contract": "host.updateAnchor@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 85,
+      "line": 87,
       "adapter": "async (input) => { await updateAnchorMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.updateCameraOrientationKeyframe@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 99,
+      "line": 101,
       "adapter": "async (input) => { await updateCameraOrientationKeyframeMutation.mutateAsync(input); }"
     },
     {
       "contract": "host.updateDefaultCameraOrientation@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 108,
+      "line": 110,
       "adapter": "async (input) => { await updateDefaultCameraOrientationMutation.mutateAsync({ pitch_deg: input.pitch_deg ?? 0, yaw_deg: input.yaw_deg ?? 0, roll_deg: input.roll_deg ?? 0, }); }"
     },
     {

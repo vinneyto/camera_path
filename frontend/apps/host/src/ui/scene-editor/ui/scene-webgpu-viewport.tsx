@@ -12,6 +12,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
 
   return (
     <SceneViewportFrame
+      onScenePointerLeave={props.onScenePointerLeave}
       available={webGpuAvailable}
       clouds={props.clouds}
       deletingTrajectory={props.deletingTrajectory}
@@ -20,6 +21,7 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
       trajectoryAvailable={Boolean(props.trajectory?.position_segments.length)}
       renderScene={(context) => (
         <RenderPipelineCanvas
+          onPointerMissed={props.onScenePointerMissed}
           camera={{ far: 100, fov: 42, near: 0.01, position: [4, 3, 6] }}
           dpr={[1, 2]}
           flat

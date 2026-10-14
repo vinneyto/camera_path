@@ -7,10 +7,11 @@ export function useEditorHoverCursor() {
   const cursor = useEditorStore((store) => {
     if (
       store.tool.activeTool === "anchor-height" ||
-      store.tool.hoveredObject?.type === "anchor"
+      store.sceneInteraction.hoveredObjectId?.startsWith("anchor:")
     )
       return "default";
-    if (store.tool.hoveredObject?.type === "trajectory") return "pointer";
+    if (store.sceneInteraction.hoveredObjectId === "trajectory")
+      return "pointer";
     return null;
   });
 

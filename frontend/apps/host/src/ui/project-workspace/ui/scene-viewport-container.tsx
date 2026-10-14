@@ -3,6 +3,7 @@ import { EditorOnly } from "@host/ui/header";
 
 import { LoaderCircle, MousePointerClick } from "lucide-react";
 import { useState } from "react";
+import { useEditorStoreApi } from "@host/editor/model/editor-store-provider";
 
 import type { ProjectCloud } from "@camera-path/contracts/api";
 import {
@@ -46,6 +47,7 @@ export function SceneViewportContainer({
   selected,
   trajectory,
 }: SceneViewportContainerProps) {
+  const store = useEditorStoreApi();
   const addAnchorMutation = useAddAnchor(projectId);
   const updateAnchorMutation = useUpdateAnchor(projectId);
   const deleteAnchorMutation = useDeleteAnchor(projectId);
@@ -113,6 +115,13 @@ export function SceneViewportContainer({
         <AnchorToolShortcut />
       </EditorOnly>
       <Viewport
+        onScenePointerLeave={() =>
+          store.getState().sceneInteractionActions.hoverObject({ id: null })
+        }
+        onScenePointerMissed={() => {
+          if (store.getState().tool.activeTool === null)
+            store.getState().sceneInteractionActions.selectObject({ id: null });
+        }}
         key={projectId}
         lidar={project.camera_track.lidar_keyframe}
         anchors={anchors}

@@ -5,7 +5,7 @@ export { themeState } from "./theme-state";
 export { editorTool } from "./editor-tool";
 export { cameraMode } from "./camera-mode";
 export { playbackState } from "./playback-state";
-export { trajectorySelection } from "./trajectory-selection";
+export { sceneInteraction } from "./scene-interaction";
 export { projectsCatalog } from "./projects-catalog";
 export { libraryCatalog } from "./library-catalog";
 export { libraryAsset } from "./library-asset";

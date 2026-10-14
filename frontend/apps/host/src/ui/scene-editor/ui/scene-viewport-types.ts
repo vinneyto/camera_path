@@ -22,6 +22,8 @@ export interface SceneViewportProps {
   onDeleteTrajectory: () => void;
   onSelectTrajectory: () => void;
   onUpdateAnchorLift: (anchorId: string, lift: number) => Promise<void>;
+  onScenePointerLeave?: () => void;
+  onScenePointerMissed?: () => void;
 }
 
 export interface SceneViewportRenderContext {
@@ -35,6 +37,7 @@ export interface SceneViewportRenderContext {
 }
 
 export interface SceneViewportFrameProps {
+  onScenePointerLeave?: () => void;
   available: boolean | null | undefined;
   onDeleteAnchor: (anchor: Anchor) => void;
   onDeleteTrajectory: () => void;

@@ -3,12 +3,13 @@ import {
   cameraMode,
   editorTool,
   projectPermissions,
+  sceneInteraction,
 } from "@camera-path/contracts/host-data";
 import {
   addAnchor,
-  clearHoveredAnchor,
+  hoverObject,
+  selectObject,
   deleteAnchor,
-  hoverAnchor,
   setActiveTool,
   updateAnchor,
 } from "@camera-path/contracts/host-requests";
@@ -17,14 +18,20 @@ export const manifest = {
   manifestVersion: 1,
   id: "anchors",
   scope: "project",
-  reads: [projectPermissions, anchors, editorTool, cameraMode],
+  reads: [
+    projectPermissions,
+    anchors,
+    editorTool,
+    cameraMode,
+    sceneInteraction,
+  ],
   calls: [
     addAnchor,
     updateAnchor,
     deleteAnchor,
     setActiveTool,
-    hoverAnchor,
-    clearHoveredAnchor,
+    hoverObject,
+    selectObject,
   ],
   frames: [],
   contributions: [

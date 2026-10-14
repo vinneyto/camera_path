@@ -20,6 +20,14 @@ function Bindings({ children }: { children: ReactNode }) {
   const playback = useEditorStore((s) => s.playback);
   useBindValue(runtime, data.projectPermissions, { canEdit: true });
   useBindValue(runtime, data.editorTool, tool);
+  const interaction = useEditorStore((s) => s.sceneInteraction);
+  useBindValue(runtime, data.sceneInteraction, interaction);
+  useBindRequest(runtime, requests.hoverObject, (input) =>
+    store.getState().sceneInteractionActions.hoverObject(input),
+  );
+  useBindRequest(runtime, requests.selectObject, (input) =>
+    store.getState().sceneInteractionActions.selectObject(input),
+  );
   useBindValue(runtime, data.cameraMode, camera);
   useBindValue(runtime, data.playbackState, playback);
   useBindRequest(runtime, requests.setActiveTool, (v) =>

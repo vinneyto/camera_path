@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest";
 import { generatedSchema } from "./generated-schema";
 
 describe("generated host DTO validation", () => {
+  it("accepts scene object IDs and guarded clears but rejects invalid IDs", () => {
+    const hover = generatedSchema("hoverObject");
+    expect(hover.parse({ id: "anchor:a" })).toEqual({ id: "anchor:a" });
+    expect(hover.parse({ id: null, ifCurrentId: "trajectory" })).toEqual({
+      id: null,
+      ifCurrentId: "trajectory",
+    });
+    expect(() => hover.parse({ id: "" })).toThrow();
+    expect(() => hover.parse({ id: 3 })).toThrow();
+    expect(() => hover.parse({ id: null, ifCurrentId: "" })).toThrow();
+  });
   it("requires non-optional identity fields and allows nullable state", () => {
     const schema = generatedSchema("identityState");
     const state = {
