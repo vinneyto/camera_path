@@ -14,3 +14,15 @@
 - Create disposable Three.js/GPU resources and dispose them in the setup and cleanup of the same `useEffect`. Do not create or memoize such a resource with `useMemo` and dispose it from a separate effect: React Strict Mode may run the effect cleanup and setup again while retaining the memoized resource, causing reuse after `dispose()`.
 - Do not create a ref only to carry the latest prop or state value into an effect. When the resulting update is cheap, apply it directly in a `useEffect` or `useLayoutEffect` and list the value in that effect's dependencies.
 - React Compiler is enabled for the frontend. Do not add `useMemo`, `useCallback`, or `memo` by default. Add manual memoization only when stable identity is required by an external API or a measured performance case justifies it; keep the reason explicit in the code.
+
+# Feature architecture
+
+- Follow `docs/feature-host-architecture.md` and the manifests in `packages/features/*/src`.
+- Feature packages must not import siblings, private host modules, raw transport, or the shared query cache. Use typed contracts and the feature's scoped host ports.
+- Public DTOs and operations belong to `packages/contracts`; schema parsing must perform real validation.
+- Keep each host data/request contract in its own file under `packages/contracts/src/host-data` or `host-requests`, exported through the folder's `index.ts`. Give every `defineDataContract` and `defineRequest` a concise English description as its second argument.
+- Describe serializable frontend DTOs in TypeScript and register their types in `host-schema-types.ts`; use `generatedSchema` rather than duplicating object shapes in handwritten JSON Schema. Keep constraints in JSDoc annotations (`@minimum`, `@maximum`, `@asType integer`). Run `npm run schemas:generate` after changing DTOs and include the generated output; CI runs `schemas:check`. Imported API DTOs retain OpenAPI validation. File/callback inputs use explicit runtime validators.
+- Host routes, UI layout, bindings and cross-feature workflows belong to `apps/host`. Load feature entrypoints only in the application/project composition catalogs, importing only `extension`. Each feature entrypoint exports only this descriptor. Slots mount generic contributions without feature-specific props; feature components own their reads, calls, mutation status, errors and UI behavior. Do not import feature hooks/controllers/factories/components into the host.
+- Preserve `src/app` as the Next/Vercel compatibility boundary; do not relocate the deploy root incidentally.
+- Declare feature access through top-level `calls`, `reads` and optional `handles`. A read permission includes snapshots, readiness and subscriptions. Omit `handles` and service registration when the feature provides no services; do not add forwarding handlers without consumers. Keep any service implementation separate from its manifest. After changing declarations or host bindings, run `npm run graph:generate` and include the graph update.
+- Run boundary, graph, API, type, lint, test, build and formatting checks before delivering this refactor.

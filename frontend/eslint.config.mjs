@@ -6,10 +6,10 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["{src,apps,packages}/**/*.{ts,tsx}"],
     ignores: [
-      "src/shared/scene-surface/adapters/3dgs-tile-webgpu/**",
-      "src/shared/scene-surface/adapters/spark/**",
+      "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/**",
+      "packages/scene-runtime/src/surface/adapters/spark/**",
     ],
     rules: {
       "no-restricted-imports": [

@@ -1,0 +1,14 @@
+{
+  "name": "@camera-path/feature-identity",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8",
+    "three": "^0.185.1"
+  }
+}

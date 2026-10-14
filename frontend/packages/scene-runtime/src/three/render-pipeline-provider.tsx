@@ -1,0 +1,254 @@
+"use client";
+import { useFrame, useThree } from "@react-three/fiber";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  type PropsWithChildren,
+} from "react";
+import { Layers } from "three";
+import { min, pass as scenePass } from "three/tsl";
+import {
+  PerspectiveCamera,
+  RenderPipeline,
+  WebGPURenderer,
+  type Node,
+} from "three/webgpu";
+
+import { compositeDepthTestedPremultipliedOver } from "@camera-path/scene-runtime/three/composite-depth-tested-premultiplied-over";
+import { compositePremultipliedOver } from "@camera-path/scene-runtime/three/composite-premultiplied-over";
+import { createPerspectiveViewDepthNode } from "@camera-path/scene-runtime/three/create-perspective-view-depth-node";
+import {
+  RENDER_PIPELINE_OVERLAY_LAYER,
+  RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
+  RENDER_PIPELINE_SCENE_LAYER,
+} from "@camera-path/scene-runtime/three/render-pipeline-scene-layers";
+import type {
+  RenderPipelineContextValue,
+  RenderPipelineEffect,
+  RenderPipelineEffectOptions,
+  RenderPipelineEffectTransform,
+  RenderPipelineLayer,
+  RenderPipelineLayerOptions,
+} from "@camera-path/scene-runtime/three/render-pipeline-types";
+
+interface PipelineResources {
+  opaque: ReturnType<typeof scenePass>;
+  overlay: ReturnType<typeof scenePass>;
+  pipeline: RenderPipeline;
+  preSplatTransparent: ReturnType<typeof scenePass>;
+  transparent: ReturnType<typeof scenePass>;
+}
+
+const RenderPipelineContext = createContext<RenderPipelineContextValue | null>(
+  null,
+);
+
+export function RenderPipelineProvider({ children }: PropsWithChildren) {
+  const camera = useThree((state) => state.camera);
+  const renderer = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const layersRef = useRef(new Map<symbol, RenderPipelineLayer>());
+  const effectsRef = useRef(new Map<symbol, RenderPipelineEffect>());
+  const afterRenderRef = useRef(new Set<() => void>());
+  const registerAfterRender = useCallback((handler: () => void) => {
+    afterRenderRef.current.add(handler);
+    return () => afterRenderRef.current.delete(handler);
+  }, []);
+  const nextSequenceRef = useRef(0);
+  const resourcesRef = useRef<PipelineResources | null>(null);
+
+  if (!(renderer instanceof WebGPURenderer)) {
+    throw new TypeError(
+      "RenderPipelineCanvas requires Three.js WebGPURenderer",
+    );
+  }
+
+  // These callbacks are registered by imperative pipeline consumers. Their
+  // identity must stay stable until the matching unregister cleanup runs.
+  const rebuildOutput = useCallback(() => {
+    const resources = resourcesRef.current;
+    if (resources === null) return;
+    const layers = [...layersRef.current.values()].sort(
+      (left, right) =>
+        left.order - right.order || left.sequence - right.sequence,
+    );
+    let output: Node<"vec4"> = compositeDepthTestedPremultipliedOver(
+      resources.opaque,
+      resources.preSplatTransparent,
+      resources.opaque.getViewZNode(),
+      resources.preSplatTransparent.getViewZNode(),
+    );
+    let sceneDepth: Node<"float"> = resources.opaque.getTextureNode("depth").r;
+    for (const layer of layers) {
+      output = compositePremultipliedOver(output, layer.node);
+      if (layer.depth !== undefined) sceneDepth = min(sceneDepth, layer.depth);
+    }
+    let withEffects = compositeDepthTestedPremultipliedOver(
+      output,
+      resources.transparent,
+      resources.opaque.getViewZNode(),
+      resources.transparent.getViewZNode(),
+    );
+    sceneDepth = min(
+      sceneDepth,
+      resources.transparent.getTextureNode("depth").r,
+    );
+    const effects = [...effectsRef.current.values()].sort(
+      (left, right) =>
+        left.order - right.order || left.sequence - right.sequence,
+    );
+    for (const effect of effects) {
+      withEffects = effect.transform(withEffects, sceneDepth);
+    }
+    resources.pipeline.outputNode = compositePremultipliedOver(
+      withEffects,
+      resources.overlay,
+    );
+    resources.pipeline.needsUpdate = true;
+  }, []);
+
+  const getOpaqueViewDepth = useCallback(
+    (screenUv: Node): Node<"float"> => {
+      const resources = resourcesRef.current;
+      if (resources === null) {
+        throw new Error(
+          "Render pipeline depth is unavailable before pipeline initialization",
+        );
+      }
+      if (!(camera instanceof PerspectiveCamera)) {
+        throw new TypeError(
+          "Render pipeline depth requires a PerspectiveCamera",
+        );
+      }
+      const perspectiveDepth = resources.opaque
+        .getTextureNode("depth")
+        .sample(screenUv);
+      return createPerspectiveViewDepthNode(perspectiveDepth, camera);
+    },
+    [camera],
+  );
+
+  const registerLayer = useCallback(
+    (node: Node<"vec4">, options: RenderPipelineLayerOptions = {}) => {
+      const key = Symbol("render-pipeline-layer");
+      layersRef.current.set(key, {
+        depth: options.depth,
+        node,
+        order: options.order ?? 0,
+        sequence: nextSequenceRef.current++,
+      });
+      rebuildOutput();
+      return () => {
+        layersRef.current.delete(key);
+        rebuildOutput();
+      };
+    },
+    [rebuildOutput],
+  );
+
+  const registerEffect = useCallback(
+    (
+      transform: RenderPipelineEffectTransform,
+      options: RenderPipelineEffectOptions = {},
+    ) => {
+      const key = Symbol("render-pipeline-effect");
+      effectsRef.current.set(key, {
+        order: options.order ?? 0,
+        sequence: nextSequenceRef.current++,
+        transform,
+      });
+      rebuildOutput();
+      return () => {
+        effectsRef.current.delete(key);
+        rebuildOutput();
+      };
+    },
+    [rebuildOutput],
+  );
+
+  const value: RenderPipelineContextValue = {
+    camera,
+    getOpaqueViewDepth,
+    registerAfterRender,
+    registerEffect,
+    registerLayer,
+    renderer,
+  };
+
+  useLayoutEffect(() => {
+    const sceneLayers = new Layers();
+    sceneLayers.set(RENDER_PIPELINE_SCENE_LAYER);
+    const overlayLayers = new Layers();
+    overlayLayers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+    const preSplatLayers = new Layers();
+    preSplatLayers.set(RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER);
+
+    const opaque = scenePass(scene, camera);
+    opaque.opaque = true;
+    opaque.transparent = false;
+    opaque.setLayers(sceneLayers);
+
+    const preSplatTransparent = scenePass(scene, camera);
+    preSplatTransparent.opaque = false;
+    preSplatTransparent.transparent = true;
+    preSplatTransparent.setLayers(preSplatLayers);
+
+    const transparent = scenePass(scene, camera);
+    transparent.opaque = false;
+    transparent.transparent = true;
+    transparent.setLayers(sceneLayers);
+
+    const overlay = scenePass(scene, camera);
+    overlay.opaque = false;
+    overlay.transparent = true;
+    overlay.setLayers(overlayLayers);
+
+    const pipeline = new RenderPipeline(renderer, opaque);
+    resourcesRef.current = {
+      opaque,
+      overlay,
+      pipeline,
+      preSplatTransparent,
+      transparent,
+    };
+    rebuildOutput();
+    return () => {
+      resourcesRef.current = null;
+      pipeline.dispose();
+      opaque.dispose();
+      preSplatTransparent.dispose();
+      transparent.dispose();
+      overlay.dispose();
+    };
+  }, [camera, rebuildOutput, renderer, scene]);
+
+  useFrame(() => {
+    if (resourcesRef.current) {
+      resourcesRef.current.pipeline.render();
+      afterRenderRef.current.forEach((fn) => fn());
+    }
+  }, 1);
+
+  return (
+    <RenderPipelineContext.Provider value={value}>
+      {children}
+    </RenderPipelineContext.Provider>
+  );
+}
+
+export function useRenderPipeline(): RenderPipelineContextValue {
+  const value = useOptionalRenderPipeline();
+  if (value === null) {
+    throw new Error(
+      "useRenderPipeline must be used inside RenderPipelineCanvas",
+    );
+  }
+  return value;
+}
+
+export function useOptionalRenderPipeline(): RenderPipelineContextValue | null {
+  return useContext(RenderPipelineContext);
+}

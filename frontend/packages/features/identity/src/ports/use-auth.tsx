@@ -1,0 +1,29 @@
+"use client";
+import { identityState } from "@camera-path/contracts/host-data";
+import {
+  cancelLogin,
+  login,
+  logout,
+  resend,
+  verify,
+} from "@camera-path/contracts/host-requests";
+import { useData, useRequestAction } from "@camera-path/extension-api";
+import { manifest } from "../manifest";
+export function useAuth() {
+  const state = useData(manifest, identityState);
+  const signIn = useRequestAction(manifest, login);
+  const confirm = useRequestAction(manifest, verify);
+  const again = useRequestAction(manifest, resend);
+  const cancel = useRequestAction(manifest, cancelLogin);
+  const signOut = useRequestAction(manifest, logout);
+  return {
+    ...state,
+    error: state.errorMessage ? new Error(state.errorMessage) : null,
+    login: (username: string, password: string) =>
+      signIn({ username, password }),
+    verify: confirm,
+    resend: () => again(undefined),
+    cancelLogin: () => void cancel(undefined),
+    logout: () => signOut(undefined),
+  };
+}

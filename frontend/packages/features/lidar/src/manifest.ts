@@ -1,0 +1,53 @@
+import {
+  gaussianScene,
+  lidarHitInstances,
+  lidarRanges,
+} from "@camera-path/contracts/gpu-resources";
+import {
+  compiledTrajectory,
+  lidarTimeline,
+  projectPermissions,
+  trajectoryCameraPose,
+} from "@camera-path/contracts/host-data";
+import { setLidarTimeline } from "@camera-path/contracts/host-requests";
+import type { FeatureManifest } from "@camera-path/extension-api";
+export const manifest = {
+  manifestVersion: 1,
+  id: "lidar",
+  scope: "project",
+  reads: [
+    compiledTrajectory,
+    trajectoryCameraPose,
+    projectPermissions,
+    lidarTimeline,
+  ],
+  calls: [setLidarTimeline],
+  frames: [
+    { id: "lidar.outputs", phase: "after-render" },
+    {
+      id: "lidar.update",
+      phase: "update",
+      after: ["host.trajectoryCamera.update"],
+    },
+  ],
+  contributions: [
+    { id: "lidar.effect", kind: "ui", slot: "timeline.effects", order: 90 },
+    {
+      id: "lidar.sensor",
+      kind: "gpu-pass",
+      inputs: [gaussianScene],
+      outputs: [lidarRanges, lidarHitInstances],
+      after: ["host.gaussians.prepare"],
+      before: ["host.scene.transparent"],
+    },
+    { id: "lidar.scene", kind: "scene", slot: "scene.root", order: 0 },
+    {
+      id: "lidar.track",
+      kind: "timeline",
+      slot: "timeline.tracks",
+      resourceType: "lidar",
+      order: 90,
+    },
+  ],
+  capabilities: ["gpu.resources.allocate", "render.passes.register"],
+} as const satisfies FeatureManifest<"lidar">;

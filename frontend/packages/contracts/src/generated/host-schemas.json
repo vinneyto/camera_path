@@ -1,0 +1,536 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "seekPlayback": {
+      "$ref": "#/definitions/PathPosition",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "projectPermissions": {
+      "$ref": "#/definitions/ProjectPermissions"
+    },
+    "identityState": {
+      "$ref": "#/definitions/IdentityState"
+    },
+    "preferencesState": {
+      "$ref": "#/definitions/PreferencesState"
+    },
+    "themeState": {
+      "$ref": "#/definitions/Theme"
+    },
+    "editorTool": {
+      "$ref": "#/definitions/ToolState"
+    },
+    "cameraMode": {
+      "$ref": "#/definitions/CameraMode"
+    },
+    "playbackState": {
+      "$ref": "#/definitions/PlaybackState"
+    },
+    "sceneInteraction": {
+      "$ref": "#/definitions/SceneInteractionState"
+    },
+    "hoverObject": {
+      "$ref": "#/definitions/SceneObjectUpdate"
+    },
+    "selectObject": {
+      "$ref": "#/definitions/SceneObjectUpdate"
+    },
+    "projectsCatalog": {
+      "type": "array",
+      "items": {
+        "$ref": "camera-path-api#/components/schemas/ProjectMetadata"
+      }
+    },
+    "libraryCatalog": {
+      "type": "array",
+      "items": {
+        "$ref": "camera-path-api#/components/schemas/LibraryAsset"
+      }
+    },
+    "sceneModels": {
+      "type": "array",
+      "items": {
+        "$ref": "camera-path-api#/components/schemas/ProjectCloud"
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "$ref": "camera-path-api#/components/schemas/Anchor"
+      }
+    },
+    "scenePoints": {
+      "type": "array",
+      "items": {
+        "$ref": "camera-path-api#/components/schemas/ScenePoint"
+      }
+    },
+    "chatHistory": {
+      "type": "array",
+      "items": {
+        "$ref": "camera-path-api#/components/schemas/ChatHistoryMessage"
+      }
+    },
+    "trajectoryCameraPose": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/TrajectoryCameraPose"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "updateAnchor": {
+      "$ref": "#/definitions/UpdateAnchorInput"
+    },
+    "updateCameraOrientationKeyframe": {
+      "$ref": "#/definitions/UpdateCameraOrientationKeyframeInput"
+    },
+    "setLidarTimeline": {
+      "anyOf": [
+        {
+          "$ref": "camera-path-api#/components/schemas/LidarSettings"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "projectCloudAction": {
+      "$ref": "#/definitions/CloudAction"
+    },
+    "projectCloudActionResult": {
+      "$ref": "#/definitions/CloudActionResult"
+    },
+    "deleteLibraryAssets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "updateLibraryDefaults": {
+      "$ref": "#/definitions/UpdateLibraryDefaultsInput"
+    },
+    "login": {
+      "$ref": "#/definitions/LoginInput"
+    },
+    "setActiveTool": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/EditorTool"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "setCameraMode": {
+      "$ref": "#/definitions/CameraMode"
+    },
+    "setPlaybackFrame": {
+      "$ref": "#/definitions/PlaybackFrameInput"
+    }
+  },
+  "required": [
+    "seekPlayback",
+    "projectPermissions",
+    "identityState",
+    "preferencesState",
+    "themeState",
+    "editorTool",
+    "cameraMode",
+    "playbackState",
+    "sceneInteraction",
+    "hoverObject",
+    "selectObject",
+    "projectsCatalog",
+    "libraryCatalog",
+    "sceneModels",
+    "anchors",
+    "scenePoints",
+    "chatHistory",
+    "trajectoryCameraPose",
+    "updateAnchor",
+    "updateCameraOrientationKeyframe",
+    "setLidarTimeline",
+    "projectCloudAction",
+    "projectCloudActionResult",
+    "deleteLibraryAssets",
+    "updateLibraryDefaults",
+    "login",
+    "setActiveTool",
+    "setCameraMode",
+    "setPlaybackFrame"
+  ],
+  "$id": "camera-path-host",
+  "definitions": {
+    "CameraMode": {
+      "type": "string",
+      "enum": ["orbit", "trajectory"]
+    },
+    "CloudAction": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "add"
+            },
+            "assetId": {
+              "type": "string"
+            },
+            "translation": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          },
+          "required": ["type", "assetId"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "remove"
+            },
+            "cloudId": {
+              "type": "string"
+            }
+          },
+          "required": ["type", "cloudId"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "update"
+            },
+            "cloudId": {
+              "type": "string"
+            },
+            "changes": {
+              "$ref": "camera-path-api#/components/schemas/ProjectCloudUpdate"
+            }
+          },
+          "required": ["type", "cloudId", "changes"]
+        }
+      ]
+    },
+    "CloudActionResult": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        }
+      },
+      "required": ["status"]
+    },
+    "EditorTool": {
+      "type": "string",
+      "enum": ["anchor", "anchor-height", "cloud"]
+    },
+    "IdentityState": {
+      "type": "object",
+      "properties": {
+        "canEdit": {
+          "type": "boolean"
+        },
+        "loading": {
+          "type": "boolean"
+        },
+        "username": {
+          "type": ["string", "null"]
+        },
+        "errorMessage": {
+          "type": ["string", "null"]
+        },
+        "pending": {
+          "type": "boolean"
+        },
+        "challenge": {
+          "anyOf": [
+            {
+              "$ref": "camera-path-api#/components/schemas/ChallengeResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "canEdit",
+        "loading",
+        "username",
+        "errorMessage",
+        "pending",
+        "challenge"
+      ]
+    },
+    "LoginInput": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": ["username", "password"]
+    },
+    "PathPosition": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "PlaybackFrameInput": {
+      "type": "object",
+      "properties": {
+        "pathPosition": {
+          "$ref": "#/definitions/PathPosition",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "elapsed": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": ["pathPosition", "elapsed"]
+    },
+    "PlaybackState": {
+      "type": "object",
+      "properties": {
+        "elapsed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pathPosition": {
+          "$ref": "#/definitions/PathPosition",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "playing": {
+          "type": "boolean"
+        }
+      },
+      "required": ["elapsed", "pathPosition", "playing"]
+    },
+    "PreferencesState": {
+      "type": "object",
+      "properties": {
+        "webGpuTileRenderer": {
+          "type": "boolean"
+        },
+        "showGrid": {
+          "type": "boolean"
+        },
+        "gaussianDpr": {
+          "type": "string",
+          "enum": ["1x", "system"]
+        },
+        "loading": {
+          "type": "boolean"
+        },
+        "saving": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "errorMessage": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": [
+        "webGpuTileRenderer",
+        "showGrid",
+        "gaussianDpr",
+        "loading",
+        "saving",
+        "ready",
+        "errorMessage"
+      ]
+    },
+    "ProjectPermissions": {
+      "type": "object",
+      "properties": {
+        "canEdit": {
+          "type": "boolean"
+        }
+      },
+      "required": ["canEdit"],
+      "additionalProperties": false
+    },
+    "SceneInteractionState": {
+      "type": "object",
+      "properties": {
+        "hoveredObjectId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SceneObjectId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selectedObjectId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SceneObjectId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["hoveredObjectId", "selectedObjectId"]
+    },
+    "SceneObjectId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "SceneObjectUpdate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SceneObjectId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ifCurrentId": {
+          "$ref": "#/definitions/SceneObjectId",
+          "description": "Apply only if the current object still has this ID; used by pointer-out and cleanup."
+        }
+      },
+      "required": ["id"]
+    },
+    "Theme": {
+      "type": "string",
+      "enum": ["light", "dark"]
+    },
+    "ToolState": {
+      "type": "object",
+      "properties": {
+        "activeTool": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EditorTool"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pendingCloud": {
+          "anyOf": [
+            {
+              "$ref": "camera-path-api#/components/schemas/LibraryAsset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["activeTool", "pendingCloud"]
+    },
+    "TrajectoryCameraPose": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "frameId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "projectRevision": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "position",
+        "orientation",
+        "up",
+        "frameId",
+        "projectRevision"
+      ]
+    },
+    "UpdateAnchorInput": {
+      "type": "object",
+      "properties": {
+        "anchorId": {
+          "type": "string"
+        },
+        "lift": {
+          "type": "number"
+        }
+      },
+      "required": ["anchorId", "lift"]
+    },
+    "UpdateCameraOrientationKeyframeInput": {
+      "type": "object",
+      "properties": {
+        "keyframeId": {
+          "type": "string"
+        },
+        "keyframe": {
+          "$ref": "camera-path-api#/components/schemas/CameraOrientationKeyframeUpdate"
+        }
+      },
+      "required": ["keyframeId", "keyframe"]
+    },
+    "UpdateLibraryDefaultsInput": {
+      "type": "object",
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "changes": {
+          "$ref": "camera-path-api#/components/schemas/LibraryAssetDefaultsUpdate"
+        }
+      },
+      "required": ["assetId", "changes"]
+    }
+  }
+}

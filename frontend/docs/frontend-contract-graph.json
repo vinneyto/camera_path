@@ -1,0 +1,3411 @@
+{
+  "schemaVersion": 3,
+  "slots": [
+    "header.controls",
+    "library.content",
+    "library.details",
+    "project.header.status",
+    "project.root",
+    "project.sidebar",
+    "projects.content",
+    "scene.hints",
+    "scene.overlay",
+    "scene.root",
+    "scene.toolbar",
+    "settings.content",
+    "timeline.controls",
+    "timeline.effects",
+    "timeline.tracks",
+    "workspace.commands"
+  ],
+  "features": [
+    {
+      "manifestVersion": 1,
+      "id": "anchors",
+      "scope": "project",
+      "reads": [
+        "host.project.permissions@1",
+        "host.anchors@1",
+        "host.tools.state@1",
+        "host.camera.mode@1",
+        "host.scene.interaction@1"
+      ],
+      "calls": [
+        "host.addAnchor@1",
+        "host.updateAnchor@1",
+        "host.deleteAnchor@1",
+        "host.setActiveTool@1",
+        "host.hoverObject@1",
+        "host.selectObject@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "anchors.status",
+          "kind": "ui",
+          "slot": "project.header.status"
+        },
+        {
+          "id": "anchors.hint",
+          "kind": "ui",
+          "slot": "scene.hints"
+        },
+        {
+          "id": "anchors.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 30
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/anchors/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "appearance",
+      "scope": "application",
+      "reads": ["host.appearance.theme@1"],
+      "calls": ["host.toggleTheme@1"],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "appearance.toggle",
+          "kind": "ui",
+          "slot": "header.controls",
+          "order": 20
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/appearance/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "camera-aim",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.project.permissions@1",
+        "host.aimTimeline@1",
+        "host.scenePoints@1"
+      ],
+      "calls": ["host.deleteCameraKeyframe@1"],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "camera-aim.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "camera-aim",
+          "order": 60
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/camera-aim/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "camera-orientation",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.project.permissions@1",
+        "host.orientationTimeline@1"
+      ],
+      "calls": [
+        "host.addCameraOrientationKeyframe@1",
+        "host.updateCameraOrientationKeyframe@1",
+        "host.updateDefaultCameraOrientation@1",
+        "host.deleteCameraOrientationKeyframe@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "camera-orientation.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "camera-orientation",
+          "order": 70
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/camera-orientation/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "camera-view",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.playback.state@1",
+        "host.tools.state@1",
+        "host.trajectoryCamera.pose@1",
+        "host.project.permissions@1",
+        "host.camera.mode@1"
+      ],
+      "calls": ["host.setCameraMode@1"],
+      "frames": [
+        {
+          "id": "camera-view.update",
+          "phase": "update",
+          "after": ["host.trajectoryCamera.update"]
+        }
+      ],
+      "contributions": [
+        {
+          "id": "camera-view.toolbar",
+          "kind": "ui",
+          "slot": "scene.toolbar"
+        },
+        {
+          "id": "camera-view.scene",
+          "kind": "scene",
+          "slot": "scene.root"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/camera-view/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "chat-agent",
+      "scope": "project",
+      "reads": [
+        "host.project.permissions@1",
+        "host.anchors@1",
+        "host.chatHistory@1"
+      ],
+      "calls": ["host.chat.send@1"],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "chat-agent.sidebar",
+          "kind": "ui",
+          "slot": "project.sidebar"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/chat-agent/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "depth-of-field",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.playback.state@1",
+        "host.camera.mode@1",
+        "host.trajectoryCamera.pose@1",
+        "host.project.permissions@1",
+        "host.depthOfFieldTimeline@1",
+        "host.scenePoints@1"
+      ],
+      "calls": [
+        "host.addDepthOfFieldKeyframe@1",
+        "host.deleteDepthOfFieldKeyframe@1"
+      ],
+      "frames": [
+        {
+          "id": "depth-of-field.helper",
+          "phase": "update",
+          "after": ["host.trajectoryCamera.update"]
+        }
+      ],
+      "contributions": [
+        {
+          "id": "depth-of-field.effect",
+          "kind": "ui",
+          "slot": "timeline.effects",
+          "order": 80
+        },
+        {
+          "id": "depth-of-field.scene",
+          "kind": "scene",
+          "slot": "scene.root"
+        },
+        {
+          "id": "depth-of-field.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "depth-of-field",
+          "order": 80
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/depth-of-field/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "identity",
+      "scope": "application",
+      "reads": ["host.identity.state@1", "host.project.permissions@1"],
+      "calls": [
+        "host.login@1",
+        "host.verify@1",
+        "host.resend@1",
+        "host.cancelLogin@1",
+        "host.logout@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "identity.profile",
+          "kind": "ui",
+          "slot": "header.controls",
+          "order": 10
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/identity/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "library",
+      "scope": "application",
+      "reads": [
+        "host.project.permissions@1",
+        "host.libraryCatalog@1",
+        "host.libraryAsset@1"
+      ],
+      "calls": [
+        "host.uploadLibraryFile@1",
+        "host.deleteLibraryAssets@1",
+        "host.updateLibraryDefaults@1",
+        "host.navigate@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "library.content",
+          "kind": "ui",
+          "slot": "library.content"
+        },
+        {
+          "id": "library.details",
+          "kind": "ui",
+          "slot": "library.details"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/library/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "lidar",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.trajectoryCamera.pose@1",
+        "host.project.permissions@1",
+        "host.lidarTimeline@1"
+      ],
+      "calls": ["host.setLidarTimeline@1"],
+      "frames": [
+        {
+          "id": "lidar.outputs",
+          "phase": "after-render"
+        },
+        {
+          "id": "lidar.update",
+          "phase": "update",
+          "after": ["host.trajectoryCamera.update"]
+        }
+      ],
+      "contributions": [
+        {
+          "id": "lidar.effect",
+          "kind": "ui",
+          "slot": "timeline.effects",
+          "order": 90
+        },
+        {
+          "id": "lidar.sensor",
+          "kind": "gpu-pass",
+          "inputs": ["host.gaussians.scene@1"],
+          "outputs": ["lidar.ranges@1", "lidar.hitInstances@1"],
+          "after": ["host.gaussians.prepare"],
+          "before": ["host.scene.transparent"]
+        },
+        {
+          "id": "lidar.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 0
+        },
+        {
+          "id": "lidar.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "lidar",
+          "order": 90
+        }
+      ],
+      "capabilities": ["gpu.resources.allocate", "render.passes.register"],
+      "source": "packages/features/lidar/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "playback",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.scene.interaction@1",
+        "host.playback.state@1"
+      ],
+      "calls": [
+        "host.seekPlayback@1",
+        "host.selectObject@1",
+        "host.setPlaybackFrame@1",
+        "host.resetPlayback@1",
+        "host.setPlaying@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "playback.runtime",
+          "kind": "ui",
+          "slot": "project.root"
+        },
+        {
+          "id": "playback.controls",
+          "kind": "ui",
+          "slot": "timeline.controls"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/playback/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "projects",
+      "scope": "application",
+      "reads": ["host.project.permissions@1", "host.projectsCatalog@1"],
+      "calls": [
+        "host.createProject@1",
+        "host.deleteProject@1",
+        "host.navigate@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "projects.content",
+          "kind": "ui",
+          "slot": "projects.content"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/projects/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "renderer-preferences",
+      "scope": "application",
+      "reads": ["host.preferences.state@1"],
+      "calls": ["host.savePreferences@1", "host.retryPreferences@1"],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "renderer-preferences.settings",
+          "kind": "ui",
+          "slot": "settings.content",
+          "order": 160
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/renderer-preferences/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "scene-grid",
+      "scope": "application",
+      "reads": ["host.preferences.state@1"],
+      "calls": ["host.savePreferences@1"],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "scene-grid.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 20
+        },
+        {
+          "id": "scene-grid.settings",
+          "kind": "ui",
+          "slot": "settings.content",
+          "order": 120
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/scene-grid/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "scene-models",
+      "scope": "project",
+      "reads": [
+        "host.camera.mode@1",
+        "host.project.permissions@1",
+        "host.libraryCatalog@1",
+        "host.sceneModels@1",
+        "host.tools.state@1"
+      ],
+      "calls": [
+        "host.projectCloudAction@1",
+        "host.startCloudPlacement@1",
+        "host.setActiveTool@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "scene-models.hint",
+          "kind": "ui",
+          "slot": "scene.hints"
+        },
+        {
+          "id": "scene-models.commands",
+          "kind": "command",
+          "slot": "workspace.commands"
+        },
+        {
+          "id": "scene-models.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 10
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/scene-models/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "speed-track",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.playback.state@1",
+        "host.project.permissions@1",
+        "host.speedTimeline@1"
+      ],
+      "calls": ["host.deleteSpeedKeyframe@1"],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "speed-track.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "speed-track",
+          "order": 50
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/speed-track/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "trajectory",
+      "scope": "project",
+      "reads": [
+        "host.compiledTrajectory@1",
+        "host.camera.mode@1",
+        "host.playback.state@1",
+        "host.project.permissions@1",
+        "host.trajectoryGeometry@1",
+        "host.tools.state@1",
+        "host.scene.interaction@1"
+      ],
+      "calls": [
+        "host.seekPlayback@1",
+        "host.clearTrajectory@1",
+        "host.hoverObject@1",
+        "host.selectObject@1"
+      ],
+      "frames": [],
+      "contributions": [
+        {
+          "id": "trajectory.status",
+          "kind": "ui",
+          "slot": "project.header.status"
+        },
+        {
+          "id": "trajectory.overlay",
+          "kind": "ui",
+          "slot": "scene.overlay"
+        },
+        {
+          "id": "trajectory.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 40
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/trajectory/src/manifest.ts"
+    }
+  ],
+  "contracts": [
+    {
+      "symbol": "addAnchor",
+      "id": "host.addAnchor@1",
+      "description": "Add an anchor to the current project.",
+      "source": "packages/contracts/src/host-requests/add-anchor.ts"
+    },
+    {
+      "symbol": "addCameraOrientationKeyframe",
+      "id": "host.addCameraOrientationKeyframe@1",
+      "description": "Add a camera orientation keyframe.",
+      "source": "packages/contracts/src/host-requests/add-camera-orientation-keyframe.ts"
+    },
+    {
+      "symbol": "addDepthOfFieldKeyframe",
+      "id": "host.addDepthOfFieldKeyframe@1",
+      "description": "Add a depth-of-field keyframe.",
+      "source": "packages/contracts/src/host-requests/add-depth-of-field-keyframe.ts"
+    },
+    {
+      "symbol": "aimTimeline",
+      "id": "host.aimTimeline@1",
+      "description": "Camera aim targets and keyframes along the trajectory.",
+      "source": "packages/contracts/src/host-data/aim-timeline.ts"
+    },
+    {
+      "symbol": "anchors",
+      "id": "host.anchors@1",
+      "description": "Anchors defining the current project path.",
+      "source": "packages/contracts/src/host-data/anchors.ts"
+    },
+    {
+      "symbol": "themeState",
+      "id": "host.appearance.theme@1",
+      "description": "Current light or dark appearance theme.",
+      "source": "packages/contracts/src/host-data/theme-state.ts"
+    },
+    {
+      "symbol": "cameraMode",
+      "id": "host.camera.mode@1",
+      "description": "Current orbit or trajectory camera mode.",
+      "source": "packages/contracts/src/host-data/camera-mode.ts"
+    },
+    {
+      "symbol": "cancelLogin",
+      "id": "host.cancelLogin@1",
+      "description": "Cancel the pending sign-in and clear its error.",
+      "source": "packages/contracts/src/host-requests/cancel-login.ts"
+    },
+    {
+      "symbol": "sendChatMessage",
+      "id": "host.chat.send@1",
+      "description": "Send a message to the trajectory agent and return the resulting trajectory.",
+      "source": "packages/contracts/src/host-requests/send-chat-message.ts"
+    },
+    {
+      "symbol": "chatHistory",
+      "id": "host.chatHistory@1",
+      "description": "Persisted messages in the trajectory agent conversation.",
+      "source": "packages/contracts/src/host-data/chat-history.ts"
+    },
+    {
+      "symbol": "clearTrajectory",
+      "id": "host.clearTrajectory@1",
+      "description": "Clear the trajectory and reset related editor state.",
+      "source": "packages/contracts/src/host-requests/clear-trajectory.ts"
+    },
+    {
+      "symbol": "compiledTrajectory",
+      "id": "host.compiledTrajectory@1",
+      "description": "Compiled trajectory geometry, motion, and camera tracks.",
+      "source": "packages/contracts/src/host-data/compiled-trajectory.ts"
+    },
+    {
+      "symbol": "createProject",
+      "id": "host.createProject@1",
+      "description": "Create a project with the given name.",
+      "source": "packages/contracts/src/host-requests/create-project.ts"
+    },
+    {
+      "symbol": "deleteAnchor",
+      "id": "host.deleteAnchor@1",
+      "description": "Delete an anchor from the current project.",
+      "source": "packages/contracts/src/host-requests/delete-anchor.ts"
+    },
+    {
+      "symbol": "deleteCameraKeyframe",
+      "id": "host.deleteCameraKeyframe@1",
+      "description": "Delete a camera aim keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-camera-keyframe.ts"
+    },
+    {
+      "symbol": "deleteCameraOrientationKeyframe",
+      "id": "host.deleteCameraOrientationKeyframe@1",
+      "description": "Delete a camera orientation keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-camera-orientation-keyframe.ts"
+    },
+    {
+      "symbol": "deleteDepthOfFieldKeyframe",
+      "id": "host.deleteDepthOfFieldKeyframe@1",
+      "description": "Delete a depth-of-field keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-depth-of-field-keyframe.ts"
+    },
+    {
+      "symbol": "deleteLibraryAssets",
+      "id": "host.deleteLibraryAssets@1",
+      "description": "Delete library clouds by their IDs.",
+      "source": "packages/contracts/src/host-requests/delete-library-assets.ts"
+    },
+    {
+      "symbol": "deleteProject",
+      "id": "host.deleteProject@1",
+      "description": "Delete a project by its ID.",
+      "source": "packages/contracts/src/host-requests/delete-project.ts"
+    },
+    {
+      "symbol": "deleteSpeedKeyframe",
+      "id": "host.deleteSpeedKeyframe@1",
+      "description": "Delete a trajectory speed keyframe.",
+      "source": "packages/contracts/src/host-requests/delete-speed-keyframe.ts"
+    },
+    {
+      "symbol": "depthOfFieldTimeline",
+      "id": "host.depthOfFieldTimeline@1",
+      "description": "Depth-of-field focus and blur keyframes.",
+      "source": "packages/contracts/src/host-data/depth-of-field-timeline.ts"
+    },
+    {
+      "symbol": "gaussianScene",
+      "id": "host.gaussians.scene@1"
+    },
+    {
+      "symbol": "hoverObject",
+      "id": "host.hoverObject@1",
+      "description": "Set or clear the hovered scene object, optionally checking its current ID.",
+      "source": "packages/contracts/src/host-requests/hover-object.ts"
+    },
+    {
+      "symbol": "identityState",
+      "id": "host.identity.state@1",
+      "description": "Current session and sign-in progress.",
+      "source": "packages/contracts/src/host-data/identity-state.ts"
+    },
+    {
+      "symbol": "libraryAsset",
+      "id": "host.libraryAsset@1",
+      "description": "Details and placement defaults of the current library cloud.",
+      "source": "packages/contracts/src/host-data/library-asset.ts"
+    },
+    {
+      "symbol": "libraryCatalog",
+      "id": "host.libraryCatalog@1",
+      "description": "Library clouds available for browsing and placement.",
+      "source": "packages/contracts/src/host-data/library-catalog.ts"
+    },
+    {
+      "symbol": "lidarTimeline",
+      "id": "host.lidarTimeline@1",
+      "description": "LiDAR scan settings and their trajectory position.",
+      "source": "packages/contracts/src/host-data/lidar-timeline.ts"
+    },
+    {
+      "symbol": "login",
+      "id": "host.login@1",
+      "description": "Start sign-in with a username and password.",
+      "source": "packages/contracts/src/host-requests/login.ts"
+    },
+    {
+      "symbol": "logout",
+      "id": "host.logout@1",
+      "description": "Sign out of the current editor session.",
+      "source": "packages/contracts/src/host-requests/logout.ts"
+    },
+    {
+      "symbol": "navigate",
+      "id": "host.navigate@1",
+      "description": "Navigate to a supported application route.",
+      "source": "packages/contracts/src/host-requests/navigate.ts"
+    },
+    {
+      "symbol": "orientationTimeline",
+      "id": "host.orientationTimeline@1",
+      "description": "Default camera orientation and orientation keyframes.",
+      "source": "packages/contracts/src/host-data/orientation-timeline.ts"
+    },
+    {
+      "symbol": "playbackState",
+      "id": "host.playback.state@1",
+      "description": "Trajectory playback time, position, and playing state.",
+      "source": "packages/contracts/src/host-data/playback-state.ts"
+    },
+    {
+      "symbol": "preferencesState",
+      "id": "host.preferences.state@1",
+      "description": "Renderer and grid preferences with loading and save status.",
+      "source": "packages/contracts/src/host-data/preferences-state.ts"
+    },
+    {
+      "symbol": "projectPermissions",
+      "id": "host.project.permissions@1",
+      "description": "Permissions for editing the current project.",
+      "source": "packages/contracts/src/host-data/project-permissions.ts"
+    },
+    {
+      "symbol": "projectCloudAction",
+      "id": "host.projectCloudAction@1",
+      "description": "Add, remove, or update a cloud in the current project.",
+      "source": "packages/contracts/src/host-requests/project-cloud-action.ts"
+    },
+    {
+      "symbol": "projectsCatalog",
+      "id": "host.projectsCatalog@1",
+      "description": "Projects available in the project list.",
+      "source": "packages/contracts/src/host-data/projects-catalog.ts"
+    },
+    {
+      "symbol": "resend",
+      "id": "host.resend@1",
+      "description": "Resend the email code for the pending sign-in.",
+      "source": "packages/contracts/src/host-requests/resend.ts"
+    },
+    {
+      "symbol": "resetPlayback",
+      "id": "host.resetPlayback@1",
+      "description": "Stop playback and reset time and position to the start.",
+      "source": "packages/contracts/src/host-requests/reset-playback.ts"
+    },
+    {
+      "symbol": "retryPreferences",
+      "id": "host.retryPreferences@1",
+      "description": "Reload user preferences.",
+      "source": "packages/contracts/src/host-requests/retry-preferences.ts"
+    },
+    {
+      "symbol": "savePreferences",
+      "id": "host.savePreferences@1",
+      "description": "Save renderer and grid preferences.",
+      "source": "packages/contracts/src/host-requests/save-preferences.ts"
+    },
+    {
+      "symbol": "sceneInteraction",
+      "id": "host.scene.interaction@1",
+      "description": "The single hovered and selected scene object IDs in the current project.",
+      "source": "packages/contracts/src/host-data/scene-interaction.ts"
+    },
+    {
+      "symbol": "sceneModels",
+      "id": "host.sceneModels@1",
+      "description": "Cloud instances placed in the current project.",
+      "source": "packages/contracts/src/host-data/scene-models.ts"
+    },
+    {
+      "symbol": "scenePoints",
+      "id": "host.scenePoints@1",
+      "description": "Named scene points used as camera aim and focus targets.",
+      "source": "packages/contracts/src/host-data/scene-points.ts"
+    },
+    {
+      "symbol": "seekPlayback",
+      "id": "host.seekPlayback@1",
+      "description": "Seek playback to a normalized path position using the current motion profile.",
+      "source": "packages/contracts/src/host-requests/seek-playback.ts"
+    },
+    {
+      "symbol": "selectObject",
+      "id": "host.selectObject@1",
+      "description": "Set or clear the selected scene object, optionally checking its current ID.",
+      "source": "packages/contracts/src/host-requests/select-object.ts"
+    },
+    {
+      "symbol": "setActiveTool",
+      "id": "host.setActiveTool@1",
+      "description": "Select or clear the active editor tool.",
+      "source": "packages/contracts/src/host-requests/set-active-tool.ts"
+    },
+    {
+      "symbol": "setCameraMode",
+      "id": "host.setCameraMode@1",
+      "description": "Switch between orbit and trajectory camera modes.",
+      "source": "packages/contracts/src/host-requests/set-camera-mode.ts"
+    },
+    {
+      "symbol": "setLidarTimeline",
+      "id": "host.setLidarTimeline@1",
+      "description": "Set or remove the LiDAR timeline settings.",
+      "source": "packages/contracts/src/host-requests/set-lidar-timeline.ts"
+    },
+    {
+      "symbol": "setPlaybackFrame",
+      "id": "host.setPlaybackFrame@1",
+      "description": "Set the current trajectory playback position and elapsed time.",
+      "source": "packages/contracts/src/host-requests/set-playback-frame.ts"
+    },
+    {
+      "symbol": "setPlaying",
+      "id": "host.setPlaying@1",
+      "description": "Start or pause trajectory playback.",
+      "source": "packages/contracts/src/host-requests/set-playing.ts"
+    },
+    {
+      "symbol": "speedTimeline",
+      "id": "host.speedTimeline@1",
+      "description": "Speed keyframes and motion settings along the trajectory.",
+      "source": "packages/contracts/src/host-data/speed-timeline.ts"
+    },
+    {
+      "symbol": "startCloudPlacement",
+      "id": "host.startCloudPlacement@1",
+      "description": "Start placing the selected library cloud in the scene.",
+      "source": "packages/contracts/src/host-requests/start-cloud-placement.ts"
+    },
+    {
+      "symbol": "toggleTheme",
+      "id": "host.toggleTheme@1",
+      "description": "Switch between light and dark themes.",
+      "source": "packages/contracts/src/host-requests/toggle-theme.ts"
+    },
+    {
+      "symbol": "editorTool",
+      "id": "host.tools.state@1",
+      "description": "Active editor tool, hovered object, and pending cloud placement.",
+      "source": "packages/contracts/src/host-data/editor-tool.ts"
+    },
+    {
+      "symbol": "trajectoryCameraPose",
+      "id": "host.trajectoryCamera.pose@1",
+      "description": "Camera pose evaluated for the current frame and project revision.",
+      "source": "packages/contracts/src/host-data/trajectory-camera-pose.ts"
+    },
+    {
+      "symbol": "trajectoryGeometry",
+      "id": "host.trajectoryGeometry@1",
+      "description": "Editable trajectory segments of the current project.",
+      "source": "packages/contracts/src/host-data/trajectory-geometry.ts"
+    },
+    {
+      "symbol": "updateAnchor",
+      "id": "host.updateAnchor@1",
+      "description": "Update the lift of an existing anchor.",
+      "source": "packages/contracts/src/host-requests/update-anchor.ts"
+    },
+    {
+      "symbol": "updateCameraOrientationKeyframe",
+      "id": "host.updateCameraOrientationKeyframe@1",
+      "description": "Update an existing camera orientation keyframe.",
+      "source": "packages/contracts/src/host-requests/update-camera-orientation-keyframe.ts"
+    },
+    {
+      "symbol": "updateDefaultCameraOrientation",
+      "id": "host.updateDefaultCameraOrientation@1",
+      "description": "Set the default orientation of the trajectory camera.",
+      "source": "packages/contracts/src/host-requests/update-default-camera-orientation.ts"
+    },
+    {
+      "symbol": "updateLibraryDefaults",
+      "id": "host.updateLibraryDefaults@1",
+      "description": "Update the placement defaults of a library cloud.",
+      "source": "packages/contracts/src/host-requests/update-library-defaults.ts"
+    },
+    {
+      "symbol": "uploadLibraryFile",
+      "id": "host.uploadLibraryFile@1",
+      "description": "Upload a cloud file to the library.",
+      "source": "packages/contracts/src/host-requests/upload-library-file.ts"
+    },
+    {
+      "symbol": "verify",
+      "id": "host.verify@1",
+      "description": "Verify the email code for the pending sign-in.",
+      "source": "packages/contracts/src/host-requests/verify.ts"
+    },
+    {
+      "symbol": "lidarHitInstances",
+      "id": "lidar.hitInstances@1"
+    },
+    {
+      "symbol": "lidarRanges",
+      "id": "lidar.ranges@1"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "anchors",
+      "type": "feature",
+      "data": {
+        "label": "anchors",
+        "scope": "project",
+        "source": "packages/features/anchors/src/manifest.ts"
+      }
+    },
+    {
+      "id": "appearance",
+      "type": "feature",
+      "data": {
+        "label": "appearance",
+        "scope": "application",
+        "source": "packages/features/appearance/src/manifest.ts"
+      }
+    },
+    {
+      "id": "camera-aim",
+      "type": "feature",
+      "data": {
+        "label": "camera-aim",
+        "scope": "project",
+        "source": "packages/features/camera-aim/src/manifest.ts"
+      }
+    },
+    {
+      "id": "camera-orientation",
+      "type": "feature",
+      "data": {
+        "label": "camera-orientation",
+        "scope": "project",
+        "source": "packages/features/camera-orientation/src/manifest.ts"
+      }
+    },
+    {
+      "id": "camera-view",
+      "type": "feature",
+      "data": {
+        "label": "camera-view",
+        "scope": "project",
+        "source": "packages/features/camera-view/src/manifest.ts"
+      }
+    },
+    {
+      "id": "chat-agent",
+      "type": "feature",
+      "data": {
+        "label": "chat-agent",
+        "scope": "project",
+        "source": "packages/features/chat-agent/src/manifest.ts"
+      }
+    },
+    {
+      "id": "depth-of-field",
+      "type": "feature",
+      "data": {
+        "label": "depth-of-field",
+        "scope": "project",
+        "source": "packages/features/depth-of-field/src/manifest.ts"
+      }
+    },
+    {
+      "id": "identity",
+      "type": "feature",
+      "data": {
+        "label": "identity",
+        "scope": "application",
+        "source": "packages/features/identity/src/manifest.ts"
+      }
+    },
+    {
+      "id": "library",
+      "type": "feature",
+      "data": {
+        "label": "library",
+        "scope": "application",
+        "source": "packages/features/library/src/manifest.ts"
+      }
+    },
+    {
+      "id": "lidar",
+      "type": "feature",
+      "data": {
+        "label": "lidar",
+        "scope": "project",
+        "source": "packages/features/lidar/src/manifest.ts"
+      }
+    },
+    {
+      "id": "playback",
+      "type": "feature",
+      "data": {
+        "label": "playback",
+        "scope": "project",
+        "source": "packages/features/playback/src/manifest.ts"
+      }
+    },
+    {
+      "id": "projects",
+      "type": "feature",
+      "data": {
+        "label": "projects",
+        "scope": "application",
+        "source": "packages/features/projects/src/manifest.ts"
+      }
+    },
+    {
+      "id": "renderer-preferences",
+      "type": "feature",
+      "data": {
+        "label": "renderer-preferences",
+        "scope": "application",
+        "source": "packages/features/renderer-preferences/src/manifest.ts"
+      }
+    },
+    {
+      "id": "scene-grid",
+      "type": "feature",
+      "data": {
+        "label": "scene-grid",
+        "scope": "application",
+        "source": "packages/features/scene-grid/src/manifest.ts"
+      }
+    },
+    {
+      "id": "scene-models",
+      "type": "feature",
+      "data": {
+        "label": "scene-models",
+        "scope": "project",
+        "source": "packages/features/scene-models/src/manifest.ts"
+      }
+    },
+    {
+      "id": "speed-track",
+      "type": "feature",
+      "data": {
+        "label": "speed-track",
+        "scope": "project",
+        "source": "packages/features/speed-track/src/manifest.ts"
+      }
+    },
+    {
+      "id": "trajectory",
+      "type": "feature",
+      "data": {
+        "label": "trajectory",
+        "scope": "project",
+        "source": "packages/features/trajectory/src/manifest.ts"
+      }
+    },
+    {
+      "id": "host.addAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "addAnchor",
+        "id": "host.addAnchor@1",
+        "description": "Add an anchor to the current project.",
+        "source": "packages/contracts/src/host-requests/add-anchor.ts"
+      }
+    },
+    {
+      "id": "host.addCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "addCameraOrientationKeyframe",
+        "id": "host.addCameraOrientationKeyframe@1",
+        "description": "Add a camera orientation keyframe.",
+        "source": "packages/contracts/src/host-requests/add-camera-orientation-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.addDepthOfFieldKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "addDepthOfFieldKeyframe",
+        "id": "host.addDepthOfFieldKeyframe@1",
+        "description": "Add a depth-of-field keyframe.",
+        "source": "packages/contracts/src/host-requests/add-depth-of-field-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.aimTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "aimTimeline",
+        "id": "host.aimTimeline@1",
+        "description": "Camera aim targets and keyframes along the trajectory.",
+        "source": "packages/contracts/src/host-data/aim-timeline.ts"
+      }
+    },
+    {
+      "id": "host.anchors@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors",
+        "id": "host.anchors@1",
+        "description": "Anchors defining the current project path.",
+        "source": "packages/contracts/src/host-data/anchors.ts"
+      }
+    },
+    {
+      "id": "host.appearance.theme@1",
+      "type": "contract",
+      "data": {
+        "symbol": "themeState",
+        "id": "host.appearance.theme@1",
+        "description": "Current light or dark appearance theme.",
+        "source": "packages/contracts/src/host-data/theme-state.ts"
+      }
+    },
+    {
+      "id": "host.camera.mode@1",
+      "type": "contract",
+      "data": {
+        "symbol": "cameraMode",
+        "id": "host.camera.mode@1",
+        "description": "Current orbit or trajectory camera mode.",
+        "source": "packages/contracts/src/host-data/camera-mode.ts"
+      }
+    },
+    {
+      "id": "host.cancelLogin@1",
+      "type": "contract",
+      "data": {
+        "symbol": "cancelLogin",
+        "id": "host.cancelLogin@1",
+        "description": "Cancel the pending sign-in and clear its error.",
+        "source": "packages/contracts/src/host-requests/cancel-login.ts"
+      }
+    },
+    {
+      "id": "host.chat.send@1",
+      "type": "contract",
+      "data": {
+        "symbol": "sendChatMessage",
+        "id": "host.chat.send@1",
+        "description": "Send a message to the trajectory agent and return the resulting trajectory.",
+        "source": "packages/contracts/src/host-requests/send-chat-message.ts"
+      }
+    },
+    {
+      "id": "host.chatHistory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "chatHistory",
+        "id": "host.chatHistory@1",
+        "description": "Persisted messages in the trajectory agent conversation.",
+        "source": "packages/contracts/src/host-data/chat-history.ts"
+      }
+    },
+    {
+      "id": "host.clearTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "clearTrajectory",
+        "id": "host.clearTrajectory@1",
+        "description": "Clear the trajectory and reset related editor state.",
+        "source": "packages/contracts/src/host-requests/clear-trajectory.ts"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "compiledTrajectory",
+        "id": "host.compiledTrajectory@1",
+        "description": "Compiled trajectory geometry, motion, and camera tracks.",
+        "source": "packages/contracts/src/host-data/compiled-trajectory.ts"
+      }
+    },
+    {
+      "id": "host.createProject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "createProject",
+        "id": "host.createProject@1",
+        "description": "Create a project with the given name.",
+        "source": "packages/contracts/src/host-requests/create-project.ts"
+      }
+    },
+    {
+      "id": "host.deleteAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteAnchor",
+        "id": "host.deleteAnchor@1",
+        "description": "Delete an anchor from the current project.",
+        "source": "packages/contracts/src/host-requests/delete-anchor.ts"
+      }
+    },
+    {
+      "id": "host.deleteCameraKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteCameraKeyframe",
+        "id": "host.deleteCameraKeyframe@1",
+        "description": "Delete a camera aim keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-camera-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.deleteCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteCameraOrientationKeyframe",
+        "id": "host.deleteCameraOrientationKeyframe@1",
+        "description": "Delete a camera orientation keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-camera-orientation-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.deleteDepthOfFieldKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteDepthOfFieldKeyframe",
+        "id": "host.deleteDepthOfFieldKeyframe@1",
+        "description": "Delete a depth-of-field keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-depth-of-field-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.deleteLibraryAssets@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteLibraryAssets",
+        "id": "host.deleteLibraryAssets@1",
+        "description": "Delete library clouds by their IDs.",
+        "source": "packages/contracts/src/host-requests/delete-library-assets.ts"
+      }
+    },
+    {
+      "id": "host.deleteProject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteProject",
+        "id": "host.deleteProject@1",
+        "description": "Delete a project by its ID.",
+        "source": "packages/contracts/src/host-requests/delete-project.ts"
+      }
+    },
+    {
+      "id": "host.deleteSpeedKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteSpeedKeyframe",
+        "id": "host.deleteSpeedKeyframe@1",
+        "description": "Delete a trajectory speed keyframe.",
+        "source": "packages/contracts/src/host-requests/delete-speed-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.depthOfFieldTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "depthOfFieldTimeline",
+        "id": "host.depthOfFieldTimeline@1",
+        "description": "Depth-of-field focus and blur keyframes.",
+        "source": "packages/contracts/src/host-data/depth-of-field-timeline.ts"
+      }
+    },
+    {
+      "id": "host.gaussians.scene@1",
+      "type": "contract",
+      "data": {
+        "symbol": "gaussianScene",
+        "id": "host.gaussians.scene@1"
+      }
+    },
+    {
+      "id": "host.hoverObject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "hoverObject",
+        "id": "host.hoverObject@1",
+        "description": "Set or clear the hovered scene object, optionally checking its current ID.",
+        "source": "packages/contracts/src/host-requests/hover-object.ts"
+      }
+    },
+    {
+      "id": "host.identity.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identityState",
+        "id": "host.identity.state@1",
+        "description": "Current session and sign-in progress.",
+        "source": "packages/contracts/src/host-data/identity-state.ts"
+      }
+    },
+    {
+      "id": "host.libraryAsset@1",
+      "type": "contract",
+      "data": {
+        "symbol": "libraryAsset",
+        "id": "host.libraryAsset@1",
+        "description": "Details and placement defaults of the current library cloud.",
+        "source": "packages/contracts/src/host-data/library-asset.ts"
+      }
+    },
+    {
+      "id": "host.libraryCatalog@1",
+      "type": "contract",
+      "data": {
+        "symbol": "libraryCatalog",
+        "id": "host.libraryCatalog@1",
+        "description": "Library clouds available for browsing and placement.",
+        "source": "packages/contracts/src/host-data/library-catalog.ts"
+      }
+    },
+    {
+      "id": "host.lidarTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarTimeline",
+        "id": "host.lidarTimeline@1",
+        "description": "LiDAR scan settings and their trajectory position.",
+        "source": "packages/contracts/src/host-data/lidar-timeline.ts"
+      }
+    },
+    {
+      "id": "host.login@1",
+      "type": "contract",
+      "data": {
+        "symbol": "login",
+        "id": "host.login@1",
+        "description": "Start sign-in with a username and password.",
+        "source": "packages/contracts/src/host-requests/login.ts"
+      }
+    },
+    {
+      "id": "host.logout@1",
+      "type": "contract",
+      "data": {
+        "symbol": "logout",
+        "id": "host.logout@1",
+        "description": "Sign out of the current editor session.",
+        "source": "packages/contracts/src/host-requests/logout.ts"
+      }
+    },
+    {
+      "id": "host.navigate@1",
+      "type": "contract",
+      "data": {
+        "symbol": "navigate",
+        "id": "host.navigate@1",
+        "description": "Navigate to a supported application route.",
+        "source": "packages/contracts/src/host-requests/navigate.ts"
+      }
+    },
+    {
+      "id": "host.orientationTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "orientationTimeline",
+        "id": "host.orientationTimeline@1",
+        "description": "Default camera orientation and orientation keyframes.",
+        "source": "packages/contracts/src/host-data/orientation-timeline.ts"
+      }
+    },
+    {
+      "id": "host.playback.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "playbackState",
+        "id": "host.playback.state@1",
+        "description": "Trajectory playback time, position, and playing state.",
+        "source": "packages/contracts/src/host-data/playback-state.ts"
+      }
+    },
+    {
+      "id": "host.preferences.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "preferencesState",
+        "id": "host.preferences.state@1",
+        "description": "Renderer and grid preferences with loading and save status.",
+        "source": "packages/contracts/src/host-data/preferences-state.ts"
+      }
+    },
+    {
+      "id": "host.project.permissions@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projectPermissions",
+        "id": "host.project.permissions@1",
+        "description": "Permissions for editing the current project.",
+        "source": "packages/contracts/src/host-data/project-permissions.ts"
+      }
+    },
+    {
+      "id": "host.projectCloudAction@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projectCloudAction",
+        "id": "host.projectCloudAction@1",
+        "description": "Add, remove, or update a cloud in the current project.",
+        "source": "packages/contracts/src/host-requests/project-cloud-action.ts"
+      }
+    },
+    {
+      "id": "host.projectsCatalog@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projectsCatalog",
+        "id": "host.projectsCatalog@1",
+        "description": "Projects available in the project list.",
+        "source": "packages/contracts/src/host-data/projects-catalog.ts"
+      }
+    },
+    {
+      "id": "host.resend@1",
+      "type": "contract",
+      "data": {
+        "symbol": "resend",
+        "id": "host.resend@1",
+        "description": "Resend the email code for the pending sign-in.",
+        "source": "packages/contracts/src/host-requests/resend.ts"
+      }
+    },
+    {
+      "id": "host.resetPlayback@1",
+      "type": "contract",
+      "data": {
+        "symbol": "resetPlayback",
+        "id": "host.resetPlayback@1",
+        "description": "Stop playback and reset time and position to the start.",
+        "source": "packages/contracts/src/host-requests/reset-playback.ts"
+      }
+    },
+    {
+      "id": "host.retryPreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "retryPreferences",
+        "id": "host.retryPreferences@1",
+        "description": "Reload user preferences.",
+        "source": "packages/contracts/src/host-requests/retry-preferences.ts"
+      }
+    },
+    {
+      "id": "host.savePreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "savePreferences",
+        "id": "host.savePreferences@1",
+        "description": "Save renderer and grid preferences.",
+        "source": "packages/contracts/src/host-requests/save-preferences.ts"
+      }
+    },
+    {
+      "id": "host.scene.interaction@1",
+      "type": "contract",
+      "data": {
+        "symbol": "sceneInteraction",
+        "id": "host.scene.interaction@1",
+        "description": "The single hovered and selected scene object IDs in the current project.",
+        "source": "packages/contracts/src/host-data/scene-interaction.ts"
+      }
+    },
+    {
+      "id": "host.sceneModels@1",
+      "type": "contract",
+      "data": {
+        "symbol": "sceneModels",
+        "id": "host.sceneModels@1",
+        "description": "Cloud instances placed in the current project.",
+        "source": "packages/contracts/src/host-data/scene-models.ts"
+      }
+    },
+    {
+      "id": "host.scenePoints@1",
+      "type": "contract",
+      "data": {
+        "symbol": "scenePoints",
+        "id": "host.scenePoints@1",
+        "description": "Named scene points used as camera aim and focus targets.",
+        "source": "packages/contracts/src/host-data/scene-points.ts"
+      }
+    },
+    {
+      "id": "host.seekPlayback@1",
+      "type": "contract",
+      "data": {
+        "symbol": "seekPlayback",
+        "id": "host.seekPlayback@1",
+        "description": "Seek playback to a normalized path position using the current motion profile.",
+        "source": "packages/contracts/src/host-requests/seek-playback.ts"
+      }
+    },
+    {
+      "id": "host.selectObject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "selectObject",
+        "id": "host.selectObject@1",
+        "description": "Set or clear the selected scene object, optionally checking its current ID.",
+        "source": "packages/contracts/src/host-requests/select-object.ts"
+      }
+    },
+    {
+      "id": "host.setActiveTool@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setActiveTool",
+        "id": "host.setActiveTool@1",
+        "description": "Select or clear the active editor tool.",
+        "source": "packages/contracts/src/host-requests/set-active-tool.ts"
+      }
+    },
+    {
+      "id": "host.setCameraMode@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setCameraMode",
+        "id": "host.setCameraMode@1",
+        "description": "Switch between orbit and trajectory camera modes.",
+        "source": "packages/contracts/src/host-requests/set-camera-mode.ts"
+      }
+    },
+    {
+      "id": "host.setLidarTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setLidarTimeline",
+        "id": "host.setLidarTimeline@1",
+        "description": "Set or remove the LiDAR timeline settings.",
+        "source": "packages/contracts/src/host-requests/set-lidar-timeline.ts"
+      }
+    },
+    {
+      "id": "host.setPlaybackFrame@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setPlaybackFrame",
+        "id": "host.setPlaybackFrame@1",
+        "description": "Set the current trajectory playback position and elapsed time.",
+        "source": "packages/contracts/src/host-requests/set-playback-frame.ts"
+      }
+    },
+    {
+      "id": "host.setPlaying@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setPlaying",
+        "id": "host.setPlaying@1",
+        "description": "Start or pause trajectory playback.",
+        "source": "packages/contracts/src/host-requests/set-playing.ts"
+      }
+    },
+    {
+      "id": "host.speedTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "speedTimeline",
+        "id": "host.speedTimeline@1",
+        "description": "Speed keyframes and motion settings along the trajectory.",
+        "source": "packages/contracts/src/host-data/speed-timeline.ts"
+      }
+    },
+    {
+      "id": "host.startCloudPlacement@1",
+      "type": "contract",
+      "data": {
+        "symbol": "startCloudPlacement",
+        "id": "host.startCloudPlacement@1",
+        "description": "Start placing the selected library cloud in the scene.",
+        "source": "packages/contracts/src/host-requests/start-cloud-placement.ts"
+      }
+    },
+    {
+      "id": "host.toggleTheme@1",
+      "type": "contract",
+      "data": {
+        "symbol": "toggleTheme",
+        "id": "host.toggleTheme@1",
+        "description": "Switch between light and dark themes.",
+        "source": "packages/contracts/src/host-requests/toggle-theme.ts"
+      }
+    },
+    {
+      "id": "host.tools.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "editorTool",
+        "id": "host.tools.state@1",
+        "description": "Active editor tool, hovered object, and pending cloud placement.",
+        "source": "packages/contracts/src/host-data/editor-tool.ts"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectoryCameraPose",
+        "id": "host.trajectoryCamera.pose@1",
+        "description": "Camera pose evaluated for the current frame and project revision.",
+        "source": "packages/contracts/src/host-data/trajectory-camera-pose.ts"
+      }
+    },
+    {
+      "id": "host.trajectoryGeometry@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectoryGeometry",
+        "id": "host.trajectoryGeometry@1",
+        "description": "Editable trajectory segments of the current project.",
+        "source": "packages/contracts/src/host-data/trajectory-geometry.ts"
+      }
+    },
+    {
+      "id": "host.updateAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateAnchor",
+        "id": "host.updateAnchor@1",
+        "description": "Update the lift of an existing anchor.",
+        "source": "packages/contracts/src/host-requests/update-anchor.ts"
+      }
+    },
+    {
+      "id": "host.updateCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateCameraOrientationKeyframe",
+        "id": "host.updateCameraOrientationKeyframe@1",
+        "description": "Update an existing camera orientation keyframe.",
+        "source": "packages/contracts/src/host-requests/update-camera-orientation-keyframe.ts"
+      }
+    },
+    {
+      "id": "host.updateDefaultCameraOrientation@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateDefaultCameraOrientation",
+        "id": "host.updateDefaultCameraOrientation@1",
+        "description": "Set the default orientation of the trajectory camera.",
+        "source": "packages/contracts/src/host-requests/update-default-camera-orientation.ts"
+      }
+    },
+    {
+      "id": "host.updateLibraryDefaults@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateLibraryDefaults",
+        "id": "host.updateLibraryDefaults@1",
+        "description": "Update the placement defaults of a library cloud.",
+        "source": "packages/contracts/src/host-requests/update-library-defaults.ts"
+      }
+    },
+    {
+      "id": "host.uploadLibraryFile@1",
+      "type": "contract",
+      "data": {
+        "symbol": "uploadLibraryFile",
+        "id": "host.uploadLibraryFile@1",
+        "description": "Upload a cloud file to the library.",
+        "source": "packages/contracts/src/host-requests/upload-library-file.ts"
+      }
+    },
+    {
+      "id": "host.verify@1",
+      "type": "contract",
+      "data": {
+        "symbol": "verify",
+        "id": "host.verify@1",
+        "description": "Verify the email code for the pending sign-in.",
+        "source": "packages/contracts/src/host-requests/verify.ts"
+      }
+    },
+    {
+      "id": "lidar.hitInstances@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarHitInstances",
+        "id": "lidar.hitInstances@1"
+      }
+    },
+    {
+      "id": "lidar.ranges@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarRanges",
+        "id": "lidar.ranges@1"
+      }
+    },
+    {
+      "id": "slot:header.controls",
+      "type": "slot",
+      "data": {
+        "label": "header.controls"
+      }
+    },
+    {
+      "id": "slot:library.content",
+      "type": "slot",
+      "data": {
+        "label": "library.content"
+      }
+    },
+    {
+      "id": "slot:library.details",
+      "type": "slot",
+      "data": {
+        "label": "library.details"
+      }
+    },
+    {
+      "id": "slot:project.header.status",
+      "type": "slot",
+      "data": {
+        "label": "project.header.status"
+      }
+    },
+    {
+      "id": "slot:project.root",
+      "type": "slot",
+      "data": {
+        "label": "project.root"
+      }
+    },
+    {
+      "id": "slot:project.sidebar",
+      "type": "slot",
+      "data": {
+        "label": "project.sidebar"
+      }
+    },
+    {
+      "id": "slot:projects.content",
+      "type": "slot",
+      "data": {
+        "label": "projects.content"
+      }
+    },
+    {
+      "id": "slot:scene.hints",
+      "type": "slot",
+      "data": {
+        "label": "scene.hints"
+      }
+    },
+    {
+      "id": "slot:scene.overlay",
+      "type": "slot",
+      "data": {
+        "label": "scene.overlay"
+      }
+    },
+    {
+      "id": "slot:scene.root",
+      "type": "slot",
+      "data": {
+        "label": "scene.root"
+      }
+    },
+    {
+      "id": "slot:scene.toolbar",
+      "type": "slot",
+      "data": {
+        "label": "scene.toolbar"
+      }
+    },
+    {
+      "id": "slot:settings.content",
+      "type": "slot",
+      "data": {
+        "label": "settings.content"
+      }
+    },
+    {
+      "id": "slot:timeline.controls",
+      "type": "slot",
+      "data": {
+        "label": "timeline.controls"
+      }
+    },
+    {
+      "id": "slot:timeline.effects",
+      "type": "slot",
+      "data": {
+        "label": "timeline.effects"
+      }
+    },
+    {
+      "id": "slot:timeline.tracks",
+      "type": "slot",
+      "data": {
+        "label": "timeline.tracks"
+      }
+    },
+    {
+      "id": "slot:workspace.commands",
+      "type": "slot",
+      "data": {
+        "label": "workspace.commands"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "host.project.permissions@1->anchors",
+      "source": "host.project.permissions@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.anchors@1->anchors",
+      "source": "host.anchors@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.tools.state@1->anchors",
+      "source": "host.tools.state@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.camera.mode@1->anchors",
+      "source": "host.camera.mode@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.scene.interaction@1->anchors",
+      "source": "host.scene.interaction@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "anchors->host.addAnchor@1",
+      "source": "anchors",
+      "target": "host.addAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.updateAnchor@1",
+      "source": "anchors",
+      "target": "host.updateAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.deleteAnchor@1",
+      "source": "anchors",
+      "target": "host.deleteAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.setActiveTool@1",
+      "source": "anchors",
+      "target": "host.setActiveTool@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.hoverObject@1",
+      "source": "anchors",
+      "target": "host.hoverObject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.selectObject@1",
+      "source": "anchors",
+      "target": "host.selectObject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors.status->slot:project.header.status",
+      "source": "anchors",
+      "target": "slot:project.header.status",
+      "data": {
+        "kind": "contributes",
+        "contribution": "anchors.status"
+      }
+    },
+    {
+      "id": "anchors.hint->slot:scene.hints",
+      "source": "anchors",
+      "target": "slot:scene.hints",
+      "data": {
+        "kind": "contributes",
+        "contribution": "anchors.hint"
+      }
+    },
+    {
+      "id": "anchors.scene->slot:scene.root",
+      "source": "anchors",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "anchors.scene"
+      }
+    },
+    {
+      "id": "host.appearance.theme@1->appearance",
+      "source": "host.appearance.theme@1",
+      "target": "appearance",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "appearance->host.toggleTheme@1",
+      "source": "appearance",
+      "target": "host.toggleTheme@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "appearance.toggle->slot:header.controls",
+      "source": "appearance",
+      "target": "slot:header.controls",
+      "data": {
+        "kind": "contributes",
+        "contribution": "appearance.toggle"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->camera-aim",
+      "source": "host.compiledTrajectory@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->camera-aim",
+      "source": "host.project.permissions@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.aimTimeline@1->camera-aim",
+      "source": "host.aimTimeline@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.scenePoints@1->camera-aim",
+      "source": "host.scenePoints@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "camera-aim->host.deleteCameraKeyframe@1",
+      "source": "camera-aim",
+      "target": "host.deleteCameraKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-aim.track->slot:timeline.tracks",
+      "source": "camera-aim",
+      "target": "slot:timeline.tracks",
+      "data": {
+        "kind": "contributes",
+        "contribution": "camera-aim.track"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->camera-orientation",
+      "source": "host.compiledTrajectory@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->camera-orientation",
+      "source": "host.project.permissions@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.orientationTimeline@1->camera-orientation",
+      "source": "host.orientationTimeline@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "camera-orientation->host.addCameraOrientationKeyframe@1",
+      "source": "camera-orientation",
+      "target": "host.addCameraOrientationKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation->host.updateCameraOrientationKeyframe@1",
+      "source": "camera-orientation",
+      "target": "host.updateCameraOrientationKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation->host.updateDefaultCameraOrientation@1",
+      "source": "camera-orientation",
+      "target": "host.updateDefaultCameraOrientation@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation->host.deleteCameraOrientationKeyframe@1",
+      "source": "camera-orientation",
+      "target": "host.deleteCameraOrientationKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation.track->slot:timeline.tracks",
+      "source": "camera-orientation",
+      "target": "slot:timeline.tracks",
+      "data": {
+        "kind": "contributes",
+        "contribution": "camera-orientation.track"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->camera-view",
+      "source": "host.compiledTrajectory@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.playback.state@1->camera-view",
+      "source": "host.playback.state@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.tools.state@1->camera-view",
+      "source": "host.tools.state@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1->camera-view",
+      "source": "host.trajectoryCamera.pose@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->camera-view",
+      "source": "host.project.permissions@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.camera.mode@1->camera-view",
+      "source": "host.camera.mode@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "camera-view->host.setCameraMode@1",
+      "source": "camera-view",
+      "target": "host.setCameraMode@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-view.toolbar->slot:scene.toolbar",
+      "source": "camera-view",
+      "target": "slot:scene.toolbar",
+      "data": {
+        "kind": "contributes",
+        "contribution": "camera-view.toolbar"
+      }
+    },
+    {
+      "id": "camera-view.scene->slot:scene.root",
+      "source": "camera-view",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "camera-view.scene"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->chat-agent",
+      "source": "host.project.permissions@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.anchors@1->chat-agent",
+      "source": "host.anchors@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.chatHistory@1->chat-agent",
+      "source": "host.chatHistory@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "chat-agent->host.chat.send@1",
+      "source": "chat-agent",
+      "target": "host.chat.send@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "chat-agent.sidebar->slot:project.sidebar",
+      "source": "chat-agent",
+      "target": "slot:project.sidebar",
+      "data": {
+        "kind": "contributes",
+        "contribution": "chat-agent.sidebar"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->depth-of-field",
+      "source": "host.compiledTrajectory@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.playback.state@1->depth-of-field",
+      "source": "host.playback.state@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.camera.mode@1->depth-of-field",
+      "source": "host.camera.mode@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1->depth-of-field",
+      "source": "host.trajectoryCamera.pose@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->depth-of-field",
+      "source": "host.project.permissions@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.depthOfFieldTimeline@1->depth-of-field",
+      "source": "host.depthOfFieldTimeline@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.scenePoints@1->depth-of-field",
+      "source": "host.scenePoints@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "depth-of-field->host.addDepthOfFieldKeyframe@1",
+      "source": "depth-of-field",
+      "target": "host.addDepthOfFieldKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "depth-of-field->host.deleteDepthOfFieldKeyframe@1",
+      "source": "depth-of-field",
+      "target": "host.deleteDepthOfFieldKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "depth-of-field.effect->slot:timeline.effects",
+      "source": "depth-of-field",
+      "target": "slot:timeline.effects",
+      "data": {
+        "kind": "contributes",
+        "contribution": "depth-of-field.effect"
+      }
+    },
+    {
+      "id": "depth-of-field.scene->slot:scene.root",
+      "source": "depth-of-field",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "depth-of-field.scene"
+      }
+    },
+    {
+      "id": "depth-of-field.track->slot:timeline.tracks",
+      "source": "depth-of-field",
+      "target": "slot:timeline.tracks",
+      "data": {
+        "kind": "contributes",
+        "contribution": "depth-of-field.track"
+      }
+    },
+    {
+      "id": "host.identity.state@1->identity",
+      "source": "host.identity.state@1",
+      "target": "identity",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->identity",
+      "source": "host.project.permissions@1",
+      "target": "identity",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "identity->host.login@1",
+      "source": "identity",
+      "target": "host.login@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.verify@1",
+      "source": "identity",
+      "target": "host.verify@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.resend@1",
+      "source": "identity",
+      "target": "host.resend@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.cancelLogin@1",
+      "source": "identity",
+      "target": "host.cancelLogin@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.logout@1",
+      "source": "identity",
+      "target": "host.logout@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity.profile->slot:header.controls",
+      "source": "identity",
+      "target": "slot:header.controls",
+      "data": {
+        "kind": "contributes",
+        "contribution": "identity.profile"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->library",
+      "source": "host.project.permissions@1",
+      "target": "library",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.libraryCatalog@1->library",
+      "source": "host.libraryCatalog@1",
+      "target": "library",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.libraryAsset@1->library",
+      "source": "host.libraryAsset@1",
+      "target": "library",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "library->host.uploadLibraryFile@1",
+      "source": "library",
+      "target": "host.uploadLibraryFile@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library->host.deleteLibraryAssets@1",
+      "source": "library",
+      "target": "host.deleteLibraryAssets@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library->host.updateLibraryDefaults@1",
+      "source": "library",
+      "target": "host.updateLibraryDefaults@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library->host.navigate@1",
+      "source": "library",
+      "target": "host.navigate@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library.content->slot:library.content",
+      "source": "library",
+      "target": "slot:library.content",
+      "data": {
+        "kind": "contributes",
+        "contribution": "library.content"
+      }
+    },
+    {
+      "id": "library.details->slot:library.details",
+      "source": "library",
+      "target": "slot:library.details",
+      "data": {
+        "kind": "contributes",
+        "contribution": "library.details"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->lidar",
+      "source": "host.compiledTrajectory@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1->lidar",
+      "source": "host.trajectoryCamera.pose@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->lidar",
+      "source": "host.project.permissions@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.lidarTimeline@1->lidar",
+      "source": "host.lidarTimeline@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "lidar->host.setLidarTimeline@1",
+      "source": "lidar",
+      "target": "host.setLidarTimeline@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "lidar.effect->slot:timeline.effects",
+      "source": "lidar",
+      "target": "slot:timeline.effects",
+      "data": {
+        "kind": "contributes",
+        "contribution": "lidar.effect"
+      }
+    },
+    {
+      "id": "host.gaussians.scene@1->lidar.sensor",
+      "source": "host.gaussians.scene@1",
+      "target": "lidar",
+      "data": {
+        "kind": "gpu-input",
+        "pass": "lidar.sensor"
+      }
+    },
+    {
+      "id": "lidar.sensor->lidar.ranges@1",
+      "source": "lidar",
+      "target": "lidar.ranges@1",
+      "data": {
+        "kind": "gpu-output",
+        "pass": "lidar.sensor"
+      }
+    },
+    {
+      "id": "lidar.sensor->lidar.hitInstances@1",
+      "source": "lidar",
+      "target": "lidar.hitInstances@1",
+      "data": {
+        "kind": "gpu-output",
+        "pass": "lidar.sensor"
+      }
+    },
+    {
+      "id": "lidar.scene->slot:scene.root",
+      "source": "lidar",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "lidar.scene"
+      }
+    },
+    {
+      "id": "lidar.track->slot:timeline.tracks",
+      "source": "lidar",
+      "target": "slot:timeline.tracks",
+      "data": {
+        "kind": "contributes",
+        "contribution": "lidar.track"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->playback",
+      "source": "host.compiledTrajectory@1",
+      "target": "playback",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.scene.interaction@1->playback",
+      "source": "host.scene.interaction@1",
+      "target": "playback",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.playback.state@1->playback",
+      "source": "host.playback.state@1",
+      "target": "playback",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "playback->host.seekPlayback@1",
+      "source": "playback",
+      "target": "host.seekPlayback@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback->host.selectObject@1",
+      "source": "playback",
+      "target": "host.selectObject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback->host.setPlaybackFrame@1",
+      "source": "playback",
+      "target": "host.setPlaybackFrame@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback->host.resetPlayback@1",
+      "source": "playback",
+      "target": "host.resetPlayback@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback->host.setPlaying@1",
+      "source": "playback",
+      "target": "host.setPlaying@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback.runtime->slot:project.root",
+      "source": "playback",
+      "target": "slot:project.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "playback.runtime"
+      }
+    },
+    {
+      "id": "playback.controls->slot:timeline.controls",
+      "source": "playback",
+      "target": "slot:timeline.controls",
+      "data": {
+        "kind": "contributes",
+        "contribution": "playback.controls"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->projects",
+      "source": "host.project.permissions@1",
+      "target": "projects",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.projectsCatalog@1->projects",
+      "source": "host.projectsCatalog@1",
+      "target": "projects",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "projects->host.createProject@1",
+      "source": "projects",
+      "target": "host.createProject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "projects->host.deleteProject@1",
+      "source": "projects",
+      "target": "host.deleteProject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "projects->host.navigate@1",
+      "source": "projects",
+      "target": "host.navigate@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "projects.content->slot:projects.content",
+      "source": "projects",
+      "target": "slot:projects.content",
+      "data": {
+        "kind": "contributes",
+        "contribution": "projects.content"
+      }
+    },
+    {
+      "id": "host.preferences.state@1->renderer-preferences",
+      "source": "host.preferences.state@1",
+      "target": "renderer-preferences",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "renderer-preferences->host.savePreferences@1",
+      "source": "renderer-preferences",
+      "target": "host.savePreferences@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "renderer-preferences->host.retryPreferences@1",
+      "source": "renderer-preferences",
+      "target": "host.retryPreferences@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "renderer-preferences.settings->slot:settings.content",
+      "source": "renderer-preferences",
+      "target": "slot:settings.content",
+      "data": {
+        "kind": "contributes",
+        "contribution": "renderer-preferences.settings"
+      }
+    },
+    {
+      "id": "host.preferences.state@1->scene-grid",
+      "source": "host.preferences.state@1",
+      "target": "scene-grid",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "scene-grid->host.savePreferences@1",
+      "source": "scene-grid",
+      "target": "host.savePreferences@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-grid.scene->slot:scene.root",
+      "source": "scene-grid",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "scene-grid.scene"
+      }
+    },
+    {
+      "id": "scene-grid.settings->slot:settings.content",
+      "source": "scene-grid",
+      "target": "slot:settings.content",
+      "data": {
+        "kind": "contributes",
+        "contribution": "scene-grid.settings"
+      }
+    },
+    {
+      "id": "host.camera.mode@1->scene-models",
+      "source": "host.camera.mode@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->scene-models",
+      "source": "host.project.permissions@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.libraryCatalog@1->scene-models",
+      "source": "host.libraryCatalog@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.sceneModels@1->scene-models",
+      "source": "host.sceneModels@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.tools.state@1->scene-models",
+      "source": "host.tools.state@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "scene-models->host.projectCloudAction@1",
+      "source": "scene-models",
+      "target": "host.projectCloudAction@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-models->host.startCloudPlacement@1",
+      "source": "scene-models",
+      "target": "host.startCloudPlacement@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-models->host.setActiveTool@1",
+      "source": "scene-models",
+      "target": "host.setActiveTool@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-models.hint->slot:scene.hints",
+      "source": "scene-models",
+      "target": "slot:scene.hints",
+      "data": {
+        "kind": "contributes",
+        "contribution": "scene-models.hint"
+      }
+    },
+    {
+      "id": "scene-models.commands->slot:workspace.commands",
+      "source": "scene-models",
+      "target": "slot:workspace.commands",
+      "data": {
+        "kind": "contributes",
+        "contribution": "scene-models.commands"
+      }
+    },
+    {
+      "id": "scene-models.scene->slot:scene.root",
+      "source": "scene-models",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "scene-models.scene"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->speed-track",
+      "source": "host.compiledTrajectory@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.playback.state@1->speed-track",
+      "source": "host.playback.state@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->speed-track",
+      "source": "host.project.permissions@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.speedTimeline@1->speed-track",
+      "source": "host.speedTimeline@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "speed-track->host.deleteSpeedKeyframe@1",
+      "source": "speed-track",
+      "target": "host.deleteSpeedKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "speed-track.track->slot:timeline.tracks",
+      "source": "speed-track",
+      "target": "slot:timeline.tracks",
+      "data": {
+        "kind": "contributes",
+        "contribution": "speed-track.track"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1->trajectory",
+      "source": "host.compiledTrajectory@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.camera.mode@1->trajectory",
+      "source": "host.camera.mode@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.playback.state@1->trajectory",
+      "source": "host.playback.state@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->trajectory",
+      "source": "host.project.permissions@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.trajectoryGeometry@1->trajectory",
+      "source": "host.trajectoryGeometry@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.tools.state@1->trajectory",
+      "source": "host.tools.state@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "host.scene.interaction@1->trajectory",
+      "source": "host.scene.interaction@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads"
+      }
+    },
+    {
+      "id": "trajectory->host.seekPlayback@1",
+      "source": "trajectory",
+      "target": "host.seekPlayback@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.clearTrajectory@1",
+      "source": "trajectory",
+      "target": "host.clearTrajectory@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.hoverObject@1",
+      "source": "trajectory",
+      "target": "host.hoverObject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.selectObject@1",
+      "source": "trajectory",
+      "target": "host.selectObject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory.status->slot:project.header.status",
+      "source": "trajectory",
+      "target": "slot:project.header.status",
+      "data": {
+        "kind": "contributes",
+        "contribution": "trajectory.status"
+      }
+    },
+    {
+      "id": "trajectory.overlay->slot:scene.overlay",
+      "source": "trajectory",
+      "target": "slot:scene.overlay",
+      "data": {
+        "kind": "contributes",
+        "contribution": "trajectory.overlay"
+      }
+    },
+    {
+      "id": "trajectory.scene->slot:scene.root",
+      "source": "trajectory",
+      "target": "slot:scene.root",
+      "data": {
+        "kind": "contributes",
+        "contribution": "trajectory.scene"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "contract": "host.addAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 99,
+      "adapter": "async (input) => { await addAnchorMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.addCameraOrientationKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 108,
+      "adapter": "async (input) => { await addCameraOrientationKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.addDepthOfFieldKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 138,
+      "adapter": "async (input) => { await addDepthOfFieldKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.aimTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 70,
+      "adapter": "api.useGetAimTimeline(projectId)"
+    },
+    {
+      "contract": "host.anchors@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 62,
+      "adapter": "api.useListAnchors(projectId)"
+    },
+    {
+      "contract": "host.appearance.theme@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 70,
+      "adapter": "theme.theme"
+    },
+    {
+      "contract": "host.camera.mode@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 58,
+      "adapter": "camera"
+    },
+    {
+      "contract": "host.cancelLogin@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 78,
+      "adapter": "() => auth.cancelLogin()"
+    },
+    {
+      "contract": "host.chat.send@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 151,
+      "adapter": "async (input, signal) => { const response = await sendChatMessageMutation.mutateAsync({ ...input, onAccepted: () => { if (!signal.aborted) input.onAccepted(); }, }); if (!signal.aborted && response.compiled.position_segments.length) store .getState() .sceneInteractionActions.selectObject({ id: trajectoryObjectId }); return response; }"
+    },
+    {
+      "contract": "host.chatHistory@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 82,
+      "adapter": "api.useListChatMessages(projectId)"
+    },
+    {
+      "contract": "host.clearTrajectory@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 206,
+      "adapter": "async (input, signal) => { await clearTrajectoryMutation.mutateAsync(input); if (!signal.aborted) { store.getState().sceneInteractionActions.selectObject({ id: null, ifCurrentId: trajectoryObjectId, }); store.getState().sceneInteractionActions.hoverObject({ id: null, ifCurrentId: trajectoryObjectId, }); store.getState().playbackActions.resetPlayback(); } }"
+    },
+    {
+      "contract": "host.compiledTrajectory@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 84,
+      "adapter": "compiled"
+    },
+    {
+      "contract": "host.createProject@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 90,
+      "adapter": "(name) => create.mutateAsync(name)"
+    },
+    {
+      "contract": "host.deleteAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 165,
+      "adapter": "async (input, signal) => { await deleteAnchorMutation.mutateAsync(input); if (!signal.aborted) { const id = anchorObjectId(input); store .getState() .sceneInteractionActions.hoverObject({ id: null, ifCurrentId: id }); store .getState() .sceneInteractionActions.selectObject({ id: null, ifCurrentId: id }); } }"
+    },
+    {
+      "contract": "host.deleteCameraKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 184,
+      "adapter": "async (input) => { await deleteCameraKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteCameraOrientationKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 189,
+      "adapter": "async (input) => { await deleteCameraOrientationKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteDepthOfFieldKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 198,
+      "adapter": "async (input) => { await deleteDepthOfFieldKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteLibraryAssets@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 99,
+      "adapter": "async (ids) => { await deleteAssets.mutateAsync(ids); }"
+    },
+    {
+      "contract": "host.deleteProject@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 93,
+      "adapter": "async (id) => { await remove.mutateAsync(id); }"
+    },
+    {
+      "contract": "host.deleteSpeedKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 179,
+      "adapter": "async (input) => { await deleteSpeedKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.depthOfFieldTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 76,
+      "adapter": "api.useGetDepthOfFieldTimeline(projectId)"
+    },
+    {
+      "contract": "host.hoverObject@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 226,
+      "adapter": "(input) => store.getState().sceneInteractionActions.hoverObject(input)"
+    },
+    {
+      "contract": "host.identity.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 53,
+      "adapter": "{ canEdit: auth.canEdit, loading: auth.loading, username: auth.username, errorMessage: auth.error?.message ?? null, pending: auth.pending, challenge: auth.challenge, }"
+    },
+    {
+      "contract": "host.libraryAsset@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/library-asset-host-provider.tsx",
+      "line": 24,
+      "adapter": "useGetLibraryAsset(assetId)"
+    },
+    {
+      "contract": "host.libraryCatalog@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 71,
+      "adapter": "library"
+    },
+    {
+      "contract": "host.lidarTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 81,
+      "adapter": "api.useGetLidarTimeline(projectId)"
+    },
+    {
+      "contract": "host.login@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 73,
+      "adapter": "({ username, password }) => auth.login(username, password)"
+    },
+    {
+      "contract": "host.logout@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 79,
+      "adapter": "() => auth.logout()"
+    },
+    {
+      "contract": "host.navigate@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 85,
+      "adapter": "(path) => { if (!/^\\/(?:projects(?:\\/[^/]+)?|library(?:\\/[^/]+)?)?$/.test(path)) throw new Error(\"Unsupported navigation destination\"); router.push(path); }"
+    },
+    {
+      "contract": "host.orientationTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 71,
+      "adapter": "api.useGetOrientationTimeline(projectId)"
+    },
+    {
+      "contract": "host.playback.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 59,
+      "adapter": "playback"
+    },
+    {
+      "contract": "host.preferences.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 61,
+      "adapter": "{ webGpuTileRenderer: settings.webGpuTileRenderer, showGrid: settings.showGrid, gaussianDpr: settings.gaussianDpr, loading: settings.loading, saving: settings.saving, ready: settings.ready, errorMessage: settings.error?.message ?? null, }"
+    },
+    {
+      "contract": "host.project.permissions@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 52,
+      "adapter": "{ canEdit: auth.canEdit }"
+    },
+    {
+      "contract": "host.projectCloudAction@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 142,
+      "adapter": "async (input) => { const response = await projectCloudActionMutation.mutateAsync(input); return { status: response.status }; }"
+    },
+    {
+      "contract": "host.projectsCatalog@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 72,
+      "adapter": "projects"
+    },
+    {
+      "contract": "host.resend@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 77,
+      "adapter": "() => auth.resend()"
+    },
+    {
+      "contract": "host.resetPlayback@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 235,
+      "adapter": "() => store.getState().playbackActions.resetPlayback()"
+    },
+    {
+      "contract": "host.retryPreferences@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 83,
+      "adapter": "() => settings.retry()"
+    },
+    {
+      "contract": "host.savePreferences@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 80,
+      "adapter": "(changes) => settings.save(changes)"
+    },
+    {
+      "contract": "host.scene.interaction@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 60,
+      "adapter": "interaction"
+    },
+    {
+      "contract": "host.sceneModels@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 61,
+      "adapter": "api.useListProjectClouds(projectId)"
+    },
+    {
+      "contract": "host.scenePoints@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 63,
+      "adapter": "api.useListScenePoints(projectId)"
+    },
+    {
+      "contract": "host.seekPlayback@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 85,
+      "adapter": "(position) => { const trajectory = compiled.data?.status === 200 ? data.compiledTrajectory.schema.parse(compiled.data.data) : null; const table = trajectory ? createPlaybackTable(trajectory) : []; store .getState() .playbackActions.setPlaybackFrame( position, timeAtPathPosition(table, position), ); }"
+    },
+    {
+      "contract": "host.selectObject@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 229,
+      "adapter": "(input) => store.getState().sceneInteractionActions.selectObject(input)"
+    },
+    {
+      "contract": "host.setActiveTool@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 220,
+      "adapter": "(input) => store.getState().toolActions.setActiveTool(input)"
+    },
+    {
+      "contract": "host.setCameraMode@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 232,
+      "adapter": "(mode) => store.getState().cameraActions.setCameraMode(mode)"
+    },
+    {
+      "contract": "host.setLidarTimeline@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 147,
+      "adapter": "async (input) => { await setLidarTimelineMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.setPlaybackFrame@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 241,
+      "adapter": "({ pathPosition, elapsed }) => store.getState().playbackActions.setPlaybackFrame(pathPosition, elapsed)"
+    },
+    {
+      "contract": "host.setPlaying@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 238,
+      "adapter": "(input) => store.getState().playbackActions.setPlaying(input)"
+    },
+    {
+      "contract": "host.speedTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 69,
+      "adapter": "api.useGetSpeedTimeline(projectId)"
+    },
+    {
+      "contract": "host.startCloudPlacement@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 223,
+      "adapter": "(input) => store.getState().toolActions.startCloudPlacement(input)"
+    },
+    {
+      "contract": "host.toggleTheme@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 84,
+      "adapter": "() => theme.toggleTheme()"
+    },
+    {
+      "contract": "host.tools.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 57,
+      "adapter": "tool"
+    },
+    {
+      "contract": "host.trajectoryCamera.pose@1",
+      "kind": "runtime.bindData",
+      "source": "apps/host/src/runtime/scene-frame-provider.tsx",
+      "line": 56,
+      "adapter": "cell.subscribe"
+    },
+    {
+      "contract": "host.trajectoryGeometry@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 64,
+      "adapter": "api.useGetTrajectory(projectId)"
+    },
+    {
+      "contract": "host.updateAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 103,
+      "adapter": "async (input) => { await updateAnchorMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.updateCameraOrientationKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 117,
+      "adapter": "async (input) => { await updateCameraOrientationKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.updateDefaultCameraOrientation@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 126,
+      "adapter": "async (input) => { await updateDefaultCameraOrientationMutation.mutateAsync({ pitch_deg: input.pitch_deg ?? 0, yaw_deg: input.yaw_deg ?? 0, roll_deg: input.roll_deg ?? 0, }); }"
+    },
+    {
+      "contract": "host.updateLibraryDefaults@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 116,
+      "adapter": "async (input) => { await defaults.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.uploadLibraryFile@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 96,
+      "adapter": "async (file) => { await upload.mutateAsync(file); }"
+    },
+    {
+      "contract": "host.verify@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 76,
+      "adapter": "(code) => auth.verify(code)"
+    }
+  ],
+  "note": "Declarations are permitted flows; HostRuntime.trace records actual access without payloads. Frame and GPU execution remain separate graphs."
+}

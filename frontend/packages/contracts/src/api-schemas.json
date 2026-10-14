@@ -1,0 +1,2538 @@
+{
+  "$id": "camera-path-api",
+  "components": {
+    "schemas": {
+      "AimTimeline": {
+        "properties": {
+          "default_aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CameraKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          },
+          "world_up": {
+            "default": [0, 1, 0],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "World Up",
+            "type": "array"
+          }
+        },
+        "title": "AimTimeline",
+        "type": "object"
+      },
+      "Anchor": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "lift": {
+            "default": 0,
+            "title": "Lift",
+            "type": "number"
+          },
+          "lift_axis": {
+            "default": "world_up",
+            "enum": ["world_up", "surface_normal"],
+            "title": "Lift Axis",
+            "type": "string"
+          },
+          "surface_normal": {
+            "default": [0, 1, 0],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Normal",
+            "type": "array"
+          },
+          "surface_position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Position",
+            "type": "array"
+          }
+        },
+        "required": ["label", "surface_position"],
+        "title": "Anchor",
+        "type": "object"
+      },
+      "AnchorCreate": {
+        "properties": {
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "lift": {
+            "default": 0,
+            "title": "Lift",
+            "type": "number"
+          },
+          "lift_axis": {
+            "default": "world_up",
+            "enum": ["world_up", "surface_normal"],
+            "title": "Lift Axis",
+            "type": "string"
+          },
+          "surface_normal": {
+            "default": [0, 1, 0],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Normal",
+            "type": "array"
+          },
+          "surface_position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Surface Position",
+            "type": "array"
+          }
+        },
+        "required": ["label", "surface_position"],
+        "title": "AnchorCreate",
+        "type": "object"
+      },
+      "AnchorUpdate": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lift": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lift"
+          },
+          "lift_axis": {
+            "anyOf": [
+              {
+                "enum": ["world_up", "surface_normal"],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lift Axis"
+          },
+          "surface_normal": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Normal"
+          },
+          "surface_position": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface Position"
+          }
+        },
+        "title": "AnchorUpdate",
+        "type": "object"
+      },
+      "ArcLengthSample": {
+        "properties": {
+          "distance": {
+            "title": "Distance",
+            "type": "number"
+          },
+          "segment_index": {
+            "title": "Segment Index",
+            "type": "integer"
+          },
+          "t": {
+            "title": "T",
+            "type": "number"
+          }
+        },
+        "required": ["segment_index", "t", "distance"],
+        "title": "ArcLengthSample",
+        "type": "object"
+      },
+      "CameraKeyframe": {
+        "properties": {
+          "aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Aim"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["path_position", "aim"],
+        "title": "CameraKeyframe",
+        "type": "object"
+      },
+      "CameraKeyframeCreate": {
+        "properties": {
+          "aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/LookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/LookAtPointAim"
+              }
+            ],
+            "title": "Aim"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["path_position", "aim"],
+        "title": "CameraKeyframeCreate",
+        "type": "object"
+      },
+      "CameraKeyframeUpdate": {
+        "properties": {
+          "aim": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "follow_path": "#/components/schemas/FollowPathAim",
+                    "look_at_point": "#/components/schemas/LookAtPointAim"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FollowPathAim"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LookAtPointAim"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aim"
+          },
+          "interpolation_to_next": {
+            "anyOf": [
+              {
+                "enum": ["smoothstep", "linear", "hold"],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpolation To Next"
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          }
+        },
+        "title": "CameraKeyframeUpdate",
+        "type": "object"
+      },
+      "CameraOrientation": {
+        "properties": {
+          "pitch_deg": {
+            "default": 0,
+            "title": "Pitch Deg",
+            "type": "number"
+          },
+          "roll_deg": {
+            "default": 0,
+            "title": "Roll Deg",
+            "type": "number"
+          },
+          "yaw_deg": {
+            "default": 0,
+            "title": "Yaw Deg",
+            "type": "number"
+          }
+        },
+        "title": "CameraOrientation",
+        "type": "object"
+      },
+      "CameraOrientationKeyframe": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["path_position", "orientation"],
+        "title": "CameraOrientationKeyframe",
+        "type": "object"
+      },
+      "CameraOrientationKeyframeCreate": {
+        "properties": {
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["path_position", "orientation"],
+        "title": "CameraOrientationKeyframeCreate",
+        "type": "object"
+      },
+      "CameraOrientationKeyframeUpdate": {
+        "properties": {
+          "interpolation_to_next": {
+            "anyOf": [
+              {
+                "enum": ["smoothstep", "linear", "hold"],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpolation To Next"
+          },
+          "orientation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CameraOrientation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          }
+        },
+        "title": "CameraOrientationKeyframeUpdate",
+        "type": "object"
+      },
+      "CameraTrackUpdate": {
+        "properties": {
+          "default_aim": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "follow_path": "#/components/schemas/FollowPathAim",
+                    "look_at_point": "#/components/schemas/LookAtPointAim"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/FollowPathAim"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LookAtPointAim"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "world_up": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "World Up"
+          }
+        },
+        "title": "CameraTrackUpdate",
+        "type": "object"
+      },
+      "CenterWeightedDepthOfFieldFocus": {
+        "properties": {
+          "kind": {
+            "const": "center_weighted_9",
+            "default": "center_weighted_9",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "CenterWeightedDepthOfFieldFocus",
+        "type": "object"
+      },
+      "ChallengeRequest": {
+        "properties": {
+          "challenge_id": {
+            "maxLength": 64,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge Id",
+            "type": "string"
+          }
+        },
+        "required": ["challenge_id"],
+        "title": "ChallengeRequest",
+        "type": "object"
+      },
+      "ChallengeResponse": {
+        "properties": {
+          "challenge_id": {
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "resend_after": {
+            "title": "Resend After",
+            "type": "integer"
+          }
+        },
+        "required": ["challenge_id", "expires_in", "resend_after"],
+        "title": "ChallengeResponse",
+        "type": "object"
+      },
+      "ChatHistoryMessage": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "enum": ["user", "assistant"],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": ["role", "content"],
+        "title": "ChatHistoryMessage",
+        "type": "object"
+      },
+      "ChatMessage": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": ["message"],
+        "title": "ChatMessage",
+        "type": "object"
+      },
+      "ChatResponse": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "compiled": {
+            "$ref": "#/components/schemas/CompiledTrajectory"
+          }
+        },
+        "required": ["answer", "compiled"],
+        "title": "ChatResponse",
+        "type": "object"
+      },
+      "CompiledCameraKeyframe": {
+        "properties": {
+          "aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/ResolvedLookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/ResolvedLookAtPointAim"
+              }
+            ],
+            "title": "Aim"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["id", "path_position", "aim", "interpolation_to_next"],
+        "title": "CompiledCameraKeyframe",
+        "type": "object"
+      },
+      "CompiledCameraTrack": {
+        "properties": {
+          "default_aim": {
+            "discriminator": {
+              "mapping": {
+                "follow_path": "#/components/schemas/FollowPathAim",
+                "look_at_point": "#/components/schemas/ResolvedLookAtPointAim"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FollowPathAim"
+              },
+              {
+                "$ref": "#/components/schemas/ResolvedLookAtPointAim"
+              }
+            ],
+            "title": "Default Aim"
+          },
+          "default_orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "depth_of_field_keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/CompiledDepthOfFieldKeyframe"
+            },
+            "title": "Depth Of Field Keyframes",
+            "type": "array"
+          },
+          "keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/CompiledCameraKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "array"
+          },
+          "orientation_keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/CameraOrientationKeyframe"
+            },
+            "title": "Orientation Keyframes",
+            "type": "array"
+          },
+          "world_up": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "World Up",
+            "type": "array"
+          }
+        },
+        "required": [
+          "default_aim",
+          "keyframes",
+          "default_orientation",
+          "orientation_keyframes",
+          "depth_of_field_keyframes",
+          "world_up"
+        ],
+        "title": "CompiledCameraTrack",
+        "type": "object"
+      },
+      "CompiledDepthOfFieldKeyframe": {
+        "properties": {
+          "bokeh_scale": {
+            "title": "Bokeh Scale",
+            "type": "number"
+          },
+          "focus": {
+            "discriminator": {
+              "mapping": {
+                "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                "scene_point": "#/components/schemas/ResolvedScenePointDepthOfFieldFocus"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+              },
+              {
+                "$ref": "#/components/schemas/ResolvedScenePointDepthOfFieldFocus"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "title": "Focus Range Scale",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path_position": {
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "path_position",
+          "focus",
+          "focus_range_scale",
+          "bokeh_scale"
+        ],
+        "title": "CompiledDepthOfFieldKeyframe",
+        "type": "object"
+      },
+      "CompiledMotionProfile": {
+        "properties": {
+          "default_speed": {
+            "title": "Default Speed",
+            "type": "number"
+          },
+          "keyframes": {
+            "items": {
+              "$ref": "#/components/schemas/SpeedKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "array"
+          }
+        },
+        "required": ["default_speed", "keyframes"],
+        "title": "CompiledMotionProfile",
+        "type": "object"
+      },
+      "CompiledTrajectory": {
+        "properties": {
+          "arc_length_table": {
+            "items": {
+              "$ref": "#/components/schemas/ArcLengthSample"
+            },
+            "title": "Arc Length Table",
+            "type": "array"
+          },
+          "camera_track": {
+            "$ref": "#/components/schemas/CompiledCameraTrack"
+          },
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "motion_profile": {
+            "$ref": "#/components/schemas/CompiledMotionProfile"
+          },
+          "position_segments": {
+            "items": {
+              "$ref": "#/components/schemas/CubicBezier3D"
+            },
+            "title": "Position Segments",
+            "type": "array"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "total_length": {
+            "title": "Total Length",
+            "type": "number"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "project_id",
+          "revision",
+          "position_segments",
+          "arc_length_table",
+          "total_length",
+          "duration_seconds",
+          "motion_profile",
+          "camera_track"
+        ],
+        "title": "CompiledTrajectory",
+        "type": "object"
+      },
+      "CubicBezier3D": {
+        "properties": {
+          "length": {
+            "title": "Length",
+            "type": "number"
+          },
+          "p0": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P0",
+            "type": "array"
+          },
+          "p1": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P1",
+            "type": "array"
+          },
+          "p2": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P2",
+            "type": "array"
+          },
+          "p3": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "P3",
+            "type": "array"
+          },
+          "source_segment_id": {
+            "title": "Source Segment Id",
+            "type": "string"
+          }
+        },
+        "required": ["source_segment_id", "p0", "p1", "p2", "p3", "length"],
+        "title": "CubicBezier3D",
+        "type": "object"
+      },
+      "DepthOfFieldKeyframe": {
+        "properties": {
+          "bokeh_scale": {
+            "default": 6,
+            "minimum": 0,
+            "title": "Bokeh Scale",
+            "type": "number"
+          },
+          "focus": {
+            "discriminator": {
+              "mapping": {
+                "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                "scene_point": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+              },
+              {
+                "$ref": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "default": 0.25,
+            "exclusiveMinimum": 0,
+            "title": "Focus Range Scale",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["path_position"],
+        "title": "DepthOfFieldKeyframe",
+        "type": "object"
+      },
+      "DepthOfFieldKeyframeCreate": {
+        "properties": {
+          "bokeh_scale": {
+            "default": 6,
+            "minimum": 0,
+            "title": "Bokeh Scale",
+            "type": "number"
+          },
+          "focus": {
+            "discriminator": {
+              "mapping": {
+                "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                "scene_point": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+              },
+              {
+                "$ref": "#/components/schemas/ScenePointDepthOfFieldFocus"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "default": 0.25,
+            "exclusiveMinimum": 0,
+            "title": "Focus Range Scale",
+            "type": "number"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          }
+        },
+        "required": ["path_position"],
+        "title": "DepthOfFieldKeyframeCreate",
+        "type": "object"
+      },
+      "DepthOfFieldKeyframeUpdate": {
+        "properties": {
+          "bokeh_scale": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bokeh Scale"
+          },
+          "focus": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "center_weighted_9": "#/components/schemas/CenterWeightedDepthOfFieldFocus",
+                    "scene_point": "#/components/schemas/ScenePointDepthOfFieldFocus"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CenterWeightedDepthOfFieldFocus"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ScenePointDepthOfFieldFocus"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus"
+          },
+          "focus_range_scale": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus Range Scale"
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          }
+        },
+        "title": "DepthOfFieldKeyframeUpdate",
+        "type": "object"
+      },
+      "DepthOfFieldTimeline": {
+        "properties": {
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DepthOfFieldKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          }
+        },
+        "title": "DepthOfFieldTimeline",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "field_errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FieldError"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Errors"
+          }
+        },
+        "required": ["code", "detail"],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "FieldError": {
+        "properties": {
+          "location": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": ["location", "message", "type"],
+        "title": "FieldError",
+        "type": "object"
+      },
+      "FollowPathAim": {
+        "properties": {
+          "direction": {
+            "default": "forward",
+            "enum": ["forward", "backward"],
+            "title": "Direction",
+            "type": "string"
+          },
+          "kind": {
+            "const": "follow_path",
+            "default": "follow_path",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "FollowPathAim",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LibraryAsset": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "default_offset": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Offset",
+            "type": "array"
+          },
+          "default_rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Rotation Deg",
+            "type": "array"
+          },
+          "default_scale": {
+            "exclusiveMinimum": 0,
+            "title": "Default Scale",
+            "type": "number"
+          },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "format": {
+            "enum": ["ply", "sog"],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "status": {
+            "enum": ["pending", "ready"],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "size_bytes",
+          "status",
+          "created_at",
+          "default_rotation_deg",
+          "default_scale",
+          "default_offset"
+        ],
+        "title": "LibraryAsset",
+        "type": "object"
+      },
+      "LibraryAssetDefaultsUpdate": {
+        "properties": {
+          "default_offset": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Offset"
+          },
+          "default_rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Rotation Deg",
+            "type": "array"
+          },
+          "default_scale": {
+            "exclusiveMinimum": 0,
+            "title": "Default Scale",
+            "type": "number"
+          }
+        },
+        "required": ["default_rotation_deg", "default_scale"],
+        "title": "LibraryAssetDefaultsUpdate",
+        "type": "object"
+      },
+      "LibraryAssetsDelete": {
+        "properties": {
+          "asset_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Asset Ids",
+            "type": "array"
+          }
+        },
+        "required": ["asset_ids"],
+        "title": "LibraryAssetsDelete",
+        "type": "object"
+      },
+      "LibraryUpload": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "default_offset": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Offset",
+            "type": "array"
+          },
+          "default_rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Default Rotation Deg",
+            "type": "array"
+          },
+          "default_scale": {
+            "exclusiveMinimum": 0,
+            "title": "Default Scale",
+            "type": "number"
+          },
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "format": {
+            "enum": ["ply", "sog"],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "status": {
+            "enum": ["pending", "ready"],
+            "title": "Status",
+            "type": "string"
+          },
+          "upload_url": {
+            "title": "Upload Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "size_bytes",
+          "status",
+          "created_at",
+          "default_rotation_deg",
+          "default_scale",
+          "default_offset",
+          "upload_url"
+        ],
+        "title": "LibraryUpload",
+        "type": "object"
+      },
+      "LibraryUploadCreate": {
+        "properties": {
+          "format": {
+            "default": "ply",
+            "enum": ["ply", "sog"],
+            "title": "Format",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483648,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": ["name", "size_bytes"],
+        "title": "LibraryUploadCreate",
+        "type": "object"
+      },
+      "LidarKeyframe": {
+        "additionalProperties": false,
+        "properties": {
+          "horizontal_resolution": {
+            "default": 512,
+            "maximum": 4096,
+            "minimum": 1,
+            "title": "Horizontal Resolution",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path_position": {
+            "const": 0,
+            "default": 0,
+            "title": "Path Position",
+            "type": "number"
+          },
+          "vertical_fov_deg": {
+            "default": 60,
+            "exclusiveMaximum": 180,
+            "exclusiveMinimum": 0,
+            "title": "Vertical Fov Deg",
+            "type": "number"
+          },
+          "vertical_resolution": {
+            "default": 32,
+            "maximum": 256,
+            "minimum": 1,
+            "title": "Vertical Resolution",
+            "type": "integer"
+          }
+        },
+        "title": "LidarKeyframe",
+        "type": "object"
+      },
+      "LidarSettings": {
+        "additionalProperties": false,
+        "description": "Static angular sampling configuration; no interpolated sensor parameters.",
+        "properties": {
+          "horizontal_resolution": {
+            "default": 512,
+            "maximum": 4096,
+            "minimum": 1,
+            "title": "Horizontal Resolution",
+            "type": "integer"
+          },
+          "vertical_fov_deg": {
+            "default": 60,
+            "exclusiveMaximum": 180,
+            "exclusiveMinimum": 0,
+            "title": "Vertical Fov Deg",
+            "type": "number"
+          },
+          "vertical_resolution": {
+            "default": 32,
+            "maximum": 256,
+            "minimum": 1,
+            "title": "Vertical Resolution",
+            "type": "integer"
+          }
+        },
+        "title": "LidarSettings",
+        "type": "object"
+      },
+      "LidarTimeline": {
+        "properties": {
+          "lidar_keyframe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LidarKeyframe"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "LidarTimeline",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "properties": {
+          "password": {
+            "format": "password",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "username": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": ["username", "password"],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "LookAtPointAim": {
+        "properties": {
+          "kind": {
+            "const": "look_at_point",
+            "default": "look_at_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": ["scene_point_id"],
+        "title": "LookAtPointAim",
+        "type": "object"
+      },
+      "MotionProfile": {
+        "properties": {
+          "default_speed": {
+            "default": 1,
+            "exclusiveMinimum": 0,
+            "title": "Default Speed",
+            "type": "number"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SpeedKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          }
+        },
+        "title": "MotionProfile",
+        "type": "object"
+      },
+      "MotionProfileUpdate": {
+        "properties": {
+          "default_speed": {
+            "exclusiveMinimum": 0,
+            "title": "Default Speed",
+            "type": "number"
+          }
+        },
+        "required": ["default_speed"],
+        "title": "MotionProfileUpdate",
+        "type": "object"
+      },
+      "OrientationTimeline": {
+        "properties": {
+          "default_orientation": {
+            "$ref": "#/components/schemas/CameraOrientation"
+          },
+          "keyframes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CameraOrientationKeyframe"
+            },
+            "title": "Keyframes",
+            "type": "object"
+          }
+        },
+        "title": "OrientationTimeline",
+        "type": "object"
+      },
+      "ProjectCloud": {
+        "properties": {
+          "download_url": {
+            "title": "Download Url",
+            "type": "string"
+          },
+          "format": {
+            "enum": ["ply", "sog"],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "library_asset_id": {
+            "title": "Library Asset Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "offset": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Offset",
+            "type": "array"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "rotation_deg": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Rotation Deg",
+            "type": "array"
+          },
+          "scale": {
+            "title": "Scale",
+            "type": "number"
+          },
+          "translation": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Translation",
+            "type": "array"
+          },
+          "visible": {
+            "title": "Visible",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "library_asset_id",
+          "name",
+          "format",
+          "position",
+          "visible",
+          "download_url",
+          "translation",
+          "rotation_deg",
+          "scale",
+          "offset"
+        ],
+        "title": "ProjectCloud",
+        "type": "object"
+      },
+      "ProjectCloudCreate": {
+        "properties": {
+          "library_asset_id": {
+            "title": "Library Asset Id",
+            "type": "string"
+          },
+          "translation": {
+            "default": [0, 0, 0],
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Translation",
+            "type": "array"
+          }
+        },
+        "required": ["library_asset_id"],
+        "title": "ProjectCloudCreate",
+        "type": "object"
+      },
+      "ProjectCloudUpdate": {
+        "properties": {
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visible"
+          }
+        },
+        "title": "ProjectCloudUpdate",
+        "type": "object"
+      },
+      "ProjectCreate": {
+        "properties": {
+          "name": {
+            "default": "Untitled camera path",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "ProjectCreate",
+        "type": "object"
+      },
+      "ProjectMetadata": {
+        "properties": {
+          "anchor_count": {
+            "title": "Anchor Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "segment_count": {
+            "title": "Segment Count",
+            "type": "integer"
+          }
+        },
+        "required": ["id", "name", "revision", "anchor_count", "segment_count"],
+        "title": "ProjectMetadata",
+        "type": "object"
+      },
+      "ProjectUpdate": {
+        "properties": {
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": ["name"],
+        "title": "ProjectUpdate",
+        "type": "object"
+      },
+      "ResolvedLookAtPointAim": {
+        "properties": {
+          "kind": {
+            "const": "look_at_point",
+            "default": "look_at_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": ["scene_point_id", "position"],
+        "title": "ResolvedLookAtPointAim",
+        "type": "object"
+      },
+      "ResolvedScenePointDepthOfFieldFocus": {
+        "properties": {
+          "kind": {
+            "const": "scene_point",
+            "default": "scene_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": ["scene_point_id", "position"],
+        "title": "ResolvedScenePointDepthOfFieldFocus",
+        "type": "object"
+      },
+      "ScenePoint": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          }
+        },
+        "required": ["label", "position"],
+        "title": "ScenePoint",
+        "type": "object"
+      },
+      "ScenePointCreate": {
+        "properties": {
+          "label": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          }
+        },
+        "required": ["label", "position"],
+        "title": "ScenePointCreate",
+        "type": "object"
+      },
+      "ScenePointDepthOfFieldFocus": {
+        "properties": {
+          "kind": {
+            "const": "scene_point",
+            "default": "scene_point",
+            "title": "Kind",
+            "type": "string"
+          },
+          "scene_point_id": {
+            "title": "Scene Point Id",
+            "type": "string"
+          }
+        },
+        "required": ["scene_point_id"],
+        "title": "ScenePointDepthOfFieldFocus",
+        "type": "object"
+      },
+      "ScenePointUpdate": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "title": "ScenePointUpdate",
+        "type": "object"
+      },
+      "SessionResponse": {
+        "properties": {
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": ["username"],
+        "title": "SessionResponse",
+        "type": "object"
+      },
+      "SpeedKeyframe": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          },
+          "speed": {
+            "exclusiveMinimum": 0,
+            "title": "Speed",
+            "type": "number"
+          }
+        },
+        "required": ["path_position", "speed"],
+        "title": "SpeedKeyframe",
+        "type": "object"
+      },
+      "SpeedKeyframeCreate": {
+        "properties": {
+          "interpolation_to_next": {
+            "default": "smoothstep",
+            "enum": ["smoothstep", "linear", "hold"],
+            "title": "Interpolation To Next",
+            "type": "string"
+          },
+          "path_position": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Path Position",
+            "type": "number"
+          },
+          "speed": {
+            "exclusiveMinimum": 0,
+            "title": "Speed",
+            "type": "number"
+          }
+        },
+        "required": ["path_position", "speed"],
+        "title": "SpeedKeyframeCreate",
+        "type": "object"
+      },
+      "SpeedKeyframeUpdate": {
+        "properties": {
+          "interpolation_to_next": {
+            "anyOf": [
+              {
+                "enum": ["smoothstep", "linear", "hold"],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpolation To Next"
+          },
+          "path_position": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Position"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          }
+        },
+        "title": "SpeedKeyframeUpdate",
+        "type": "object"
+      },
+      "SpiralSegment": {
+        "properties": {
+          "axial_law": {
+            "default": "smoothstep",
+            "enum": ["linear", "smoothstep"],
+            "title": "Axial Law",
+            "type": "string"
+          },
+          "center_anchor_id": {
+            "title": "Center Anchor Id",
+            "type": "string"
+          },
+          "direction": {
+            "default": "ccw",
+            "enum": ["cw", "ccw"],
+            "title": "Direction",
+            "type": "string"
+          },
+          "end_anchor_id": {
+            "title": "End Anchor Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "spiral",
+            "default": "spiral",
+            "title": "Kind",
+            "type": "string"
+          },
+          "radial_law": {
+            "default": "smoothstep",
+            "enum": ["linear", "smoothstep"],
+            "title": "Radial Law",
+            "type": "string"
+          },
+          "start_anchor_id": {
+            "title": "Start Anchor Id",
+            "type": "string"
+          },
+          "turns": {
+            "default": 1,
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "title": "Turns",
+            "type": "number"
+          }
+        },
+        "required": ["start_anchor_id", "center_anchor_id", "end_anchor_id"],
+        "title": "SpiralSegment",
+        "type": "object"
+      },
+      "SpiralSegmentCreate": {
+        "properties": {
+          "axial_law": {
+            "default": "smoothstep",
+            "enum": ["linear", "smoothstep"],
+            "title": "Axial Law",
+            "type": "string"
+          },
+          "center_anchor_id": {
+            "title": "Center Anchor Id",
+            "type": "string"
+          },
+          "direction": {
+            "default": "ccw",
+            "enum": ["cw", "ccw"],
+            "title": "Direction",
+            "type": "string"
+          },
+          "end_anchor_id": {
+            "title": "End Anchor Id",
+            "type": "string"
+          },
+          "radial_law": {
+            "default": "smoothstep",
+            "enum": ["linear", "smoothstep"],
+            "title": "Radial Law",
+            "type": "string"
+          },
+          "start_anchor_id": {
+            "title": "Start Anchor Id",
+            "type": "string"
+          },
+          "turns": {
+            "default": 1,
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "title": "Turns",
+            "type": "number"
+          }
+        },
+        "required": ["start_anchor_id", "center_anchor_id", "end_anchor_id"],
+        "title": "SpiralSegmentCreate",
+        "type": "object"
+      },
+      "SplineSegment": {
+        "properties": {
+          "anchor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "title": "Anchor Ids",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "spline",
+            "default": "spline",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tension": {
+            "default": 0,
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Tension",
+            "type": "number"
+          }
+        },
+        "required": ["anchor_ids"],
+        "title": "SplineSegment",
+        "type": "object"
+      },
+      "SplineSegmentCreate": {
+        "properties": {
+          "anchor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "title": "Anchor Ids",
+            "type": "array"
+          },
+          "tension": {
+            "default": 0,
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Tension",
+            "type": "number"
+          }
+        },
+        "required": ["anchor_ids"],
+        "title": "SplineSegmentCreate",
+        "type": "object"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": ["access_token", "expires_in"],
+        "title": "TokenResponse",
+        "type": "object"
+      },
+      "Trajectory": {
+        "properties": {
+          "segments": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "spiral": "#/components/schemas/SpiralSegment",
+                  "spline": "#/components/schemas/SplineSegment"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SplineSegment"
+                },
+                {
+                  "$ref": "#/components/schemas/SpiralSegment"
+                }
+              ]
+            },
+            "title": "Segments",
+            "type": "array"
+          }
+        },
+        "title": "Trajectory",
+        "type": "object"
+      },
+      "UserSettings": {
+        "properties": {
+          "gaussian_dpr": {
+            "default": "1x",
+            "enum": ["1x", "system"],
+            "title": "Gaussian Dpr",
+            "type": "string"
+          },
+          "show_grid": {
+            "title": "Show Grid",
+            "type": "boolean"
+          },
+          "webgpu_tile_renderer": {
+            "title": "Webgpu Tile Renderer",
+            "type": "boolean"
+          }
+        },
+        "required": ["webgpu_tile_renderer", "show_grid"],
+        "title": "UserSettings",
+        "type": "object"
+      },
+      "UserSettingsUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "gaussian_dpr": {
+            "default": "1x",
+            "enum": ["1x", "system"],
+            "title": "Gaussian Dpr",
+            "type": "string"
+          },
+          "show_grid": {
+            "default": true,
+            "title": "Show Grid",
+            "type": "boolean"
+          },
+          "webgpu_tile_renderer": {
+            "default": true,
+            "title": "Webgpu Tile Renderer",
+            "type": "boolean"
+          }
+        },
+        "title": "UserSettingsUpdate",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VerifyRequest": {
+        "properties": {
+          "challenge_id": {
+            "maxLength": 64,
+            "minLength": 32,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "code": {
+            "format": "password",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": ["challenge_id", "code"],
+        "title": "VerifyRequest",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  }
+}

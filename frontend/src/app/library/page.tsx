@@ -1,7 +1,7 @@
-import { AuthControl, EditorOnly } from "@/features/auth";
+import { AuthControl } from "@host/ui/header";
 import Link from "next/link";
 
-import { LibraryAssetList, LibraryUploadForm } from "@/features/library";
+import { ExtensionSlot } from "@camera-path/extension-api";
 
 export default function LibraryPage() {
   return (
@@ -21,10 +21,7 @@ export default function LibraryPage() {
           Upload reconstruction files here. Projects will be able to reuse them.
         </p>
       </div>
-      <EditorOnly>
-        <LibraryUploadForm />
-      </EditorOnly>
-      <LibraryAssetList />
+      <ExtensionSlot name="library.content" />
     </main>
   );
 }

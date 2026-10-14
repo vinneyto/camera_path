@@ -1,5 +1,6 @@
-import { EditorStoreProvider } from "@/features/project-editor";
-import { ProjectWorkspace } from "@/widgets/project-workspace";
+import { EditorStoreProvider } from "@host/editor";
+import { ProjectHostProvider } from "@host/runtime/project-host-provider";
+import { ProjectWorkspace } from "@host/ui/project-workspace";
 
 interface ProjectPageProps {
   params: Promise<{ projectId: string }>;
@@ -9,7 +10,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
   return (
     <EditorStoreProvider key={projectId}>
-      <ProjectWorkspace projectId={projectId} />
+      <ProjectHostProvider projectId={projectId}>
+        <ProjectWorkspace projectId={projectId} />
+      </ProjectHostProvider>
     </EditorStoreProvider>
   );
 }

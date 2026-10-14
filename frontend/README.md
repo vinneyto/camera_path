@@ -1,30 +1,20 @@
 # Camera Path frontend
 
-Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The source follows
-Feature-Sliced Design layers: route composition in `app`, business actions in `features`, domain
-models in `entities`, large interface blocks in `widgets`, and reusable code in `shared`.
+Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The frontend is an npm workspace with 17 isolated feature packages and a host that coordinates their data and operations.
 
 ## Frontend architecture
 
-The state is intentionally split by ownership instead of being placed in one global store:
+Feature manifests declare `calls` (actions/operations they invoke), `reads` (data they consume, including subscriptions), and optional `handles` (services they implement). Current features omit `handles`; action handlers and data publication belong to the host. Frame handlers and UI/scene/GPU contributions are declared separately. Typed DTOs and validated contract objects live in `packages/contracts`. Features receive a scoped API from `packages/extension-api`; imports of sibling features, private host code, raw transport and the shared query cache are rejected by CI.
 
-- TanStack Query owns server state: project metadata, anchors, scene points, editable and compiled
-  trajectories, timelines, and chat messages are cached under separate resource keys. Query hooks
-  live in `entities/project`; mutations live beside the user action in `features`.
-- Zustand owns synchronous editor state shared by several interface blocks: playback position,
-  elapsed time, play/pause, and trajectory selection. It lives in `features/project-editor` and does
-  not copy project data from the query cache.
-- Local component state is reserved for temporary input such as the current chat draft or project
-  name.
+`apps/host` loads opaque extension descriptors, mounts generic slots, and owns resource/query adapters, auth/preferences, tool arbitration and cross-feature workflows. `src/app` keeps the existing Next.js/Vercel route and deployment boundary. Generic UI, scene adapters and pure trajectory math live in their own packages. Playback and camera state are owned by host controllers per project; the host owns shared scene hover and selection by object ID; temporary form and chat state stays local.
 
-Each FSD slice exposes a public API through its root `index.ts`. Cross-slice imports use those public
-APIs, while files inside a slice use relative imports. Route composition therefore reads as
-`app -> widgets -> features -> entities -> shared`; lower layers do not depend on interface widgets.
+Each feature exports only `extension` (manifest plus `{ id, Component }` contributions). Only the two composition catalogs import feature entrypoints. Timeline, scene, chat, settings, header and page components read their own host contracts and dispatch their own actions; slot containers receive no feature-specific props. Adding a contribution requires no container changes. CI enforces this boundary and checks each descriptor against its manifest.
 
-Trajectory geometry stays in pure functions under `entities/trajectory`. Camera lookup uses the
-backend's adaptive arc-length table to map normalized path distance back to Bezier `t`. This keeps
-camera speed uniform along curved segments, avoids treating Bezier `t` as physical distance, and
-keeps the backend compiler as the single source of geometry sampling truth.
+See [the architecture and review guide](docs/feature-host-architecture.md) and the generated [contract graph](docs/frontend-contract-graph.json). Run `npm run boundaries:check`, `npm run graph:check` and `npm run typecheck` alongside the standard lint/test/build checks. Regenerate the graph after changing manifests or host bindings with `npm run graph:generate`.
+
+Host data and request contracts live in individual files under `packages/contracts/src/host-data` and `host-requests`, with barrel exports and short English descriptions. Serializable frontend DTO schemas are generated from TypeScript types via `npm run schemas:generate`; `npm run schemas:check` verifies freshness in CI. Runtime validation uses committed JSON Schema and AJV. Numeric constraints live in JSDoc annotations, while imported API DTOs retain their OpenAPI schemas. File and callback inputs use explicit runtime validators.
+
+Trajectory geometry uses the backend's adaptive arc-length table to map path distance to Bezier `t`. The host computes a shared camera pose per frame for camera-view, DOF and LiDAR.
 
 ## Run
 
@@ -54,10 +44,10 @@ clouds/anchors/timelines, send messages and run the agent. The backend
 enforces these permissions for direct API requests too. Create the account with the backend's
 `editor-create` command before signing in.
 
-Wrap editing forms, menus and controls in `EditorOnly` at their composition boundary. Guests see
+Features own permission-dependent visibility of their editing forms, menus and controls. Guests see
 the shared content and read-only anchor markers; the anchor keyboard shortcut mounts only for editors.
 
-`features/auth` checks the server session on startup, window focus and once a minute. A 401 drops
+The identity host adapter checks the server session on startup, window focus and once a minute. A 401 drops
 editor mode immediately. Settings remain available to guests. Renderer/grid/DPR choices
 are always stored under `camera-path-editor-settings` in localStorage (the existing key is retained).
 Local values take priority over the backend fallback, survive login/logout and session expiry, and
@@ -91,7 +81,7 @@ Signed S3 URLs stay direct browser transfers. Production cookies require HTTPS.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
 
 The frontend API client, types, and TanStack Query hooks are generated from
-`backend/openapi.json` with Orval and committed under `src/shared/api/generated`.
+`backend/openapi.json` with Orval and committed under `apps/host/src/adapters/api/generated` (transport) and `packages/contracts/src/api` (DTOs).
 After changing the backend contract, run `npm run api:generate` in `frontend` and commit the
 result. The normal build never regenerates code. `api:check` verifies the committed output.
 Mutations send the latest project revision as `If-Match`; the backend exposes revision ETags

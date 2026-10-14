@@ -1,0 +1,13 @@
+{
+  "name": "@camera-path/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./host-data": "./src/host-data/index.ts",
+    "./host-requests": "./src/host-requests/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "peerDependencies": {}
+}

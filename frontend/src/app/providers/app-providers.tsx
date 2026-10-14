@@ -1,11 +1,12 @@
 "use client";
 
+import { ApplicationHostProvider } from "@host/runtime/application-host-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { UserSettingsProvider } from "@/features/user-settings";
-import { ThemeProvider } from "@/features/theme-switcher";
-import { AuthProvider } from "@/features/auth";
+import { ThemeProvider } from "@host/adapters/appearance/theme-provider";
+import { AuthProvider } from "@host/adapters/identity/auth-provider";
+import { UserSettingsProvider } from "@host/adapters/settings";
 
 export function AppProviders({
   children,
@@ -27,7 +28,9 @@ export function AppProviders({
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <UserSettingsProvider>{children}</UserSettingsProvider>
+          <UserSettingsProvider>
+            <ApplicationHostProvider>{children}</ApplicationHostProvider>
+          </UserSettingsProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
