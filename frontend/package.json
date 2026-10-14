@@ -8,10 +8,14 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
-    "api:generate": "orval --config orval.config.ts",
-    "api:check": "npm run api:generate && git diff --exit-code -- src/shared/api/generated && test -z \"$(git ls-files --others --exclude-standard src/shared/api/generated)\"",
+    "api:generate": "orval --config orval.config.ts && node scripts/generate-api-schemas.mjs && prettier --write apps/host/src/adapters/api/generated packages/contracts/src/api",
+    "api:check": "npm run api:generate && git diff --exit-code -- apps/host/src/adapters/api/generated packages/contracts/src/api packages/contracts/src/api-schemas.json && test -z \"$(git ls-files --others --exclude-standard apps/host/src/adapters/api/generated packages/contracts/src/api packages/contracts/src/api-schemas.json)\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "boundaries:check": "node scripts/check-boundaries.mjs",
+    "graph:generate": "node scripts/generate-contract-graph.mjs",
+    "graph:check": "node scripts/generate-contract-graph.mjs --check",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.24",
@@ -23,6 +27,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-query": "^5.102.8",
     "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#49267c4ba10c71539525bb2d1215045a4dedd01c",
+    "ajv": "^8.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.39.0",
@@ -51,5 +56,14 @@
     "typescript": "^5.9.2",
     "vitest": "^4.1.11",
     "wgsl_reflect": "^1.6.0"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/contracts",
+    "packages/extension-api",
+    "packages/ui-kit",
+    "packages/scene-runtime",
+    "packages/trajectory-math",
+    "packages/features/*"
+  ]
 }

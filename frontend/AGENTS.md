@@ -14,3 +14,13 @@
 - Create disposable Three.js/GPU resources and dispose them in the setup and cleanup of the same `useEffect`. Do not create or memoize such a resource with `useMemo` and dispose it from a separate effect: React Strict Mode may run the effect cleanup and setup again while retaining the memoized resource, causing reuse after `dispose()`.
 - Do not create a ref only to carry the latest prop or state value into an effect. When the resulting update is cheap, apply it directly in a `useEffect` or `useLayoutEffect` and list the value in that effect's dependencies.
 - React Compiler is enabled for the frontend. Do not add `useMemo`, `useCallback`, or `memo` by default. Add manual memoization only when stable identity is required by an external API or a measured performance case justifies it; keep the reason explicit in the code.
+
+# Feature architecture
+
+- Follow `docs/feature-host-architecture.md` and the manifests in `packages/features/*/src`.
+- Feature packages must not import siblings, private host modules, raw transport, or the shared query cache. Use typed contracts and the feature's scoped host ports.
+- Public DTOs and operations belong to `packages/contracts`; schema parsing must perform real validation.
+- Host routes, UI layout, bindings and cross-feature workflows belong to `apps/host`. Import a feature through its public package entrypoint.
+- Preserve `src/app` as the Next/Vercel compatibility boundary; do not relocate the deploy root incidentally.
+- Keep manifest declarations separate from implementation registration. After changing declarations or host bindings, run `npm run graph:generate` and include the graph update.
+- Run boundary, graph, API, type, lint, test, build and formatting checks before delivering this refactor.

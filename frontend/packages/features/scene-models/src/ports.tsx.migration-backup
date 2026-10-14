@@ -1,0 +1,9 @@
+"use client";
+import type {ReactNode} from "react";
+import {useData,useDataQuery,useRequestAction} from "@camera-path/extension-api";
+import {manifest} from "./manifest";
+import {editorTool,libraryCatalog,sceneModels} from "@camera-path/contracts/host-data";
+import {setActiveTool,startCloudPlacement} from "@camera-path/contracts/host-requests";
+export function useCloudPlacement() {const state = useData(manifest, editorTool); const start = useRequestAction(manifest, startCloudPlacement); const set = useRequestAction(manifest, setActiveTool); return { pendingCloud: state.pendingCloud, start, cancel: () => { void set(null); } };}
+export function useListLibraryAssets() {return useDataQuery(manifest,libraryCatalog);}
+export function useListProjectClouds(_id?:string) {return useDataQuery(manifest,sceneModels);}

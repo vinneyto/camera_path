@@ -1,0 +1,3866 @@
+{
+  "schemaVersion": 1,
+  "features": [
+    {
+      "manifestVersion": 1,
+      "id": "anchors",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.anchors@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.tools.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.camera.mode@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.addAnchor@1",
+          "host.updateAnchor@1",
+          "host.deleteAnchor@1",
+          "host.setActiveTool@1",
+          "host.hoverAnchor@1",
+          "host.clearHoveredAnchor@1"
+        ],
+        "handles": [
+          "anchors.addAnchor@1",
+          "anchors.updateAnchor@1",
+          "anchors.deleteAnchor@1",
+          "anchors.setActiveTool@1",
+          "anchors.hoverAnchor@1",
+          "anchors.clearHoveredAnchor@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "anchors.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 30
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/anchors/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "appearance",
+      "scope": "application",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.appearance.theme@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.toggleTheme@1"],
+        "handles": ["appearance.toggleTheme@1"]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "appearance.settings",
+          "kind": "ui",
+          "slot": "settings.content",
+          "order": 150
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/appearance/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "camera-aim",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.aimTimeline@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.scenePoints@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.deleteCameraKeyframe@1"],
+        "handles": ["camera-aim.deleteCameraKeyframe@1"]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "camera-aim.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "camera-aim",
+          "order": 60
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/camera-aim/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "camera-orientation",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.orientationTimeline@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.addCameraOrientationKeyframe@1",
+          "host.updateCameraOrientationKeyframe@1",
+          "host.updateDefaultCameraOrientation@1",
+          "host.deleteCameraOrientationKeyframe@1"
+        ],
+        "handles": [
+          "camera-orientation.addCameraOrientationKeyframe@1",
+          "camera-orientation.updateCameraOrientationKeyframe@1",
+          "camera-orientation.updateDefaultCameraOrientation@1",
+          "camera-orientation.deleteCameraOrientationKeyframe@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "camera-orientation.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "camera-orientation",
+          "order": 70
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/camera-orientation/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "camera-view",
+      "scope": "project",
+      "data": {
+        "provides": ["camera-view.mode@1"],
+        "reads": [
+          {
+            "contract": "host.trajectoryCamera.pose@1",
+            "access": ["read"]
+          },
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.camera.mode@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.setCameraMode@1"],
+        "handles": ["camera-view.setCameraMode@1"]
+      },
+      "frames": [
+        {
+          "id": "camera-view.update",
+          "phase": "update",
+          "after": ["host.trajectoryCamera.update"]
+        }
+      ],
+      "contributions": [
+        {
+          "id": "camera-view.scene",
+          "kind": "scene",
+          "slot": "scene.root"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/camera-view/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "chat-agent",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.anchors@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.chatHistory@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.chat.send@1"],
+        "handles": ["chat-agent.sendChatMessage@1"]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "chat-agent.sidebar",
+          "kind": "ui",
+          "slot": "project.sidebar"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/chat-agent/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "depth-of-field",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.trajectoryCamera.pose@1",
+            "access": ["read"]
+          },
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.depthOfFieldTimeline@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.scenePoints@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.addDepthOfFieldKeyframe@1",
+          "host.deleteDepthOfFieldKeyframe@1"
+        ],
+        "handles": [
+          "depth-of-field.addDepthOfFieldKeyframe@1",
+          "depth-of-field.deleteDepthOfFieldKeyframe@1"
+        ]
+      },
+      "frames": [
+        {
+          "id": "depth-of-field.helper",
+          "phase": "update",
+          "after": ["host.trajectoryCamera.update"]
+        }
+      ],
+      "contributions": [
+        {
+          "id": "depth-of-field.scene",
+          "kind": "scene",
+          "slot": "scene.root"
+        },
+        {
+          "id": "depth-of-field.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "depth-of-field",
+          "order": 80
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/depth-of-field/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "identity",
+      "scope": "application",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.identity.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.login@1",
+          "host.verify@1",
+          "host.resend@1",
+          "host.cancelLogin@1",
+          "host.logout@1"
+        ],
+        "handles": [
+          "identity.login@1",
+          "identity.verify@1",
+          "identity.resend@1",
+          "identity.cancelLogin@1",
+          "identity.logout@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [],
+      "capabilities": [],
+      "source": "packages/features/identity/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "library",
+      "scope": "application",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.libraryCatalog@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.libraryAsset@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.uploadLibraryFile@1",
+          "host.deleteLibraryAssets@1",
+          "host.updateLibraryDefaults@1",
+          "host.navigate@1"
+        ],
+        "handles": [
+          "library.uploadLibraryFile@1",
+          "library.deleteLibraryAssets@1",
+          "library.updateLibraryDefaults@1",
+          "library.navigate@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [],
+      "capabilities": [],
+      "source": "packages/features/library/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "lidar",
+      "scope": "project",
+      "data": {
+        "provides": ["lidar.status@1"],
+        "reads": [
+          {
+            "contract": "host.trajectoryCamera.pose@1",
+            "access": ["read"]
+          },
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.lidarTimeline@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.setLidarTimeline@1"],
+        "handles": ["lidar.setLidarTimeline@1"]
+      },
+      "frames": [
+        {
+          "id": "lidar.outputs",
+          "phase": "after-render"
+        },
+        {
+          "id": "lidar.update",
+          "phase": "update",
+          "after": ["host.trajectoryCamera.update"]
+        }
+      ],
+      "contributions": [
+        {
+          "id": "lidar.sensor",
+          "kind": "gpu-pass",
+          "inputs": ["host.gaussians.scene@1"],
+          "outputs": ["lidar.ranges@1", "lidar.hitInstances@1"],
+          "after": ["host.gaussians.prepare"],
+          "before": ["host.scene.transparent"]
+        },
+        {
+          "id": "lidar.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 0
+        },
+        {
+          "id": "lidar.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "lidar",
+          "order": 90
+        }
+      ],
+      "capabilities": ["gpu.resources.allocate", "render.passes.register"],
+      "source": "packages/features/lidar/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "playback",
+      "scope": "project",
+      "data": {
+        "provides": ["playback.state@1"],
+        "reads": [
+          {
+            "contract": "host.playback.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.setPlaybackFrame@1",
+          "host.resetPlayback@1",
+          "host.setPlaying@1"
+        ],
+        "handles": [
+          "playback.setPlaybackFrame@1",
+          "playback.resetPlayback@1",
+          "playback.setPlaying@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [],
+      "capabilities": [],
+      "source": "packages/features/playback/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "projects",
+      "scope": "application",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.projectsCatalog@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.createProject@1",
+          "host.deleteProject@1",
+          "host.navigate@1"
+        ],
+        "handles": [
+          "projects.createProject@1",
+          "projects.deleteProject@1",
+          "projects.navigate@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "projects.content",
+          "kind": "ui",
+          "slot": "projects.content"
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/projects/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "renderer-preferences",
+      "scope": "application",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.preferences.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.savePreferences@1", "host.retryPreferences@1"],
+        "handles": [
+          "renderer-preferences.savePreferences@1",
+          "renderer-preferences.retryPreferences@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "renderer-preferences.settings",
+          "kind": "ui",
+          "slot": "settings.content",
+          "order": 160
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/renderer-preferences/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "scene-grid",
+      "scope": "application",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.preferences.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.savePreferences@1"],
+        "handles": ["scene-grid.savePreferences@1"]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "scene-grid.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 20
+        },
+        {
+          "id": "scene-grid.settings",
+          "kind": "ui",
+          "slot": "settings.content",
+          "order": 120
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/scene-grid/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "scene-models",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.libraryCatalog@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.sceneModels@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.tools.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.projectCloudAction@1",
+          "host.startCloudPlacement@1",
+          "host.setActiveTool@1"
+        ],
+        "handles": [
+          "scene-models.projectCloudAction@1",
+          "scene-models.startCloudPlacement@1",
+          "scene-models.setActiveTool@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "scene-models.commands",
+          "kind": "command",
+          "slot": "workspace.commands"
+        },
+        {
+          "id": "scene-models.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 10
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/scene-models/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "speed-track",
+      "scope": "project",
+      "data": {
+        "provides": [],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.speedTimeline@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": ["host.deleteSpeedKeyframe@1"],
+        "handles": ["speed-track.deleteSpeedKeyframe@1"]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "speed-track.track",
+          "kind": "timeline",
+          "slot": "timeline.tracks",
+          "resourceType": "speed-track",
+          "order": 50
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/speed-track/src/manifest.ts"
+    },
+    {
+      "manifestVersion": 1,
+      "id": "trajectory",
+      "scope": "project",
+      "data": {
+        "provides": ["trajectory.selection@1"],
+        "reads": [
+          {
+            "contract": "host.project.permissions@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.trajectoryGeometry@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.tools.state@1",
+            "access": ["read", "readAsync", "subscribe"]
+          },
+          {
+            "contract": "host.trajectory.selection@1",
+            "access": ["read", "readAsync", "subscribe"]
+          }
+        ]
+      },
+      "requests": {
+        "calls": [
+          "host.clearTrajectory@1",
+          "host.hoverTrajectory@1",
+          "host.clearHoveredTrajectory@1",
+          "host.selectTrajectory@1",
+          "host.closeTrajectory@1"
+        ],
+        "handles": [
+          "trajectory.clearTrajectory@1",
+          "trajectory.hoverTrajectory@1",
+          "trajectory.clearHoveredTrajectory@1",
+          "trajectory.selectTrajectory@1",
+          "trajectory.closeTrajectory@1"
+        ]
+      },
+      "frames": [],
+      "contributions": [
+        {
+          "id": "trajectory.scene",
+          "kind": "scene",
+          "slot": "scene.root",
+          "order": 40
+        }
+      ],
+      "capabilities": [],
+      "source": "packages/features/trajectory/src/manifest.ts"
+    }
+  ],
+  "contracts": [
+    {
+      "symbol": "anchors_addAnchor",
+      "id": "anchors.addAnchor@1"
+    },
+    {
+      "symbol": "anchors_clearHoveredAnchor",
+      "id": "anchors.clearHoveredAnchor@1"
+    },
+    {
+      "symbol": "anchors_deleteAnchor",
+      "id": "anchors.deleteAnchor@1"
+    },
+    {
+      "symbol": "anchors_hoverAnchor",
+      "id": "anchors.hoverAnchor@1"
+    },
+    {
+      "symbol": "anchors_setActiveTool",
+      "id": "anchors.setActiveTool@1"
+    },
+    {
+      "symbol": "anchors_updateAnchor",
+      "id": "anchors.updateAnchor@1"
+    },
+    {
+      "symbol": "appearance_toggleTheme",
+      "id": "appearance.toggleTheme@1"
+    },
+    {
+      "symbol": "camera_aim_deleteCameraKeyframe",
+      "id": "camera-aim.deleteCameraKeyframe@1"
+    },
+    {
+      "symbol": "camera_orientation_addCameraOrientationKeyframe",
+      "id": "camera-orientation.addCameraOrientationKeyframe@1"
+    },
+    {
+      "symbol": "camera_orientation_deleteCameraOrientationKeyframe",
+      "id": "camera-orientation.deleteCameraOrientationKeyframe@1"
+    },
+    {
+      "symbol": "camera_orientation_updateCameraOrientationKeyframe",
+      "id": "camera-orientation.updateCameraOrientationKeyframe@1"
+    },
+    {
+      "symbol": "camera_orientation_updateDefaultCameraOrientation",
+      "id": "camera-orientation.updateDefaultCameraOrientation@1"
+    },
+    {
+      "symbol": "cameraModeOutput",
+      "id": "camera-view.mode@1"
+    },
+    {
+      "symbol": "camera_view_setCameraMode",
+      "id": "camera-view.setCameraMode@1"
+    },
+    {
+      "symbol": "chat_agent_sendChatMessage",
+      "id": "chat-agent.sendChatMessage@1"
+    },
+    {
+      "symbol": "depth_of_field_addDepthOfFieldKeyframe",
+      "id": "depth-of-field.addDepthOfFieldKeyframe@1"
+    },
+    {
+      "symbol": "depth_of_field_deleteDepthOfFieldKeyframe",
+      "id": "depth-of-field.deleteDepthOfFieldKeyframe@1"
+    },
+    {
+      "symbol": "addAnchor",
+      "id": "host.addAnchor@1"
+    },
+    {
+      "symbol": "addCameraOrientationKeyframe",
+      "id": "host.addCameraOrientationKeyframe@1"
+    },
+    {
+      "symbol": "addDepthOfFieldKeyframe",
+      "id": "host.addDepthOfFieldKeyframe@1"
+    },
+    {
+      "symbol": "aimTimeline",
+      "id": "host.aimTimeline@1"
+    },
+    {
+      "symbol": "anchors",
+      "id": "host.anchors@1"
+    },
+    {
+      "symbol": "themeState",
+      "id": "host.appearance.theme@1"
+    },
+    {
+      "symbol": "cameraMode",
+      "id": "host.camera.mode@1"
+    },
+    {
+      "symbol": "cancelLogin",
+      "id": "host.cancelLogin@1"
+    },
+    {
+      "symbol": "sendChatMessage",
+      "id": "host.chat.send@1"
+    },
+    {
+      "symbol": "chatHistory",
+      "id": "host.chatHistory@1"
+    },
+    {
+      "symbol": "clearHoveredAnchor",
+      "id": "host.clearHoveredAnchor@1"
+    },
+    {
+      "symbol": "clearHoveredTrajectory",
+      "id": "host.clearHoveredTrajectory@1"
+    },
+    {
+      "symbol": "clearTrajectory",
+      "id": "host.clearTrajectory@1"
+    },
+    {
+      "symbol": "closeTrajectory",
+      "id": "host.closeTrajectory@1"
+    },
+    {
+      "symbol": "compiledTrajectory",
+      "id": "host.compiledTrajectory@1"
+    },
+    {
+      "symbol": "createProject",
+      "id": "host.createProject@1"
+    },
+    {
+      "symbol": "deleteAnchor",
+      "id": "host.deleteAnchor@1"
+    },
+    {
+      "symbol": "deleteCameraKeyframe",
+      "id": "host.deleteCameraKeyframe@1"
+    },
+    {
+      "symbol": "deleteCameraOrientationKeyframe",
+      "id": "host.deleteCameraOrientationKeyframe@1"
+    },
+    {
+      "symbol": "deleteDepthOfFieldKeyframe",
+      "id": "host.deleteDepthOfFieldKeyframe@1"
+    },
+    {
+      "symbol": "deleteLibraryAssets",
+      "id": "host.deleteLibraryAssets@1"
+    },
+    {
+      "symbol": "deleteProject",
+      "id": "host.deleteProject@1"
+    },
+    {
+      "symbol": "deleteSpeedKeyframe",
+      "id": "host.deleteSpeedKeyframe@1"
+    },
+    {
+      "symbol": "depthOfFieldTimeline",
+      "id": "host.depthOfFieldTimeline@1"
+    },
+    {
+      "symbol": "gaussianScene",
+      "id": "host.gaussians.scene@1"
+    },
+    {
+      "symbol": "hoverAnchor",
+      "id": "host.hoverAnchor@1"
+    },
+    {
+      "symbol": "hoverTrajectory",
+      "id": "host.hoverTrajectory@1"
+    },
+    {
+      "symbol": "identityState",
+      "id": "host.identity.state@1"
+    },
+    {
+      "symbol": "libraryAsset",
+      "id": "host.libraryAsset@1"
+    },
+    {
+      "symbol": "libraryCatalog",
+      "id": "host.libraryCatalog@1"
+    },
+    {
+      "symbol": "lidarTimeline",
+      "id": "host.lidarTimeline@1"
+    },
+    {
+      "symbol": "login",
+      "id": "host.login@1"
+    },
+    {
+      "symbol": "logout",
+      "id": "host.logout@1"
+    },
+    {
+      "symbol": "navigate",
+      "id": "host.navigate@1"
+    },
+    {
+      "symbol": "orientationTimeline",
+      "id": "host.orientationTimeline@1"
+    },
+    {
+      "symbol": "playbackState",
+      "id": "host.playback.state@1"
+    },
+    {
+      "symbol": "preferencesState",
+      "id": "host.preferences.state@1"
+    },
+    {
+      "symbol": "projectPermissions",
+      "id": "host.project.permissions@1"
+    },
+    {
+      "symbol": "projectCloudAction",
+      "id": "host.projectCloudAction@1"
+    },
+    {
+      "symbol": "projectsCatalog",
+      "id": "host.projectsCatalog@1"
+    },
+    {
+      "symbol": "resend",
+      "id": "host.resend@1"
+    },
+    {
+      "symbol": "resetPlayback",
+      "id": "host.resetPlayback@1"
+    },
+    {
+      "symbol": "retryPreferences",
+      "id": "host.retryPreferences@1"
+    },
+    {
+      "symbol": "savePreferences",
+      "id": "host.savePreferences@1"
+    },
+    {
+      "symbol": "sceneModels",
+      "id": "host.sceneModels@1"
+    },
+    {
+      "symbol": "scenePoints",
+      "id": "host.scenePoints@1"
+    },
+    {
+      "symbol": "selectTrajectory",
+      "id": "host.selectTrajectory@1"
+    },
+    {
+      "symbol": "setActiveTool",
+      "id": "host.setActiveTool@1"
+    },
+    {
+      "symbol": "setCameraMode",
+      "id": "host.setCameraMode@1"
+    },
+    {
+      "symbol": "setLidarTimeline",
+      "id": "host.setLidarTimeline@1"
+    },
+    {
+      "symbol": "setPlaybackFrame",
+      "id": "host.setPlaybackFrame@1"
+    },
+    {
+      "symbol": "setPlaying",
+      "id": "host.setPlaying@1"
+    },
+    {
+      "symbol": "speedTimeline",
+      "id": "host.speedTimeline@1"
+    },
+    {
+      "symbol": "startCloudPlacement",
+      "id": "host.startCloudPlacement@1"
+    },
+    {
+      "symbol": "toggleTheme",
+      "id": "host.toggleTheme@1"
+    },
+    {
+      "symbol": "editorTool",
+      "id": "host.tools.state@1"
+    },
+    {
+      "symbol": "trajectorySelection",
+      "id": "host.trajectory.selection@1"
+    },
+    {
+      "symbol": "trajectoryCameraPose",
+      "id": "host.trajectoryCamera.pose@1"
+    },
+    {
+      "symbol": "trajectoryGeometry",
+      "id": "host.trajectoryGeometry@1"
+    },
+    {
+      "symbol": "updateAnchor",
+      "id": "host.updateAnchor@1"
+    },
+    {
+      "symbol": "updateCameraOrientationKeyframe",
+      "id": "host.updateCameraOrientationKeyframe@1"
+    },
+    {
+      "symbol": "updateDefaultCameraOrientation",
+      "id": "host.updateDefaultCameraOrientation@1"
+    },
+    {
+      "symbol": "updateLibraryDefaults",
+      "id": "host.updateLibraryDefaults@1"
+    },
+    {
+      "symbol": "uploadLibraryFile",
+      "id": "host.uploadLibraryFile@1"
+    },
+    {
+      "symbol": "verify",
+      "id": "host.verify@1"
+    },
+    {
+      "symbol": "identity_cancelLogin",
+      "id": "identity.cancelLogin@1"
+    },
+    {
+      "symbol": "identity_login",
+      "id": "identity.login@1"
+    },
+    {
+      "symbol": "identity_logout",
+      "id": "identity.logout@1"
+    },
+    {
+      "symbol": "identity_resend",
+      "id": "identity.resend@1"
+    },
+    {
+      "symbol": "identity_verify",
+      "id": "identity.verify@1"
+    },
+    {
+      "symbol": "library_deleteLibraryAssets",
+      "id": "library.deleteLibraryAssets@1"
+    },
+    {
+      "symbol": "library_navigate",
+      "id": "library.navigate@1"
+    },
+    {
+      "symbol": "library_updateLibraryDefaults",
+      "id": "library.updateLibraryDefaults@1"
+    },
+    {
+      "symbol": "library_uploadLibraryFile",
+      "id": "library.uploadLibraryFile@1"
+    },
+    {
+      "symbol": "lidarHitInstances",
+      "id": "lidar.hitInstances@1"
+    },
+    {
+      "symbol": "lidarRanges",
+      "id": "lidar.ranges@1"
+    },
+    {
+      "symbol": "lidar_setLidarTimeline",
+      "id": "lidar.setLidarTimeline@1"
+    },
+    {
+      "symbol": "lidarStatus",
+      "id": "lidar.status@1"
+    },
+    {
+      "symbol": "playback_resetPlayback",
+      "id": "playback.resetPlayback@1"
+    },
+    {
+      "symbol": "playback_setPlaybackFrame",
+      "id": "playback.setPlaybackFrame@1"
+    },
+    {
+      "symbol": "playback_setPlaying",
+      "id": "playback.setPlaying@1"
+    },
+    {
+      "symbol": "playbackOutput",
+      "id": "playback.state@1"
+    },
+    {
+      "symbol": "projects_createProject",
+      "id": "projects.createProject@1"
+    },
+    {
+      "symbol": "projects_deleteProject",
+      "id": "projects.deleteProject@1"
+    },
+    {
+      "symbol": "projects_navigate",
+      "id": "projects.navigate@1"
+    },
+    {
+      "symbol": "renderer_preferences_retryPreferences",
+      "id": "renderer-preferences.retryPreferences@1"
+    },
+    {
+      "symbol": "renderer_preferences_savePreferences",
+      "id": "renderer-preferences.savePreferences@1"
+    },
+    {
+      "symbol": "scene_grid_savePreferences",
+      "id": "scene-grid.savePreferences@1"
+    },
+    {
+      "symbol": "scene_models_projectCloudAction",
+      "id": "scene-models.projectCloudAction@1"
+    },
+    {
+      "symbol": "scene_models_setActiveTool",
+      "id": "scene-models.setActiveTool@1"
+    },
+    {
+      "symbol": "scene_models_startCloudPlacement",
+      "id": "scene-models.startCloudPlacement@1"
+    },
+    {
+      "symbol": "speed_track_deleteSpeedKeyframe",
+      "id": "speed-track.deleteSpeedKeyframe@1"
+    },
+    {
+      "symbol": "trajectory_clearHoveredTrajectory",
+      "id": "trajectory.clearHoveredTrajectory@1"
+    },
+    {
+      "symbol": "trajectory_clearTrajectory",
+      "id": "trajectory.clearTrajectory@1"
+    },
+    {
+      "symbol": "trajectory_closeTrajectory",
+      "id": "trajectory.closeTrajectory@1"
+    },
+    {
+      "symbol": "trajectory_hoverTrajectory",
+      "id": "trajectory.hoverTrajectory@1"
+    },
+    {
+      "symbol": "trajectorySelectionOutput",
+      "id": "trajectory.selection@1"
+    },
+    {
+      "symbol": "trajectory_selectTrajectory",
+      "id": "trajectory.selectTrajectory@1"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "anchors",
+      "type": "feature",
+      "data": {
+        "label": "anchors",
+        "scope": "project",
+        "source": "packages/features/anchors/src/manifest.ts"
+      }
+    },
+    {
+      "id": "appearance",
+      "type": "feature",
+      "data": {
+        "label": "appearance",
+        "scope": "application",
+        "source": "packages/features/appearance/src/manifest.ts"
+      }
+    },
+    {
+      "id": "camera-aim",
+      "type": "feature",
+      "data": {
+        "label": "camera-aim",
+        "scope": "project",
+        "source": "packages/features/camera-aim/src/manifest.ts"
+      }
+    },
+    {
+      "id": "camera-orientation",
+      "type": "feature",
+      "data": {
+        "label": "camera-orientation",
+        "scope": "project",
+        "source": "packages/features/camera-orientation/src/manifest.ts"
+      }
+    },
+    {
+      "id": "camera-view",
+      "type": "feature",
+      "data": {
+        "label": "camera-view",
+        "scope": "project",
+        "source": "packages/features/camera-view/src/manifest.ts"
+      }
+    },
+    {
+      "id": "chat-agent",
+      "type": "feature",
+      "data": {
+        "label": "chat-agent",
+        "scope": "project",
+        "source": "packages/features/chat-agent/src/manifest.ts"
+      }
+    },
+    {
+      "id": "depth-of-field",
+      "type": "feature",
+      "data": {
+        "label": "depth-of-field",
+        "scope": "project",
+        "source": "packages/features/depth-of-field/src/manifest.ts"
+      }
+    },
+    {
+      "id": "identity",
+      "type": "feature",
+      "data": {
+        "label": "identity",
+        "scope": "application",
+        "source": "packages/features/identity/src/manifest.ts"
+      }
+    },
+    {
+      "id": "library",
+      "type": "feature",
+      "data": {
+        "label": "library",
+        "scope": "application",
+        "source": "packages/features/library/src/manifest.ts"
+      }
+    },
+    {
+      "id": "lidar",
+      "type": "feature",
+      "data": {
+        "label": "lidar",
+        "scope": "project",
+        "source": "packages/features/lidar/src/manifest.ts"
+      }
+    },
+    {
+      "id": "playback",
+      "type": "feature",
+      "data": {
+        "label": "playback",
+        "scope": "project",
+        "source": "packages/features/playback/src/manifest.ts"
+      }
+    },
+    {
+      "id": "projects",
+      "type": "feature",
+      "data": {
+        "label": "projects",
+        "scope": "application",
+        "source": "packages/features/projects/src/manifest.ts"
+      }
+    },
+    {
+      "id": "renderer-preferences",
+      "type": "feature",
+      "data": {
+        "label": "renderer-preferences",
+        "scope": "application",
+        "source": "packages/features/renderer-preferences/src/manifest.ts"
+      }
+    },
+    {
+      "id": "scene-grid",
+      "type": "feature",
+      "data": {
+        "label": "scene-grid",
+        "scope": "application",
+        "source": "packages/features/scene-grid/src/manifest.ts"
+      }
+    },
+    {
+      "id": "scene-models",
+      "type": "feature",
+      "data": {
+        "label": "scene-models",
+        "scope": "project",
+        "source": "packages/features/scene-models/src/manifest.ts"
+      }
+    },
+    {
+      "id": "speed-track",
+      "type": "feature",
+      "data": {
+        "label": "speed-track",
+        "scope": "project",
+        "source": "packages/features/speed-track/src/manifest.ts"
+      }
+    },
+    {
+      "id": "trajectory",
+      "type": "feature",
+      "data": {
+        "label": "trajectory",
+        "scope": "project",
+        "source": "packages/features/trajectory/src/manifest.ts"
+      }
+    },
+    {
+      "id": "anchors.addAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors_addAnchor",
+        "id": "anchors.addAnchor@1"
+      }
+    },
+    {
+      "id": "anchors.clearHoveredAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors_clearHoveredAnchor",
+        "id": "anchors.clearHoveredAnchor@1"
+      }
+    },
+    {
+      "id": "anchors.deleteAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors_deleteAnchor",
+        "id": "anchors.deleteAnchor@1"
+      }
+    },
+    {
+      "id": "anchors.hoverAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors_hoverAnchor",
+        "id": "anchors.hoverAnchor@1"
+      }
+    },
+    {
+      "id": "anchors.setActiveTool@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors_setActiveTool",
+        "id": "anchors.setActiveTool@1"
+      }
+    },
+    {
+      "id": "anchors.updateAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors_updateAnchor",
+        "id": "anchors.updateAnchor@1"
+      }
+    },
+    {
+      "id": "appearance.toggleTheme@1",
+      "type": "contract",
+      "data": {
+        "symbol": "appearance_toggleTheme",
+        "id": "appearance.toggleTheme@1"
+      }
+    },
+    {
+      "id": "camera-aim.deleteCameraKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "camera_aim_deleteCameraKeyframe",
+        "id": "camera-aim.deleteCameraKeyframe@1"
+      }
+    },
+    {
+      "id": "camera-orientation.addCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "camera_orientation_addCameraOrientationKeyframe",
+        "id": "camera-orientation.addCameraOrientationKeyframe@1"
+      }
+    },
+    {
+      "id": "camera-orientation.deleteCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "camera_orientation_deleteCameraOrientationKeyframe",
+        "id": "camera-orientation.deleteCameraOrientationKeyframe@1"
+      }
+    },
+    {
+      "id": "camera-orientation.updateCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "camera_orientation_updateCameraOrientationKeyframe",
+        "id": "camera-orientation.updateCameraOrientationKeyframe@1"
+      }
+    },
+    {
+      "id": "camera-orientation.updateDefaultCameraOrientation@1",
+      "type": "contract",
+      "data": {
+        "symbol": "camera_orientation_updateDefaultCameraOrientation",
+        "id": "camera-orientation.updateDefaultCameraOrientation@1"
+      }
+    },
+    {
+      "id": "camera-view.mode@1",
+      "type": "contract",
+      "data": {
+        "symbol": "cameraModeOutput",
+        "id": "camera-view.mode@1"
+      }
+    },
+    {
+      "id": "camera-view.setCameraMode@1",
+      "type": "contract",
+      "data": {
+        "symbol": "camera_view_setCameraMode",
+        "id": "camera-view.setCameraMode@1"
+      }
+    },
+    {
+      "id": "chat-agent.sendChatMessage@1",
+      "type": "contract",
+      "data": {
+        "symbol": "chat_agent_sendChatMessage",
+        "id": "chat-agent.sendChatMessage@1"
+      }
+    },
+    {
+      "id": "depth-of-field.addDepthOfFieldKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "depth_of_field_addDepthOfFieldKeyframe",
+        "id": "depth-of-field.addDepthOfFieldKeyframe@1"
+      }
+    },
+    {
+      "id": "depth-of-field.deleteDepthOfFieldKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "depth_of_field_deleteDepthOfFieldKeyframe",
+        "id": "depth-of-field.deleteDepthOfFieldKeyframe@1"
+      }
+    },
+    {
+      "id": "host.addAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "addAnchor",
+        "id": "host.addAnchor@1"
+      }
+    },
+    {
+      "id": "host.addCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "addCameraOrientationKeyframe",
+        "id": "host.addCameraOrientationKeyframe@1"
+      }
+    },
+    {
+      "id": "host.addDepthOfFieldKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "addDepthOfFieldKeyframe",
+        "id": "host.addDepthOfFieldKeyframe@1"
+      }
+    },
+    {
+      "id": "host.aimTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "aimTimeline",
+        "id": "host.aimTimeline@1"
+      }
+    },
+    {
+      "id": "host.anchors@1",
+      "type": "contract",
+      "data": {
+        "symbol": "anchors",
+        "id": "host.anchors@1"
+      }
+    },
+    {
+      "id": "host.appearance.theme@1",
+      "type": "contract",
+      "data": {
+        "symbol": "themeState",
+        "id": "host.appearance.theme@1"
+      }
+    },
+    {
+      "id": "host.camera.mode@1",
+      "type": "contract",
+      "data": {
+        "symbol": "cameraMode",
+        "id": "host.camera.mode@1"
+      }
+    },
+    {
+      "id": "host.cancelLogin@1",
+      "type": "contract",
+      "data": {
+        "symbol": "cancelLogin",
+        "id": "host.cancelLogin@1"
+      }
+    },
+    {
+      "id": "host.chat.send@1",
+      "type": "contract",
+      "data": {
+        "symbol": "sendChatMessage",
+        "id": "host.chat.send@1"
+      }
+    },
+    {
+      "id": "host.chatHistory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "chatHistory",
+        "id": "host.chatHistory@1"
+      }
+    },
+    {
+      "id": "host.clearHoveredAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "clearHoveredAnchor",
+        "id": "host.clearHoveredAnchor@1"
+      }
+    },
+    {
+      "id": "host.clearHoveredTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "clearHoveredTrajectory",
+        "id": "host.clearHoveredTrajectory@1"
+      }
+    },
+    {
+      "id": "host.clearTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "clearTrajectory",
+        "id": "host.clearTrajectory@1"
+      }
+    },
+    {
+      "id": "host.closeTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "closeTrajectory",
+        "id": "host.closeTrajectory@1"
+      }
+    },
+    {
+      "id": "host.compiledTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "compiledTrajectory",
+        "id": "host.compiledTrajectory@1"
+      }
+    },
+    {
+      "id": "host.createProject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "createProject",
+        "id": "host.createProject@1"
+      }
+    },
+    {
+      "id": "host.deleteAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteAnchor",
+        "id": "host.deleteAnchor@1"
+      }
+    },
+    {
+      "id": "host.deleteCameraKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteCameraKeyframe",
+        "id": "host.deleteCameraKeyframe@1"
+      }
+    },
+    {
+      "id": "host.deleteCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteCameraOrientationKeyframe",
+        "id": "host.deleteCameraOrientationKeyframe@1"
+      }
+    },
+    {
+      "id": "host.deleteDepthOfFieldKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteDepthOfFieldKeyframe",
+        "id": "host.deleteDepthOfFieldKeyframe@1"
+      }
+    },
+    {
+      "id": "host.deleteLibraryAssets@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteLibraryAssets",
+        "id": "host.deleteLibraryAssets@1"
+      }
+    },
+    {
+      "id": "host.deleteProject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteProject",
+        "id": "host.deleteProject@1"
+      }
+    },
+    {
+      "id": "host.deleteSpeedKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "deleteSpeedKeyframe",
+        "id": "host.deleteSpeedKeyframe@1"
+      }
+    },
+    {
+      "id": "host.depthOfFieldTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "depthOfFieldTimeline",
+        "id": "host.depthOfFieldTimeline@1"
+      }
+    },
+    {
+      "id": "host.gaussians.scene@1",
+      "type": "contract",
+      "data": {
+        "symbol": "gaussianScene",
+        "id": "host.gaussians.scene@1"
+      }
+    },
+    {
+      "id": "host.hoverAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "hoverAnchor",
+        "id": "host.hoverAnchor@1"
+      }
+    },
+    {
+      "id": "host.hoverTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "hoverTrajectory",
+        "id": "host.hoverTrajectory@1"
+      }
+    },
+    {
+      "id": "host.identity.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identityState",
+        "id": "host.identity.state@1"
+      }
+    },
+    {
+      "id": "host.libraryAsset@1",
+      "type": "contract",
+      "data": {
+        "symbol": "libraryAsset",
+        "id": "host.libraryAsset@1"
+      }
+    },
+    {
+      "id": "host.libraryCatalog@1",
+      "type": "contract",
+      "data": {
+        "symbol": "libraryCatalog",
+        "id": "host.libraryCatalog@1"
+      }
+    },
+    {
+      "id": "host.lidarTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarTimeline",
+        "id": "host.lidarTimeline@1"
+      }
+    },
+    {
+      "id": "host.login@1",
+      "type": "contract",
+      "data": {
+        "symbol": "login",
+        "id": "host.login@1"
+      }
+    },
+    {
+      "id": "host.logout@1",
+      "type": "contract",
+      "data": {
+        "symbol": "logout",
+        "id": "host.logout@1"
+      }
+    },
+    {
+      "id": "host.navigate@1",
+      "type": "contract",
+      "data": {
+        "symbol": "navigate",
+        "id": "host.navigate@1"
+      }
+    },
+    {
+      "id": "host.orientationTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "orientationTimeline",
+        "id": "host.orientationTimeline@1"
+      }
+    },
+    {
+      "id": "host.playback.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "playbackState",
+        "id": "host.playback.state@1"
+      }
+    },
+    {
+      "id": "host.preferences.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "preferencesState",
+        "id": "host.preferences.state@1"
+      }
+    },
+    {
+      "id": "host.project.permissions@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projectPermissions",
+        "id": "host.project.permissions@1"
+      }
+    },
+    {
+      "id": "host.projectCloudAction@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projectCloudAction",
+        "id": "host.projectCloudAction@1"
+      }
+    },
+    {
+      "id": "host.projectsCatalog@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projectsCatalog",
+        "id": "host.projectsCatalog@1"
+      }
+    },
+    {
+      "id": "host.resend@1",
+      "type": "contract",
+      "data": {
+        "symbol": "resend",
+        "id": "host.resend@1"
+      }
+    },
+    {
+      "id": "host.resetPlayback@1",
+      "type": "contract",
+      "data": {
+        "symbol": "resetPlayback",
+        "id": "host.resetPlayback@1"
+      }
+    },
+    {
+      "id": "host.retryPreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "retryPreferences",
+        "id": "host.retryPreferences@1"
+      }
+    },
+    {
+      "id": "host.savePreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "savePreferences",
+        "id": "host.savePreferences@1"
+      }
+    },
+    {
+      "id": "host.sceneModels@1",
+      "type": "contract",
+      "data": {
+        "symbol": "sceneModels",
+        "id": "host.sceneModels@1"
+      }
+    },
+    {
+      "id": "host.scenePoints@1",
+      "type": "contract",
+      "data": {
+        "symbol": "scenePoints",
+        "id": "host.scenePoints@1"
+      }
+    },
+    {
+      "id": "host.selectTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "selectTrajectory",
+        "id": "host.selectTrajectory@1"
+      }
+    },
+    {
+      "id": "host.setActiveTool@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setActiveTool",
+        "id": "host.setActiveTool@1"
+      }
+    },
+    {
+      "id": "host.setCameraMode@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setCameraMode",
+        "id": "host.setCameraMode@1"
+      }
+    },
+    {
+      "id": "host.setLidarTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setLidarTimeline",
+        "id": "host.setLidarTimeline@1"
+      }
+    },
+    {
+      "id": "host.setPlaybackFrame@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setPlaybackFrame",
+        "id": "host.setPlaybackFrame@1"
+      }
+    },
+    {
+      "id": "host.setPlaying@1",
+      "type": "contract",
+      "data": {
+        "symbol": "setPlaying",
+        "id": "host.setPlaying@1"
+      }
+    },
+    {
+      "id": "host.speedTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "speedTimeline",
+        "id": "host.speedTimeline@1"
+      }
+    },
+    {
+      "id": "host.startCloudPlacement@1",
+      "type": "contract",
+      "data": {
+        "symbol": "startCloudPlacement",
+        "id": "host.startCloudPlacement@1"
+      }
+    },
+    {
+      "id": "host.toggleTheme@1",
+      "type": "contract",
+      "data": {
+        "symbol": "toggleTheme",
+        "id": "host.toggleTheme@1"
+      }
+    },
+    {
+      "id": "host.tools.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "editorTool",
+        "id": "host.tools.state@1"
+      }
+    },
+    {
+      "id": "host.trajectory.selection@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectorySelection",
+        "id": "host.trajectory.selection@1"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectoryCameraPose",
+        "id": "host.trajectoryCamera.pose@1"
+      }
+    },
+    {
+      "id": "host.trajectoryGeometry@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectoryGeometry",
+        "id": "host.trajectoryGeometry@1"
+      }
+    },
+    {
+      "id": "host.updateAnchor@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateAnchor",
+        "id": "host.updateAnchor@1"
+      }
+    },
+    {
+      "id": "host.updateCameraOrientationKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateCameraOrientationKeyframe",
+        "id": "host.updateCameraOrientationKeyframe@1"
+      }
+    },
+    {
+      "id": "host.updateDefaultCameraOrientation@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateDefaultCameraOrientation",
+        "id": "host.updateDefaultCameraOrientation@1"
+      }
+    },
+    {
+      "id": "host.updateLibraryDefaults@1",
+      "type": "contract",
+      "data": {
+        "symbol": "updateLibraryDefaults",
+        "id": "host.updateLibraryDefaults@1"
+      }
+    },
+    {
+      "id": "host.uploadLibraryFile@1",
+      "type": "contract",
+      "data": {
+        "symbol": "uploadLibraryFile",
+        "id": "host.uploadLibraryFile@1"
+      }
+    },
+    {
+      "id": "host.verify@1",
+      "type": "contract",
+      "data": {
+        "symbol": "verify",
+        "id": "host.verify@1"
+      }
+    },
+    {
+      "id": "identity.cancelLogin@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identity_cancelLogin",
+        "id": "identity.cancelLogin@1"
+      }
+    },
+    {
+      "id": "identity.login@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identity_login",
+        "id": "identity.login@1"
+      }
+    },
+    {
+      "id": "identity.logout@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identity_logout",
+        "id": "identity.logout@1"
+      }
+    },
+    {
+      "id": "identity.resend@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identity_resend",
+        "id": "identity.resend@1"
+      }
+    },
+    {
+      "id": "identity.verify@1",
+      "type": "contract",
+      "data": {
+        "symbol": "identity_verify",
+        "id": "identity.verify@1"
+      }
+    },
+    {
+      "id": "library.deleteLibraryAssets@1",
+      "type": "contract",
+      "data": {
+        "symbol": "library_deleteLibraryAssets",
+        "id": "library.deleteLibraryAssets@1"
+      }
+    },
+    {
+      "id": "library.navigate@1",
+      "type": "contract",
+      "data": {
+        "symbol": "library_navigate",
+        "id": "library.navigate@1"
+      }
+    },
+    {
+      "id": "library.updateLibraryDefaults@1",
+      "type": "contract",
+      "data": {
+        "symbol": "library_updateLibraryDefaults",
+        "id": "library.updateLibraryDefaults@1"
+      }
+    },
+    {
+      "id": "library.uploadLibraryFile@1",
+      "type": "contract",
+      "data": {
+        "symbol": "library_uploadLibraryFile",
+        "id": "library.uploadLibraryFile@1"
+      }
+    },
+    {
+      "id": "lidar.hitInstances@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarHitInstances",
+        "id": "lidar.hitInstances@1"
+      }
+    },
+    {
+      "id": "lidar.ranges@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarRanges",
+        "id": "lidar.ranges@1"
+      }
+    },
+    {
+      "id": "lidar.setLidarTimeline@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidar_setLidarTimeline",
+        "id": "lidar.setLidarTimeline@1"
+      }
+    },
+    {
+      "id": "lidar.status@1",
+      "type": "contract",
+      "data": {
+        "symbol": "lidarStatus",
+        "id": "lidar.status@1"
+      }
+    },
+    {
+      "id": "playback.resetPlayback@1",
+      "type": "contract",
+      "data": {
+        "symbol": "playback_resetPlayback",
+        "id": "playback.resetPlayback@1"
+      }
+    },
+    {
+      "id": "playback.setPlaybackFrame@1",
+      "type": "contract",
+      "data": {
+        "symbol": "playback_setPlaybackFrame",
+        "id": "playback.setPlaybackFrame@1"
+      }
+    },
+    {
+      "id": "playback.setPlaying@1",
+      "type": "contract",
+      "data": {
+        "symbol": "playback_setPlaying",
+        "id": "playback.setPlaying@1"
+      }
+    },
+    {
+      "id": "playback.state@1",
+      "type": "contract",
+      "data": {
+        "symbol": "playbackOutput",
+        "id": "playback.state@1"
+      }
+    },
+    {
+      "id": "projects.createProject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projects_createProject",
+        "id": "projects.createProject@1"
+      }
+    },
+    {
+      "id": "projects.deleteProject@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projects_deleteProject",
+        "id": "projects.deleteProject@1"
+      }
+    },
+    {
+      "id": "projects.navigate@1",
+      "type": "contract",
+      "data": {
+        "symbol": "projects_navigate",
+        "id": "projects.navigate@1"
+      }
+    },
+    {
+      "id": "renderer-preferences.retryPreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "renderer_preferences_retryPreferences",
+        "id": "renderer-preferences.retryPreferences@1"
+      }
+    },
+    {
+      "id": "renderer-preferences.savePreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "renderer_preferences_savePreferences",
+        "id": "renderer-preferences.savePreferences@1"
+      }
+    },
+    {
+      "id": "scene-grid.savePreferences@1",
+      "type": "contract",
+      "data": {
+        "symbol": "scene_grid_savePreferences",
+        "id": "scene-grid.savePreferences@1"
+      }
+    },
+    {
+      "id": "scene-models.projectCloudAction@1",
+      "type": "contract",
+      "data": {
+        "symbol": "scene_models_projectCloudAction",
+        "id": "scene-models.projectCloudAction@1"
+      }
+    },
+    {
+      "id": "scene-models.setActiveTool@1",
+      "type": "contract",
+      "data": {
+        "symbol": "scene_models_setActiveTool",
+        "id": "scene-models.setActiveTool@1"
+      }
+    },
+    {
+      "id": "scene-models.startCloudPlacement@1",
+      "type": "contract",
+      "data": {
+        "symbol": "scene_models_startCloudPlacement",
+        "id": "scene-models.startCloudPlacement@1"
+      }
+    },
+    {
+      "id": "speed-track.deleteSpeedKeyframe@1",
+      "type": "contract",
+      "data": {
+        "symbol": "speed_track_deleteSpeedKeyframe",
+        "id": "speed-track.deleteSpeedKeyframe@1"
+      }
+    },
+    {
+      "id": "trajectory.clearHoveredTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectory_clearHoveredTrajectory",
+        "id": "trajectory.clearHoveredTrajectory@1"
+      }
+    },
+    {
+      "id": "trajectory.clearTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectory_clearTrajectory",
+        "id": "trajectory.clearTrajectory@1"
+      }
+    },
+    {
+      "id": "trajectory.closeTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectory_closeTrajectory",
+        "id": "trajectory.closeTrajectory@1"
+      }
+    },
+    {
+      "id": "trajectory.hoverTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectory_hoverTrajectory",
+        "id": "trajectory.hoverTrajectory@1"
+      }
+    },
+    {
+      "id": "trajectory.selection@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectorySelectionOutput",
+        "id": "trajectory.selection@1"
+      }
+    },
+    {
+      "id": "trajectory.selectTrajectory@1",
+      "type": "contract",
+      "data": {
+        "symbol": "trajectory_selectTrajectory",
+        "id": "trajectory.selectTrajectory@1"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "host.project.permissions@1->anchors",
+      "source": "host.project.permissions@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.anchors@1->anchors",
+      "source": "host.anchors@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.tools.state@1->anchors",
+      "source": "host.tools.state@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.camera.mode@1->anchors",
+      "source": "host.camera.mode@1",
+      "target": "anchors",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "anchors->host.addAnchor@1",
+      "source": "anchors",
+      "target": "host.addAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.updateAnchor@1",
+      "source": "anchors",
+      "target": "host.updateAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.deleteAnchor@1",
+      "source": "anchors",
+      "target": "host.deleteAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.setActiveTool@1",
+      "source": "anchors",
+      "target": "host.setActiveTool@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.hoverAnchor@1",
+      "source": "anchors",
+      "target": "host.hoverAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors->host.clearHoveredAnchor@1",
+      "source": "anchors",
+      "target": "host.clearHoveredAnchor@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "anchors.addAnchor@1->anchors",
+      "source": "anchors.addAnchor@1",
+      "target": "anchors",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "anchors.updateAnchor@1->anchors",
+      "source": "anchors.updateAnchor@1",
+      "target": "anchors",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "anchors.deleteAnchor@1->anchors",
+      "source": "anchors.deleteAnchor@1",
+      "target": "anchors",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "anchors.setActiveTool@1->anchors",
+      "source": "anchors.setActiveTool@1",
+      "target": "anchors",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "anchors.hoverAnchor@1->anchors",
+      "source": "anchors.hoverAnchor@1",
+      "target": "anchors",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "anchors.clearHoveredAnchor@1->anchors",
+      "source": "anchors.clearHoveredAnchor@1",
+      "target": "anchors",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.appearance.theme@1->appearance",
+      "source": "host.appearance.theme@1",
+      "target": "appearance",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "appearance->host.toggleTheme@1",
+      "source": "appearance",
+      "target": "host.toggleTheme@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "appearance.toggleTheme@1->appearance",
+      "source": "appearance.toggleTheme@1",
+      "target": "appearance",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->camera-aim",
+      "source": "host.project.permissions@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.aimTimeline@1->camera-aim",
+      "source": "host.aimTimeline@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.scenePoints@1->camera-aim",
+      "source": "host.scenePoints@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "camera-aim->host.deleteCameraKeyframe@1",
+      "source": "camera-aim",
+      "target": "host.deleteCameraKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-aim.deleteCameraKeyframe@1->camera-aim",
+      "source": "camera-aim.deleteCameraKeyframe@1",
+      "target": "camera-aim",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->camera-orientation",
+      "source": "host.project.permissions@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.orientationTimeline@1->camera-orientation",
+      "source": "host.orientationTimeline@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "camera-orientation->host.addCameraOrientationKeyframe@1",
+      "source": "camera-orientation",
+      "target": "host.addCameraOrientationKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation->host.updateCameraOrientationKeyframe@1",
+      "source": "camera-orientation",
+      "target": "host.updateCameraOrientationKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation->host.updateDefaultCameraOrientation@1",
+      "source": "camera-orientation",
+      "target": "host.updateDefaultCameraOrientation@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation->host.deleteCameraOrientationKeyframe@1",
+      "source": "camera-orientation",
+      "target": "host.deleteCameraOrientationKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-orientation.addCameraOrientationKeyframe@1->camera-orientation",
+      "source": "camera-orientation.addCameraOrientationKeyframe@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "camera-orientation.updateCameraOrientationKeyframe@1->camera-orientation",
+      "source": "camera-orientation.updateCameraOrientationKeyframe@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "camera-orientation.updateDefaultCameraOrientation@1->camera-orientation",
+      "source": "camera-orientation.updateDefaultCameraOrientation@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "camera-orientation.deleteCameraOrientationKeyframe@1->camera-orientation",
+      "source": "camera-orientation.deleteCameraOrientationKeyframe@1",
+      "target": "camera-orientation",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1->camera-view",
+      "source": "host.trajectoryCamera.pose@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads",
+        "access": ["read"]
+      }
+    },
+    {
+      "id": "host.project.permissions@1->camera-view",
+      "source": "host.project.permissions@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.camera.mode@1->camera-view",
+      "source": "host.camera.mode@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "camera-view->camera-view.mode@1",
+      "source": "camera-view",
+      "target": "camera-view.mode@1",
+      "data": {
+        "kind": "provides"
+      }
+    },
+    {
+      "id": "camera-view->host.setCameraMode@1",
+      "source": "camera-view",
+      "target": "host.setCameraMode@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "camera-view.setCameraMode@1->camera-view",
+      "source": "camera-view.setCameraMode@1",
+      "target": "camera-view",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->chat-agent",
+      "source": "host.project.permissions@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.anchors@1->chat-agent",
+      "source": "host.anchors@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.chatHistory@1->chat-agent",
+      "source": "host.chatHistory@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "chat-agent->host.chat.send@1",
+      "source": "chat-agent",
+      "target": "host.chat.send@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "chat-agent.sendChatMessage@1->chat-agent",
+      "source": "chat-agent.sendChatMessage@1",
+      "target": "chat-agent",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1->depth-of-field",
+      "source": "host.trajectoryCamera.pose@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads",
+        "access": ["read"]
+      }
+    },
+    {
+      "id": "host.project.permissions@1->depth-of-field",
+      "source": "host.project.permissions@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.depthOfFieldTimeline@1->depth-of-field",
+      "source": "host.depthOfFieldTimeline@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.scenePoints@1->depth-of-field",
+      "source": "host.scenePoints@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "depth-of-field->host.addDepthOfFieldKeyframe@1",
+      "source": "depth-of-field",
+      "target": "host.addDepthOfFieldKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "depth-of-field->host.deleteDepthOfFieldKeyframe@1",
+      "source": "depth-of-field",
+      "target": "host.deleteDepthOfFieldKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "depth-of-field.addDepthOfFieldKeyframe@1->depth-of-field",
+      "source": "depth-of-field.addDepthOfFieldKeyframe@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "depth-of-field.deleteDepthOfFieldKeyframe@1->depth-of-field",
+      "source": "depth-of-field.deleteDepthOfFieldKeyframe@1",
+      "target": "depth-of-field",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.identity.state@1->identity",
+      "source": "host.identity.state@1",
+      "target": "identity",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.project.permissions@1->identity",
+      "source": "host.project.permissions@1",
+      "target": "identity",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "identity->host.login@1",
+      "source": "identity",
+      "target": "host.login@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.verify@1",
+      "source": "identity",
+      "target": "host.verify@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.resend@1",
+      "source": "identity",
+      "target": "host.resend@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.cancelLogin@1",
+      "source": "identity",
+      "target": "host.cancelLogin@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity->host.logout@1",
+      "source": "identity",
+      "target": "host.logout@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "identity.login@1->identity",
+      "source": "identity.login@1",
+      "target": "identity",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "identity.verify@1->identity",
+      "source": "identity.verify@1",
+      "target": "identity",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "identity.resend@1->identity",
+      "source": "identity.resend@1",
+      "target": "identity",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "identity.cancelLogin@1->identity",
+      "source": "identity.cancelLogin@1",
+      "target": "identity",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "identity.logout@1->identity",
+      "source": "identity.logout@1",
+      "target": "identity",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->library",
+      "source": "host.project.permissions@1",
+      "target": "library",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.libraryCatalog@1->library",
+      "source": "host.libraryCatalog@1",
+      "target": "library",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.libraryAsset@1->library",
+      "source": "host.libraryAsset@1",
+      "target": "library",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "library->host.uploadLibraryFile@1",
+      "source": "library",
+      "target": "host.uploadLibraryFile@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library->host.deleteLibraryAssets@1",
+      "source": "library",
+      "target": "host.deleteLibraryAssets@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library->host.updateLibraryDefaults@1",
+      "source": "library",
+      "target": "host.updateLibraryDefaults@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library->host.navigate@1",
+      "source": "library",
+      "target": "host.navigate@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "library.uploadLibraryFile@1->library",
+      "source": "library.uploadLibraryFile@1",
+      "target": "library",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "library.deleteLibraryAssets@1->library",
+      "source": "library.deleteLibraryAssets@1",
+      "target": "library",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "library.updateLibraryDefaults@1->library",
+      "source": "library.updateLibraryDefaults@1",
+      "target": "library",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "library.navigate@1->library",
+      "source": "library.navigate@1",
+      "target": "library",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.trajectoryCamera.pose@1->lidar",
+      "source": "host.trajectoryCamera.pose@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads",
+        "access": ["read"]
+      }
+    },
+    {
+      "id": "host.project.permissions@1->lidar",
+      "source": "host.project.permissions@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.lidarTimeline@1->lidar",
+      "source": "host.lidarTimeline@1",
+      "target": "lidar",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "lidar->lidar.status@1",
+      "source": "lidar",
+      "target": "lidar.status@1",
+      "data": {
+        "kind": "provides"
+      }
+    },
+    {
+      "id": "lidar->host.setLidarTimeline@1",
+      "source": "lidar",
+      "target": "host.setLidarTimeline@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "lidar.setLidarTimeline@1->lidar",
+      "source": "lidar.setLidarTimeline@1",
+      "target": "lidar",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.gaussians.scene@1->lidar.sensor",
+      "source": "host.gaussians.scene@1",
+      "target": "lidar",
+      "data": {
+        "kind": "gpu-input",
+        "pass": "lidar.sensor"
+      }
+    },
+    {
+      "id": "lidar.sensor->lidar.ranges@1",
+      "source": "lidar",
+      "target": "lidar.ranges@1",
+      "data": {
+        "kind": "gpu-output",
+        "pass": "lidar.sensor"
+      }
+    },
+    {
+      "id": "lidar.sensor->lidar.hitInstances@1",
+      "source": "lidar",
+      "target": "lidar.hitInstances@1",
+      "data": {
+        "kind": "gpu-output",
+        "pass": "lidar.sensor"
+      }
+    },
+    {
+      "id": "host.playback.state@1->playback",
+      "source": "host.playback.state@1",
+      "target": "playback",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "playback->playback.state@1",
+      "source": "playback",
+      "target": "playback.state@1",
+      "data": {
+        "kind": "provides"
+      }
+    },
+    {
+      "id": "playback->host.setPlaybackFrame@1",
+      "source": "playback",
+      "target": "host.setPlaybackFrame@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback->host.resetPlayback@1",
+      "source": "playback",
+      "target": "host.resetPlayback@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback->host.setPlaying@1",
+      "source": "playback",
+      "target": "host.setPlaying@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "playback.setPlaybackFrame@1->playback",
+      "source": "playback.setPlaybackFrame@1",
+      "target": "playback",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "playback.resetPlayback@1->playback",
+      "source": "playback.resetPlayback@1",
+      "target": "playback",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "playback.setPlaying@1->playback",
+      "source": "playback.setPlaying@1",
+      "target": "playback",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->projects",
+      "source": "host.project.permissions@1",
+      "target": "projects",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.projectsCatalog@1->projects",
+      "source": "host.projectsCatalog@1",
+      "target": "projects",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "projects->host.createProject@1",
+      "source": "projects",
+      "target": "host.createProject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "projects->host.deleteProject@1",
+      "source": "projects",
+      "target": "host.deleteProject@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "projects->host.navigate@1",
+      "source": "projects",
+      "target": "host.navigate@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "projects.createProject@1->projects",
+      "source": "projects.createProject@1",
+      "target": "projects",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "projects.deleteProject@1->projects",
+      "source": "projects.deleteProject@1",
+      "target": "projects",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "projects.navigate@1->projects",
+      "source": "projects.navigate@1",
+      "target": "projects",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.preferences.state@1->renderer-preferences",
+      "source": "host.preferences.state@1",
+      "target": "renderer-preferences",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "renderer-preferences->host.savePreferences@1",
+      "source": "renderer-preferences",
+      "target": "host.savePreferences@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "renderer-preferences->host.retryPreferences@1",
+      "source": "renderer-preferences",
+      "target": "host.retryPreferences@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "renderer-preferences.savePreferences@1->renderer-preferences",
+      "source": "renderer-preferences.savePreferences@1",
+      "target": "renderer-preferences",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "renderer-preferences.retryPreferences@1->renderer-preferences",
+      "source": "renderer-preferences.retryPreferences@1",
+      "target": "renderer-preferences",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.preferences.state@1->scene-grid",
+      "source": "host.preferences.state@1",
+      "target": "scene-grid",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "scene-grid->host.savePreferences@1",
+      "source": "scene-grid",
+      "target": "host.savePreferences@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-grid.savePreferences@1->scene-grid",
+      "source": "scene-grid.savePreferences@1",
+      "target": "scene-grid",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->scene-models",
+      "source": "host.project.permissions@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.libraryCatalog@1->scene-models",
+      "source": "host.libraryCatalog@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.sceneModels@1->scene-models",
+      "source": "host.sceneModels@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.tools.state@1->scene-models",
+      "source": "host.tools.state@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "scene-models->host.projectCloudAction@1",
+      "source": "scene-models",
+      "target": "host.projectCloudAction@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-models->host.startCloudPlacement@1",
+      "source": "scene-models",
+      "target": "host.startCloudPlacement@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-models->host.setActiveTool@1",
+      "source": "scene-models",
+      "target": "host.setActiveTool@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "scene-models.projectCloudAction@1->scene-models",
+      "source": "scene-models.projectCloudAction@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "scene-models.startCloudPlacement@1->scene-models",
+      "source": "scene-models.startCloudPlacement@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "scene-models.setActiveTool@1->scene-models",
+      "source": "scene-models.setActiveTool@1",
+      "target": "scene-models",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->speed-track",
+      "source": "host.project.permissions@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.speedTimeline@1->speed-track",
+      "source": "host.speedTimeline@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "speed-track->host.deleteSpeedKeyframe@1",
+      "source": "speed-track",
+      "target": "host.deleteSpeedKeyframe@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "speed-track.deleteSpeedKeyframe@1->speed-track",
+      "source": "speed-track.deleteSpeedKeyframe@1",
+      "target": "speed-track",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "host.project.permissions@1->trajectory",
+      "source": "host.project.permissions@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.trajectoryGeometry@1->trajectory",
+      "source": "host.trajectoryGeometry@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.tools.state@1->trajectory",
+      "source": "host.tools.state@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "host.trajectory.selection@1->trajectory",
+      "source": "host.trajectory.selection@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "reads",
+        "access": ["read", "readAsync", "subscribe"]
+      }
+    },
+    {
+      "id": "trajectory->trajectory.selection@1",
+      "source": "trajectory",
+      "target": "trajectory.selection@1",
+      "data": {
+        "kind": "provides"
+      }
+    },
+    {
+      "id": "trajectory->host.clearTrajectory@1",
+      "source": "trajectory",
+      "target": "host.clearTrajectory@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.hoverTrajectory@1",
+      "source": "trajectory",
+      "target": "host.hoverTrajectory@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.clearHoveredTrajectory@1",
+      "source": "trajectory",
+      "target": "host.clearHoveredTrajectory@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.selectTrajectory@1",
+      "source": "trajectory",
+      "target": "host.selectTrajectory@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory->host.closeTrajectory@1",
+      "source": "trajectory",
+      "target": "host.closeTrajectory@1",
+      "data": {
+        "kind": "calls"
+      }
+    },
+    {
+      "id": "trajectory.clearTrajectory@1->trajectory",
+      "source": "trajectory.clearTrajectory@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "trajectory.hoverTrajectory@1->trajectory",
+      "source": "trajectory.hoverTrajectory@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "trajectory.clearHoveredTrajectory@1->trajectory",
+      "source": "trajectory.clearHoveredTrajectory@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "trajectory.selectTrajectory@1->trajectory",
+      "source": "trajectory.selectTrajectory@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "handles"
+      }
+    },
+    {
+      "id": "trajectory.closeTrajectory@1->trajectory",
+      "source": "trajectory.closeTrajectory@1",
+      "target": "trajectory",
+      "data": {
+        "kind": "handles"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "contract": "host.addAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 93,
+      "adapter": "async (input) => { await addAnchorMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.addCameraOrientationKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 102,
+      "adapter": "async (input) => { await addCameraOrientationKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.addDepthOfFieldKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 132,
+      "adapter": "async (input) => { await addDepthOfFieldKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.aimTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 74,
+      "adapter": "api.useGetAimTimeline(projectId)"
+    },
+    {
+      "contract": "host.anchors@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 66,
+      "adapter": "api.useListAnchors(projectId)"
+    },
+    {
+      "contract": "host.appearance.theme@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 68,
+      "adapter": "theme.theme"
+    },
+    {
+      "contract": "host.camera.mode@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 62,
+      "adapter": "camera"
+    },
+    {
+      "contract": "host.cancelLogin@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 76,
+      "adapter": "() => auth.cancelLogin()"
+    },
+    {
+      "contract": "host.chat.send@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 145,
+      "adapter": "async (input, signal) => { const response = await sendChatMessageMutation.mutateAsync({ ...input, onAccepted: () => { if (!signal.aborted) input.onAccepted(); }, }); if (!signal.aborted && response.compiled.position_segments.length) store.getState().selectionActions.selectTrajectory(); return response; }"
+    },
+    {
+      "contract": "host.chatHistory@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 86,
+      "adapter": "api.useListChatMessages(projectId)"
+    },
+    {
+      "contract": "host.clearHoveredAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 206,
+      "adapter": "(input) => store.getState().toolActions.clearHoveredAnchor(input)"
+    },
+    {
+      "contract": "host.clearHoveredTrajectory@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 212,
+      "adapter": "() => store.getState().toolActions.clearHoveredTrajectory()"
+    },
+    {
+      "contract": "host.clearTrajectory@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 189,
+      "adapter": "async (input, signal) => { await clearTrajectoryMutation.mutateAsync(input); if (!signal.aborted) { store.getState().selectionActions.closeTrajectory(); store.getState().toolActions.clearHoveredTrajectory(); store.getState().playbackActions.resetPlayback(); } }"
+    },
+    {
+      "contract": "host.closeTrajectory@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 221,
+      "adapter": "() => store.getState().selectionActions.closeTrajectory()"
+    },
+    {
+      "contract": "host.compiledTrajectory@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 87,
+      "adapter": "api.useGetCompiledTrajectory(projectId)"
+    },
+    {
+      "contract": "host.createProject@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 88,
+      "adapter": "(name) => create.mutateAsync(name)"
+    },
+    {
+      "contract": "host.deleteAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 157,
+      "adapter": "async (input) => { await deleteAnchorMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteCameraKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 167,
+      "adapter": "async (input) => { await deleteCameraKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteCameraOrientationKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 172,
+      "adapter": "async (input) => { await deleteCameraOrientationKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteDepthOfFieldKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 181,
+      "adapter": "async (input) => { await deleteDepthOfFieldKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.deleteLibraryAssets@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 97,
+      "adapter": "async (ids) => { await deleteAssets.mutateAsync(ids); }"
+    },
+    {
+      "contract": "host.deleteProject@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 91,
+      "adapter": "async (id) => { await remove.mutateAsync(id); }"
+    },
+    {
+      "contract": "host.deleteSpeedKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 162,
+      "adapter": "async (input) => { await deleteSpeedKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.depthOfFieldTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 80,
+      "adapter": "api.useGetDepthOfFieldTimeline(projectId)"
+    },
+    {
+      "contract": "host.hoverAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 203,
+      "adapter": "(input) => store.getState().toolActions.hoverAnchor(input)"
+    },
+    {
+      "contract": "host.hoverTrajectory@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 209,
+      "adapter": "() => store.getState().toolActions.hoverTrajectory()"
+    },
+    {
+      "contract": "host.identity.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 51,
+      "adapter": "{ canEdit: auth.canEdit, loading: auth.loading, username: auth.username, errorMessage: auth.error?.message ?? null, pending: auth.pending, challenge: auth.challenge, }"
+    },
+    {
+      "contract": "host.libraryAsset@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/library-asset-host-provider.tsx",
+      "line": 24,
+      "adapter": "useGetLibraryAsset(assetId)"
+    },
+    {
+      "contract": "host.libraryCatalog@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 69,
+      "adapter": "library"
+    },
+    {
+      "contract": "host.lidarTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 85,
+      "adapter": "api.useGetLidarTimeline(projectId)"
+    },
+    {
+      "contract": "host.login@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 71,
+      "adapter": "({ username, password }) => auth.login(username, password)"
+    },
+    {
+      "contract": "host.logout@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 77,
+      "adapter": "() => auth.logout()"
+    },
+    {
+      "contract": "host.navigate@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 83,
+      "adapter": "(path) => { if (!/^\\/(?:projects(?:\\/[^/]+)?|library(?:\\/[^/]+)?)?$/.test(path)) throw new Error(\"Unsupported navigation destination\"); router.push(path); }"
+    },
+    {
+      "contract": "host.orientationTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 75,
+      "adapter": "api.useGetOrientationTimeline(projectId)"
+    },
+    {
+      "contract": "host.playback.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 63,
+      "adapter": "playback"
+    },
+    {
+      "contract": "host.preferences.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 59,
+      "adapter": "{ webGpuTileRenderer: settings.webGpuTileRenderer, showGrid: settings.showGrid, gaussianDpr: settings.gaussianDpr, loading: settings.loading, saving: settings.saving, ready: settings.ready, errorMessage: settings.error?.message ?? null, }"
+    },
+    {
+      "contract": "host.project.permissions@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 50,
+      "adapter": "{ canEdit: auth.canEdit }"
+    },
+    {
+      "contract": "host.projectCloudAction@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 136,
+      "adapter": "async (input) => { const response = await projectCloudActionMutation.mutateAsync(input); return { status: response.status }; }"
+    },
+    {
+      "contract": "host.projectsCatalog@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 70,
+      "adapter": "projects"
+    },
+    {
+      "contract": "host.resend@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 75,
+      "adapter": "() => auth.resend()"
+    },
+    {
+      "contract": "host.resetPlayback@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 224,
+      "adapter": "() => store.getState().playbackActions.resetPlayback()"
+    },
+    {
+      "contract": "host.retryPreferences@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 81,
+      "adapter": "() => settings.retry()"
+    },
+    {
+      "contract": "host.savePreferences@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 78,
+      "adapter": "(changes) => settings.save(changes)"
+    },
+    {
+      "contract": "host.sceneModels@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 65,
+      "adapter": "api.useListProjectClouds(projectId)"
+    },
+    {
+      "contract": "host.scenePoints@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 67,
+      "adapter": "api.useListScenePoints(projectId)"
+    },
+    {
+      "contract": "host.selectTrajectory@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 218,
+      "adapter": "() => store.getState().selectionActions.selectTrajectory()"
+    },
+    {
+      "contract": "host.setActiveTool@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 197,
+      "adapter": "(input) => store.getState().toolActions.setActiveTool(input)"
+    },
+    {
+      "contract": "host.setCameraMode@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 215,
+      "adapter": "(mode) => store.getState().cameraActions.setCameraMode(mode)"
+    },
+    {
+      "contract": "host.setLidarTimeline@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 141,
+      "adapter": "async (input) => { await setLidarTimelineMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.setPlaybackFrame@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 230,
+      "adapter": "({ pathPosition, elapsed }) => store.getState().playbackActions.setPlaybackFrame(pathPosition, elapsed)"
+    },
+    {
+      "contract": "host.setPlaying@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 227,
+      "adapter": "(input) => store.getState().playbackActions.setPlaying(input)"
+    },
+    {
+      "contract": "host.speedTimeline@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 73,
+      "adapter": "api.useGetSpeedTimeline(projectId)"
+    },
+    {
+      "contract": "host.startCloudPlacement@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 200,
+      "adapter": "(input) => store.getState().toolActions.startCloudPlacement(input)"
+    },
+    {
+      "contract": "host.toggleTheme@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 82,
+      "adapter": "() => theme.toggleTheme()"
+    },
+    {
+      "contract": "host.tools.state@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 61,
+      "adapter": "tool"
+    },
+    {
+      "contract": "host.trajectory.selection@1",
+      "kind": "useBindValue",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 64,
+      "adapter": "selection"
+    },
+    {
+      "contract": "host.trajectoryCamera.pose@1",
+      "kind": "runtime.bindData",
+      "source": "apps/host/src/runtime/scene-frame-provider.tsx",
+      "line": 56,
+      "adapter": "cell.subscribe"
+    },
+    {
+      "contract": "host.trajectoryGeometry@1",
+      "kind": "useBindQuery",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 68,
+      "adapter": "api.useGetTrajectory(projectId)"
+    },
+    {
+      "contract": "host.updateAnchor@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 97,
+      "adapter": "async (input) => { await updateAnchorMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.updateCameraOrientationKeyframe@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 111,
+      "adapter": "async (input) => { await updateCameraOrientationKeyframeMutation.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.updateDefaultCameraOrientation@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/project-host-provider.tsx",
+      "line": 120,
+      "adapter": "async (input) => { await updateDefaultCameraOrientationMutation.mutateAsync({ pitch_deg: input.pitch_deg ?? 0, yaw_deg: input.yaw_deg ?? 0, roll_deg: input.roll_deg ?? 0, }); }"
+    },
+    {
+      "contract": "host.updateLibraryDefaults@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 114,
+      "adapter": "async (input) => { await defaults.mutateAsync(input); }"
+    },
+    {
+      "contract": "host.uploadLibraryFile@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 94,
+      "adapter": "async (file) => { await upload.mutateAsync(file); }"
+    },
+    {
+      "contract": "host.verify@1",
+      "kind": "useBindRequest",
+      "source": "apps/host/src/runtime/application-host-provider.tsx",
+      "line": 74,
+      "adapter": "(code) => auth.verify(code)"
+    }
+  ],
+  "note": "Declarations are permitted flows; HostRuntime.trace records actual access without payloads. Frame and GPU execution remain separate graphs."
+}

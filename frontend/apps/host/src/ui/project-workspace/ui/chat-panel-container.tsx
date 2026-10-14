@@ -1,0 +1,58 @@
+"use client";
+import type { Project } from "@camera-path/contracts/project";
+import {
+  ResponsiveChatPanel,
+  useChatComposer,
+  useSendChatMessage,
+} from "@camera-path/feature-chat-agent";
+import { useTrajectorySelection } from "@host/editor";
+
+interface ChatPanelContainerProps {
+  project: Project;
+  projectId: string;
+  queryError: Error | null;
+}
+
+export function ChatPanelContainer({
+  project,
+  projectId,
+  queryError,
+}: ChatPanelContainerProps) {
+  const chatMutation = useSendChatMessage(projectId);
+  const { selectTrajectory } = useTrajectorySelection();
+  const anchors = Object.values(project.anchors);
+  const requestError = queryError ?? chatMutation.error;
+  const error = requestError instanceof Error ? requestError.message : null;
+
+  async function sendMessage(
+    id: string,
+    message: string,
+    onAccepted: () => void,
+  ) {
+    try {
+      const result = await chatMutation.mutateAsync({
+        id,
+        message,
+        onAccepted,
+      });
+      if (result.compiled.position_segments.length > 0) selectTrajectory();
+    } catch {
+      // The mutation exposes the error while the persisted user message stays in chat history.
+    }
+  }
+
+  const composer = useChatComposer({
+    pending: chatMutation.isPending,
+    onSend: sendMessage,
+  });
+
+  return (
+    <ResponsiveChatPanel
+      anchors={anchors}
+      error={error}
+      messages={project.chat_history}
+      composer={composer}
+      pending={chatMutation.isPending}
+    />
+  );
+}

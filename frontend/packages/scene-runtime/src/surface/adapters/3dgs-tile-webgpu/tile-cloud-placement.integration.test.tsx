@@ -1,0 +1,626 @@
+import { EditorTestHost } from "@host/testing/editor-host";
+// @vitest-environment happy-dom
+import type { GaussianCloud } from "3dgs-tile-webgpu";
+import type { LibraryAsset, ProjectCloud } from "@camera-path/contracts/api";
+import { useAnchorPlacement } from "@camera-path/feature-anchors/scene/use-anchor-placement";
+import { SceneGrid } from "@camera-path/feature-scene-grid/scene/scene-grid";
+import { SceneClouds } from "@camera-path/feature-scene-models/scene/scene-clouds";
+import type { PlacementPreview } from "@camera-path/feature-scene-models/scene/use-cloud-placement-interaction";
+import { raycastPlacementSurfaces } from "@camera-path/scene-runtime/picking/raycast-placement-surfaces";
+import { SceneSurfaceProvider } from "@camera-path/scene-runtime/surface";
+import { TileGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend";
+import type { SceneRenderPipeline } from "@camera-path/scene-runtime/three";
+import { configureInteractiveRaycasterLayers } from "@camera-path/scene-runtime/three/configure-interactive-raycaster-layers";
+import { createRenderPipelineEvents } from "@camera-path/scene-runtime/three/create-render-pipeline-events";
+import { useSetActiveEditorTool } from "@host/editor";
+import { createRoot, extend } from "@react-three/fiber";
+import { readFileSync } from "node:fs";
+import { act, useEffect } from "react";
+import {
+  GridHelper,
+  Group,
+  LineBasicMaterial,
+  Mesh,
+  MeshBasicMaterial,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Raycaster,
+  RingGeometry,
+  Scene,
+  Vector3,
+  type WebGLRenderer,
+} from "three";
+import { afterEach, expect, it, vi } from "vitest";
+
+// SceneGrid must use its WebGPU pre-splat layer, without creating a GPU renderer.
+vi.mock("@camera-path/scene-runtime/three", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@camera-path/scene-runtime/three")
+  >()),
+  useOptionalRenderPipeline: () => ({}),
+}));
+
+// Use the real adapter and WASM store; substitute only worker transport and GPU pass setup.
+vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("3dgs-tile-webgpu")>();
+  return {
+    ...actual,
+    GaussianStore: class extends actual.GaussianStore {
+      constructor() {
+        super(new actual.WasmGaussianBackend({}));
+      }
+    },
+    gaussianPass: (
+      _renderer: unknown,
+      camera: PerspectiveCamera,
+      store: InstanceType<typeof actual.GaussianStore>,
+    ) => {
+      store.setFrontendCapabilities(
+        {
+          maxStorageBufferBindingSize: 64 * 1024 * 1024,
+          maxBufferSize: 64 * 1024 * 1024,
+          maxStorageBuffersPerShaderStage: 8,
+          supportsPartialBufferUpdates: true,
+        },
+        camera,
+        100,
+        100,
+      );
+      let resolutionScale = 1;
+      return {
+        depthSortMode: "float32",
+        dispose: vi.fn(),
+        warmup: vi.fn(async () => undefined),
+        getResolutionScale: () => resolutionScale,
+        setResolutionScale: (value: number) => {
+          resolutionScale = value;
+        },
+      };
+    },
+  };
+});
+
+// Exercise the renderer's real Rust parser, mipmap snapshot and alpha raycast, without a GPU.
+const ply = new TextEncoder().encode(
+  `ply\nformat ascii 1.0\nelement vertex 1\nproperty float x\nproperty float y\nproperty float z\nproperty float opacity\nproperty float scale_0\nproperty float scale_1\nproperty float scale_2\nproperty float rot_0\nproperty float rot_1\nproperty float rot_2\nproperty float rot_3\nproperty float f_dc_0\nproperty float f_dc_1\nproperty float f_dc_2\nend_header\n0 0 0 4 -2 -2 -2 1 0 0 0 0 0 0\n`,
+);
+const sog = new Uint8Array(
+  readFileSync(
+    "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/fixtures/single.sog",
+  ),
+);
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+it.each([
+  { format: "ply", bytes: ply },
+  { format: "sog", bytes: sog },
+])(
+  "keeps second and third $format clouds pickable through preview handoff, transforms and removal",
+  async ({ format, bytes }) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    // Node streaming compilation rejects Happy DOM Responses from another realm.
+    // Compile the same WASM bytes directly while exercising the real Rust engine.
+    vi.spyOn(WebAssembly, "instantiateStreaming").mockImplementation(
+      async (source, imports) =>
+        WebAssembly.instantiate(await (await source).arrayBuffer(), imports),
+    );
+    extend({
+      Group,
+      GridHelper,
+      LineBasicMaterial,
+      Mesh,
+      MeshBasicMaterial,
+      PlaneGeometry,
+      RingGeometry,
+    });
+    const downloadUrl = "/api/v1/library/asset/content";
+    const fetchCloud = vi.fn(async () => new Response(bytes.slice().buffer));
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith(downloadUrl)
+        ? fetchCloud()
+        : originalFetch(input, init),
+    );
+    const backend = new TileGaussianRenderingBackend({
+      camera: new PerspectiveCamera(),
+      renderer: { getPixelRatio: () => 1 },
+      getOpaqueViewDepth: vi.fn(() => ({})),
+      registerLayer: vi.fn(() => vi.fn()),
+    } as unknown as SceneRenderPipeline);
+    vi.spyOn(backend, "createCloud");
+    const canvas = document.createElement("canvas");
+    const scene = new Scene();
+    const root = createRoot(canvas);
+    root.configure({
+      scene,
+      events: createRenderPipelineEvents,
+      onCreated: (state) =>
+        configureInteractiveRaycasterLayers(state.raycaster),
+      frameloop: "never",
+      size: { width: 100, height: 100, top: 0, left: 0 },
+      gl: {
+        render: vi.fn(),
+        setSize: vi.fn(),
+        setPixelRatio: vi.fn(),
+        domElement: canvas,
+      } as unknown as WebGLRenderer,
+    });
+    const ready = vi.fn();
+    const anchorPick = vi.fn();
+    const onPlaceAnchor = vi.fn();
+    let anchorPlacement: ReturnType<typeof useAnchorPlacement>;
+    let setAnchorTool: ReturnType<typeof useSetActiveEditorTool>;
+    const asset: LibraryAsset = {
+      id: "asset",
+      created_at: "",
+      format: format as "ply" | "sog",
+      size_bytes: bytes.byteLength,
+      status: "ready",
+      download_url: downloadUrl,
+      name: "cloud",
+      default_rotation_deg: [0, 0, 0],
+      default_scale: 1,
+      default_offset: [0, 0, 0],
+    };
+    const clouds: ProjectCloud[] = [];
+    const keys = new Map<string, string>();
+    let preview: PlacementPreview | null = null;
+    let placed: PlacementPreview | null = null;
+    let showGrid = false;
+    let state: ReturnType<typeof root.render> | undefined;
+    function AnchorScene() {
+      const setTool = useSetActiveEditorTool();
+      setAnchorTool = setTool;
+      useEffect(() => setTool("anchor"), [setTool]);
+      anchorPlacement = useAnchorPlacement({ onPlace: onPlaceAnchor });
+      return (
+        <>
+          <SceneClouds
+            clouds={[...clouds]}
+            preview={preview}
+            placed={placed}
+            resourceKeyForCloud={(id) => keys.get(id)}
+            interactive
+            surfaceEvents={{
+              ...anchorPlacement.surfaceEventProps,
+              onSurfacePointerDown: (hit, event) => {
+                anchorPick(hit, event);
+                anchorPlacement.surfaceEventProps.onSurfacePointerDown(
+                  hit,
+                  event,
+                );
+              },
+            }}
+            onReady={ready}
+            onLoading={vi.fn()}
+            onError={vi.fn()}
+          />
+          {showGrid && (
+            <SceneGrid
+              dark={false}
+              interactive
+              placementEvents={anchorPlacement.surfaceEventProps}
+            />
+          )}
+        </>
+      );
+    }
+    async function renderScene() {
+      await act(async () => {
+        state = root.render(
+          <EditorTestHost>
+            <SceneSurfaceProvider backend={backend}>
+              <AnchorScene />
+            </SceneSurfaceProvider>
+          </EditorTestHost>,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      // Rust/WASM initialization and decoding can finish after the first React commit.
+      await act(async () => {
+        await Promise.all(
+          vi.mocked(backend.createCloud).mock.results.map(({ value }) => value),
+        );
+      });
+    }
+    function hit(x: number) {
+      const raycaster = new Raycaster(
+        new Vector3(x, 0, 5),
+        new Vector3(0, 0, -1),
+      );
+      scene.updateMatrixWorld(true);
+      return raycaster.intersectObjects(scene.children, true)[0];
+    }
+    async function pickAnchor(x: number, pointerType = "mouse", cloudHits = 1) {
+      await act(async () => setAnchorTool("anchor"));
+      const camera = state!.getState().camera;
+      camera.updateWorldMatrix(true, false);
+      const screenPoint = new Vector3(x, 0, 0).project(camera);
+      async function pointer(
+        type: "onPointerMove" | "onPointerDown" | "onPointerUp",
+      ) {
+        const event = new PointerEvent(type.slice(2).toLowerCase(), {
+          pointerId: 1,
+          pointerType,
+          ctrlKey: true,
+          clientX: (screenPoint.x + 1) * 50,
+          clientY: (1 - screenPoint.y) * 50,
+        });
+        Object.defineProperties(event, {
+          offsetX: { value: event.clientX },
+          offsetY: { value: event.clientY },
+          target: { value: canvas },
+        });
+        await act(async () => state!.getState().events.handlers![type](event));
+      }
+      canvas.setPointerCapture = vi.fn();
+      canvas.releasePointerCapture = vi.fn();
+      anchorPick.mockClear();
+      onPlaceAnchor.mockClear();
+      await pointer("onPointerMove");
+      const hoverHit = anchorPlacement.previewHit;
+      expect(hoverHit).not.toBeNull();
+      await pointer("onPointerDown");
+      expect(anchorPick).toHaveBeenCalledTimes(cloudHits);
+      await pointer("onPointerUp");
+      expect(onPlaceAnchor).toHaveBeenCalledExactlyOnceWith(
+        hoverHit!.position,
+        hoverHit!.normal,
+      );
+    }
+    try {
+      clouds.push({
+        id: "first",
+        name: "first",
+        position: 0,
+        project_id: "project",
+        library_asset_id: asset.id,
+        download_url: asset.download_url!,
+        format: asset.format,
+        translation: [0, 0, 0],
+        rotation_deg: [0, 0, 0],
+        scale: 1,
+        offset: [0, 0, 0],
+        visible: true,
+      } as ProjectCloud);
+      await renderScene();
+      expect(hit(0)).toBeDefined();
+      for (const [index, x] of [
+        [2, 2],
+        [3, 4],
+      ]) {
+        preview = {
+          asset,
+          hit: { position: [x, 0, 0], normal: [0, 1, 0] },
+          resourceKey: `placement-${index}`,
+        };
+        await renderScene();
+        const instance = await vi.mocked(backend.createCloud).mock.results[
+          index - 1
+        ].value;
+        const object = instance.object as GaussianCloud;
+        expect(object.getRaycastIndex()).not.toBeNull();
+        // The preview is rendered, but never targets itself during placement.
+        expect(
+          raycastPlacementSurfaces(
+            scene,
+            new Raycaster(new Vector3(x, 0, 5), new Vector3(0, 0, -1)),
+          ),
+        ).toBeNull();
+        placed = preview;
+        preview = null;
+        await renderScene();
+        const id = `cloud-${index}`;
+        keys.set(id, placed.resourceKey);
+        clouds.push({
+          ...clouds[0],
+          id,
+          translation: [x, 0, 0],
+          rotation_deg: [0, 35, 0],
+          scale: 2,
+          offset: [0.1, 0, 0],
+        });
+        await renderScene();
+        placed = null;
+        await renderScene();
+        expect(backend.createCloud).toHaveBeenCalledTimes(index);
+        expect(hit(x)?.object).toBe(object);
+        expect(state!.getState().internal.interaction).toContain(object);
+        expect((object as unknown as { __r3f?: unknown }).__r3f).toBeDefined();
+        // Dispatch through R3F too: anchors use surface events rather than the
+        // placement raycaster. Keeping the BVH alone would not catch this bug.
+        await pickAnchor(x);
+        expect(ready).toHaveBeenCalledWith(id, expect.anything());
+        expect(
+          raycastPlacementSurfaces(
+            scene,
+            new Raycaster(new Vector3(x, 0, 5), new Vector3(0, 0, -1)),
+          ),
+        ).not.toBeNull();
+      }
+      // With another cloud behind the last one, the nearest surface owns the tap.
+      clouds[0] = { ...clouds[0], translation: [4, 0, -1] };
+      await renderScene();
+      state!.getState().camera.position.x = 4;
+      state!.getState().camera.lookAt(4, 0, 0);
+      scene.updateMatrixWorld(true);
+      await pickAnchor(4);
+      expect(anchorPick.mock.calls[0][0].position[2]).toBeGreaterThan(-0.5);
+      showGrid = true;
+      // Look down through two clouds and the grid; hover and tap must agree.
+      clouds[0] = { ...clouds[0], translation: [4, 1, 0] };
+      clouds[2] = { ...clouds[2], translation: [4, 2, 0] };
+      await renderScene();
+      state!.getState().camera.position.set(4, 5, 0);
+      state!.getState().camera.lookAt(4, 0, 0);
+      scene.updateMatrixWorld(true);
+      await pickAnchor(4);
+      expect(onPlaceAnchor.mock.calls[0][0][1]).toBeGreaterThan(1.5);
+      await pickAnchor(4, "touch");
+      expect(onPlaceAnchor.mock.calls[0][0][1]).toBeGreaterThan(1.5);
+      // The grid is physically closer but is composited underneath the splats.
+      clouds[0] = { ...clouds[0], translation: [4, -2, 0] };
+      clouds[2] = { ...clouds[2], translation: [4, -1, 0] };
+      await renderScene();
+      scene.updateMatrixWorld(true);
+      await pickAnchor(4);
+      expect(onPlaceAnchor.mock.calls[0][0][1]).toBeLessThan(-0.5);
+      await pickAnchor(4, "touch");
+      expect(onPlaceAnchor.mock.calls[0][0][1]).toBeLessThan(-0.5);
+      expect(
+        raycastPlacementSurfaces(scene, state!.getState().raycaster)
+          ?.position[1],
+      ).toBeLessThan(-0.5);
+      // With no visible splats under the pointer, the grid still accepts anchors.
+      clouds[0] = { ...clouds[0], visible: false };
+      clouds[2] = { ...clouds[2], visible: false };
+      await renderScene();
+      scene.updateMatrixWorld(true);
+      await pickAnchor(4, "mouse", 0);
+      expect(onPlaceAnchor.mock.calls[0][0][1]).toBeCloseTo(0);
+      await pickAnchor(4, "touch", 0);
+      expect(onPlaceAnchor.mock.calls[0][0][1]).toBeCloseTo(0);
+      expect(backend.createCloud).toHaveBeenCalledTimes(3);
+      expect(fetchCloud).toHaveBeenCalledTimes(3);
+      for (const [source] of vi.mocked(backend.createCloud).mock.calls) {
+        expect(source).toEqual({ kind: "url", url: downloadUrl, format });
+      }
+      showGrid = false;
+      clouds[0] = { ...clouds[0], translation: [4, 0, -1], visible: true };
+      clouds[2] = { ...clouds[2], translation: [4, 0, 0], visible: true };
+      clouds.splice(1, 1);
+      await renderScene();
+      expect(hit(2)).toBeUndefined();
+      expect(hit(4)).toBeDefined();
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+    }
+  },
+);
+
+it.each([
+  { format: "ply", bytes: ply },
+  { format: "sog", bytes: sog },
+])(
+  "shows a ready $format model while another still downloads, with separate positioned progress rings",
+  async ({ format, bytes }) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.spyOn(WebAssembly, "instantiateStreaming").mockImplementation(
+      async (source, imports) =>
+        WebAssembly.instantiate(await (await source).arrayBuffer(), imports),
+    );
+    extend({ Group, Mesh, MeshBasicMaterial, RingGeometry });
+    let slowController!: ReadableStreamDefaultController<Uint8Array>;
+    const cancelled = vi.fn();
+    let slowSignal: AbortSignal | undefined;
+    const originalFetch = globalThis.fetch;
+    const fetched: string[] = [];
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (!url.includes("/progressive/")) return originalFetch(input, init);
+      fetched.push(url);
+      if (url.includes("missing"))
+        return Promise.resolve(new Response("Missing", { status: 404 }));
+      if (url.includes("slow")) {
+        slowSignal = init?.signal ?? undefined;
+        return Promise.resolve(
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start(controller) {
+                slowController = controller;
+              },
+              cancel: cancelled,
+            }),
+            { headers: { "Content-Length": String(bytes.byteLength) } },
+          ),
+        );
+      }
+      return Promise.resolve(
+        new Response(bytes.slice().buffer, {
+          headers: { "Content-Length": String(bytes.byteLength) },
+        }),
+      );
+    });
+    const camera = new PerspectiveCamera(42, 1, 0.01, 100);
+    camera.position.set(4, 3, 6);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    const backend = new TileGaussianRenderingBackend({
+      camera,
+      renderer: { getPixelRatio: () => 1 },
+      getOpaqueViewDepth: vi.fn(() => ({})),
+      registerLayer: vi.fn(() => vi.fn()),
+    } as unknown as SceneRenderPipeline);
+    vi.spyOn(backend, "createCloud");
+    const canvas = document.createElement("canvas");
+    const scene = new Scene();
+    const root = createRoot(canvas);
+    await root.configure({
+      scene,
+      camera,
+      frameloop: "never",
+      size: { width: 100, height: 100, top: 0, left: 0 },
+      gl: {
+        render: vi.fn(),
+        setSize: vi.fn(),
+        setPixelRatio: vi.fn(),
+        domElement: canvas,
+      } as unknown as WebGLRenderer,
+    });
+    const ready = vi.fn();
+    const error = vi.fn();
+    const base = {
+      format: format as "ply" | "sog",
+      library_asset_id: "asset",
+      project_id: "project",
+      position: 0,
+      visible: true,
+      rotation_deg: [0, 0, 0] as [number, number, number],
+      scale: 1,
+      offset: [0, 0, 0] as [number, number, number],
+    };
+    let clouds: ProjectCloud[] = [
+      {
+        ...base,
+        id: "slow",
+        name: "slow",
+        download_url: "/progressive/slow",
+        translation: [8, 0, 0],
+      },
+      {
+        ...base,
+        id: "fast",
+        name: "fast",
+        download_url: "/progressive/fast",
+        translation: [0, 0, 0],
+      },
+    ];
+    const renderScene = async () => {
+      await act(async () => {
+        root.render(
+          <SceneSurfaceProvider backend={backend}>
+            <SceneClouds
+              clouds={clouds}
+              preview={null}
+              placed={null}
+              resourceKeyForCloud={() => undefined}
+              interactive
+              surfaceEvents={{}}
+              onReady={ready}
+              onError={error}
+              onLoading={vi.fn()}
+            />
+          </SceneSurfaceProvider>,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+    };
+    try {
+      await renderScene();
+      expect(fetched).toEqual(["/progressive/slow", "/progressive/fast"]);
+      await act(async () => {
+        await vi.mocked(backend.createCloud).mock.results[1].value;
+      });
+      expect(ready).toHaveBeenCalledWith("fast", expect.anything());
+      expect(ready).toHaveBeenCalledTimes(1);
+      expect(scene.getObjectByName("fast")).toBeTruthy();
+      expect(scene.getObjectByName("slow")).toBeUndefined();
+      const store = (
+        backend as unknown as {
+          store: import("3dgs-tile-webgpu").GaussianStore;
+        }
+      ).store;
+      expect(store.hasPackedData).toBe(true);
+      expect(
+        store.isRenderReady(scene.getObjectByName("fast") as GaussianCloud),
+      ).toBe(true);
+      const rings = scene.getObjectsByProperty("name", "cloud-loading-ring");
+      expect(rings).toHaveLength(1);
+      expect(rings[0].getWorldPosition(new Vector3()).toArray()).toEqual([
+        8, 0, 0,
+      ]);
+      const geometryBeforeProgress = (
+        scene.getObjectByName("cloud-loading-progress") as Mesh<RingGeometry>
+      ).geometry;
+      const halfway = Math.floor(bytes.byteLength / 2);
+      await act(async () => {
+        slowController.enqueue(bytes.slice(0, halfway));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      const arc = scene.getObjectByName("cloud-loading-progress") as Mesh<
+        import("three").RingGeometry
+      >;
+      expect(arc.geometry).toBe(geometryBeforeProgress);
+      const endAngle =
+        Math.PI / 2 + (Math.PI * 2 * 0.9 * halfway) / bytes.byteLength;
+      const position = arc.geometry.getAttribute("position");
+      expect(position.getX(96)).toBeCloseTo(0.21 * Math.cos(endAngle));
+      expect(position.getY(96)).toBeCloseTo(0.21 * Math.sin(endAngle));
+      expect(ready).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        slowController.enqueue(bytes.slice(halfway));
+        slowController.close();
+        await vi.mocked(backend.createCloud).mock.results[0].value;
+      });
+      expect(ready).toHaveBeenCalledTimes(2);
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(0);
+      scene.updateMatrixWorld(true);
+      expect(
+        scene
+          .getObjectByName("slow")!
+          .getWorldPosition(new Vector3())
+          .toArray(),
+      ).toEqual([8, 0, 0]);
+      // Removing another unfinished instance aborts its download without touching ready models.
+      clouds = [
+        ...clouds,
+        {
+          ...clouds[0],
+          id: "cancel",
+          download_url: "/progressive/slow-cancel",
+          translation: [16, 0, 0],
+        },
+      ];
+      await renderScene();
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(1);
+      clouds = clouds.filter((cloud) => cloud.id !== "cancel");
+      await renderScene();
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(slowSignal?.aborted).toBe(true);
+      expect(cancelled).toHaveBeenCalledOnce();
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(0);
+      expect(scene.getObjectByName("fast")).toBeTruthy();
+      expect(error).not.toHaveBeenCalled();
+      clouds = [
+        ...clouds,
+        { ...clouds[0], id: "missing", download_url: "/progressive/missing" },
+      ];
+      await renderScene();
+      expect(error).toHaveBeenCalledWith(
+        "missing",
+        expect.objectContaining({ message: expect.stringContaining("404") }),
+      );
+      expect(
+        scene.getObjectsByProperty("name", "cloud-loading-ring"),
+      ).toHaveLength(0);
+      expect(scene.getObjectByName("fast")).toBeTruthy();
+      expect(scene.getObjectByName("slow")).toBeTruthy();
+    } finally {
+      await act(async () => root.unmount());
+      backend.dispose();
+    }
+  },
+);

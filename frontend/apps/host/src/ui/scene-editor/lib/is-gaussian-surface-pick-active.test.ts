@@ -1,0 +1,14 @@
+import { describe, expect, it } from "vitest";
+
+import { isGaussianSurfacePickActive } from "@host/ui/scene-editor/lib/is-gaussian-surface-pick-active";
+
+describe("isGaussianSurfacePickActive", () => {
+  it.each([
+    ["anchor", true],
+    ["cloud", true],
+    ["anchor-height", false],
+    [null, false],
+  ] as const)("maps %s to %s", (activeTool, expected) => {
+    expect(isGaussianSurfacePickActive(activeTool)).toBe(expected);
+  });
+});

@@ -1,30 +1,16 @@
 # Camera Path frontend
 
-Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The source follows
-Feature-Sliced Design layers: route composition in `app`, business actions in `features`, domain
-models in `entities`, large interface blocks in `widgets`, and reusable code in `shared`.
+Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The frontend is an npm workspace with 17 isolated feature packages and a host that coordinates their data and operations.
 
 ## Frontend architecture
 
-The state is intentionally split by ownership instead of being placed in one global store:
+Feature manifests declare data reads/producers, called/handled requests, frame handlers and UI/scene/GPU contributions. Typed DTOs and validated contract objects live in `packages/contracts`. Features receive a scoped API from `packages/extension-api`; imports of sibling features, private host code, raw transport and the shared query cache are rejected by CI.
 
-- TanStack Query owns server state: project metadata, anchors, scene points, editable and compiled
-  trajectories, timelines, and chat messages are cached under separate resource keys. Query hooks
-  live in `entities/project`; mutations live beside the user action in `features`.
-- Zustand owns synchronous editor state shared by several interface blocks: playback position,
-  elapsed time, play/pause, and trajectory selection. It lives in `features/project-editor` and does
-  not copy project data from the query cache.
-- Local component state is reserved for temporary input such as the current chat draft or project
-  name.
+`apps/host` owns composition, layout, resource/query adapters, auth/preferences, tool arbitration and cross-feature workflows. `src/app` keeps the existing Next.js/Vercel route and deployment boundary. Generic UI, scene adapters and pure trajectory math live in their own packages. Playback, camera mode and trajectory selection have separate feature controllers per project; temporary form and chat state stays local.
 
-Each FSD slice exposes a public API through its root `index.ts`. Cross-slice imports use those public
-APIs, while files inside a slice use relative imports. Route composition therefore reads as
-`app -> widgets -> features -> entities -> shared`; lower layers do not depend on interface widgets.
+See [the architecture and review guide](docs/feature-host-architecture.md) and the generated [contract graph](docs/frontend-contract-graph.json). Run `npm run boundaries:check`, `npm run graph:check` and `npm run typecheck` alongside the standard lint/test/build checks. Regenerate the graph after changing manifests or host bindings with `npm run graph:generate`.
 
-Trajectory geometry stays in pure functions under `entities/trajectory`. Camera lookup uses the
-backend's adaptive arc-length table to map normalized path distance back to Bezier `t`. This keeps
-camera speed uniform along curved segments, avoids treating Bezier `t` as physical distance, and
-keeps the backend compiler as the single source of geometry sampling truth.
+Trajectory geometry uses the backend's adaptive arc-length table to map path distance to Bezier `t`. The host computes a shared camera pose per frame for camera-view, DOF and LiDAR.
 
 ## Run
 
@@ -57,7 +43,7 @@ enforces these permissions for direct API requests too. Create the account with 
 Wrap editing forms, menus and controls in `EditorOnly` at their composition boundary. Guests see
 the shared content and read-only anchor markers; the anchor keyboard shortcut mounts only for editors.
 
-`features/auth` checks the server session on startup, window focus and once a minute. A 401 drops
+The identity host adapter checks the server session on startup, window focus and once a minute. A 401 drops
 editor mode immediately. Settings remain available to guests. Renderer/grid/DPR choices
 are always stored under `camera-path-editor-settings` in localStorage (the existing key is retained).
 Local values take priority over the backend fallback, survive login/logout and session expiry, and
@@ -91,7 +77,7 @@ Signed S3 URLs stay direct browser transfers. Production cookies require HTTPS.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
 
 The frontend API client, types, and TanStack Query hooks are generated from
-`backend/openapi.json` with Orval and committed under `src/shared/api/generated`.
+`backend/openapi.json` with Orval and committed under `apps/host/src/adapters/api/generated` (transport) and `packages/contracts/src/api` (DTOs).
 After changing the backend contract, run `npm run api:generate` in `frontend` and commit the
 result. The normal build never regenerates code. `api:check` verifies the committed output.
 Mutations send the latest project revision as `If-Match`; the backend exposes revision ETags

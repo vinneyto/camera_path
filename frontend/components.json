@@ -10,10 +10,10 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@/shared/ui",
-    "utils": "@/shared/lib/cn",
-    "ui": "@/shared/ui",
-    "lib": "@/shared/lib",
-    "hooks": "@/shared/hooks"
+    "components": "@camera-path/ui-kit",
+    "utils": "@camera-path/ui-kit/lib/cn",
+    "ui": "@camera-path/ui-kit",
+    "lib": "@camera-path/ui-kit/lib",
+    "hooks": "@camera-path/ui-kit/lib"
   }
 }

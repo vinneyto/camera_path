@@ -1,0 +1,150 @@
+import { numberSchema, voidSchema } from "@camera-path/contracts/basic-schemas";
+import { defineDataContract } from "@camera-path/contracts/define-data-contract";
+import { defineRequest } from "@camera-path/contracts/define-request";
+import { projectPermissions } from "@camera-path/contracts/host-data";
+import { jsonSchema } from "@camera-path/contracts/json-schema";
+import { describe, expect, it, vi } from "vitest";
+import { DataCell } from "./data-cell";
+import { HostRuntime } from "./host-runtime";
+const value = defineDataContract("host.test.value@1", numberSchema);
+const privateValue = defineDataContract("host.test.private@1", numberSchema);
+const write = defineRequest("host.test.write@1", numberSchema, numberSchema);
+const undeclared = defineRequest(
+  "host.test.private@1",
+  voidSchema,
+  voidSchema,
+  false,
+);
+const manifest = {
+  manifestVersion: 1,
+  id: "test",
+  scope: "project",
+  data: {
+    provides: [],
+    reads: [{ contract: value, access: ["read", "readAsync", "subscribe"] }],
+  },
+  requests: { calls: [write], handles: [] },
+  frames: [],
+  contributions: [],
+  capabilities: [],
+} as const;
+function fixture(id = "project") {
+  const runtime = new HostRuntime(id, "project");
+  const cell = new DataCell(value);
+  runtime.bindData(value, cell.read, cell.subscribe);
+  const permissions = new DataCell(projectPermissions);
+  permissions.set({ canEdit: true });
+  runtime.bindData(projectPermissions, permissions.read, permissions.subscribe);
+  return { runtime, cell, permissions, host: runtime.feature(manifest) };
+}
+describe("scoped host runtime", () => {
+  it("enforces declared object references, access modes and requests", async () => {
+    const { runtime, host } = fixture();
+    expect(() =>
+      host.data.read(privateValue as unknown as typeof value),
+    ).toThrow(/Undeclared/);
+    await expect(
+      host.requests.call(undeclared as unknown as typeof write, 1),
+    ).rejects.toThrow(/Undeclared/);
+    expect(runtime.trace.map((t) => t.result)).toEqual(["denied", "denied"]);
+  });
+  it("keeps snapshots stable and subscribes before awaiting readiness", async () => {
+    const { host, cell } = fixture();
+    const waiting = host.data.readAsync(value);
+    cell.set(4);
+    expect(await waiting).toBe(4);
+    const first = host.data.state(value);
+    expect(host.data.state(value)).toBe(first);
+    const listener = vi.fn();
+    const off = host.data.subscribe(value, listener);
+    cell.set(7);
+    expect(listener).toHaveBeenCalledOnce();
+    off();
+    cell.set(8);
+    expect(listener).toHaveBeenCalledOnce();
+  });
+  it("reports provider conflicts and schema failures", () => {
+    const { runtime, cell } = fixture();
+    expect(() => runtime.bindData(value, cell.read, cell.subscribe)).toThrow(
+      /Duplicate/,
+    );
+    expect(() => cell.set("bad" as unknown as number)).toThrow();
+    runtime.bindRequest(write, (n) => n);
+    expect(() => runtime.bindRequest(write, (n) => n)).toThrow(/Duplicate/);
+  });
+  it("checks editing permissions and validates input/output", async () => {
+    const { runtime, host, permissions } = fixture();
+    runtime.bindRequest(write, (n) => n + 1);
+    permissions.set({ canEdit: false });
+    expect(await host.requests.call(write, 4)).toMatchObject({
+      ok: false,
+      error: { code: "forbidden" },
+    });
+    permissions.set({ canEdit: true });
+    expect(
+      await host.requests.call(write, "bad" as unknown as number),
+    ).toMatchObject({ ok: false, error: { code: "invalid-input" } });
+    expect(await host.requests.call(write, 4)).toEqual({ ok: true, value: 5 });
+  });
+  it("settles in-flight calls and readAsync on scope disposal; scopes remain separate", async () => {
+    const a = fixture("a");
+    const b = fixture("b");
+    a.runtime.bindRequest(write, () => new Promise<number>(() => {}));
+    const read = a.host.data.readAsync(value);
+    const call = a.host.requests.call(write, 3);
+    a.runtime.dispose();
+    await expect(read).rejects.toMatchObject({ name: "AbortError" });
+    expect(await call).toMatchObject({
+      ok: false,
+      error: { code: "cancelled" },
+    });
+    b.cell.set(9);
+    expect(b.host.data.read(value)).toBe(9);
+    expect(() => a.host.data.read(value)).toThrow(/Disposed/);
+  });
+  it("validates and freezes recursively published DTOs", () => {
+    const dto = defineDataContract(
+      "host.test.dto@1",
+      jsonSchema<{ items: number[] }>({
+        type: "object",
+        required: ["items"],
+        properties: { items: { type: "array", items: { type: "number" } } },
+      }),
+    );
+    const cell = new DataCell(dto);
+    const original = { items: [1] };
+    cell.set(original);
+    original.items[0] = 8;
+    const state = cell.read();
+    if (state.status !== "ready") throw new Error("Expected ready");
+    expect(state.value.items).toEqual([1]);
+    expect(Object.isFrozen(state.value.items)).toBe(true);
+  });
+  it("releases subscriptions when the host is disposed", () => {
+    const { runtime, host, cell } = fixture();
+    const listener = vi.fn();
+    host.data.subscribe(value, listener);
+    runtime.dispose();
+    cell.set(2);
+    expect(listener).not.toHaveBeenCalled();
+  });
+  it("cancels editor work on logout without disabling guest reads", async () => {
+    const { runtime, host, cell } = fixture();
+    runtime.bindRequest(write, () => new Promise<number>(() => {}));
+    const call = host.requests.call(write, 1);
+    runtime.revokeEditorRequests();
+    expect(await call).toMatchObject({
+      ok: false,
+      error: { code: "cancelled" },
+    });
+    cell.set(2);
+    expect(host.data.read(value)).toBe(2);
+  });
+  it("uses one application instance across project children", () => {
+    const app = new HostRuntime("app", "application");
+    const a = new HostRuntime("a", "project", app);
+    const b = new HostRuntime("b", "project", app);
+    const m = { ...manifest, scope: "application" as const };
+    expect(a.feature(m)).toBe(b.feature(m));
+  });
+});
