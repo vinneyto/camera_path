@@ -2370,7 +2370,7 @@
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
       "line": 190,
-      "adapter": "async (input, signal) => { await clearTrajectoryMutation.mutateAsync(input); if (!signal.aborted) { store .getState() .sceneInteractionActions.selectObject({ id: null, ifCurrentId: trajectoryObjectId, }); store .getState() .sceneInteractionActions.hoverObject({ id: null, ifCurrentId: trajectoryObjectId, }); store.getState().playbackActions.resetPlayback(); } }"
+      "adapter": "async (input, signal) => { await clearTrajectoryMutation.mutateAsync(input); if (!signal.aborted) { store.getState().sceneInteractionActions.selectObject({ id: null, ifCurrentId: trajectoryObjectId, }); store.getState().sceneInteractionActions.hoverObject({ id: null, ifCurrentId: trajectoryObjectId, }); store.getState().playbackActions.resetPlayback(); } }"
     },
     {
       "contract": "host.compiledTrajectory@1",
@@ -2446,7 +2446,7 @@
       "contract": "host.hoverObject@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 214,
+      "line": 210,
       "adapter": "(input) => store.getState().sceneInteractionActions.hoverObject(input)"
     },
     {
@@ -2551,7 +2551,7 @@
       "contract": "host.resetPlayback@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 223,
+      "line": 219,
       "adapter": "() => store.getState().playbackActions.resetPlayback()"
     },
     {
@@ -2593,21 +2593,21 @@
       "contract": "host.selectObject@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 217,
+      "line": 213,
       "adapter": "(input) => store.getState().sceneInteractionActions.selectObject(input)"
     },
     {
       "contract": "host.setActiveTool@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 208,
+      "line": 204,
       "adapter": "(input) => store.getState().toolActions.setActiveTool(input)"
     },
     {
       "contract": "host.setCameraMode@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 220,
+      "line": 216,
       "adapter": "(mode) => store.getState().cameraActions.setCameraMode(mode)"
     },
     {
@@ -2621,14 +2621,14 @@
       "contract": "host.setPlaybackFrame@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 229,
+      "line": 225,
       "adapter": "({ pathPosition, elapsed }) => store.getState().playbackActions.setPlaybackFrame(pathPosition, elapsed)"
     },
     {
       "contract": "host.setPlaying@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 226,
+      "line": 222,
       "adapter": "(input) => store.getState().playbackActions.setPlaying(input)"
     },
     {
@@ -2642,7 +2642,7 @@
       "contract": "host.startCloudPlacement@1",
       "kind": "useBindRequest",
       "source": "apps/host/src/runtime/project-host-provider.tsx",
-      "line": 211,
+      "line": 207,
       "adapter": "(input) => store.getState().toolActions.startCloudPlacement(input)"
     },
     {
