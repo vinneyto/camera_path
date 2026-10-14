@@ -1,9 +1,4 @@
 import {
-  scene_models_projectCloudAction,
-  scene_models_setActiveTool,
-  scene_models_startCloudPlacement,
-} from "@camera-path/contracts/feature-requests";
-import {
   editorTool,
   libraryCatalog,
   projectPermissions,
@@ -19,26 +14,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "scene-models",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: libraryCatalog, access: ["read", "readAsync", "subscribe"] },
-      { contract: sceneModels, access: ["read", "readAsync", "subscribe"] },
-      { contract: editorTool, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: {
-    calls: [projectCloudAction, startCloudPlacement, setActiveTool],
-    handles: [
-      scene_models_projectCloudAction,
-      scene_models_startCloudPlacement,
-      scene_models_setActiveTool,
-    ],
-  },
+  reads: [projectPermissions, libraryCatalog, sceneModels, editorTool],
+  calls: [projectCloudAction, startCloudPlacement, setActiveTool],
   frames: [],
   contributions: [
     {

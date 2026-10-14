@@ -1,4 +1,3 @@
-import { appearance_toggleTheme } from "@camera-path/contracts/feature-requests";
 import { themeState } from "@camera-path/contracts/host-data";
 import { toggleTheme } from "@camera-path/contracts/host-requests";
 import type { FeatureManifest } from "@camera-path/extension-api";
@@ -6,13 +5,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "appearance",
   scope: "application",
-  data: {
-    provides: [],
-    reads: [
-      { contract: themeState, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: { calls: [toggleTheme], handles: [appearance_toggleTheme] },
+  reads: [themeState],
+  calls: [toggleTheme],
   frames: [],
   contributions: [
     {

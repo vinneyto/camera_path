@@ -1,7 +1,4 @@
 "use client";
-import * as cameraFeature from "@camera-path/feature-camera-view";
-import * as playbackFeature from "@camera-path/feature-playback";
-import * as trajectoryFeature from "@camera-path/feature-trajectory";
 import { projectFeatures } from "@host/composition/project-features";
 import { useActivateFeatures } from "./use-activate-features";
 
@@ -27,7 +24,7 @@ import {
   useEditorStore,
   useEditorStoreApi,
 } from "@host/editor/model/editor-store-provider";
-import { useLayoutEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useBindQuery } from "./use-bind-query";
 import { useBindRequest } from "./use-bind-request";
 import { useBindValue } from "./use-bind-value";
@@ -45,15 +42,6 @@ export function ProjectHostProvider({
   );
   useRuntimeLifecycle(runtime);
   const store = useEditorStoreApi();
-  useLayoutEffect(() => {
-    store.controllers.playback.connect(
-      runtime.feature(playbackFeature.manifest),
-    );
-    store.controllers.camera.connect(runtime.feature(cameraFeature.manifest));
-    store.controllers.selection.connect(
-      runtime.feature(trajectoryFeature.manifest),
-    );
-  }, [store, runtime]);
   const tool = useEditorStore((s) => s.tool);
   const camera = useEditorStore((s) => s.camera.cameraMode);
   const playback = useEditorStore((s) => s.playback);

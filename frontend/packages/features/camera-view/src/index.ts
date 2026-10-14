@@ -9,7 +9,6 @@ export {
 export { stopOrbitControlsInertia } from "./lib/stop-orbit-controls-inertia";
 export { manifest } from "./manifest";
 export { CameraController } from "./model/cameraController";
-export { register } from "./register";
 export { CameraViewOffset } from "./scene/camera-view-offset";
 export { PlaybackCamera } from "./scene/playback-camera";
 export { TrajectoryCameraControl } from "./scene/trajectory-camera-control";

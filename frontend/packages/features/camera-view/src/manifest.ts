@@ -1,5 +1,3 @@
-import { cameraModeOutput } from "@camera-path/contracts/feature-data";
-import { camera_view_setCameraMode } from "@camera-path/contracts/feature-requests";
 import {
   cameraMode,
   projectPermissions,
@@ -11,18 +9,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "camera-view",
   scope: "project",
-  data: {
-    provides: [cameraModeOutput],
-    reads: [
-      { contract: trajectoryCameraPose, access: ["read"] },
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: cameraMode, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: { calls: [setCameraMode], handles: [camera_view_setCameraMode] },
+  reads: [trajectoryCameraPose, projectPermissions, cameraMode],
+  calls: [setCameraMode],
   frames: [
     {
       id: "camera-view.update",

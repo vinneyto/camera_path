@@ -1,9 +1,4 @@
 import {
-  projects_createProject,
-  projects_deleteProject,
-  projects_navigate,
-} from "@camera-path/contracts/feature-requests";
-import {
   projectPermissions,
   projectsCatalog,
 } from "@camera-path/contracts/host-data";
@@ -17,24 +12,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "projects",
   scope: "application",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: projectsCatalog, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: {
-    calls: [createProject, deleteProject, navigate],
-    handles: [
-      projects_createProject,
-      projects_deleteProject,
-      projects_navigate,
-    ],
-  },
+  reads: [projectPermissions, projectsCatalog],
+  calls: [createProject, deleteProject, navigate],
   frames: [],
   contributions: [
     { id: "projects.content", kind: "ui", slot: "projects.content" },

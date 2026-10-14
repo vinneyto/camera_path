@@ -3,5 +3,4 @@ export { useUpdateCameraOrientationKeyframe } from "./api/use-update-camera-orie
 export { useUpdateDefaultCameraOrientation } from "./api/use-update-default-camera-orientation";
 export { timelineContribution } from "./contributions";
 export { manifest } from "./manifest";
-export { register } from "./register";
 export { createOrientationTrack } from "./timeline/create-orientation-track";

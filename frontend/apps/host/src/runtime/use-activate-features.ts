@@ -7,13 +7,14 @@ export function useActivateFeatures(
   runtime: HostRuntime,
   features: readonly {
     manifest: FeatureManifest;
-    register: (host: never) => () => void;
+    register?: (host: never) => () => void;
   }[],
 ) {
   useLayoutEffect(() => {
-    const off = features.map((feature) =>
-      feature.register(runtime.feature(feature.manifest) as never),
-    );
-    return () => off.reverse().forEach((dispose) => dispose());
+    const off = features.map((feature) => {
+      const context = runtime.feature(feature.manifest);
+      return feature.register?.(context as never);
+    });
+    return () => off.reverse().forEach((dispose) => dispose?.());
   }, [runtime, features]);
 }

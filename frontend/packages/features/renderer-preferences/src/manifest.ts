@@ -1,7 +1,3 @@
-import {
-  renderer_preferences_retryPreferences,
-  renderer_preferences_savePreferences,
-} from "@camera-path/contracts/feature-requests";
 import { preferencesState } from "@camera-path/contracts/host-data";
 import {
   retryPreferences,
@@ -12,22 +8,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "renderer-preferences",
   scope: "application",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: preferencesState,
-        access: ["read", "readAsync", "subscribe"],
-      },
-    ],
-  },
-  requests: {
-    calls: [savePreferences, retryPreferences],
-    handles: [
-      renderer_preferences_savePreferences,
-      renderer_preferences_retryPreferences,
-    ],
-  },
+  reads: [preferencesState],
+  calls: [savePreferences, retryPreferences],
   frames: [],
   contributions: [
     {

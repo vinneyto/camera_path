@@ -6,11 +6,8 @@ const manifest = {
   manifestVersion: 1,
   id: "host-ui",
   scope: "application",
-  data: {
-    provides: [],
-    reads: [{ contract: projectPermissions, access: ["read", "subscribe"] }],
-  },
-  requests: { calls: [], handles: [] },
+  reads: [projectPermissions],
+  calls: [],
   frames: [],
   contributions: [],
   capabilities: [],

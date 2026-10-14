@@ -5,7 +5,6 @@ export { getAnchorToolModifier } from "./lib/get-anchor-tool-modifier";
 export { getWorldYAxisLift } from "./lib/get-world-y-axis-lift";
 export { manifest } from "./manifest";
 export { useAnchorToolShortcut } from "./model/use-anchor-tool-shortcut";
-export { register } from "./register";
 export { AnchorHeightEditingOverlay } from "./scene/anchor-height-editing-overlay";
 export { AnchorHeightRuler } from "./scene/anchor-height-ruler";
 export { AnchorMarker } from "./scene/anchor-marker";

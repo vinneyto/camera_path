@@ -8,7 +8,6 @@ import type {
   RequestResult,
 } from "@camera-path/contracts/contract-types";
 import type { FeatureContext } from "./feature-context";
-import { immutableValue } from "./immutable-value";
 import type { FeatureManifest } from "./manifest";
 
 interface DataBinding {
@@ -100,10 +99,7 @@ export class HostRuntime {
       if (this.parent) return this.parent.feature(manifest);
       throw new Error(`Scope mismatch: ${manifest.id}`);
     }
-    for (const contract of manifest.data.provides)
-      if (!contract.id.startsWith(manifest.id + "."))
-        throw new Error(`Invalid data owner: ${contract.id}`);
-    for (const contract of manifest.requests.handles)
+    for (const contract of manifest.handles ?? [])
       if (!contract.id.startsWith(manifest.id + "."))
         throw new Error(`Invalid request owner: ${contract.id}`);
     for (const contribution of manifest.contributions) {
@@ -120,9 +116,7 @@ export class HostRuntime {
       contract: DataContract,
       mode: "read" | "readAsync" | "subscribe",
     ) => {
-      const allowed = manifest.data.reads.some(
-        (d) => d.contract === contract && d.access.includes(mode),
-      );
+      const allowed = manifest.reads.includes(contract);
       this.record(manifest.id, mode, contract.id, allowed);
       if (!allowed)
         throw new Error(`Undeclared ${mode}: ${manifest.id} → ${contract.id}`);
@@ -189,41 +183,10 @@ export class HostRuntime {
           this.cleanups.add(cleanup);
           return cleanup;
         },
-        provide: (contract, value) => {
-          this.assertAlive();
-          if (!manifest.data.provides.includes(contract))
-            throw new Error(`Undeclared provide: ${contract.id}`);
-          const next = immutableValue(contract.schema.parse(value));
-          let b = this.dataBindings.get(contract.id);
-          if (b && b.owner !== manifest.id)
-            throw new Error(`Duplicate data owner: ${contract.id}`);
-          if (!b) {
-            const listeners = new Set<() => void>();
-            let state: DataState<unknown> = {
-              status: "ready",
-              value: next,
-              error: null,
-            };
-            b = {
-              contract,
-              owner: manifest.id,
-              read: () => state,
-              subscribe: (fn) => {
-                listeners.add(fn);
-                return () => listeners.delete(fn);
-              },
-            };
-            this.dataBindings.set(contract.id, b);
-            this.localPublishers.set(contract.id, (v) => {
-              state = { status: "ready", value: v, error: null };
-              listeners.forEach((fn) => fn());
-            });
-          } else this.localPublishers.get(contract.id)!(next);
-        },
       },
       requests: {
         call: (contract, input, options) => {
-          const allowed = manifest.requests.calls.includes(contract);
+          const allowed = manifest.calls.includes(contract);
           this.record(manifest.id, "call", contract.id, allowed);
           if (!allowed)
             return Promise.reject(
@@ -232,7 +195,8 @@ export class HostRuntime {
           return this.call(contract, input, options);
         },
         handle: (contract, handler) => {
-          if (!manifest.requests.handles.includes(contract))
+          this.assertAlive();
+          if (!manifest.handles?.includes(contract))
             throw new Error(`Undeclared handle: ${contract.id}`);
           const off = this.bindRequest(contract, handler as never, manifest.id);
           this.cleanups.add(off);
@@ -247,10 +211,7 @@ export class HostRuntime {
     this.manifests.set(manifest.id, manifest);
     return context;
   }
-  private readonly localPublishers = new Map<
-    string,
-    (value: unknown) => void
-  >();
+
   async call<C extends RequestDefinition<string, unknown, unknown>>(
     contract: C,
     input: RequestInput<C>,
@@ -413,6 +374,5 @@ export class HostRuntime {
     this.manifests.clear();
     this.dataBindings.clear();
     this.requestBindings.clear();
-    this.localPublishers.clear();
   }
 }

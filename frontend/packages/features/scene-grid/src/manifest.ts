@@ -1,4 +1,3 @@
-import { scene_grid_savePreferences } from "@camera-path/contracts/feature-requests";
 import { preferencesState } from "@camera-path/contracts/host-data";
 import { savePreferences } from "@camera-path/contracts/host-requests";
 import type { FeatureManifest } from "@camera-path/extension-api";
@@ -6,16 +5,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "scene-grid",
   scope: "application",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: preferencesState,
-        access: ["read", "readAsync", "subscribe"],
-      },
-    ],
-  },
-  requests: { calls: [savePreferences], handles: [scene_grid_savePreferences] },
+  reads: [preferencesState],
+  calls: [savePreferences],
   frames: [],
   contributions: [
     { id: "scene-grid.scene", kind: "scene", slot: "scene.root", order: 20 },

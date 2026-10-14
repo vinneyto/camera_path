@@ -1,10 +1,4 @@
 import {
-  camera_orientation_addCameraOrientationKeyframe,
-  camera_orientation_deleteCameraOrientationKeyframe,
-  camera_orientation_updateCameraOrientationKeyframe,
-  camera_orientation_updateDefaultCameraOrientation,
-} from "@camera-path/contracts/feature-requests";
-import {
   orientationTimeline,
   projectPermissions,
 } from "@camera-path/contracts/host-data";
@@ -19,33 +13,13 @@ export const manifest = {
   manifestVersion: 1,
   id: "camera-orientation",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      {
-        contract: orientationTimeline,
-        access: ["read", "readAsync", "subscribe"],
-      },
-    ],
-  },
-  requests: {
-    calls: [
-      addCameraOrientationKeyframe,
-      updateCameraOrientationKeyframe,
-      updateDefaultCameraOrientation,
-      deleteCameraOrientationKeyframe,
-    ],
-    handles: [
-      camera_orientation_addCameraOrientationKeyframe,
-      camera_orientation_updateCameraOrientationKeyframe,
-      camera_orientation_updateDefaultCameraOrientation,
-      camera_orientation_deleteCameraOrientationKeyframe,
-    ],
-  },
+  reads: [projectPermissions, orientationTimeline],
+  calls: [
+    addCameraOrientationKeyframe,
+    updateCameraOrientationKeyframe,
+    updateDefaultCameraOrientation,
+    deleteCameraOrientationKeyframe,
+  ],
   frames: [],
   contributions: [
     {

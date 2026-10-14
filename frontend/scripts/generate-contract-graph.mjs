@@ -4,13 +4,7 @@ import path from "node:path";
 import ts from "typescript";
 const root = path.resolve(".");
 const ids = new Map();
-for (const name of [
-  "host-data.ts",
-  "host-requests.ts",
-  "feature-requests.ts",
-  "feature-data.ts",
-  "gpu-resources.ts",
-]) {
+for (const name of ["host-data.ts", "host-requests.ts", "gpu-resources.ts"]) {
   const file = path.join(root, "packages/contracts/src", name);
   const source = ts.createSourceFile(
     file,
@@ -147,28 +141,21 @@ const nodes = [
 ];
 const edges = [];
 for (const feature of features) {
-  for (const read of feature.data.reads)
+  for (const read of feature.reads)
     edges.push({
-      id: `${read.contract}->${feature.id}`,
-      source: read.contract,
+      id: `${read}->${feature.id}`,
+      source: read,
       target: feature.id,
-      data: { kind: "reads", access: read.access },
+      data: { kind: "reads" },
     });
-  for (const output of feature.data.provides)
-    edges.push({
-      id: `${feature.id}->${output}`,
-      source: feature.id,
-      target: output,
-      data: { kind: "provides" },
-    });
-  for (const call of feature.requests.calls)
+  for (const call of feature.calls)
     edges.push({
       id: `${feature.id}->${call}`,
       source: feature.id,
       target: call,
       data: { kind: "calls" },
     });
-  for (const handle of feature.requests.handles)
+  for (const handle of feature.handles ?? [])
     edges.push({
       id: `${handle}->${feature.id}`,
       source: handle,
@@ -193,7 +180,7 @@ for (const feature of features) {
   }
 }
 const graph = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   features,
   contracts,
   nodes,

@@ -1,7 +1,6 @@
 export { useProjectCloudActions } from "./api/use-project-cloud-actions";
 export { updateLoadingRingAngle } from "./lib/update-loading-ring-angle";
 export { manifest } from "./manifest";
-export { register } from "./register";
 export { CloudLoadingRing } from "./scene/cloud-loading-ring";
 export { createPlacementPreviewCloud } from "./scene/create-placement-preview-cloud";
 export { ProjectCloudSurface } from "./scene/project-cloud-surface";

@@ -1,8 +1,4 @@
 import {
-  depth_of_field_addDepthOfFieldKeyframe,
-  depth_of_field_deleteDepthOfFieldKeyframe,
-} from "@camera-path/contracts/feature-requests";
-import {
   depthOfFieldTimeline,
   projectPermissions,
   scenePoints,
@@ -17,28 +13,13 @@ export const manifest = {
   manifestVersion: 1,
   id: "depth-of-field",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [
-      { contract: trajectoryCameraPose, access: ["read"] },
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      {
-        contract: depthOfFieldTimeline,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: scenePoints, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: {
-    calls: [addDepthOfFieldKeyframe, deleteDepthOfFieldKeyframe],
-    handles: [
-      depth_of_field_addDepthOfFieldKeyframe,
-      depth_of_field_deleteDepthOfFieldKeyframe,
-    ],
-  },
+  reads: [
+    trajectoryCameraPose,
+    projectPermissions,
+    depthOfFieldTimeline,
+    scenePoints,
+  ],
+  calls: [addDepthOfFieldKeyframe, deleteDepthOfFieldKeyframe],
   frames: [
     {
       id: "depth-of-field.helper",

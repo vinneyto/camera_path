@@ -3,8 +3,9 @@ import { defineDataContract } from "@camera-path/contracts/define-data-contract"
 import { defineRequest } from "@camera-path/contracts/define-request";
 import { projectPermissions } from "@camera-path/contracts/host-data";
 import { jsonSchema } from "@camera-path/contracts/json-schema";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { DataCell } from "./data-cell";
+import type { Handled } from "./feature-context";
 import { HostRuntime } from "./host-runtime";
 const value = defineDataContract("host.test.value@1", numberSchema);
 const privateValue = defineDataContract("host.test.private@1", numberSchema);
@@ -19,11 +20,8 @@ const manifest = {
   manifestVersion: 1,
   id: "test",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [{ contract: value, access: ["read", "readAsync", "subscribe"] }],
-  },
-  requests: { calls: [write], handles: [] },
+  reads: [value],
+  calls: [write],
   frames: [],
   contributions: [],
   capabilities: [],
@@ -38,7 +36,7 @@ function fixture(id = "project") {
   return { runtime, cell, permissions, host: runtime.feature(manifest) };
 }
 describe("scoped host runtime", () => {
-  it("enforces declared object references, access modes and requests", async () => {
+  it("enforces declared read contracts and calls", async () => {
     const { runtime, host } = fixture();
     expect(() =>
       host.data.read(privateValue as unknown as typeof value),
@@ -47,6 +45,80 @@ describe("scoped host runtime", () => {
       host.requests.call(undeclared as unknown as typeof write, 1),
     ).rejects.toThrow(/Undeclared/);
     expect(runtime.trace.map((t) => t.result)).toEqual(["denied", "denied"]);
+  });
+  it("denies every read method for undeclared contracts", () => {
+    const { host } = fixture();
+    const contract = privateValue as unknown as typeof value;
+    expect(() => host.data.state(contract)).toThrow(/Undeclared/);
+    expect(() => host.data.readAsync(contract)).toThrow(/Undeclared/);
+    expect(() => host.data.subscribe(contract, () => {})).toThrow(/Undeclared/);
+  });
+  it("treats omitted or empty handles as no service permissions", () => {
+    const { runtime, host } = fixture();
+    expectTypeOf<Handled<typeof manifest>>().toEqualTypeOf<never>();
+    expect(() =>
+      host.requests.handle(write as never, () => {
+        throw new Error("Must not be registered");
+      }),
+    ).toThrow(/Undeclared handle/);
+    const empty = { ...manifest, id: "empty", handles: [] } as const;
+    expectTypeOf<Handled<typeof empty>>().toEqualTypeOf<never>();
+    expect(() =>
+      runtime.feature(empty).requests.handle(write as never, () => {
+        throw new Error("Must not be registered");
+      }),
+    ).toThrow(/Undeclared handle/);
+  });
+  it("routes declared feature services and releases them on unregister or disposal", async () => {
+    const runtime = new HostRuntime("services", "project");
+    const service = defineRequest(
+      "provider.compute@1",
+      numberSchema,
+      numberSchema,
+      false,
+    );
+    const providerManifest = {
+      ...manifest,
+      id: "provider",
+      reads: [],
+      calls: [],
+      handles: [service],
+    } as const;
+    const provider = runtime.feature(providerManifest);
+    const caller = runtime.feature({
+      ...manifest,
+      id: "caller",
+      reads: [],
+      calls: [service],
+    } as const);
+    expectTypeOf<Handled<typeof providerManifest>>().toEqualTypeOf<
+      typeof service
+    >();
+    const off = provider.requests.handle(service, (n) => n + 1);
+    expect(await caller.requests.call(service, 4)).toEqual({
+      ok: true,
+      value: 5,
+    });
+    off();
+    expect(await caller.requests.call(service, 4)).toMatchObject({
+      ok: false,
+      error: { code: "unavailable" },
+    });
+    provider.requests.handle(service, (n) => n + 2);
+    runtime.dispose();
+    expect(await caller.requests.call(service, 4)).toMatchObject({
+      ok: false,
+      error: { code: "cancelled" },
+    });
+    expect(() => provider.requests.handle(service, (n) => n)).toThrow(
+      /Disposed/,
+    );
+    expect(() =>
+      new HostRuntime("invalid", "project").feature({
+        ...providerManifest,
+        id: "wrong-owner",
+      }),
+    ).toThrow(/Invalid request owner/);
   });
   it("keeps snapshots stable and subscribes before awaiting readiness", async () => {
     const { host, cell } = fixture();

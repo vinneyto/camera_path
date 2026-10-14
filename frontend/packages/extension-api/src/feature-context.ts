@@ -8,10 +8,13 @@ import type {
   RequestResult,
 } from "@camera-path/contracts/contract-types";
 import type { FeatureManifest } from "./manifest";
-export type Readable<M extends FeatureManifest> =
-  M["data"]["reads"][number]["contract"];
-export type Callable<M extends FeatureManifest> =
-  M["requests"]["calls"][number];
+export type Readable<M extends FeatureManifest> = M["reads"][number];
+export type Callable<M extends FeatureManifest> = M["calls"][number];
+export type Handled<M extends FeatureManifest> = M extends {
+  readonly handles?: readonly (infer C)[];
+}
+  ? Extract<C, RequestDefinition<string, unknown, unknown>>
+  : never;
 export interface FeatureContext<M extends FeatureManifest> {
   readonly scopeId: string;
   readonly signal: AbortSignal;
@@ -23,10 +26,6 @@ export interface FeatureContext<M extends FeatureManifest> {
       contract: C,
       listener: () => void,
     ): () => void;
-    provide<C extends M["data"]["provides"][number]>(
-      contract: C,
-      value: ContractValue<C>,
-    ): void;
   };
   readonly requests: {
     call<C extends Callable<M>>(
@@ -34,7 +33,7 @@ export interface FeatureContext<M extends FeatureManifest> {
       input: RequestInput<C>,
       options?: { signal?: AbortSignal; timeoutMs?: number },
     ): Promise<RequestResult<RequestOutput<C>>>;
-    handle<C extends M["requests"]["handles"][number]>(
+    handle<C extends Handled<M>>(
       contract: C,
       handler: (
         input: RequestInput<C>,

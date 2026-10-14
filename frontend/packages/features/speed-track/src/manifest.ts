@@ -1,4 +1,3 @@
-import { speed_track_deleteSpeedKeyframe } from "@camera-path/contracts/feature-requests";
 import {
   projectPermissions,
   speedTimeline,
@@ -9,20 +8,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "speed-track",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: speedTimeline, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: {
-    calls: [deleteSpeedKeyframe],
-    handles: [speed_track_deleteSpeedKeyframe],
-  },
+  reads: [projectPermissions, speedTimeline],
+  calls: [deleteSpeedKeyframe],
   frames: [],
   contributions: [
     {

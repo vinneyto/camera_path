@@ -1,4 +1,3 @@
-import { chat_agent_sendChatMessage } from "@camera-path/contracts/feature-requests";
 import {
   anchors,
   chatHistory,
@@ -10,18 +9,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "chat-agent",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: anchors, access: ["read", "readAsync", "subscribe"] },
-      { contract: chatHistory, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: { calls: [sendChatMessage], handles: [chat_agent_sendChatMessage] },
+  reads: [projectPermissions, anchors, chatHistory],
+  calls: [sendChatMessage],
   frames: [],
   contributions: [
     { id: "chat-agent.sidebar", kind: "ui", slot: "project.sidebar" },

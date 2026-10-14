@@ -22,5 +22,5 @@
 - Public DTOs and operations belong to `packages/contracts`; schema parsing must perform real validation.
 - Host routes, UI layout, bindings and cross-feature workflows belong to `apps/host`. Import a feature through its public package entrypoint.
 - Preserve `src/app` as the Next/Vercel compatibility boundary; do not relocate the deploy root incidentally.
-- Keep manifest declarations separate from implementation registration. After changing declarations or host bindings, run `npm run graph:generate` and include the graph update.
+- Declare feature access through top-level `calls`, `reads` and optional `handles`. A read permission includes snapshots, readiness and subscriptions. Omit `handles` and service registration when the feature provides no services; do not add forwarding handlers without consumers. Keep any service implementation separate from its manifest. After changing declarations or host bindings, run `npm run graph:generate` and include the graph update.
 - Run boundary, graph, API, type, lint, test, build and formatting checks before delivering this refactor.

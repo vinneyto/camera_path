@@ -26,17 +26,11 @@ export interface FeatureManifest<Id extends string = string> {
   readonly manifestVersion: 1;
   readonly id: Id;
   readonly scope: "application" | "project";
-  readonly data: {
-    readonly provides: readonly DataContract[];
-    readonly reads: readonly {
-      readonly contract: DataContract;
-      readonly access: readonly ("read" | "readAsync" | "subscribe")[];
-    }[];
-  };
-  readonly requests: {
-    readonly calls: readonly RequestDefinition<string, unknown, unknown>[];
-    readonly handles: readonly RequestDefinition<string, unknown, unknown>[];
-  };
+  /** Reading includes snapshots, readiness and subscriptions. */
+  readonly reads: readonly DataContract[];
+  readonly calls: readonly RequestDefinition<string, unknown, unknown>[];
+  /** Services implemented by the feature; omitted when none are provided. */
+  readonly handles?: readonly RequestDefinition<string, unknown, unknown>[];
   readonly frames: readonly FrameDeclaration[];
   readonly contributions: readonly ContributionDeclaration[];
   readonly capabilities: readonly string[];

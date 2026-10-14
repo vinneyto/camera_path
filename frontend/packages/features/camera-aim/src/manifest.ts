@@ -1,4 +1,3 @@
-import { camera_aim_deleteCameraKeyframe } from "@camera-path/contracts/feature-requests";
 import {
   aimTimeline,
   projectPermissions,
@@ -10,21 +9,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "camera-aim",
   scope: "project",
-  data: {
-    provides: [],
-    reads: [
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: aimTimeline, access: ["read", "readAsync", "subscribe"] },
-      { contract: scenePoints, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: {
-    calls: [deleteCameraKeyframe],
-    handles: [camera_aim_deleteCameraKeyframe],
-  },
+  reads: [projectPermissions, aimTimeline, scenePoints],
+  calls: [deleteCameraKeyframe],
   frames: [],
   contributions: [
     {

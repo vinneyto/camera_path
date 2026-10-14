@@ -1,5 +1,3 @@
-import { lidarStatus } from "@camera-path/contracts/feature-data";
-import { lidar_setLidarTimeline } from "@camera-path/contracts/feature-requests";
 import {
   gaussianScene,
   lidarHitInstances,
@@ -16,18 +14,8 @@ export const manifest = {
   manifestVersion: 1,
   id: "lidar",
   scope: "project",
-  data: {
-    provides: [lidarStatus],
-    reads: [
-      { contract: trajectoryCameraPose, access: ["read"] },
-      {
-        contract: projectPermissions,
-        access: ["read", "readAsync", "subscribe"],
-      },
-      { contract: lidarTimeline, access: ["read", "readAsync", "subscribe"] },
-    ],
-  },
-  requests: { calls: [setLidarTimeline], handles: [lidar_setLidarTimeline] },
+  reads: [trajectoryCameraPose, projectPermissions, lidarTimeline],
+  calls: [setLidarTimeline],
   frames: [
     { id: "lidar.outputs", phase: "after-render" },
     {

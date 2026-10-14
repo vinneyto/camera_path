@@ -4,7 +4,7 @@ Next.js, TypeScript and React Three Fiber editor for the Camera Path API. The fr
 
 ## Frontend architecture
 
-Feature manifests declare data reads/producers, called/handled requests, frame handlers and UI/scene/GPU contributions. Typed DTOs and validated contract objects live in `packages/contracts`. Features receive a scoped API from `packages/extension-api`; imports of sibling features, private host code, raw transport and the shared query cache are rejected by CI.
+Feature manifests declare `calls` (actions/operations they invoke), `reads` (data they consume, including subscriptions), and optional `handles` (services they implement). Current features omit `handles`; action handlers and data publication belong to the host. Frame handlers and UI/scene/GPU contributions are declared separately. Typed DTOs and validated contract objects live in `packages/contracts`. Features receive a scoped API from `packages/extension-api`; imports of sibling features, private host code, raw transport and the shared query cache are rejected by CI.
 
 `apps/host` owns composition, layout, resource/query adapters, auth/preferences, tool arbitration and cross-feature workflows. `src/app` keeps the existing Next.js/Vercel route and deployment boundary. Generic UI, scene adapters and pure trajectory math live in their own packages. Playback, camera mode and trajectory selection have separate feature controllers per project; temporary form and chat state stays local.
 

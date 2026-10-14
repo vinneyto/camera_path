@@ -1,6 +1,5 @@
 "use client";
 import type { LidarKeyframe } from "@camera-path/contracts/api";
-import { lidarStatus } from "@camera-path/contracts/feature-data";
 import {
   gaussianScene,
   lidarHitInstances,
@@ -39,16 +38,9 @@ export function LidarCloud({ settings }: LidarCloudProps) {
     vertical_resolution = 32,
   } = settings;
   useEffect(() => {
-    host.data.provide(lidarStatus, { state: "initializing", message: null });
     const lease = gpu.lease(gaussianScene);
     if (!lease.ready) return;
-    if (!lease.read().available) {
-      host.data.provide(lidarStatus, {
-        state: "unavailable",
-        message: "LiDAR requires the WebGPU renderer",
-      });
-      return;
-    }
+    if (!lease.read().available) return;
     const sensor = lease.read().createSensor({
       verticalFovDegrees: vertical_fov_deg,
       horizontalResolution: horizontal_resolution,
@@ -65,8 +57,6 @@ export function LidarCloud({ settings }: LidarCloudProps) {
     scene.add(sensor.object);
 
     return () => {
-      if (!host.signal.aborted)
-        host.data.provide(lidarStatus, { state: "disabled", message: null });
       resources.current = null;
       scene.remove(sensor.object);
       ranges?.dispose();
@@ -75,7 +65,6 @@ export function LidarCloud({ settings }: LidarCloudProps) {
     };
   }, [
     gpu,
-    host,
     scene,
     vertical_fov_deg,
     horizontal_resolution,
@@ -98,8 +87,6 @@ export function LidarCloud({ settings }: LidarCloudProps) {
       current.ranges?.ready();
       current.hits?.ready();
       current.reportedReady = true;
-      if (host.data.read(trajectoryCameraPose))
-        host.data.provide(lidarStatus, { state: "ready", message: null });
     }
   });
 

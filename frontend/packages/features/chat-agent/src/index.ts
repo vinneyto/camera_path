@@ -1,7 +1,6 @@
 export { useSendChatMessage } from "./api/use-send-chat-message";
 export { manifest } from "./manifest";
 export { useChatComposer } from "./model/use-chat-composer";
-export { register } from "./register";
 export { AnchorReferencePicker } from "./ui/anchor-reference-picker";
 export { AutoGrowingTextarea } from "./ui/auto-growing-textarea";
 export { ChatMarkdown } from "./ui/chat-markdown";
