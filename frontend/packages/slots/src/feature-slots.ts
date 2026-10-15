@@ -22,7 +22,6 @@ export interface FeatureSlots {
   };
   readonly timeline?: {
     readonly controls?: SlotComponents;
-    readonly effects?: SlotComponents;
     readonly tracks?: SlotComponents;
   };
 }

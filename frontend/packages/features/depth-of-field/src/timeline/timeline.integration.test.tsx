@@ -3,6 +3,7 @@ import {
   createEditorActions,
   EditorActionsProvider,
 } from "@camera-path/actions";
+import { CommandsProvider } from "@camera-path/commands";
 import { Slot, SlotProvider } from "@camera-path/slots";
 import {
   createEditorStore,
@@ -77,7 +78,9 @@ function mount() {
             <EditorActionsProvider actions={actions}>
               <EditableProvider editable={auth.canEdit}>
                 <SlotProvider features={[slots]}>
-                  <Slot name="timeline.effects" />
+                  <CommandsProvider>
+                    <Slot name="project.commands" />
+                  </CommandsProvider>
                   <Slot name="timeline.tracks" />
                 </SlotProvider>
               </EditableProvider>
@@ -89,7 +92,7 @@ function mount() {
   }
   return render(<Harness />);
 }
-it("adds and deletes a keyframe through the real shared client/cache without host props or registration", async () => {
+it("adds and deletes a keyframe through the real shared client/cache using feature commands without host props", async () => {
   let key: CompiledDepthOfFieldKeyframe | null = null,
     revision = 1;
   const writes: { method: string; path: string; input: unknown }[] = [];
@@ -138,12 +141,14 @@ it("adds and deletes a keyframe through the real shared client/cache without hos
     vi.fn(() => true),
   );
   mount();
+  fireEvent.focus(await screen.findByRole("combobox"));
   fireEvent.click(
-    await screen.findByRole("button", { name: "Depth of Field" }),
+    await screen.findByRole("option", { name: "Depth of Field: Add" }),
   );
   const marker = await screen.findByRole("button", {
     name: /Nine-point autofocus/,
   });
+  await waitFor(() => expect(screen.queryByRole("combobox")).toBeNull());
   expect(writes[0]).toEqual({
     method: "POST",
     path: "/api/v1/projects/project/camera/depth-of-field/keyframes",
@@ -165,9 +170,9 @@ it("adds and deletes a keyframe through the real shared client/cache without hos
     path: "/api/v1/projects/project/camera/depth-of-field/keyframes/dof",
     input: null,
   });
-  await screen.findByRole("button", { name: "Depth of Field" });
+  await screen.findByRole("combobox");
 });
-it("shows API errors within the feature and hides edit controls for a viewer", async () => {
+it("shows action errors in the palette and registers no commands for a viewer", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (path: string, options: RequestInit) =>
@@ -184,8 +189,9 @@ it("shows API errors within the feature and hides edit controls for a viewer", a
     ),
   );
   const view = mount();
+  fireEvent.focus(await screen.findByRole("combobox"));
   fireEvent.click(
-    await screen.findByRole("button", { name: "Depth of Field" }),
+    await screen.findByRole("option", { name: "Depth of Field: Add" }),
   );
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
@@ -196,5 +202,5 @@ it("shows API errors within the feature and hides edit controls for a viewer", a
   await act(async () => {
     mount();
   });
-  expect(screen.queryByRole("button", { name: "Depth of Field" })).toBeNull();
+  expect(screen.queryByRole("combobox")).toBeNull();
 });

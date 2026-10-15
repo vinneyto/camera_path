@@ -40,9 +40,8 @@ pending/error UI и приватными взаимодействиями. Вн�
 
 ```tsx
 export const slots = {
-  project: { scene: [DepthOfFieldScene] },
+  project: { scene: [DepthOfFieldScene], commands: [DepthOfFieldCommands] },
   timeline: {
-    effects: [DepthOfFieldEffect],
     tracks: [DepthOfFieldTimeline],
   },
 } as const satisfies FeatureSlots;
@@ -69,12 +68,11 @@ mount/cleanup выполняет React. Данные и действия не п
 | Settings modal               | `RendererSettings`, `GridSettings`                                                                                  |
 | Project root                 | `PlaybackLoop`                                                                                                      |
 | Project header status        | `AnchorStatus`, `TrajectoryStatus`                                                                                  |
-| Command palette              | `ProjectCloudCommands`                                                                                              |
+| Command palette              | `ProjectCloudCommands`, `DepthOfFieldCommands`, `LidarCommands`                                                     |
 | Project sidebar              | `ChatSidebar`                                                                                                       |
 | Canvas scene                 | `CameraViewScene`, `SceneGrid`, `SceneModels`, `AnchorsScene`, `TrajectoryScene`, `DepthOfFieldScene`, `LidarScene` |
 | Scene hints / toolbar        | `AnchorHint`, `CloudPlacementHint`, `CameraViewToolbar`                                                             |
 | Timeline controls            | `PlaybackControls`                                                                                                  |
-| Timeline effects menu        | `DepthOfFieldEffect`, `LidarEffect`                                                                                 |
 | Timeline tracks              | `SpeedTimeline`, `CameraAimTimeline`, `CameraOrientationTimeline`, `DepthOfFieldTimeline`, `LidarTimeline`          |
 
 В `apps/host/src/ui/scene-editor/ui/scene-contents.tsx`:
@@ -86,8 +84,7 @@ mount/cleanup выполняет React. Данные и действия не п
 ```
 
 Provider — общая инфраструктура. Фичи не получают `trajectory` и callbacks через props.
-`trajectory-panel-slot.tsx` содержит контейнеры `timeline.controls`, `timeline.effects`,
-`timeline.tracks`; хост по-прежнему владеет общим layout и условиями отображения панелей.
+`trajectory-panel-slot.tsx` содержит контейнеры `timeline.controls` и `timeline.tracks`; хост по-прежнему владеет общим layout и условиями отображения панелей.
 Фичи импортируют из slots-пакета только типы и не монтируют компоненты других фич.
 
 ## Команды и жизненный цикл
@@ -134,7 +131,8 @@ Provider объединяет команды всех фич и рендерит
 ID уникален внутри provider; используйте префикс фичи. Конфликты отклоняются явно.
 Обновления сохраняют порядок смонтированных команд. Реестр локален provider и поддерживает
 Strict Mode replay. Фичи управляют API-запросами, доступностью и обработчиками; host не передаёт
-им props. Данные команд не хранятся в объекте слотов. Lifecycle-хук остаётся деталью пакета
+им props. Данные команд не хранятся в объекте слотов. Добавление DOF и LiDAR также выполняется через команды: меню «Add effect» удалено.
+Lifecycle-хук остаётся деталью пакета
 `commands`; фичам не нужно писать свои эффекты регистрации. Это тот же принцип, что у render passes.
 
 ## Сцена и жизненный цикл

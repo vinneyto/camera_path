@@ -8,7 +8,7 @@ import { usePlaybackState, useSceneInteraction } from "@camera-path/store";
 import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
 import { Button } from "@camera-path/ui-kit";
 import { TimelineStack } from "@camera-path/ui-kit/timeline/timeline-stack";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 export function TrajectoryPanelSlot() {
   const query = useCompiledTrajectoryResource();
   const playback = usePlaybackState();
@@ -31,15 +31,6 @@ export function TrajectoryPanelSlot() {
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <details className="group relative hidden has-[button]:block">
-                <summary className="flex h-6 cursor-pointer list-none items-center gap-1 rounded border bg-background px-1.5 text-[10px] text-muted-foreground hover:bg-accent">
-                  <Plus className="size-3" />
-                  Add effect
-                </summary>
-                <div className="absolute right-0 top-full z-20 mt-1 min-w-32 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-                  <Slot name="timeline.effects" />
-                </div>
-              </details>
               <Button
                 aria-label="Close trajectory panels"
                 onClick={() =>

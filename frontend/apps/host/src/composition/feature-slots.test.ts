@@ -24,8 +24,8 @@ it("preserves scene, timeline, settings and header order from the previous host 
     "LidarTimeline",
   ]);
   expect(
-    features.flatMap((f) => f.timeline?.effects ?? []).map((c) => c.name),
-  ).toEqual(["DepthOfFieldEffect", "LidarEffect"]);
+    features.flatMap((f) => f.project?.commands ?? []).map((c) => c.name),
+  ).toEqual(["ProjectCloudCommands", "DepthOfFieldCommands", "LidarCommands"]);
   expect(
     features.flatMap((f) => f.settings?.content ?? []).map((c) => c.name),
   ).toEqual(["RendererSettings", "GridSettings"]);

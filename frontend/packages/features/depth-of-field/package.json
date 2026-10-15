@@ -17,6 +17,7 @@
     "react": "^19.2.8",
     "three": "^0.185.1",
     "@camera-path/slots": "*",
-    "@camera-path/render-pipeline": "*"
+    "@camera-path/render-pipeline": "*",
+    "@camera-path/commands": "*"
   }
 }

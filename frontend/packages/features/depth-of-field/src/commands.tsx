@@ -4,8 +4,8 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useDepthOfFieldTimeline } from "@camera-path/api/resources";
 import { usePlaybackState } from "@camera-path/store";
 
-import { EffectMenuItem } from "@camera-path/ui-kit/timeline/effect-menu-item";
-export function DepthOfFieldEffect() {
+import { Command } from "@camera-path/commands";
+export function DepthOfFieldCommands() {
   const timeline = useDepthOfFieldTimeline();
   const playback = usePlaybackState();
   const canEdit = useAuth().canEdit;
@@ -17,19 +17,18 @@ export function DepthOfFieldEffect() {
   )
     return null;
   return (
-    <>
-      <EffectMenuItem
-        disabled={mutation.isPending}
-        onSelect={() =>
-          mutation.mutate({
-            path_position: playback.pathPosition,
-            focus: { kind: "center_weighted_9" },
-          })
-        }
-      >
-        Depth of Field
-      </EffectMenuItem>
-      {mutation.error && <p role="alert">{mutation.error.message}</p>}
-    </>
+    <Command
+      id="depth-of-field.add"
+      label="Depth of Field: Add"
+      searchText="dof focus autofocus effect"
+      disabled={mutation.isPending}
+      actionError={mutation.error?.message}
+      onSelect={() =>
+        mutation.mutate({
+          path_position: playback.pathPosition,
+          focus: { kind: "center_weighted_9" },
+        })
+      }
+    />
   );
 }
