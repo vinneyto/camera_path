@@ -10,6 +10,7 @@
     "@camera-path/scene-runtime": "*",
     "@camera-path/types": "*",
     "@react-three/fiber": "^9.7.0",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "@camera-path/slots": "*"
   }
 }

@@ -9,6 +9,7 @@
     "@camera-path/api": "*",
     "@camera-path/ui-kit": "*",
     "lucide-react": "^1.39.0",
-    "react": "^19.2.8"
+    "react": "^19.2.8",
+    "@camera-path/slots": "*"
   }
 }

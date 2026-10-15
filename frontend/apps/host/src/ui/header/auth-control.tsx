@@ -1,14 +1,13 @@
 "use client";
-import { ThemeToggle } from "@camera-path/feature-appearance";
-import { ProfileControl } from "@camera-path/feature-identity";
+import { Slot } from "@camera-path/slots";
+
 import { SettingsMenu } from "./settings-menu";
-/** The header slot is composed explicitly by the host. */
+/** The host owns the header shell; features supply the controls slot. */
 export function AuthControl() {
   return (
     <div className="flex shrink-0 items-center gap-1">
       <SettingsMenu />
-      <ProfileControl />
-      <ThemeToggle />
+      <Slot name="header.controls" />
     </div>
   );
 }

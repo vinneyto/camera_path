@@ -1,3 +1,11 @@
 "use client";
-export { CameraViewScene } from "./scene/scene";
-export { CameraViewToolbar } from "./ui/toolbar";
+import type { FeatureSlots } from "@camera-path/slots";
+import { CameraViewScene } from "./scene/scene";
+import { CameraViewToolbar } from "./ui/toolbar";
+
+export const slots = {
+  project: {
+    scene: [CameraViewScene],
+    toolbar: [CameraViewToolbar],
+  },
+} as const satisfies FeatureSlots;

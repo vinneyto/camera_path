@@ -1,6 +1,6 @@
 "use client";
-import { RendererSettings } from "@camera-path/feature-renderer-preferences";
-import { GridSettings } from "@camera-path/feature-scene-grid";
+import { Slot } from "@camera-path/slots";
+
 import { Button, Modal } from "@camera-path/ui-kit";
 import { Settings } from "lucide-react";
 import { useState } from "react";
@@ -24,8 +24,7 @@ export function SettingsMenu() {
       }
     >
       <div className="space-y-3">
-        <RendererSettings />
-        <GridSettings />
+        <Slot name="settings.content" />
       </div>
     </Modal>
   );

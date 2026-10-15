@@ -1,5 +1,7 @@
 "use client";
 
+import { SlotProvider } from "@camera-path/slots";
+import { featureSlots } from "@host/composition/feature-slots";
 import { ApplicationUi } from "@host/providers/application-ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
@@ -29,7 +31,9 @@ export function AppProviders({
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <UserSettingsProvider>
-            <ApplicationUi>{children}</ApplicationUi>
+            <SlotProvider features={featureSlots}>
+              <ApplicationUi>{children}</ApplicationUi>
+            </SlotProvider>
           </UserSettingsProvider>
         </AuthProvider>
       </QueryClientProvider>

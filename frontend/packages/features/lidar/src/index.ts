@@ -1,4 +1,15 @@
 "use client";
-export { LidarEffect } from "./timeline/add-effect";
-export { LidarTimeline } from "./timeline/timeline";
-export { LidarScene } from "./ui/scene";
+import type { FeatureSlots } from "@camera-path/slots";
+import { LidarEffect } from "./timeline/add-effect";
+import { LidarTimeline } from "./timeline/timeline";
+import { LidarScene } from "./ui/scene";
+
+export const slots = {
+  project: {
+    scene: [LidarScene],
+  },
+  timeline: {
+    effects: [LidarEffect],
+    tracks: [LidarTimeline],
+  },
+} as const satisfies FeatureSlots;

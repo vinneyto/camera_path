@@ -1,5 +1,6 @@
 "use client";
-import { ProjectCloudControls } from "@camera-path/feature-scene-models";
+import { Slot } from "@camera-path/slots";
+
 export function WorkspaceCommands() {
-  return <ProjectCloudControls />;
+  return <Slot name="project.commands" />;
 }

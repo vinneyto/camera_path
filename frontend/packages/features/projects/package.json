@@ -12,6 +12,7 @@
     "@camera-path/ui-kit": "*",
     "lucide-react": "^1.39.0",
     "next": "^16.4.0",
-    "react": "^19.2.8"
+    "react": "^19.2.8",
+    "@camera-path/slots": "*"
   }
 }

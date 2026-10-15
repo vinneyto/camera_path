@@ -11,6 +11,7 @@
     "@camera-path/store": "*",
     "@camera-path/trajectory-math": "*",
     "@camera-path/ui-kit": "*",
-    "react": "^19.2.8"
+    "react": "^19.2.8",
+    "@camera-path/slots": "*"
   }
 }

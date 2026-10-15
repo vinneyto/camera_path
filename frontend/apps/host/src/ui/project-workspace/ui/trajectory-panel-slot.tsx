@@ -1,13 +1,5 @@
 "use client";
-import { CameraAimTimeline } from "@camera-path/feature-camera-aim";
-import { CameraOrientationTimeline } from "@camera-path/feature-camera-orientation";
-import {
-  DepthOfFieldEffect,
-  DepthOfFieldTimeline,
-} from "@camera-path/feature-depth-of-field";
-import { LidarEffect, LidarTimeline } from "@camera-path/feature-lidar";
-import { PlaybackControls } from "@camera-path/feature-playback";
-import { SpeedTimeline } from "@camera-path/feature-speed-track";
+import { Slot } from "@camera-path/slots";
 
 import { useEditorActions, useSeekPlayback } from "@camera-path/actions";
 import { useCompiledTrajectoryResource } from "@camera-path/api/resources";
@@ -28,7 +20,7 @@ export function TrajectoryPanelSlot() {
   if (!trajectory?.position_segments.length) return null;
   return (
     <div className="overflow-hidden rounded-lg border bg-background/90 shadow-lg backdrop-blur-md">
-      <PlaybackControls />
+      <Slot name="timeline.controls" />
       {selected && (
         <section className="border-t bg-muted/35 p-2">
           <div className="mb-1.5 flex items-center justify-between px-0.5">
@@ -45,8 +37,7 @@ export function TrajectoryPanelSlot() {
                   Add effect
                 </summary>
                 <div className="absolute right-0 top-full z-20 mt-1 min-w-32 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-                  <DepthOfFieldEffect />
-                  <LidarEffect />
+                  <Slot name="timeline.effects" />
                 </div>
               </details>
               <Button
@@ -66,11 +57,7 @@ export function TrajectoryPanelSlot() {
               pathPosition={playback.pathPosition}
               onScrub={(position) => void seek(position)}
             >
-              <SpeedTimeline />
-              <CameraAimTimeline />
-              <CameraOrientationTimeline />
-              <DepthOfFieldTimeline />
-              <LidarTimeline />
+              <Slot name="timeline.tracks" />
             </TimelineStack>
           </div>
         </section>

@@ -32,22 +32,51 @@ it("rejects feature-to-host and shared-to-feature dependencies", () => {
     ).join(),
   ).toContain("must not import features");
 });
-it("allows public feature components without props, rejects props, spreads, injected children and private imports", () => {
-  const imports = 'import { AnchorsScene as Scene } from "feature";';
+it("allows slot objects only in the catalog and rejects component/private imports", () => {
+  const catalog = `${base}/apps/host/src/composition/feature-slots.ts`;
   expect(
-    inspectSource(host, imports + "const v = <Scene />;", () => entry),
+    inspectSource(
+      catalog,
+      'import {slots as anchors} from "feature";',
+      () => entry,
+    ),
   ).toEqual([]);
-  for (const jsx of [
-    "<Scene data={1} />",
-    "<Scene {...data} />",
-    "<Scene><div /></Scene>",
-  ])
-    expect(
-      inspectSource(host, imports + `const v = ${jsx};`, () => entry).join(),
-    ).toMatch(/without props|inject children/);
   expect(
-    inspectSource(host, imports + "const v = <Scene />;", () => feature).join(),
+    inspectSource(host, 'import {slots} from "feature";', () => entry).join(),
+  ).toContain("only slots objects");
+  expect(
+    inspectSource(
+      catalog,
+      'import {AnchorsScene} from "feature";',
+      () => entry,
+    ).join(),
+  ).toContain("only slots objects");
+  expect(
+    inspectSource(
+      catalog,
+      'import {slots} from "feature/private";',
+      () => feature,
+    ).join(),
   ).toContain("public package entrypoint");
+});
+it("keeps feature entrypoints limited to slot objects and slot runtime in the host", () => {
+  expect(inspectSource(entry, "export const slots = {};")).toEqual([]);
+  expect(
+    inspectSource(
+      entry,
+      'export {Component} from "./view";',
+      () => feature,
+    ).join(),
+  ).toContain("only their slots object");
+  expect(
+    inspectSource(feature, 'import {Slot} from "@camera-path/slots";').join(),
+  ).toContain("only slot types");
+  expect(
+    inspectSource(
+      feature,
+      'import type {FeatureSlots} from "@camera-path/slots";',
+    ),
+  ).toEqual([]);
 });
 it("allows a feature to use its own implementation and shared store", () => {
   expect(

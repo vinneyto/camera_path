@@ -35,7 +35,6 @@ export function inspectSource(
   const issues = [];
   const feature = featureOf(file);
   const shared = packageOf(file) && !feature;
-  const publicComponents = new Set();
   const host =
     normalize(file).includes("/apps/host/") ||
     normalize(file).includes("/src/app/");
@@ -66,19 +65,43 @@ export function inspectSource(
         node,
         "Host imports feature components only through the public package entrypoint",
       );
-    if (host && targetFeature && ts.isImportDeclaration(node)) {
-      const bindings = node.importClause?.namedBindings;
+    if (host && targetFeature) {
+      const bindings =
+        ts.isImportDeclaration(node) && node.importClause?.namedBindings;
+      const catalog = normalize(file).endsWith(
+        "/apps/host/src/composition/feature-slots.ts",
+      );
       if (
+        !catalog ||
         !bindings ||
         !ts.isNamedImports(bindings) ||
         node.importClause?.name ||
-        node.importClause?.isTypeOnly
+        node.importClause?.isTypeOnly ||
+        bindings.elements.length !== 1 ||
+        (bindings.elements[0].propertyName ?? bindings.elements[0].name)
+          .text !== "slots"
       )
-        report(node, "Host imports only named feature components");
-      else
-        for (const item of bindings.elements)
-          publicComponents.add(item.name.text);
+        report(node, "Host imports only slots objects in the feature catalog");
     }
+    if (
+      feature &&
+      specifier === "@camera-path/slots" &&
+      ts.isImportDeclaration(node)
+    ) {
+      const clause = node.importClause;
+      const bindings = clause?.namedBindings;
+      if (
+        !clause?.isTypeOnly &&
+        (!bindings ||
+          !ts.isNamedImports(bindings) ||
+          bindings.elements.some((e) => !e.isTypeOnly))
+      )
+        report(
+          node,
+          "Features import only slot types; slot containers belong to host",
+        );
+    }
+
     if (
       feature &&
       (specifier === "@tanstack/react-query" ||
@@ -127,31 +150,23 @@ export function inspectSource(
     ts.forEachChild(node, visit);
   }
   visit(source);
-  // Scan JSX after imports, regardless of source ordering.
-  function jsx(node) {
-    if (
-      (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) &&
-      publicComponents.has(node.tagName.getText(source))
-    ) {
-      if (
-        node.attributes.properties.some(
-          (attribute) =>
-            ts.isJsxSpreadAttribute(attribute) ||
-            attribute.name?.getText(source) !== "key",
-        )
+  if (
+    feature &&
+    normalize(file).endsWith(`/features/${feature}/src/index.ts`)
+  ) {
+    for (const node of source.statements) {
+      if (ts.isExportDeclaration(node) || ts.isExportAssignment(node))
+        report(node, "Feature entrypoints export only their slots object");
+      else if (
+        node.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) &&
+        (!ts.isVariableStatement(node) ||
+          node.declarationList.declarations.some(
+            (d) => !ts.isIdentifier(d.name) || d.name.text !== "slots",
+          ))
       )
-        report(node, "Host mounts feature components without props");
-      if (
-        ts.isJsxOpeningElement(node) &&
-        node.parent.children.some(
-          (child) => !ts.isJsxText(child) || child.text.trim(),
-        )
-      )
-        report(node, "Host does not inject children into feature components");
+        report(node, "Feature entrypoints export only their slots object");
     }
-    ts.forEachChild(node, jsx);
   }
-  jsx(source);
   return issues;
 }
 
@@ -220,5 +235,8 @@ if (
   if (issues.length) {
     console.error(issues.join("\n"));
     process.exitCode = 1;
-  } else console.log("Package boundaries and manual feature mounts are valid.");
+  } else
+    console.log(
+      "Package boundaries and slot-only feature entrypoints are valid.",
+    );
 }

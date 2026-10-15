@@ -1,4 +1,13 @@
 "use client";
-export { AnchorsScene } from "./scene/scene";
-export { AnchorHint } from "./ui/hint";
-export { AnchorStatus } from "./ui/status";
+import type { FeatureSlots } from "@camera-path/slots";
+import { AnchorsScene } from "./scene/scene";
+import { AnchorHint } from "./ui/hint";
+import { AnchorStatus } from "./ui/status";
+
+export const slots = {
+  project: {
+    scene: [AnchorsScene],
+    hints: [AnchorHint],
+    headerStatus: [AnchorStatus],
+  },
+} as const satisfies FeatureSlots;

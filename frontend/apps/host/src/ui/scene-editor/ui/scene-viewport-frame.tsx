@@ -1,7 +1,6 @@
 "use client";
-import { AnchorHint } from "@camera-path/feature-anchors";
-import { CameraViewToolbar } from "@camera-path/feature-camera-view";
-import { CloudPlacementHint } from "@camera-path/feature-scene-models";
+import { Slot } from "@camera-path/slots";
+
 import { ViewportProvider } from "@camera-path/scene-runtime/viewport/viewport-provider";
 import { FLOATING_UI_Z_INDEX_MIN } from "@camera-path/ui-kit";
 import { useTheme } from "@camera-path/ui-kit/theme/theme-provider";
@@ -30,8 +29,7 @@ export function SceneViewportFrame({
         {available === false && <SceneMessage message={unavailableMessage} />}
         {available && (
           <div className="absolute left-3 top-3">
-            <AnchorHint />
-            <CloudPlacementHint />
+            <Slot name="project.hints" />
           </div>
         )}
         {available && (
@@ -39,7 +37,7 @@ export function SceneViewportFrame({
             className="absolute right-3 top-3"
             style={{ zIndex: FLOATING_UI_Z_INDEX_MIN }}
           >
-            <CameraViewToolbar />
+            <Slot name="project.toolbar" />
           </div>
         )}
       </ViewportProvider>

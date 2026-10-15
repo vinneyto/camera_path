@@ -1,5 +1,6 @@
 "use client";
-import { ProjectsContent } from "@camera-path/feature-projects";
+import { Slot } from "@camera-path/slots";
+
 import Link from "next/link";
 
 import { AuthControl } from "@host/ui/header";
@@ -27,7 +28,7 @@ export function ProjectListPage() {
           <AuthControl />
         </div>
       </div>
-      <ProjectsContent />
+      <Slot name="dashboard.content" />
     </main>
   );
 }

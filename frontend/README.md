@@ -5,15 +5,16 @@ The host lives in `apps/host`, with Next/Vercel routes retained in `src/app`.
 
 ## Frontend architecture
 
-See [Пакеты frontend и ручная сборка фич](docs/feature-packages.md) for package dependencies,
+See [Пакеты frontend и типизированные слоты](docs/feature-packages.md) for package dependencies,
 providers, the full feature/slot map and review entrypoints.
 
 - `store` contains project-scoped Zustand state; `actions` contains its synchronous updates and
   server mutations. `api` owns transport, auth/preferences and React Query resource hooks.
-- Each `features/*` package owns its UI and behavior, imports shared hooks, and exports ready
-  React components without props. Features do not import the host or one another.
-- Host components explicitly mount feature components in JSX containers. No extension framework
-  or automatic slot registration is involved.
+- Each `features/*` package owns its UI and behavior, imports shared hooks, and exports an optional typed `slots` object
+  containing ready React components without required props. Features do not import the host or one another.
+- Host loads the slot objects in one catalog and mounts `<Slot name="project.scene" />` and
+  other typed containers. A plain React context selects components; there is no feature manifest
+  or registration/activation protocol.
 - Server resources remain in React Query. Local transient inputs remain inside their feature.
 - `trajectory-math` contains pure geometry and motion functions; `scene-runtime` contains renderer
   adapters and neutral viewport services; `ui-kit` contains shared UI and theme.

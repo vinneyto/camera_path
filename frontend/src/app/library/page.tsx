@@ -1,4 +1,4 @@
-import { LibraryContent } from "@camera-path/feature-library";
+import { Slot } from "@camera-path/slots";
 import { AuthControl } from "@host/ui/header";
 import Link from "next/link";
 
@@ -20,7 +20,7 @@ export default function LibraryPage() {
           Upload reconstruction files here. Projects will be able to reuse them.
         </p>
       </div>
-      <LibraryContent />
+      <Slot name="library.content" />
     </main>
   );
 }

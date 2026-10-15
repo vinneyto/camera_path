@@ -1,3 +1,5 @@
+import { slots } from "@camera-path/feature-scene-models";
+import { SlotProvider } from "@camera-path/slots";
 import { EditorTestHost } from "@host/testing/editor-host";
 import { WorkspaceCommands } from "@host/ui/commands/workspace-commands";
 // @vitest-environment happy-dom
@@ -99,7 +101,9 @@ describe("project cloud controls", () => {
     render(
       <EditorTestHost>
         <>
-          <WorkspaceCommands />
+          <SlotProvider features={[slots]}>
+            <WorkspaceCommands />
+          </SlotProvider>
           <PlacementState />
         </>
       </EditorTestHost>,
@@ -117,7 +121,9 @@ describe("project cloud controls", () => {
     render(
       <EditorTestHost>
         <>
-          <WorkspaceCommands />
+          <SlotProvider features={[slots]}>
+            <WorkspaceCommands />
+          </SlotProvider>
           <PlacementState />
         </>
       </EditorTestHost>,

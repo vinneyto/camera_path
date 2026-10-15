@@ -1,3 +1,11 @@
 "use client";
-export { LibraryContent } from "./ui/content";
-export { LibraryDetails } from "./ui/details";
+import type { FeatureSlots } from "@camera-path/slots";
+import { LibraryContent } from "./ui/content";
+import { LibraryDetails } from "./ui/details";
+
+export const slots = {
+  library: {
+    content: [LibraryContent],
+    details: [LibraryDetails],
+  },
+} as const satisfies FeatureSlots;

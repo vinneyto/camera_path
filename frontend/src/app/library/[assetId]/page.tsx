@@ -1,4 +1,4 @@
-import { LibraryDetails } from "@camera-path/feature-library";
+import { Slot } from "@camera-path/slots";
 import { ResourceScopeProvider } from "@camera-path/store";
 import { AuthControl } from "@host/ui/header";
 export default async function LibraryAssetPage({
@@ -14,7 +14,7 @@ export default async function LibraryAssetPage({
           <AuthControl />
         </div>
       </div>
-      <LibraryDetails />
+      <Slot name="library.details" />
     </ResourceScopeProvider>
   );
 }

@@ -1,5 +1,4 @@
-import { AnchorStatus } from "@camera-path/feature-anchors";
-import { TrajectoryStatus } from "@camera-path/feature-trajectory";
+import { Slot } from "@camera-path/slots";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -43,8 +42,7 @@ export function ProjectHeader({ title, revision }: ProjectHeaderProps) {
       </div>
       <div className="col-start-2 flex min-w-0 items-center justify-end gap-2 md:col-start-3">
         <AuthControl />
-        <AnchorStatus />
-        <TrajectoryStatus />
+        <Slot name="project.headerStatus" />
       </div>
     </header>
   );

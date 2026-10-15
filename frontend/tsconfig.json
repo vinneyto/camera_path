@@ -124,7 +124,8 @@
       ],
       "@camera-path/feature-renderer-preferences/*": [
         "./packages/features/renderer-preferences/src/*"
-      ]
+      ],
+      "@camera-path/slots": ["./packages/slots/src/index.ts"]
     }
   },
   "include": [

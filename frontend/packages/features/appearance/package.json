@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@camera-path/ui-kit": "*",
-    "lucide-react": "^1.39.0"
+    "lucide-react": "^1.39.0",
+    "@camera-path/slots": "*"
   }
 }

@@ -1,3 +1,13 @@
 "use client";
-export { SceneGrid } from "./scene/scene";
-export { GridSettings } from "./ui/grid-settings";
+import type { FeatureSlots } from "@camera-path/slots";
+import { SceneGrid } from "./scene/scene";
+import { GridSettings } from "./ui/grid-settings";
+
+export const slots = {
+  settings: {
+    content: [GridSettings],
+  },
+  project: {
+    scene: [SceneGrid],
+  },
+} as const satisfies FeatureSlots;

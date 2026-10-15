@@ -3,6 +3,7 @@ import {
   createEditorActions,
   EditorActionsProvider,
 } from "@camera-path/actions";
+import { Slot, SlotProvider } from "@camera-path/slots";
 import {
   createEditorStore,
   EditorStoreProvider,
@@ -24,7 +25,7 @@ import {
 } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, expect, it, vi } from "vitest";
-import { DepthOfFieldEffect, DepthOfFieldTimeline } from "../index";
+import { slots } from "../index";
 const compiled: CompiledTrajectory = {
   arc_length_table: [],
   camera_track: {
@@ -75,8 +76,10 @@ function mount() {
           <EditorStoreProvider store={store}>
             <EditorActionsProvider actions={actions}>
               <EditableProvider editable={auth.canEdit}>
-                <DepthOfFieldEffect />
-                <DepthOfFieldTimeline />
+                <SlotProvider features={[slots]}>
+                  <Slot name="timeline.effects" />
+                  <Slot name="timeline.tracks" />
+                </SlotProvider>
               </EditableProvider>
             </EditorActionsProvider>
           </EditorStoreProvider>

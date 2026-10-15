@@ -1,4 +1,13 @@
 "use client";
-export { SceneModels } from "./scene/scene";
-export { CloudPlacementHint } from "./ui/hint";
-export { ProjectCloudControls } from "./ui/project-cloud-controls";
+import type { FeatureSlots } from "@camera-path/slots";
+import { SceneModels } from "./scene/scene";
+import { CloudPlacementHint } from "./ui/hint";
+import { ProjectCloudControls } from "./ui/project-cloud-controls";
+
+export const slots = {
+  project: {
+    scene: [SceneModels],
+    hints: [CloudPlacementHint],
+    commands: [ProjectCloudControls],
+  },
+} as const satisfies FeatureSlots;

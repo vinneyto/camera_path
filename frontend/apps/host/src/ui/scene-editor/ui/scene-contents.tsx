@@ -1,13 +1,8 @@
 "use client";
+import { Slot } from "@camera-path/slots";
+
 import { useCompiledTrajectoryQuery } from "@camera-path/api/project";
 import { useUserSettings } from "@camera-path/api/settings";
-import { AnchorsScene } from "@camera-path/feature-anchors";
-import { CameraViewScene } from "@camera-path/feature-camera-view";
-import { DepthOfFieldScene } from "@camera-path/feature-depth-of-field";
-import { LidarScene } from "@camera-path/feature-lidar";
-import { SceneGrid } from "@camera-path/feature-scene-grid";
-import { SceneModels } from "@camera-path/feature-scene-models";
-import { TrajectoryScene } from "@camera-path/feature-trajectory";
 import {
   SceneSurfaceProvider,
   useGaussianRenderingBackend,
@@ -89,13 +84,7 @@ export function SceneContents({
         }}
       >
         <TrajectoryPoseProvider trajectory={trajectory}>
-          <CameraViewScene />
-          <SceneGrid />
-          <SceneModels />
-          <AnchorsScene />
-          <TrajectoryScene />
-          <DepthOfFieldScene />
-          <LidarScene />
+          <Slot name="project.scene" />
           <ambientLight intensity={dark ? 0.8 : 1.25} />
           <directionalLight
             castShadow

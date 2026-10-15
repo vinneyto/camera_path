@@ -1,4 +1,4 @@
-# Пакеты frontend и ручная сборка фич
+# Пакеты frontend и типизированные слоты
 
 Все пакеты находятся в одном репозитории и подключаются через npm workspaces.
 Точка входа Next/Vercel остаётся в `frontend/src/app`; приложение живёт в `apps/host`.
@@ -14,8 +14,9 @@
 | `ui-kit`          | Общие визуальные компоненты, тема и editable-контекст                                | `types`                                       |
 | `trajectory-math` | Чистая математика траектории                                                         | `types`                                       |
 | `scene-runtime`   | Общие renderer adapters, viewport services, picking и R3F pose context               | `store`, `types`, `ui-kit`, `trajectory-math` |
+| `slots`           | Общий интерфейс optional slots и простой React-монтаж                                | Нет                                           |
 | `features/*`      | Компоненты и приватное поведение одной фичи                                          | Общие пакеты; другие фичи и host запрещены    |
-| `apps/host`       | Providers, маршруты, layout и ручная композиция                                      | Общие пакеты и публичные компоненты фич       |
+| `apps/host`       | Providers, маршруты, layout и контейнеры слотов                                      | Общие пакеты и объекты слотов фич             |
 
 Хост создаёт `QueryClient`, а для каждого открытого проекта — отдельные `createEditorStore()`
 и `createEditorActions(store)`. Они передаются обычным React providers. Zustand хранит
@@ -23,16 +24,40 @@ camera mode, playback, active tool, pending cloud и единые hovered/select
 Данные сервера остаются в React Query; фичи читают их через API hooks, без второй копии в Zustand.
 API provider сессии и preferences и provider темы монтируются на уровне приложения.
 
-Фичи экспортируют только готовые React-компоненты без props. Компонент сам вызывает
+Фичи экспортируют один объект `slots`, проверенный через `satisfies FeatureSlots`. Он содержит
+готовые React-компоненты без обязательных props. Каждый компонент сам вызывает
 `useEditorStore`, `useEditorActions`, конкретные API/action hooks и `useTheme`. Он владеет
 pending/error UI и приватными взаимодействиями. Внутри пакета его компоненты могут обмениваться
 обычными props; ограничение относится к публичной границе host → feature.
 
 ## Фичи и места подключения
 
-Слот — обычный JSX-контейнер в хосте. Добавить фичу означает явно импортировать её компонент
-и поставить JSX в нужном месте. Автоматической регистрации, манифестов, request dispatcher,
-прав доступа по манифесту и API расширений здесь нет.
+Общий пакет `@camera-path/slots` содержит `FeatureSlots`, `SlotName`, `SlotProvider` и `Slot`.
+Интерфейс задаёт известные хосту секции и слоты; все поля, включая вложенные, опциональны.
+Фича описывает только те места, которые использует. Например, entrypoint depth-of-field:
+
+```tsx
+export const slots = {
+  project: { scene: [DepthOfFieldScene] },
+  timeline: {
+    effects: [DepthOfFieldEffect],
+    tracks: [DepthOfFieldTimeline],
+  },
+} as const satisfies FeatureSlots;
+```
+
+Хост импортирует объекты в `apps/host/src/composition/feature-slots.ts` и передаёт массив в
+`<SlotProvider features={featureSlots}>`. Его layout содержит только типизированные контейнеры:
+`<Slot name="project.scene" />`, `<Slot name="settings.content" />`,
+`<Slot name="dashboard.content" />` и аналогичные. Конкретные компоненты остаются приватными.
+Для новой фичи достаточно добавить её объект в каталог; править каждый контейнер не требуется.
+Опечатки в именах и компоненты с обязательными props отклоняются TypeScript.
+
+Порядок компонентов внутри каждого слота: сначала порядок фич в статическом каталоге,
+затем порядок компонентов в массиве самой фичи. Каталог не меняется в течение жизни приложения.
+Пустые/необъявленные слоты ничего не рендерят. `Slot` не добавляет DOM/Three.js-обёрток;
+mount/cleanup выполняет React. Данные и действия не передаются через объект слотов.
+Манифестов, IDs, прав, request dispatcher, register/activate и динамического реестра фич нет.
 
 | Контейнер хоста              | Компоненты фич                                                                                                      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -50,23 +75,18 @@ pending/error UI и приватными взаимодействиями. Вн�
 | Timeline effects menu        | `DepthOfFieldEffect`, `LidarEffect`                                                                                 |
 | Timeline tracks              | `SpeedTimeline`, `CameraAimTimeline`, `CameraOrientationTimeline`, `DepthOfFieldTimeline`, `LidarTimeline`          |
 
-Например, `apps/host/src/ui/scene-editor/ui/scene-contents.tsx` явно монтирует:
+В `apps/host/src/ui/scene-editor/ui/scene-contents.tsx`:
 
 ```tsx
 <TrajectoryPoseProvider trajectory={trajectory}>
-  <CameraViewScene />
-  <SceneGrid />
-  <SceneModels />
-  <AnchorsScene />
-  <TrajectoryScene />
-  <DepthOfFieldScene />
-  <LidarScene />
+  <Slot name="project.scene" />
 </TrajectoryPoseProvider>
 ```
 
-Provider — общая инфраструктура. Сами фичи не получают ни `trajectory`, ни callbacks.
-В `trajectory-panel-slot.tsx` хост аналогично собирает controls/effects/tracks; ни одна фича
-не импортирует соседнюю ради вложенного слота.
+Provider — общая инфраструктура. Фичи не получают `trajectory` и callbacks через props.
+`trajectory-panel-slot.tsx` содержит контейнеры `timeline.controls`, `timeline.effects`,
+`timeline.tracks`; хост по-прежнему владеет общим layout и условиями отображения панелей.
+Фичи импортируют из slots-пакета только типы и не монтируют компоненты других фич.
 
 ## Сцена и жизненный цикл
 
@@ -90,7 +110,11 @@ hits, anchors обрабатывает их. Это связь с нейтрал
 
 `npm run boundaries:check` анализирует статические, type-only, re-export, dynamic и require imports,
 проверяет отсутствие циклов между пакетами и запрещает host → feature implementation imports.
-JSX-монтаж публичных компонентов фич в host не допускает props/spreads/children.
+Host может импортировать только объекты `slots` в единственном каталоге. Публичные entrypoints
+фич экспортируют только `slots`; runtime слотов остаётся у хоста. Проверки типов дополнительно
+проверяют неизвестные пути, опечатки и обязательные props компонентов. Интеграционные тесты
+проверяют порядок, пустые слоты, доступ к provider-данным, сохранение mount и cleanup,
+а также реальное добавление/удаление DOF через слоты и общий API/cache.
 Тесты могут собирать providers и использовать private implementation своей проверяемой фичи.
 
 ```bash
@@ -105,4 +129,5 @@ npm run format:check
 ```
 
 Начать ревью: `store/src/editor-store.ts`, `actions/src/create-editor-actions.ts`,
-`api/src/resources`, затем `apps/host/src/providers` и публичные `features/*/src/index.ts`.
+`api/src/resources`, `slots/src/feature-slots.ts`, затем `apps/host/src/composition/feature-slots.ts`,
+`apps/host/src/providers` и публичные `features/*/src/index.ts`.

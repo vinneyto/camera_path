@@ -1,6 +1,6 @@
 "use client";
-import { ChatSidebar } from "@camera-path/feature-chat-agent";
-import { PlaybackLoop } from "@camera-path/feature-playback";
+import { Slot } from "@camera-path/slots";
+
 import { LoaderCircle } from "lucide-react";
 
 import {
@@ -41,7 +41,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
 
   return (
     <main className="grid h-dvh min-h-0 grid-cols-1 grid-rows-1 overflow-hidden [&:has([data-project-sidebar]>*)]:grid-rows-[minmax(0,1fr)_auto] md:[&:has([data-project-sidebar]>*)]:grid-cols-[minmax(0,1fr)_300px] md:[&:has([data-project-sidebar]>*)]:grid-rows-1">
-      <PlaybackLoop />
+      <Slot name="project.root" />
       <div className="flex min-h-0 min-w-0 flex-col">
         <ProjectHeader title={project.name} revision={project.revision} />
         <ProjectScene
@@ -49,7 +49,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
         />
       </div>
       <div data-project-sidebar className="contents">
-        <ChatSidebar />
+        <Slot name="project.sidebar" />
       </div>
     </main>
   );
