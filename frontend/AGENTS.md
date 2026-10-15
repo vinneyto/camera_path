@@ -26,4 +26,5 @@
 - Command palette, registration and command types belong to the shared `commands` package. Host mounts `CommandsProvider`; each feature command component returns one `Command` element with data/callback props. Keep registration hooks private to that package.
 - Generic WebGPU Canvas, RenderPipeline provider, pass registration/compositing and layer/picking rules belong to the shared `render-pipeline` package. It depends only on React, R3F and Three.js. Consumers import it directly; do not forward its exports through scene-runtime.
 - Keep renderer-specific Gaussian/LiDAR code in scene-runtime adapters. Preserve the existing renderer dependency and GPU resource lifecycle.
-- Run API generation checks, package boundaries, typecheck, lint, tests, build and formatting checks before delivering architectural changes.
+- Keep `docs/frontend-modules.json` current with `npm run modules:scan` when frontend contributions or action/data dependencies change. Do not edit the generated report by hand; `modules:check` verifies it in CI. See `docs/frontend-module-map.md`.
+- Run API generation checks, module map freshness, package boundaries, typecheck, lint, tests, build and formatting checks before delivering architectural changes.

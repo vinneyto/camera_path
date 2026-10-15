@@ -178,6 +178,13 @@ hits, anchors обрабатывает их. Это связь с нейтрал
 построенную траекторию. Scope проекта задаётся provider и проверяется при явном ID.
 Ключ страницы по project ID создаёт новый store/actions при переходе к другому проекту.
 
+## Карта модулей
+
+`npm run modules:scan` строит `docs/frontend-modules.json`: дерево слотов каждого
+workspace и используемые actions/селекторы с исходными файлами и строками. Анализ использует
+TypeScript AST и type checker. Формат и ограничения описаны в [frontend-module-map.md](frontend-module-map.md).
+`npm run modules:check` проверяет актуальность отчёта в CI.
+
 ## Проверки
 
 `npm run boundaries:check` анализирует статические, type-only, re-export, dynamic и require imports,
@@ -193,6 +200,7 @@ Host может импортировать только объекты `slots` �
 npm ci
 npm run api:check
 npm run boundaries:check
+npm run modules:check
 npm run typecheck
 npm run lint
 npm test
