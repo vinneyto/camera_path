@@ -2,7 +2,7 @@ import { float } from "three/tsl";
 import { PerspectiveCamera } from "three/webgpu";
 import { expect, it } from "vitest";
 
-import { createPerspectiveViewDepthNode } from "@camera-path/scene-runtime/three/create-perspective-view-depth-node";
+import { createPerspectiveViewDepthNode } from "./create-perspective-view-depth-node";
 
 it("keeps camera clipping planes live after the depth node is created", () => {
   const camera = new PerspectiveCamera(42, 1, 0.01, 100);

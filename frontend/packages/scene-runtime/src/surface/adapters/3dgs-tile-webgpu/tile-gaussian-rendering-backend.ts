@@ -9,7 +9,7 @@ import {
 import { PerspectiveCamera } from "three/webgpu";
 
 import type { GaussianDprMode } from "@camera-path/scene-runtime/surface/model/gaussian-dpr-mode";
-import type { SceneRenderPipeline } from "@camera-path/scene-runtime/three";
+import type { SceneRenderPipeline } from "@camera-path/render-pipeline";
 
 import { createTileRasterDepthNodes } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/create-tile-raster-depth-nodes";
 import { downloadGaussianCloud } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/download-gaussian-cloud";

@@ -17,14 +17,14 @@ import {
   type Node,
 } from "three/webgpu";
 
-import { compositeDepthTestedPremultipliedOver } from "@camera-path/scene-runtime/three/composite-depth-tested-premultiplied-over";
-import { compositePremultipliedOver } from "@camera-path/scene-runtime/three/composite-premultiplied-over";
-import { createPerspectiveViewDepthNode } from "@camera-path/scene-runtime/three/create-perspective-view-depth-node";
+import { compositeDepthTestedPremultipliedOver } from "./composite-depth-tested-premultiplied-over";
+import { compositePremultipliedOver } from "./composite-premultiplied-over";
+import { createPerspectiveViewDepthNode } from "./create-perspective-view-depth-node";
 import {
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
-} from "@camera-path/scene-runtime/three/render-pipeline-scene-layers";
+} from "./render-pipeline-scene-layers";
 import type {
   RenderPipelineContextValue,
   RenderPipelineEffect,
@@ -32,7 +32,7 @@ import type {
   RenderPipelineEffectTransform,
   RenderPipelineLayer,
   RenderPipelineLayerOptions,
-} from "@camera-path/scene-runtime/three/render-pipeline-types";
+} from "./render-pipeline-types";
 
 interface PipelineResources {
   opaque: ReturnType<typeof scenePass>;

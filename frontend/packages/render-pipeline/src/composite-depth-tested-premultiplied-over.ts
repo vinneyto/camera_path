@@ -1,7 +1,7 @@
 import { vec4 } from "three/tsl";
 import type { Node } from "three/webgpu";
 
-import { compositePremultipliedOver } from "@camera-path/scene-runtime/three/composite-premultiplied-over";
+import { compositePremultipliedOver } from "./composite-premultiplied-over";
 
 export function compositeDepthTestedPremultipliedOver(
   base: Node<"vec4">,

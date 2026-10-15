@@ -9,7 +9,7 @@ import {
   type SceneSurfaceBackground,
   type SceneSurfaceReady,
 } from "@camera-path/scene-runtime/surface";
-import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "@camera-path/scene-runtime/three";
+import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "@camera-path/render-pipeline";
 import { SceneServicesProvider } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { TrajectoryPoseProvider } from "@camera-path/scene-runtime/viewport/trajectory-pose-provider";
 import { useEditorStore, useProjectId } from "@camera-path/store";

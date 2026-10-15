@@ -4,9 +4,9 @@ import { useFrame } from "@react-three/fiber";
 
 import {
   DEPTH_OF_FIELD_AUTOFOCUS_LAYER,
-  forEachCenterWeightedAutofocusRay,
   RENDER_PIPELINE_OVERLAY_LAYER,
-} from "@camera-path/scene-runtime/three";
+} from "@camera-path/render-pipeline";
+import { forEachCenterWeightedAutofocusRay } from "@camera-path/scene-runtime/three";
 import { type ResolvedDepthOfFieldFocus } from "@camera-path/trajectory-math";
 import { useThree } from "@react-three/fiber";
 import { useLayoutEffect, useRef } from "react";

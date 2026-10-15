@@ -1,7 +1,7 @@
 import { float, vec4 } from "three/tsl";
 import { expect, it } from "vitest";
 
-import { compositeDepthTestedPremultipliedOver } from "@camera-path/scene-runtime/three/composite-depth-tested-premultiplied-over";
+import { compositeDepthTestedPremultipliedOver } from "./composite-depth-tested-premultiplied-over";
 
 it("builds a depth selection before premultiplied-over composition", () => {
   const result = compositeDepthTestedPremultipliedOver(

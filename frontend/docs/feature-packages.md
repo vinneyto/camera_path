@@ -5,19 +5,20 @@
 
 ## Зависимости и владение
 
-| Пакет             | Ответственность                                                                      | Допустимые внутренние зависимости             |
-| ----------------- | ------------------------------------------------------------------------------------ | --------------------------------------------- |
-| `types`           | DTO Orval, типы редактора, траектории и UI                                           | Нет                                           |
-| `store`           | Vanilla Zustand store, selectors и контекст текущего project/asset                   | `types`                                       |
-| `api`             | HTTP-клиент, сессия, preferences, query hooks и ключи React Query                    | `types`, `store` для текущего ID              |
-| `actions`         | Синхронные изменения Zustand и серверные mutations с invalidation и бизнес-эффектами | `store`, `api`, `types`, `trajectory-math`    |
-| `ui-kit`          | Общие визуальные компоненты, тема и editable-контекст                                | `types`                                       |
-| `trajectory-math` | Чистая математика траектории                                                         | `types`                                       |
-| `scene-runtime`   | Общие renderer adapters, viewport services, picking и R3F pose context               | `store`, `types`, `ui-kit`, `trajectory-math` |
-| `commands`        | Панель команд, provider, компонент `Command` и типы команд                           | Нет                                           |
-| `slots`           | Общий интерфейс optional slots и простой React-монтаж                                | Нет                                           |
-| `features/*`      | Компоненты и приватное поведение одной фичи                                          | Общие пакеты; другие фичи и host запрещены    |
-| `apps/host`       | Providers, маршруты, layout и контейнеры слотов                                      | Общие пакеты и объекты слотов фич             |
+| Пакет             | Ответственность                                                                      | Допустимые внутренние зависимости                                |
+| ----------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `types`           | DTO Orval, типы редактора, траектории и UI                                           | Нет                                                              |
+| `store`           | Vanilla Zustand store, selectors и контекст текущего project/asset                   | `types`                                                          |
+| `api`             | HTTP-клиент, сессия, preferences, query hooks и ключи React Query                    | `types`, `store` для текущего ID                                 |
+| `actions`         | Синхронные изменения Zustand и серверные mutations с invalidation и бизнес-эффектами | `store`, `api`, `types`, `trajectory-math`                       |
+| `ui-kit`          | Общие визуальные компоненты, тема и editable-контекст                                | `types`                                                          |
+| `trajectory-math` | Чистая математика траектории                                                         | `types`                                                          |
+| `scene-runtime`   | Общие renderer adapters, viewport services, picking и R3F pose context               | `store`, `types`, `ui-kit`, `trajectory-math`, `render-pipeline` |
+| `render-pipeline` | R3F Canvas, RenderPipeline, provider слоёв/эффектов и правила picking                | Нет                                                              |
+| `commands`        | Панель команд, provider, компонент `Command` и типы команд                           | Нет                                                              |
+| `slots`           | Общий интерфейс optional slots и простой React-монтаж                                | Нет                                                              |
+| `features/*`      | Компоненты и приватное поведение одной фичи                                          | Общие пакеты; другие фичи и host запрещены                       |
+| `apps/host`       | Providers, маршруты, layout и контейнеры слотов                                      | Общие пакеты и объекты слотов фич                                |
 
 Хост создаёт `QueryClient`, а для каждого открытого проекта — отдельные `createEditorStore()`
 и `createEditorActions(store)`. Они передаются обычным React providers. Zustand хранит
@@ -140,8 +141,23 @@ Strict Mode replay. Фичи управляют API-запросами, дост
 
 Фичи могут использовать `useFrame`. Общая pose траекторной камеры вычисляется один раз перед
 потребителями с priority `-2`; управление камерой, DOF helper и LiDAR читают её из ref с priority `-1`.
-Это обычный R3F context, без собственного планировщика кадров. RenderPipeline и создание
-LiDAR sensor остаются в renderer adapter. Ресурсы сенсора создаются и освобождаются в одном effect,
+Это обычный R3F context, без собственного планировщика кадров.
+
+`@camera-path/render-pipeline` — общий пакет приложения, независимый от host, фич и renderer adapters.
+Он содержит `RenderPipelineCanvas`, `RenderPipelineProvider`, `useRenderPipeline`,
+`useOptionalRenderPipeline`, типы регистрации, композитинг, константы слоёв и правила picking.
+Внешние зависимости — только React, R3F и Three.js. Хост импортирует Canvas напрямую из пакета;
+Canvas создаёт WebGPU renderer и монтирует provider внутри R3F. Старых re-export через
+`scene-runtime/three` нет.
+
+Фичи и Gaussian adapter получают сервис через `useRenderPipeline`/`SceneRenderPipeline`:
+`registerLayer`, `registerEffect`, `registerAfterRender`, `getOpaqueViewDepth`.
+Регистрация возвращает cleanup; владельцы пасов создают и освобождают свои ресурсы.
+Provider владеет базовыми scene passes и финальным `RenderPipeline.outputNode`, применяет
+зарегистрированные layers/effects в порядке `order` и выполняет рендер через `useFrame` с priority `1`.
+Создание/освобождение pipeline и базовых passes остаётся в одном layout effect.
+Конкретные Gaussian/LiDAR passes, worker и renderer-specific поведение остаются в `scene-runtime`
+и соответствующих адаптерах. Создание LiDAR sensor остаётся в renderer adapter. Ресурсы сенсора создаются и освобождаются в одном effect,
 включая replay Strict Mode и смену разрешения.
 
 Общие viewport services предоставляют поверхность для picking, события OrbitControls,

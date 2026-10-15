@@ -27,7 +27,6 @@ vi.mock("@camera-path/feature-trajectory/ports/use-hovered-trajectory", () => ({
 }));
 
 vi.mock("@camera-path/scene-runtime/three", () => ({
-  RENDER_PIPELINE_OVERLAY_LAYER: 1,
   ScreenSpaceLine: ({
     onContextMenu,
     onPointerDown,

@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo } from "react";
 import { WebGLRenderer } from "three";
 import { WebGPURenderer } from "three/webgpu";
 
-import { useOptionalRenderPipeline } from "@camera-path/scene-runtime/three";
+import { useOptionalRenderPipeline } from "@camera-path/render-pipeline";
 
 import { TileGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend";
 import { SparkGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/spark/spark-gaussian-rendering-backend";

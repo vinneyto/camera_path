@@ -9,7 +9,7 @@ import type {
 import {
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
   useOptionalRenderPipeline,
-} from "@camera-path/scene-runtime/three";
+} from "@camera-path/render-pipeline";
 import type { Vec3 } from "@camera-path/types/project";
 
 type PlacementEvents = Pick<

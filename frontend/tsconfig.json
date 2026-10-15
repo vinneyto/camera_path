@@ -126,7 +126,10 @@
         "./packages/features/renderer-preferences/src/*"
       ],
       "@camera-path/slots": ["./packages/slots/src/index.ts"],
-      "@camera-path/commands": ["./packages/commands/src/index.ts"]
+      "@camera-path/commands": ["./packages/commands/src/index.ts"],
+      "@camera-path/render-pipeline": [
+        "./packages/render-pipeline/src/index.ts"
+      ]
     }
   },
   "include": [

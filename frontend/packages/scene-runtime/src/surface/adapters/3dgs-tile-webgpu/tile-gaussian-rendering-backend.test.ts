@@ -2,7 +2,7 @@ import type { GaussianPass } from "3dgs-tile-webgpu";
 import { PerspectiveCamera, type WebGPURenderer } from "three/webgpu";
 import { describe, expect, it, vi } from "vitest";
 
-import type { SceneRenderPipeline } from "@camera-path/scene-runtime/three";
+import type { SceneRenderPipeline } from "@camera-path/render-pipeline";
 
 import { TileGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend";
 

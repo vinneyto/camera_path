@@ -1,6 +1,6 @@
 import type { Intersection } from "three";
 
-import { RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER } from "@camera-path/scene-runtime/three/render-pipeline-scene-layers";
+import { RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER } from "./render-pipeline-scene-layers";
 
 /** Pre-splat surfaces are composited underneath splats, regardless of depth. */
 export function sortRenderPipelineIntersections<T extends Intersection>(

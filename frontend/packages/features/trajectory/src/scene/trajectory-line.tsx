@@ -2,10 +2,8 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { useEffect } from "react";
 
-import {
-  RENDER_PIPELINE_OVERLAY_LAYER,
-  ScreenSpaceLine,
-} from "@camera-path/scene-runtime/three";
+import { RENDER_PIPELINE_OVERLAY_LAYER } from "@camera-path/render-pipeline";
+import { ScreenSpaceLine } from "@camera-path/scene-runtime/three";
 import {
   sampleTrajectory,
   type CompiledTrajectory,

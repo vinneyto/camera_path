@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { Quaternion, Vector3, type Group } from "three";
 
-import { RENDER_PIPELINE_OVERLAY_LAYER } from "@camera-path/scene-runtime/three";
+import { RENDER_PIPELINE_OVERLAY_LAYER } from "@camera-path/render-pipeline";
 import {
   evaluateTrajectoryCameraPose,
   type CompiledTrajectory,

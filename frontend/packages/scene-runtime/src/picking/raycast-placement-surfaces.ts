@@ -1,5 +1,5 @@
 import type { SceneSurfaceHit } from "@camera-path/scene-runtime/surface";
-import { sortRenderPipelineIntersections } from "@camera-path/scene-runtime/three";
+import { sortRenderPipelineIntersections } from "@camera-path/render-pipeline";
 import type { Object3D, Raycaster } from "three";
 
 export function raycastPlacementSurfaces(

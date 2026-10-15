@@ -9,9 +9,11 @@ import type { PlacementPreview } from "@camera-path/feature-scene-models/scene/u
 import { raycastPlacementSurfaces } from "@camera-path/scene-runtime/picking/raycast-placement-surfaces";
 import { SceneSurfaceProvider } from "@camera-path/scene-runtime/surface";
 import { TileGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend";
-import type { SceneRenderPipeline } from "@camera-path/scene-runtime/three";
-import { configureInteractiveRaycasterLayers } from "@camera-path/scene-runtime/three/configure-interactive-raycaster-layers";
-import { createRenderPipelineEvents } from "@camera-path/scene-runtime/three/create-render-pipeline-events";
+import {
+  type SceneRenderPipeline,
+  configureInteractiveRaycasterLayers,
+  createRenderPipelineEvents,
+} from "@camera-path/render-pipeline";
 import type { LibraryAsset, ProjectCloud } from "@camera-path/types/api";
 import { createRoot, extend } from "@react-three/fiber";
 import { readFileSync } from "node:fs";
@@ -33,10 +35,8 @@ import {
 import { afterEach, expect, it, vi } from "vitest";
 
 // SceneGrid must use its WebGPU pre-splat layer, without creating a GPU renderer.
-vi.mock("@camera-path/scene-runtime/three", async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import("@camera-path/scene-runtime/three")
-  >()),
+vi.mock("@camera-path/render-pipeline", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@camera-path/render-pipeline")>()),
   useOptionalRenderPipeline: () => ({}),
 }));
 

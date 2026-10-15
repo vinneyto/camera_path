@@ -1,10 +1,10 @@
 "use client";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
 
-import { configureInteractiveRaycasterLayers } from "@camera-path/scene-runtime/three/configure-interactive-raycaster-layers";
-import { createRenderPipelineEvents } from "@camera-path/scene-runtime/three/create-render-pipeline-events";
-import { createWebGpuRenderer } from "@camera-path/scene-runtime/three/create-webgpu-renderer";
-import { RenderPipelineProvider } from "@camera-path/scene-runtime/three/render-pipeline-provider";
+import { configureInteractiveRaycasterLayers } from "./configure-interactive-raycaster-layers";
+import { createRenderPipelineEvents } from "./create-render-pipeline-events";
+import { createWebGpuRenderer } from "./create-webgpu-renderer";
+import { RenderPipelineProvider } from "./render-pipeline-provider";
 
 /** A WebGPU R3F Canvas whose frame output is owned by Three.js RenderPipeline. */
 export function RenderPipelineCanvas({

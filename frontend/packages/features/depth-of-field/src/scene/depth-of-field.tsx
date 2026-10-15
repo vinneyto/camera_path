@@ -9,8 +9,10 @@ import { PerspectiveCamera, type Node } from "three/webgpu";
 import type { ResolvedDepthOfFieldFocus } from "@camera-path/trajectory-math";
 
 import { forEachCenterWeightedAutofocusRay } from "@camera-path/scene-runtime/three/for-each-center-weighted-autofocus-ray";
-import { useRenderPipeline } from "@camera-path/scene-runtime/three/render-pipeline-provider";
-import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "@camera-path/scene-runtime/three/render-pipeline-scene-layers";
+import {
+  useRenderPipeline,
+  DEPTH_OF_FIELD_AUTOFOCUS_LAYER,
+} from "@camera-path/render-pipeline";
 import { weightedMedianFocusDistance } from "@camera-path/scene-runtime/three/weighted-median-focus-distance";
 
 interface DepthOfFieldProps {

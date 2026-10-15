@@ -1,12 +1,12 @@
 import { Layers, Object3D, Raycaster } from "three";
 import { expect, test } from "vitest";
 
-import { configureInteractiveRaycasterLayers } from "@camera-path/scene-runtime/three/configure-interactive-raycaster-layers";
+import { configureInteractiveRaycasterLayers } from "./configure-interactive-raycaster-layers";
 import {
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
-} from "@camera-path/scene-runtime/three/render-pipeline-scene-layers";
+} from "./render-pipeline-scene-layers";
 
 test("enables scene and overlay picking without enabling debug layers", () => {
   const raycaster = new Raycaster();

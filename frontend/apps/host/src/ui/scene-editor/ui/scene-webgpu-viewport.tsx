@@ -1,5 +1,5 @@
 "use client";
-import { RenderPipelineCanvas } from "@camera-path/scene-runtime/three";
+import { RenderPipelineCanvas } from "@camera-path/render-pipeline";
 import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
 import type { SceneViewportProps } from "./scene-viewport-types";
