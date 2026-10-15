@@ -25,7 +25,12 @@ it("preserves scene, timeline, settings and header order from the previous host 
   ]);
   expect(
     features.flatMap((f) => f.project?.commands ?? []).map((c) => c.name),
-  ).toEqual(["ProjectCloudCommands", "DepthOfFieldCommands", "LidarCommands"]);
+  ).toEqual([
+    "AddCloudCommand",
+    "RemoveCloudCommand",
+    "AddDepthOfFieldCommand",
+    "AddLidarCommand",
+  ]);
   expect(
     features.flatMap((f) => f.settings?.content ?? []).map((c) => c.name),
   ).toEqual(["RendererSettings", "GridSettings"]);

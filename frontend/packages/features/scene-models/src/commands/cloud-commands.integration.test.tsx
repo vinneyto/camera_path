@@ -13,6 +13,7 @@ import { useUserSettings } from "@camera-path/api/settings";
 const mutate = vi.hoisted(() => vi.fn());
 let showGrid = true;
 let canEdit = true;
+let clouds: { id: string; name: string }[] = [];
 vi.mock("@camera-path/api/settings", async () => {
   const { useState } = await import("react");
   return {
@@ -53,7 +54,7 @@ vi.mock("@camera-path/api/resources", () => ({
     error: null,
   }),
   useSceneModels: () => ({
-    data: { data: [] },
+    data: { data: clouds },
     isPending: false,
     error: null,
   }),
@@ -91,6 +92,7 @@ function openAddCloud() {
 beforeEach(() => {
   showGrid = true;
   canEdit = true;
+  clouds = [];
 });
 
 afterEach(() => {
@@ -99,6 +101,23 @@ afterEach(() => {
 });
 
 describe("project cloud commands", () => {
+  it("removes the selected instance through its independent command", () => {
+    clouds = [{ id: "cloud-a", name: "Mug" }];
+    render(
+      <EditorTestHost>
+        <SlotProvider features={[slots]}>
+          <WorkspaceCommands />
+        </SlotProvider>
+      </EditorTestHost>,
+    );
+    fireEvent.focus(screen.getByRole("combobox"));
+    fireEvent.click(screen.getByRole("option", { name: "Cloud: Remove" }));
+    fireEvent.click(screen.getByRole("option", { name: "Mug · 1 · cloud-a" }));
+    expect(mutate).toHaveBeenCalledExactlyOnceWith({
+      type: "remove",
+      cloudId: "cloud-a",
+    });
+  });
   it("removes commands when edit access is lost", () => {
     const view = (
       <EditorTestHost>

@@ -40,7 +40,7 @@ pending/error UI и приватными взаимодействиями. Вн�
 
 ```tsx
 export const slots = {
-  project: { scene: [DepthOfFieldScene], commands: [DepthOfFieldCommands] },
+  project: { scene: [DepthOfFieldScene], commands: [AddDepthOfFieldCommand] },
   timeline: {
     tracks: [DepthOfFieldTimeline],
   },
@@ -68,7 +68,7 @@ mount/cleanup выполняет React. Данные и действия не п
 | Settings modal               | `RendererSettings`, `GridSettings`                                                                                  |
 | Project root                 | `PlaybackLoop`                                                                                                      |
 | Project header status        | `AnchorStatus`, `TrajectoryStatus`                                                                                  |
-| Command palette              | `ProjectCloudCommands`, `DepthOfFieldCommands`, `LidarCommands`                                                     |
+| Command palette              | `AddCloudCommand`, `RemoveCloudCommand`, `AddDepthOfFieldCommand`, `AddLidarCommand`                                |
 | Project sidebar              | `ChatSidebar`                                                                                                       |
 | Canvas scene                 | `CameraViewScene`, `SceneGrid`, `SceneModels`, `AnchorsScene`, `TrajectoryScene`, `DepthOfFieldScene`, `LidarScene` |
 | Scene hints / toolbar        | `AnchorHint`, `CloudPlacementHint`, `CameraViewToolbar`                                                             |
@@ -100,12 +100,15 @@ Provider — общая инфраструктура. Фичи не получа
 </CommandsProvider>
 ```
 
-Компоненты фич возвращают один `Command` или несколько команд во фрагменте:
+Одна команда — один файл и один компонент, возвращающий один `Command`.
+Один render effect также живёт в отдельном файле вместе с его setup/cleanup.
+Не объединяйте вклады в общий компонент: перечисляйте каждую команду в `slots` напрямую.
+Например, команда в своём файле:
 
 ```tsx
 import { Command } from "@camera-path/commands";
 
-function ProjectCloudCommands() {
+function CancelCloudPlacementCommand() {
   const placement = useCloudPlacement();
   return (
     <Command
@@ -115,9 +118,16 @@ function ProjectCloudCommands() {
     />
   );
 }
+```
+
+В `src/index.ts` фича облаков явно перечисляет команды из отдельных файлов:
+
+```tsx
+import { AddCloudCommand } from "./commands/add-cloud-command";
+import { RemoveCloudCommand } from "./commands/remove-cloud-command";
 
 export const slots = {
-  project: { commands: [ProjectCloudCommands] },
+  project: { commands: [AddCloudCommand, RemoveCloudCommand] },
 } as const satisfies FeatureSlots;
 ```
 

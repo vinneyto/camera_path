@@ -5,7 +5,7 @@ import { useDepthOfFieldTimeline } from "@camera-path/api/resources";
 import { usePlaybackState } from "@camera-path/store";
 
 import { Command } from "@camera-path/commands";
-export function DepthOfFieldCommands() {
+export function AddDepthOfFieldCommand() {
   const timeline = useDepthOfFieldTimeline();
   const playback = usePlaybackState();
   const canEdit = useAuth().canEdit;

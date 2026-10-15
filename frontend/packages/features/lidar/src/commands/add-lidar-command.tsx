@@ -4,7 +4,7 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useLidarTimelineResource } from "@camera-path/api/resources";
 
 import { Command } from "@camera-path/commands";
-export function LidarCommands() {
+export function AddLidarCommand() {
   const timeline = useLidarTimelineResource();
   const canEdit = useAuth().canEdit;
   const mutation = useSetLidarTimelineMutation();

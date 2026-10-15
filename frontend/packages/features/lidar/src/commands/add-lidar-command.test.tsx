@@ -13,7 +13,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { slots } from ".";
+import { slots } from "../index";
 
 const auth = vi.hoisted(() => ({ canEdit: true }));
 vi.mock("@camera-path/api/identity/auth-provider", () => ({
