@@ -4,14 +4,14 @@ export default defineConfig({
   cameraPath: {
     input: "../backend/openapi.json",
     output: {
-      target: "src/shared/api/generated/client.ts",
-      schemas: "src/shared/api/generated/model",
+      target: "packages/api/src/client/generated/client.ts",
+      schemas: "packages/types/src/api",
       client: "react-query",
       httpClient: "fetch",
       mode: "single",
       override: {
         mutator: {
-          path: "src/shared/api/orval-fetch.ts",
+          path: "packages/api/src/client/orval-fetch.ts",
           name: "orvalFetch",
         },
       },

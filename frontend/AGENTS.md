@@ -14,3 +14,13 @@
 - Create disposable Three.js/GPU resources and dispose them in the setup and cleanup of the same `useEffect`. Do not create or memoize such a resource with `useMemo` and dispose it from a separate effect: React Strict Mode may run the effect cleanup and setup again while retaining the memoized resource, causing reuse after `dispose()`.
 - Do not create a ref only to carry the latest prop or state value into an effect. When the resulting update is cheap, apply it directly in a `useEffect` or `useLayoutEffect` and list the value in that effect's dependencies.
 - React Compiler is enabled for the frontend. Do not add `useMemo`, `useCallback`, or `memo` by default. Add manual memoization only when stable identity is required by an external API or a measured performance case justifies it; keep the reason explicit in the code.
+
+# Package boundaries
+
+- Follow `docs/feature-packages.md`. Keep `src/app` as the Next/Vercel entrypoint and host composition in `apps/host`.
+- `store` contains state and selectors only. `actions` owns state changes, server mutations and their business effects. `api` owns HTTP, generated DTO clients, session/preferences and query hooks. These shared packages must not depend on features or host.
+- Each feature lives in its own `packages/features/<name>` workspace. Features import shared packages and their own implementation only; never another feature or host. Read state/actions/API/theme through shared hooks. `useFrame` is allowed.
+- Public feature entrypoints export ready React components without props. Host imports only these entrypoints and mounts components explicitly in ordinary JSX containers. Keep nested multi-feature composition in host.
+- Do not add extension descriptors, manifests, automatic slot registration, request dispatchers or manifest permission frameworks. Host owns provider lifetimes and creates each project's Zustand store, actions and the application's API query client.
+- Keep renderer-specific code in scene-runtime adapters. Preserve the existing renderer dependency and GPU resource lifecycle.
+- Run API generation checks, package boundaries, typecheck, lint, tests, build and formatting checks before delivering architectural changes.

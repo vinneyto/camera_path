@@ -1,0 +1,30 @@
+import {
+  getGetAimTimelineQueryKey,
+  getGetCompiledTrajectoryQueryKey,
+  getGetDepthOfFieldTimelineQueryKey,
+  getGetLidarTimelineQueryKey,
+  getGetOrientationTimelineQueryKey,
+  getGetProjectQueryKey,
+  getGetSpeedTimelineQueryKey,
+  getGetTrajectoryQueryKey,
+  getListAnchorsQueryKey,
+  getListChatMessagesQueryKey,
+  getListProjectsQueryKey,
+  getListScenePointsQueryKey,
+} from "@camera-path/api/client/generated/client";
+
+export const projectKeys = {
+  all: ["/api/v1/projects"] as const,
+  list: getListProjectsQueryKey,
+  detail: getGetProjectQueryKey,
+  anchors: getListAnchorsQueryKey,
+  scenePoints: getListScenePointsQueryKey,
+  segments: getGetTrajectoryQueryKey,
+  speed: getGetSpeedTimelineQueryKey,
+  aim: getGetAimTimelineQueryKey,
+  orientation: getGetOrientationTimelineQueryKey,
+  depthOfField: getGetDepthOfFieldTimelineQueryKey,
+  lidar: getGetLidarTimelineQueryKey,
+  chat: getListChatMessagesQueryKey,
+  trajectory: getGetCompiledTrajectoryQueryKey,
+};

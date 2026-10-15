@@ -1,0 +1,13 @@
+{
+  "name": "@camera-path/trajectory-math",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@camera-path/types": "*",
+    "three": "^0.185.1"
+  }
+}

@@ -1,11 +1,12 @@
 "use client";
 
+import { ApplicationUi } from "@host/providers/application-ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { UserSettingsProvider } from "@/features/user-settings";
-import { ThemeProvider } from "@/features/theme-switcher";
-import { AuthProvider } from "@/features/auth";
+import { AuthProvider } from "@camera-path/api/identity/auth-provider";
+import { UserSettingsProvider } from "@camera-path/api/settings";
+import { ThemeProvider } from "@camera-path/ui-kit/theme/theme-provider";
 
 export function AppProviders({
   children,
@@ -27,7 +28,9 @@ export function AppProviders({
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <UserSettingsProvider>{children}</UserSettingsProvider>
+          <UserSettingsProvider>
+            <ApplicationUi>{children}</ApplicationUi>
+          </UserSettingsProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

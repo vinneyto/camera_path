@@ -1,0 +1,14 @@
+{
+  "name": "@camera-path/store",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@camera-path/types": "*",
+    "react": "^19.2.8",
+    "zustand": "^5.0.15"
+  }
+}

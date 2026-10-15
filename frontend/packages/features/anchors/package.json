@@ -1,0 +1,21 @@
+{
+  "name": "@camera-path/feature-anchors",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@camera-path/actions": "*",
+    "@camera-path/api": "*",
+    "@camera-path/scene-runtime": "*",
+    "@camera-path/store": "*",
+    "@camera-path/types": "*",
+    "@camera-path/ui-kit": "*",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "lucide-react": "^1.39.0",
+    "react": "^19.2.8",
+    "three": "^0.185.1"
+  }
+}
