@@ -1,0 +1,12 @@
+{
+  "name": "@camera-path/commands",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "lucide-react": "^1.39.0",
+    "react": "^19.2.8"
+  }
+}

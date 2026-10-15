@@ -1,5 +1,5 @@
 "use client";
-import type { CommandState } from "@camera-path/types/commands";
+import type { CommandState } from "../types";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { CommandPalette } from "./command-palette";
 
@@ -59,7 +59,7 @@ export function CommandsProvider({ children }: { children: ReactNode }) {
 export function useCommandRegistration() {
   const registration = useContext(CommandRegistrationContext);
   if (!registration) {
-    throw new Error("useRegisterCommands requires CommandsProvider");
+    throw new Error("Command requires CommandsProvider");
   }
   return registration;
 }

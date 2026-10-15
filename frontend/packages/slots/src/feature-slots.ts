@@ -15,7 +15,7 @@ export interface FeatureSlots {
     readonly scene?: SlotComponents;
     readonly sidebar?: SlotComponents;
     readonly headerStatus?: SlotComponents;
-    /** Lifecycle registrars under CommandsProvider; useRegisterCommands, return null. */
+    /** Components returning Command elements under the shared CommandsProvider. */
     readonly commands?: SlotComponents;
     readonly hints?: SlotComponents;
     readonly toolbar?: SlotComponents;

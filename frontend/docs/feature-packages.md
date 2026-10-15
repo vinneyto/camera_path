@@ -14,6 +14,7 @@
 | `ui-kit`          | Общие визуальные компоненты, тема и editable-контекст                                | `types`                                       |
 | `trajectory-math` | Чистая математика траектории                                                         | `types`                                       |
 | `scene-runtime`   | Общие renderer adapters, viewport services, picking и R3F pose context               | `store`, `types`, `ui-kit`, `trajectory-math` |
+| `commands`        | Панель команд, provider, компонент `Command` и типы команд                           | Нет                                           |
 | `slots`           | Общий интерфейс optional slots и простой React-монтаж                                | Нет                                           |
 | `features/*`      | Компоненты и приватное поведение одной фичи                                          | Общие пакеты; другие фичи и host запрещены    |
 | `apps/host`       | Providers, маршруты, layout и контейнеры слотов                                      | Общие пакеты и объекты слотов фич             |
@@ -90,23 +91,31 @@ Provider — общая инфраструктура. Фичи не получа
 
 ## Команды и жизненный цикл
 
-Хост монтирует `project.commands` внутри общего `CommandsProvider` из `ui-kit`.
-Компоненты этого слота регистрируют данные через `useRegisterCommands` и возвращают `null`.
-Provider собирает команды всех смонтированных компонентов и рендерит единственный
-`CommandPalette`. Поиск идёт по label/searchText, выбор вызывает актуальный `onSelect`
-или `onSelectItem`. Данные команд не передаются через объект слотов.
+`@camera-path/commands` — общий пакет приложения, доступный хосту и фичам.
+Он владеет типами команд, регистрацией, `CommandsProvider`, поиском и отрисовкой palette.
+Он не зависит от host, фич, store или API; получает поведение через callbacks.
+Хост монтирует `project.commands` внутри `CommandsProvider`:
 
 ```tsx
+<CommandsProvider>
+  <Slot name="project.commands" />
+</CommandsProvider>
+```
+
+Компоненты фич возвращают один `Command` или несколько команд во фрагменте:
+
+```tsx
+import { Command } from "@camera-path/commands";
+
 function ProjectCloudCommands() {
   const placement = useCloudPlacement();
-  useRegisterCommands([
-    {
-      id: "scene-models.cancel-placement",
-      label: "Cancel cloud placement",
-      onSelect: () => placement.cancel(),
-    },
-  ]);
-  return null;
+  return (
+    <Command
+      id="scene-models.cancel-placement"
+      label="Cancel cloud placement"
+      onSelect={() => placement.cancel()}
+    />
+  );
 }
 
 export const slots = {
@@ -114,12 +123,18 @@ export const slots = {
 } as const satisfies FeatureSlots;
 ```
 
-ID команды уникален внутри provider; используйте префикс фичи. Конфликты отклоняются явно.
-При изменении данных заменяется вклад того же компонента без перестановки остальных команд;
-при unmount удаляются его команды и ошибки. Реестр локален provider, включая Strict Mode replay.
-Pending/disabled блокирует только команды соответствующего вклада. Фича управляет доступностью,
-API-запросами и обработчиками; общий provider показывает переданные ошибки. Компоненты слота
-не рендерят собственные palettes. Это тот же принцип lifecycle-регистрации, что у render passes.
+`Command` не создаёт DOM: внутри он регистрирует свои props в ближайшем provider.
+При изменении props обновляются данные и callbacks, при unmount команда удаляется.
+Provider объединяет команды всех фич и рендерит единственный palette. Поиск идёт по
+`label`/`searchText`, выбор вызывает `onSelect` или `onSelectItem` для списка `items`.
+`disabled` блокирует отдельную команду; `loading`, `error`, `emptyMessage` описывают
+загрузку списка, `actionError` показывает ошибку выполнения под palette.
+
+ID уникален внутри provider; используйте префикс фичи. Конфликты отклоняются явно.
+Обновления сохраняют порядок смонтированных команд. Реестр локален provider и поддерживает
+Strict Mode replay. Фичи управляют API-запросами, доступностью и обработчиками; host не передаёт
+им props. Данные команд не хранятся в объекте слотов. Lifecycle-хук остаётся деталью пакета
+`commands`; фичам не нужно писать свои эффекты регистрации. Это тот же принцип, что у render passes.
 
 ## Сцена и жизненный цикл
 

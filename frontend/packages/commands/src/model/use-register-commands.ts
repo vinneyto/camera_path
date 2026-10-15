@@ -1,5 +1,5 @@
 "use client";
-import type { CommandPaletteCommand } from "@camera-path/types/commands";
+import type { CommandPaletteCommand } from "../types";
 import { useId, useLayoutEffect } from "react";
 import { useCommandRegistration } from "../ui/commands-provider";
 

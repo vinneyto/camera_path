@@ -1,12 +1,8 @@
 "use client";
-import type { CommandPaletteCommand } from "@camera-path/types/commands";
+import type { CommandPaletteCommand } from "../types";
 import { ArrowLeft, Check, Search } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
-export type {
-  CommandPaletteCommand,
-  CommandPaletteItem,
-} from "@camera-path/types/commands";
 interface CommandPaletteProps {
   commands: CommandPaletteCommand[];
   disabled?: boolean;

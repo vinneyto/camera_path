@@ -3,10 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  CommandPalette,
-  type CommandPaletteCommand,
-} from "@camera-path/ui-kit/command-palette/ui/command-palette";
+import { CommandPalette } from "./command-palette";
+import type { CommandPaletteCommand } from "../types";
 
 afterEach(cleanup);
 

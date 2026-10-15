@@ -8,13 +8,23 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { CommandState } from "@camera-path/types/commands";
+import type { CommandState } from "../types";
 import { Slot, SlotProvider } from "@camera-path/slots";
-import { CommandsProvider, useRegisterCommands } from "..";
+import { CommandsProvider, Command } from "..";
 
 function Registrar({ commands, disabled, error }: CommandState) {
-  useRegisterCommands(commands, { disabled, error });
-  return null;
+  return (
+    <>
+      {commands.map((command) => (
+        <Command
+          key={command.id}
+          {...command}
+          disabled={disabled || command.disabled}
+          actionError={error}
+        />
+      ))}
+    </>
+  );
 }
 
 afterEach(cleanup);
@@ -22,8 +32,8 @@ afterEach(cleanup);
 describe("CommandsProvider", () => {
   it("requires a provider for lifecycle registration", () => {
     expect(() =>
-      render(<Registrar commands={[]} disabled={false} error={null} />),
-    ).toThrow("useRegisterCommands requires CommandsProvider");
+      render(<Command id="outside" label="Outside" onSelect={vi.fn()} />),
+    ).toThrow("Command requires CommandsProvider");
   });
 
   it("updates a selected command's items and handler while the palette is open", () => {
@@ -72,21 +82,22 @@ describe("CommandsProvider", () => {
     const selectCloud = vi.fn();
     const selectCamera = vi.fn();
     function CloudCommands() {
-      useRegisterCommands([
-        { id: "cloud.add", label: "Add cloud", onSelect: selectCloud },
-      ]);
-      return null;
+      return (
+        <>
+          <Command id="cloud.add" label="Add cloud" onSelect={selectCloud} />
+          <Command id="cloud.info" label="Cloud info" onSelect={vi.fn()} />
+        </>
+      );
     }
     function CameraCommands() {
-      useRegisterCommands([
-        {
-          id: "camera.reset",
-          label: "Reset camera",
-          searchText: "home",
-          onSelect: selectCamera,
-        },
-      ]);
-      return null;
+      return (
+        <Command
+          id="camera.reset"
+          label="Reset camera"
+          searchText="home"
+          onSelect={selectCamera}
+        />
+      );
     }
     render(
       <SlotProvider
@@ -105,7 +116,7 @@ describe("CommandsProvider", () => {
     fireEvent.focus(search);
     expect(
       screen.getAllByRole("option").map((item) => item.textContent),
-    ).toEqual(["Add cloud", "Reset camera"]);
+    ).toEqual(["Add cloud", "Cloud info", "Reset camera"]);
     fireEvent.change(search, { target: { value: "home" } });
     expect(screen.getAllByRole("option")).toHaveLength(1);
     fireEvent.keyDown(search, { key: "Enter" });
