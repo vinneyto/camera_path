@@ -34,7 +34,7 @@ export function CommandPalette({
 
   function choose(index: number) {
     const item = filtered[index];
-    if (!item || disabled) return;
+    if (!item || disabled || item.disabled || command?.disabled) return;
     if (command && "items" in command) {
       command.onSelectItem(item.id);
       setOpen(false);
@@ -80,7 +80,7 @@ export function CommandPalette({
       }}
     >
       <div className="flex items-center gap-2 px-3">
-        {commandId ? (
+        {command ? (
           <button
             aria-label="Back to commands"
             className="rounded p-1 hover:bg-accent"
@@ -95,11 +95,7 @@ export function CommandPalette({
         <input
           aria-controls={listId}
           aria-expanded={open}
-          aria-label={
-            commandId
-              ? `Search ${command?.label ?? "items"}`
-              : "Search commands"
-          }
+          aria-label={command ? `Search ${command.label}` : "Search commands"}
           className="h-8 min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
           disabled={disabled}
           onChange={(event) => {
@@ -113,7 +109,7 @@ export function CommandPalette({
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.preventDefault();
-              if (commandId) goBack();
+              if (command) goBack();
               else {
                 setOpen(false);
                 setQuery("");
@@ -141,9 +137,7 @@ export function CommandPalette({
             }
           }}
           placeholder={
-            commandId
-              ? `Search ${command?.label ?? "items"}…`
-              : "Search commands…"
+            command ? `Search ${command.label}…` : "Search commands…"
           }
           ref={inputRef}
           role="combobox"
@@ -156,9 +150,9 @@ export function CommandPalette({
           id={listId}
           role="listbox"
         >
-          {commandId && (
+          {command && (
             <p className="px-2 py-1 font-medium text-muted-foreground">
-              {command?.label}
+              {command.label}
             </p>
           )}
           {loading ? (
@@ -171,7 +165,8 @@ export function CommandPalette({
             filtered.map((item, index) => (
               <button
                 aria-selected={activeIndex === index}
-                className="block w-full rounded px-2 py-2 text-left hover:bg-accent aria-selected:bg-accent"
+                className="block w-full rounded px-2 py-2 text-left hover:bg-accent aria-selected:bg-accent disabled:opacity-50"
+                disabled={disabled || command?.disabled || item.disabled}
                 key={item.id}
                 onClick={() => choose(index)}
                 onMouseEnter={() => setActiveIndex(index)}
@@ -180,7 +175,7 @@ export function CommandPalette({
               >
                 <span className="flex items-center justify-between gap-2">
                   {item.label}
-                  {"checked" in item && item.checked && (
+                  {"checked" in item && item.checked === true && (
                     <Check aria-hidden="true" className="size-3.5" />
                   )}
                 </span>

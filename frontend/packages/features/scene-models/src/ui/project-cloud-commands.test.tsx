@@ -12,6 +12,7 @@ import { useUserSettings } from "@camera-path/api/settings";
 
 const mutate = vi.hoisted(() => vi.fn());
 let showGrid = true;
+let canEdit = true;
 vi.mock("@camera-path/api/settings", async () => {
   const { useState } = await import("react");
   return {
@@ -89,6 +90,7 @@ function openAddCloud() {
 
 beforeEach(() => {
   showGrid = true;
+  canEdit = true;
 });
 
 afterEach(() => {
@@ -96,7 +98,27 @@ afterEach(() => {
   mutate.mockClear();
 });
 
-describe("project cloud controls", () => {
+describe("project cloud commands", () => {
+  it("removes commands when edit access is lost", () => {
+    const view = (
+      <EditorTestHost>
+        <SlotProvider features={[slots]}>
+          <WorkspaceCommands />
+        </SlotProvider>
+      </EditorTestHost>
+    );
+    const { rerender } = render(view);
+    expect(screen.getByRole("combobox")).toBeTruthy();
+    canEdit = false;
+    rerender(
+      <EditorTestHost>
+        <SlotProvider features={[slots]}>
+          <WorkspaceCommands />
+        </SlotProvider>
+      </EditorTestHost>,
+    );
+    expect(screen.queryByRole("combobox")).toBeNull();
+  });
   it("places the first cloud on the enabled grid", () => {
     render(
       <EditorTestHost>
@@ -139,5 +161,5 @@ describe("project cloud controls", () => {
 });
 
 vi.mock("@camera-path/api/identity/auth-provider", () => ({
-  useAuth: () => ({ canEdit: true }),
+  useAuth: () => ({ canEdit }),
 }));

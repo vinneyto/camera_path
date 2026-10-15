@@ -1,7 +1,7 @@
 "use client";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useProjectId } from "@camera-path/store";
-import { CommandPalette } from "@camera-path/ui-kit/command-palette";
+import { useRegisterCommands } from "@camera-path/ui-kit/command-palette";
 
 import { useCloudPlacement } from "@camera-path/actions";
 import { useLibraryCatalog, useSceneModels } from "@camera-path/api/resources";
@@ -10,7 +10,7 @@ import type { CommandPaletteCommand } from "@camera-path/types/commands";
 
 import { useProjectCloudActionMutation } from "@camera-path/actions";
 
-export function ProjectCloudControls() {
+export function ProjectCloudCommands() {
   const canEdit = useAuth().canEdit;
   const projectId = useProjectId();
   const library = useLibraryCatalog();
@@ -23,7 +23,7 @@ export function ProjectCloudControls() {
   const clouds = (projectClouds.data?.data ?? []) as ProjectCloud[];
   const commands: CommandPaletteCommand[] = [
     {
-      id: "add-cloud",
+      id: "scene-models.add-cloud",
       label: "Cloud: Add",
       items: assets.map((asset) => ({ id: asset.id, label: asset.name })),
       onSelectItem: (assetId) => {
@@ -36,7 +36,7 @@ export function ProjectCloudControls() {
       emptyMessage: "Upload a PLY or SOG to the library first.",
     },
     {
-      id: "remove-cloud",
+      id: "scene-models.remove-cloud",
       label: "Cloud: Remove",
       items: clouds.map((cloud, index) => ({
         id: cloud.id,
@@ -50,15 +50,9 @@ export function ProjectCloudControls() {
     },
   ];
 
-  if (!canEdit) return null;
-  return (
-    <div className="space-y-1">
-      <CommandPalette commands={commands} disabled={actions.isPending} />
-      {actions.error && (
-        <p role="alert" className="text-xs text-destructive">
-          {actions.error.message}
-        </p>
-      )}
-    </div>
-  );
+  useRegisterCommands(canEdit ? commands : [], {
+    disabled: actions.isPending,
+    error: canEdit ? (actions.error?.message ?? null) : null,
+  });
+  return null;
 }

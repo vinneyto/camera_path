@@ -2,12 +2,12 @@
 import type { FeatureSlots } from "@camera-path/slots";
 import { SceneModels } from "./scene/scene";
 import { CloudPlacementHint } from "./ui/hint";
-import { ProjectCloudControls } from "./ui/project-cloud-controls";
+import { ProjectCloudCommands } from "./ui/project-cloud-commands";
 
 export const slots = {
   project: {
     scene: [SceneModels],
     hints: [CloudPlacementHint],
-    commands: [ProjectCloudControls],
+    commands: [ProjectCloudCommands],
   },
 } as const satisfies FeatureSlots;

@@ -67,7 +67,7 @@ mount/cleanup выполняет React. Данные и действия не п
 | Settings modal               | `RendererSettings`, `GridSettings`                                                                                  |
 | Project root                 | `PlaybackLoop`                                                                                                      |
 | Project header status        | `AnchorStatus`, `TrajectoryStatus`                                                                                  |
-| Command palette              | `ProjectCloudControls`                                                                                              |
+| Command palette              | `ProjectCloudCommands`                                                                                              |
 | Project sidebar              | `ChatSidebar`                                                                                                       |
 | Canvas scene                 | `CameraViewScene`, `SceneGrid`, `SceneModels`, `AnchorsScene`, `TrajectoryScene`, `DepthOfFieldScene`, `LidarScene` |
 | Scene hints / toolbar        | `AnchorHint`, `CloudPlacementHint`, `CameraViewToolbar`                                                             |
@@ -87,6 +87,39 @@ Provider — общая инфраструктура. Фичи не получа
 `trajectory-panel-slot.tsx` содержит контейнеры `timeline.controls`, `timeline.effects`,
 `timeline.tracks`; хост по-прежнему владеет общим layout и условиями отображения панелей.
 Фичи импортируют из slots-пакета только типы и не монтируют компоненты других фич.
+
+## Команды и жизненный цикл
+
+Хост монтирует `project.commands` внутри общего `CommandsProvider` из `ui-kit`.
+Компоненты этого слота регистрируют данные через `useRegisterCommands` и возвращают `null`.
+Provider собирает команды всех смонтированных компонентов и рендерит единственный
+`CommandPalette`. Поиск идёт по label/searchText, выбор вызывает актуальный `onSelect`
+или `onSelectItem`. Данные команд не передаются через объект слотов.
+
+```tsx
+function ProjectCloudCommands() {
+  const placement = useCloudPlacement();
+  useRegisterCommands([
+    {
+      id: "scene-models.cancel-placement",
+      label: "Cancel cloud placement",
+      onSelect: () => placement.cancel(),
+    },
+  ]);
+  return null;
+}
+
+export const slots = {
+  project: { commands: [ProjectCloudCommands] },
+} as const satisfies FeatureSlots;
+```
+
+ID команды уникален внутри provider; используйте префикс фичи. Конфликты отклоняются явно.
+При изменении данных заменяется вклад того же компонента без перестановки остальных команд;
+при unmount удаляются его команды и ошибки. Реестр локален provider, включая Strict Mode replay.
+Pending/disabled блокирует только команды соответствующего вклада. Фича управляет доступностью,
+API-запросами и обработчиками; общий provider показывает переданные ошибки. Компоненты слота
+не рендерят собственные palettes. Это тот же принцип lifecycle-регистрации, что у render passes.
 
 ## Сцена и жизненный цикл
 
