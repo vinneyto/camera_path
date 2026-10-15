@@ -2,7 +2,7 @@
 import { ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 
-import type { useDeleteLibraryAssets } from "@camera-path/feature-library/api/use-delete-library-assets";
+import type { useDeleteLibraryAssetsMutation as useDeleteLibraryAssets } from "@camera-path/actions";
 import type { LibraryAsset } from "@camera-path/types/api";
 import { Button, ConfirmationDialog, DropdownMenu } from "@camera-path/ui-kit";
 

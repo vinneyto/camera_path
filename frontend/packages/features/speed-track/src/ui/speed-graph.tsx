@@ -1,5 +1,5 @@
 "use client";
-import { EditorOnly } from "../ports";
+import { EditorOnly } from "../ports/editor-only";
 
 import { useState } from "react";
 

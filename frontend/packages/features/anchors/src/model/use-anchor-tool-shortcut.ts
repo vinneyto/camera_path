@@ -3,8 +3,8 @@ import { useEditorStoreApi } from "@camera-path/store";
 
 import { useEffect } from "react";
 
+import { useSetActiveEditorTool } from "@camera-path/actions";
 import { getAnchorToolModifier } from "@camera-path/feature-anchors/lib/get-anchor-tool-modifier";
-import { useSetActiveEditorTool } from "../ports";
 
 export function useAnchorToolShortcut() {
   const store = useEditorStoreApi();

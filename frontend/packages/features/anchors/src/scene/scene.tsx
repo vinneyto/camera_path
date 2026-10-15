@@ -4,15 +4,17 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useAnchors } from "@camera-path/api/resources";
 import { useCameraModeValue } from "@camera-path/store";
 
+import {
+  useAddAnchorMutation,
+  useUpdateAnchorMutation,
+} from "@camera-path/actions";
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { useSceneEvent } from "@camera-path/scene-runtime/viewport/use-scene-event";
 import { useViewportServices } from "@camera-path/scene-runtime/viewport/viewport-provider";
 import type { Anchor, Vec3 } from "@camera-path/types/project";
 import { useEffect } from "react";
-import { useAddAnchor } from "../api/use-add-anchor";
-import { useUpdateAnchor } from "../api/use-update-anchor";
 import { getAnchorLabel } from "../lib/get-anchor-label";
-import { useActiveEditorTool } from "../ports";
+import { useActiveEditorTool } from "../ports/use-active-editor-tool";
 import { AnchorToolShortcut } from "../ui/anchor-tool-shortcut";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorMarker } from "./anchor-marker";
@@ -28,8 +30,8 @@ export function AnchorsScene() {
   const activeTool = useActiveEditorTool();
   const services = useSceneServices();
   const viewport = useViewportServices();
-  const add = useAddAnchor();
-  const update = useUpdateAnchor();
+  const add = useAddAnchorMutation();
+  const update = useUpdateAnchorMutation();
   const deletion = useDeleteAnchorMutation();
   const busy = add.isPending || update.isPending || deletion.isPending;
   const placement = useAnchorPlacement({

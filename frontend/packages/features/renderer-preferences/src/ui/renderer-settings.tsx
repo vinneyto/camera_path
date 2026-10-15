@@ -1,6 +1,6 @@
 "use client";
+import { useUserSettings } from "@camera-path/api/settings";
 import { Button } from "@camera-path/ui-kit";
-import { useUserSettings } from "../ports";
 import { GaussianDprSelect } from "./gaussian-dpr-select";
 export function RendererSettings() {
   const settings = useUserSettings();

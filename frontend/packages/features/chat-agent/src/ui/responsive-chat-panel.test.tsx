@@ -12,7 +12,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-vi.mock("@camera-path/feature-chat-agent/ports", () => ({
+vi.mock("@camera-path/feature-chat-agent/ports/editor-only", () => ({
   EditorOnly: ({ children }: { children: React.ReactNode }) => children,
 }));
 

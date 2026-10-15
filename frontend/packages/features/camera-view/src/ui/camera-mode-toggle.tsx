@@ -4,7 +4,7 @@ import { Camera, Orbit } from "lucide-react";
 import { Button } from "@camera-path/ui-kit";
 
 import type { CameraMode } from "@camera-path/types/editor-state";
-import { useCameraMode } from "../ports";
+import { useCameraMode } from "../ports/use-camera-mode";
 
 interface CameraModeToggleProps {
   onModeChange: (mode: CameraMode) => void;

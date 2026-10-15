@@ -2,7 +2,7 @@
 import { Moon, Sun } from "lucide-react";
 
 import { Button } from "@camera-path/ui-kit";
-import { useTheme } from "../ports";
+import { useTheme } from "@camera-path/ui-kit/theme/theme-provider";
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();

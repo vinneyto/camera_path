@@ -3,6 +3,7 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useSceneModels } from "@camera-path/api/resources";
 import { useCameraModeValue, useEditorTool } from "@camera-path/store";
 
+import { useProjectCloudActionMutation } from "@camera-path/actions";
 import type { SceneSurfaceReady } from "@camera-path/scene-runtime/surface";
 import { SurfaceTargetRing } from "@camera-path/scene-runtime/three/surface-target-ring";
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
@@ -19,7 +20,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useProjectCloudActions } from "../api/use-project-cloud-actions";
 import { resolveInitialSceneBounds } from "../lib/resolve-initial-scene-bounds";
 import { SceneClouds } from "./scene-clouds";
 import { useCloudPlacementInteraction } from "./use-cloud-placement-interaction";
@@ -34,7 +34,7 @@ export function SceneModels() {
   const services = useSceneServices();
   const viewport = useViewportServices();
   const surfaceEvents = useSurfaceEvents();
-  const action = useProjectCloudActions();
+  const action = useProjectCloudActionMutation();
   const placement = useCloudPlacementInteraction({
     clouds,
     onPlace: async (assetId, position) => {

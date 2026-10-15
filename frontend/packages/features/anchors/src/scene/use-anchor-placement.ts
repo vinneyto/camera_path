@@ -4,10 +4,11 @@ import { getAnchorToolModifier } from "../lib/get-anchor-tool-modifier";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 
+import { useSetActiveEditorTool } from "@camera-path/actions";
 import type { SceneSurfaceHit } from "@camera-path/scene-runtime/surface";
 import type { Vec3 } from "@camera-path/types/project";
 import { usePointerTap } from "@camera-path/ui-kit/lib/use-pointer-tap";
-import { useActiveEditorTool, useSetActiveEditorTool } from "../ports";
+import { useActiveEditorTool } from "../ports/use-active-editor-tool";
 
 const CLICK_THRESHOLD_PX = 5;
 

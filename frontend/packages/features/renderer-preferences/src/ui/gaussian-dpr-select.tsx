@@ -1,5 +1,5 @@
 "use client";
-import { useUserSettings } from "../ports";
+import { useUserSettings } from "@camera-path/api/settings";
 
 export function GaussianDprSelect() {
   const settings = useUserSettings();

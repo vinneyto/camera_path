@@ -1,16 +1,16 @@
 "use client";
 import Link from "next/link";
-import { EditorOnly } from "../ports";
+import { EditorOnly } from "../ports/editor-only";
 
+import { useLibraryAssetResource } from "@camera-path/api/resources";
 import { LibraryAssetDefaults } from "@camera-path/feature-library/ui/library-asset-defaults";
-import { useGetLibraryAsset } from "../ports";
 
 interface LibraryAssetDetailsProps {
   assetId: string;
 }
 
 export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
-  const asset = useGetLibraryAsset(assetId);
+  const asset = useLibraryAssetResource(assetId);
   const current = asset.data?.status === 200 ? asset.data.data : null;
 
   return (

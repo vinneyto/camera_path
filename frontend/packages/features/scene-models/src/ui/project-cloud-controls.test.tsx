@@ -1,4 +1,3 @@
-import { useCloudPlacement as hostCloudPlacement } from "@camera-path/actions";
 import { EditorTestHost } from "@host/testing/editor-host";
 import { WorkspaceCommands } from "@host/ui/commands/workspace-commands";
 // @vitest-environment happy-dom
@@ -30,9 +29,8 @@ vi.mock("@camera-path/api/settings", async () => {
   };
 });
 
-vi.mock("@camera-path/feature-scene-models/ports", () => ({
-  useCloudPlacement: () => hostCloudPlacement(),
-  useListLibraryAssets: () => ({
+vi.mock("@camera-path/api/resources", () => ({
+  useLibraryCatalog: () => ({
     data: {
       data: [
         {
@@ -51,18 +49,20 @@ vi.mock("@camera-path/feature-scene-models/ports", () => ({
     isPending: false,
     error: null,
   }),
-  useListProjectClouds: () => ({
+  useSceneModels: () => ({
     data: { data: [] },
     isPending: false,
     error: null,
   }),
 }));
-vi.mock(
-  "@camera-path/feature-scene-models/api/use-project-cloud-actions",
-  () => ({
-    useProjectCloudActions: () => ({ mutate, isPending: false, error: null }),
+vi.mock("@camera-path/actions", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useProjectCloudActionMutation: () => ({
+    mutate,
+    isPending: false,
+    error: null,
   }),
-);
+}));
 
 function PlacementState() {
   const { pendingCloud } = useCloudPlacement();

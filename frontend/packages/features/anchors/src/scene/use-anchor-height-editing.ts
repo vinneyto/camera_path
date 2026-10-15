@@ -2,12 +2,10 @@
 import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 
+import { useSetActiveEditorTool } from "@camera-path/actions";
 import type { Anchor } from "@camera-path/types/project";
-import {
-  useActiveEditorTool,
-  useHoveredAnchor,
-  useSetActiveEditorTool,
-} from "../ports";
+import { useActiveEditorTool } from "../ports/use-active-editor-tool";
+import { useHoveredAnchor } from "../ports/use-hovered-anchor";
 
 import { getWorldYAxisLift } from "@camera-path/feature-anchors/lib/get-world-y-axis-lift";
 

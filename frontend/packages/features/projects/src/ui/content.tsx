@@ -4,13 +4,13 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useProjectsCatalog } from "@camera-path/api/resources";
 import { useRouter } from "next/navigation";
 
-import { useCreateProject } from "../api/use-create-project";
+import { useCreateProjectMutation } from "@camera-path/actions";
 import { ProjectCreateForm } from "./project-create-form";
 import { ProjectList } from "./project-list";
 export function ProjectsContent() {
   const query = useProjectsCatalog();
   const canEdit = useAuth().canEdit;
-  const create = useCreateProject();
+  const create = useCreateProjectMutation();
   const deletion = useDeleteProjectMutation();
   const go = useRouter().push;
   const error = query.error ?? create.error ?? deletion.error;

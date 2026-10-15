@@ -1,5 +1,5 @@
 "use client";
-import { EditorOnly } from "../ports";
+import { EditorOnly } from "../ports/editor-only";
 
 import type { useChatComposer } from "@camera-path/feature-chat-agent/model/use-chat-composer";
 import { LoaderCircle, Send } from "lucide-react";

@@ -1,5 +1,5 @@
 "use client";
-import { EditorOnly } from "../ports";
+import { EditorOnly } from "../ports/editor-only";
 
 import { ArrowRight, Box, LoaderCircle } from "lucide-react";
 import Link from "next/link";

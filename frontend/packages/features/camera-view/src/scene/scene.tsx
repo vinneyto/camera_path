@@ -7,7 +7,7 @@ import { useViewportServices } from "@camera-path/scene-runtime/viewport/viewpor
 import { OrbitControls } from "@react-three/drei";
 import { useEffect, useRef } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { useCameraMode } from "../ports";
+import { useCameraMode } from "../ports/use-camera-mode";
 import { CameraViewOffset } from "./camera-view-offset";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";

@@ -2,8 +2,8 @@
 import { UserRound } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
+import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { Button, DropdownMenu, Input, Modal } from "@camera-path/ui-kit";
-import { useAuth } from "../ports";
 
 export function ProfileControl() {
   const auth = useAuth();

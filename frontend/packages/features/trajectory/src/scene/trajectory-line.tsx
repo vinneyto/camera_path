@@ -11,7 +11,7 @@ import {
   type CompiledTrajectory,
 } from "@camera-path/trajectory-math";
 import type { ContextMenuPosition } from "@camera-path/ui-kit";
-import { useHoveredTrajectory } from "../ports";
+import { useHoveredTrajectory } from "../ports/use-hovered-trajectory";
 
 interface TrajectoryLineProps {
   dark: boolean;

@@ -1,18 +1,18 @@
 "use client";
-import { EditorOnly } from "../ports";
+import { EditorOnly } from "../ports/editor-only";
 
 import Link from "next/link";
 import { useState } from "react";
 
-import { useDeleteLibraryAssets } from "@camera-path/feature-library/api/use-delete-library-assets";
+import { useDeleteLibraryAssetsMutation } from "@camera-path/actions";
+import { useLibraryCatalog } from "@camera-path/api/resources";
 import { LibrarySelectionActions } from "@camera-path/feature-library/ui/library-selection-actions";
 import { Card, Checkbox } from "@camera-path/ui-kit";
-import { useListLibraryAssets } from "../ports";
 
 export function LibraryAssetList() {
-  const library = useListLibraryAssets();
+  const library = useLibraryCatalog();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const deletion = useDeleteLibraryAssets();
+  const deletion = useDeleteLibraryAssetsMutation();
 
   if (library.isPending)
     return <p className="text-xs text-muted-foreground">Loading library…</p>;

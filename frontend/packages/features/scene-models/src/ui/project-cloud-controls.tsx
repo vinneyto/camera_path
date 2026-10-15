@@ -3,22 +3,19 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useProjectId } from "@camera-path/store";
 import { CommandPalette } from "@camera-path/ui-kit/command-palette";
 
+import { useCloudPlacement } from "@camera-path/actions";
+import { useLibraryCatalog, useSceneModels } from "@camera-path/api/resources";
 import type { LibraryAsset, ProjectCloud } from "@camera-path/types/api";
 import type { CommandPaletteCommand } from "@camera-path/types/commands";
-import {
-  useCloudPlacement,
-  useListLibraryAssets,
-  useListProjectClouds,
-} from "../ports";
 
-import { useProjectCloudActions } from "@camera-path/feature-scene-models/api/use-project-cloud-actions";
+import { useProjectCloudActionMutation } from "@camera-path/actions";
 
 export function ProjectCloudControls() {
   const canEdit = useAuth().canEdit;
   const projectId = useProjectId();
-  const library = useListLibraryAssets();
-  const projectClouds = useListProjectClouds(projectId);
-  const actions = useProjectCloudActions(projectId);
+  const library = useLibraryCatalog();
+  const projectClouds = useSceneModels(projectId);
+  const actions = useProjectCloudActionMutation(projectId);
   const placement = useCloudPlacement();
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
     (asset) => asset.status === "ready",

@@ -1,12 +1,12 @@
 "use client";
 import { useState, type FormEvent } from "react";
 
-import { useUploadLibraryFile } from "@camera-path/feature-library/api/use-upload-library-file";
+import { useUploadLibraryFileMutation } from "@camera-path/actions";
 import { Button, Input } from "@camera-path/ui-kit";
 
 export function LibraryUploadForm() {
   const [file, setFile] = useState<File | null>(null);
-  const upload = useUploadLibraryFile();
+  const upload = useUploadLibraryFileMutation();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

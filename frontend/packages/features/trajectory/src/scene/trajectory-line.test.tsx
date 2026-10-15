@@ -18,7 +18,7 @@ vi.mock("@camera-path/trajectory-math", async (importOriginal) => ({
   ],
 }));
 
-vi.mock("@camera-path/feature-trajectory/ports", () => ({
+vi.mock("@camera-path/feature-trajectory/ports/use-hovered-trajectory", () => ({
   useHoveredTrajectory: () => ({
     clearHoveredTrajectory,
     hoverTrajectory: vi.fn(),
