@@ -211,3 +211,19 @@ npm run format:check
 Начать ревью: `store/src/editor-store.ts`, `actions/src/create-editor-actions.ts`,
 `api/src/resources`, `slots/src/feature-slots.ts`, затем `apps/host/src/composition/feature-slots.ts`,
 `apps/host/src/providers` и публичные `features/*/src/index.ts`.
+
+## Чтение editor state
+
+Фичи получают только разделы через `useCameraState()` (`camera`),
+`usePlaybackState()` (`playback`), `useEditorTool()` (`tool`) и
+`useSceneInteraction()` (`sceneInteraction`). Хуки подписываются на соответствующий
+раздел Zustand; обновление другого раздела не вызывает перерисовку подписчика.
+`useProjectId` и `useAssetId` остаются хуками resource scope.
+
+Фичи не импортируют `useEditorStoreApi`, общий `useEditorStore`, `EditorState`,
+создание стора или внутренние пути store-пакета. `boundaries:check` проверяет
+эту границу по AST, включая алиасы и namespace/dynamic imports. Сам store и его
+императивный API остаются деталями общей инфраструктуры; изменения выполняют actions.
+Обработчики, установленные эффектом, читают актуальные значения хуков через
+React `useEffectEvent`, сохраняя время жизни подписки. Playback считывает elapsed
+при запуске сессии и ведёт локальный счётчик кадров, не перезапуская RAF на каждом кадре.

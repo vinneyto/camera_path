@@ -33,7 +33,7 @@ export function DependencyCard({
       </div>
       <span
         className="usage-count"
-        aria-label={`Используют фич: ${node.featureIds.length}`}
+        aria-label={`Used by features: ${node.featureIds.length}`}
       >
         {node.featureIds.length}
       </span>

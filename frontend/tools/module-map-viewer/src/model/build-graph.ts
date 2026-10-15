@@ -48,7 +48,10 @@ export function buildGraph(report: Report): Graph {
         module,
         selectorIds: collect(
           module.selectors.filter(
-            (d) => d.package === "@camera-path/store" && d.kind !== "api-hook",
+            (d) =>
+              d.package === "@camera-path/store" &&
+              d.kind !== "api-hook" &&
+              !!d.statePaths?.length,
           ),
           selectors,
           id,

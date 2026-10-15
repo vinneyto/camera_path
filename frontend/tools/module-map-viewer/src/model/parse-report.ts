@@ -48,7 +48,9 @@ export function parseReport(value: unknown): Report {
     value.schemaVersion !== 1 ||
     !Array.isArray(value.modules)
   )
-    throw new Error("Ожидался отчёт frontend-modules.json с schemaVersion: 1.");
+    throw new Error(
+      "Expected a frontend-modules.json report with schemaVersion: 1.",
+    );
   const names = new Set<string>();
   for (const item of value.modules) {
     if (
@@ -63,7 +65,7 @@ export function parseReport(value: unknown): Report {
       names.has(item.name)
     )
       throw new Error(
-        "В JSON некорректный модуль, дерево слотов или зависимости.",
+        "Invalid module, slot tree or dependency in the JSON report.",
       );
     names.add(item.name);
   }

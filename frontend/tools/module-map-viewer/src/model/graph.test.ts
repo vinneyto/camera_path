@@ -21,6 +21,12 @@ describe("report graph", () => {
       package: "@camera-path/api",
       kind: "api-hook",
     });
+    report.modules[0].selectors.push({
+      ...report.modules[0].selectors[0],
+      name: "useProjectId",
+      kind: "store-hook",
+      statePaths: [],
+    });
     const graph = buildGraph(report);
     expect(graph.features.map((f) => f.label)).toEqual([
       "alpha",

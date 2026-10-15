@@ -44,6 +44,46 @@ export function inspectSource(
     );
   const check = (node, specifier) => {
     const target = resolve(specifier);
+    if (
+      feature &&
+      (packageOf(target ?? "") === "store" ||
+        specifier === "@camera-path/store" ||
+        specifier.startsWith("@camera-path/store/"))
+    ) {
+      const hooks = new Set([
+        "useCameraState",
+        "usePlaybackState",
+        "useEditorTool",
+        "useSceneInteraction",
+        "useProjectId",
+        "useAssetId",
+      ]);
+      const clause = ts.isImportDeclaration(node) && node.importClause;
+      const bindings = clause?.namedBindings;
+      if (
+        (target && !normalize(target).endsWith("/store/src/index.ts")) ||
+        specifier.startsWith("@camera-path/store/") ||
+        !clause ||
+        clause.name ||
+        !bindings ||
+        !ts.isNamedImports(bindings) ||
+        bindings.elements.some(
+          (e) => !hooks.has((e.propertyName ?? e.name).text),
+        )
+      )
+        report(
+          node,
+          "Features read store sections through public selector hooks only; raw store/state access belongs to infrastructure",
+        );
+    }
+    if (
+      feature &&
+      (specifier === "zustand" || specifier.startsWith("zustand/"))
+    )
+      report(
+        node,
+        "Features use shared selector hooks instead of accessing Zustand directly",
+      );
     const targetFeature = target && featureOf(target);
     if (feature && targetFeature && targetFeature !== feature)
       report(node, "Features must not import one another");

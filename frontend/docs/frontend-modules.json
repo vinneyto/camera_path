@@ -1250,46 +1250,27 @@
           ]
         },
         {
-          "name": "useCameraModeValue",
+          "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
-            "file": "packages/store/src/use-camera-mode-value.ts",
+            "file": "packages/store/src/use-camera-state.ts",
             "line": 3,
             "column": 1
           },
-          "statePaths": ["camera.cameraMode"],
+          "statePaths": ["camera"],
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
               "line": 28,
               "column": 16,
-              "expression": "useCameraModeValue()"
+              "expression": "useCameraState()"
             },
             {
               "file": "packages/features/anchors/src/ui/hint.tsx",
               "line": 8,
               "column": 16,
-              "expression": "useCameraModeValue()"
-            }
-          ]
-        },
-        {
-          "name": "useEditorStoreApi",
-          "kind": "store-hook",
-          "package": "@camera-path/store",
-          "definition": {
-            "file": "packages/store/src/store-provider.tsx",
-            "line": 16,
-            "column": 1
-          },
-          "statePaths": [],
-          "usages": [
-            {
-              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
-              "line": 10,
-              "column": 17,
-              "expression": "useEditorStoreApi()"
+              "expression": "useCameraState()"
             }
           ]
         },
@@ -1304,6 +1285,12 @@
           },
           "statePaths": ["tool"],
           "usages": [
+            {
+              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
+              "line": 10,
+              "column": 26,
+              "expression": "useEditorTool()"
+            },
             {
               "file": "packages/features/anchors/src/ports/use-active-editor-tool.tsx",
               "line": 5,
@@ -1334,37 +1321,6 @@
               "line": 8,
               "column": 17,
               "expression": "useSceneInteraction()"
-            }
-          ]
-        },
-        {
-          "name": "getState",
-          "kind": "store-snapshot",
-          "package": "@camera-path/store",
-          "definition": {
-            "file": "packages/store/src/editor-store.ts",
-            "line": 7,
-            "column": 1
-          },
-          "statePaths": ["tool.activeTool"],
-          "usages": [
-            {
-              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
-              "line": 17,
-              "column": 9,
-              "expression": "store.getState().tool.activeTool"
-            },
-            {
-              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
-              "line": 18,
-              "column": 9,
-              "expression": "store.getState().tool.activeTool"
-            },
-            {
-              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
-              "line": 27,
-              "column": 9,
-              "expression": "store.getState().tool.activeTool"
             }
           ]
         }
@@ -1685,21 +1641,21 @@
           ]
         },
         {
-          "name": "useCameraModeValue",
+          "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
-            "file": "packages/store/src/use-camera-mode-value.ts",
+            "file": "packages/store/src/use-camera-state.ts",
             "line": 3,
             "column": 1
           },
-          "statePaths": ["camera.cameraMode"],
+          "statePaths": ["camera"],
           "usages": [
             {
               "file": "packages/features/camera-view/src/ports/use-camera-mode.tsx",
               "line": 6,
               "column": 16,
-              "expression": "useCameraModeValue()"
+              "expression": "useCameraState()"
             }
           ]
         },
@@ -2045,21 +2001,21 @@
           ]
         },
         {
-          "name": "useCameraModeValue",
+          "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
-            "file": "packages/store/src/use-camera-mode-value.ts",
+            "file": "packages/store/src/use-camera-state.ts",
             "line": 3,
             "column": 1
           },
-          "statePaths": ["camera.cameraMode"],
+          "statePaths": ["camera"],
           "usages": [
             {
               "file": "packages/features/depth-of-field/src/scene/scene.tsx",
               "line": 13,
               "column": 16,
-              "expression": "useCameraModeValue()"
+              "expression": "useCameraState()"
             }
           ]
         },
@@ -2505,13 +2461,13 @@
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 35,
+              "line": 37,
               "column": 10,
               "expression": "reset"
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 36,
+              "line": 38,
               "column": 7,
               "expression": "reset"
             }
@@ -2571,19 +2527,19 @@
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 48,
+              "line": 50,
               "column": 14,
               "expression": "frame"
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 52,
+              "line": 54,
               "column": 12,
               "expression": "frame"
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 61,
+              "line": 63,
               "column": 26,
               "expression": "frame"
             }
@@ -2619,13 +2575,13 @@
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 49,
+              "line": 51,
               "column": 14,
               "expression": "play"
             },
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 61,
+              "line": 63,
               "column": 33,
               "expression": "play"
             }
@@ -2730,25 +2686,6 @@
           ]
         },
         {
-          "name": "useEditorStoreApi",
-          "kind": "store-hook",
-          "package": "@camera-path/store",
-          "definition": {
-            "file": "packages/store/src/store-provider.tsx",
-            "line": 16,
-            "column": 1
-          },
-          "statePaths": [],
-          "usages": [
-            {
-              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 29,
-              "column": 17,
-              "expression": "useEditorStoreApi()"
-            }
-          ]
-        },
-        {
           "name": "usePlaybackState",
           "kind": "store-hook",
           "package": "@camera-path/store",
@@ -2768,7 +2705,7 @@
             {
               "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
               "line": 25,
-              "column": 19,
+              "column": 32,
               "expression": "usePlaybackState()"
             }
           ]
@@ -2789,49 +2726,6 @@
               "line": 12,
               "column": 5,
               "expression": "useSceneInteraction()"
-            }
-          ]
-        },
-        {
-          "name": "getState",
-          "kind": "store-snapshot",
-          "package": "@camera-path/store",
-          "definition": {
-            "file": "packages/store/src/editor-store.ts",
-            "line": 7,
-            "column": 1
-          },
-          "statePaths": ["playback.elapsed"],
-          "usages": [
-            {
-              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 42,
-              "column": 26,
-              "expression": "store.getState().playback.elapsed"
-            },
-            {
-              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 45,
-              "column": 7,
-              "expression": "currentElapsed"
-            },
-            {
-              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 47,
-              "column": 11,
-              "expression": "currentElapsed"
-            },
-            {
-              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 53,
-              "column": 49,
-              "expression": "currentElapsed"
-            },
-            {
-              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
-              "line": 54,
-              "column": 18,
-              "expression": "currentElapsed"
             }
           ]
         }
@@ -3283,27 +3177,27 @@
           ]
         },
         {
-          "name": "useCameraModeValue",
+          "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
-            "file": "packages/store/src/use-camera-mode-value.ts",
+            "file": "packages/store/src/use-camera-state.ts",
             "line": 3,
             "column": 1
           },
-          "statePaths": ["camera.cameraMode"],
+          "statePaths": ["camera"],
           "usages": [
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
               "line": 32,
               "column": 16,
-              "expression": "useCameraModeValue()"
+              "expression": "useCameraState()"
             },
             {
               "file": "packages/features/scene-models/src/ui/hint.tsx",
               "line": 8,
               "column": 16,
-              "expression": "useCameraModeValue()"
+              "expression": "useCameraState()"
             }
           ]
         },
@@ -3658,21 +3552,21 @@
           ]
         },
         {
-          "name": "useCameraModeValue",
+          "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
-            "file": "packages/store/src/use-camera-mode-value.ts",
+            "file": "packages/store/src/use-camera-state.ts",
             "line": 3,
             "column": 1
           },
-          "statePaths": ["camera.cameraMode"],
+          "statePaths": ["camera"],
           "usages": [
             {
               "file": "packages/features/trajectory/src/scene/scene.tsx",
               "line": 22,
               "column": 16,
-              "expression": "useCameraModeValue()"
+              "expression": "useCameraState()"
             }
           ]
         },
@@ -3804,8 +3698,8 @@
           "usages": [
             {
               "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
-              "line": 22,
-              "column": 11,
+              "line": 21,
+              "column": 39,
               "expression": "actions.selectObject"
             },
             {
@@ -3993,21 +3887,40 @@
           ]
         },
         {
-          "name": "useEditorStoreApi",
+          "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
-            "file": "packages/store/src/store-provider.tsx",
-            "line": 16,
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
             "column": 1
           },
-          "statePaths": [],
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+              "line": 34,
+              "column": 23,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
           "usages": [
             {
               "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
               "line": 12,
-              "column": 17,
-              "expression": "useEditorStoreApi()"
+              "column": 16,
+              "expression": "useEditorTool()"
             }
           ]
         },
@@ -4065,44 +3978,6 @@
               "line": 16,
               "column": 5,
               "expression": "useSceneInteraction()"
-            }
-          ]
-        },
-        {
-          "name": "useEditorStore",
-          "kind": "store-selector",
-          "package": "@camera-path/store",
-          "definition": {
-            "file": "packages/store/src/store-provider.tsx",
-            "line": 21,
-            "column": 1
-          },
-          "statePaths": ["camera.cameraMode"],
-          "usages": [
-            {
-              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 34,
-              "column": 23,
-              "expression": "useEditorStore((s) => s.camera.cameraMode === \"orbit\")"
-            }
-          ]
-        },
-        {
-          "name": "getState",
-          "kind": "store-snapshot",
-          "package": "@camera-path/store",
-          "definition": {
-            "file": "packages/store/src/editor-store.ts",
-            "line": 7,
-            "column": 1
-          },
-          "statePaths": ["tool.activeTool"],
-          "usages": [
-            {
-              "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
-              "line": 21,
-              "column": 13,
-              "expression": "store.getState().tool.activeTool"
             }
           ]
         }
@@ -4258,7 +4133,7 @@
         "packages/store/src/index.ts",
         "packages/store/src/resource-scope-provider.tsx",
         "packages/store/src/store-provider.tsx",
-        "packages/store/src/use-camera-mode-value.ts",
+        "packages/store/src/use-camera-state.ts",
         "packages/store/src/use-editor-tool.ts",
         "packages/store/src/use-playback-state.ts",
         "packages/store/src/use-scene-interaction.ts"
@@ -4294,18 +4169,13 @@
             "line": 21,
             "column": 1
           },
-          "statePaths": [
-            "camera.cameraMode",
-            "playback",
-            "sceneInteraction",
-            "tool"
-          ],
+          "statePaths": ["camera", "playback", "sceneInteraction", "tool"],
           "usages": [
             {
-              "file": "packages/store/src/use-camera-mode-value.ts",
+              "file": "packages/store/src/use-camera-state.ts",
               "line": 4,
               "column": 10,
-              "expression": "useEditorStore((s) => s.camera.cameraMode)"
+              "expression": "useEditorStore((s) => s.camera)"
             },
             {
               "file": "packages/store/src/use-editor-tool.ts",

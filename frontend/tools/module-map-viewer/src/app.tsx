@@ -43,7 +43,7 @@ export function App({
         setError(
           failure instanceof Error
             ? failure.message
-            : "Не удалось прочитать JSON.",
+            : "Could not read the JSON file.",
         );
     } finally {
       input.value = "";
@@ -72,15 +72,15 @@ export function App({
             <span className="eyebrow-divider">/</span>
             <span>architecture</span>
           </div>
-          <h1>Карта модулей</h1>
-          <p>Как фичи связаны с данными и действиями</p>
+          <h1>Module map</h1>
+          <p>How features connect to state and actions</p>
         </div>
         <div className="header-actions">
           <span className="source-name" title={source}>
             {source}
           </span>
           <label htmlFor={inputId} className="file-button">
-            Открыть JSON
+            Open JSON
             <input
               id={inputId}
               type="file"
@@ -92,33 +92,33 @@ export function App({
       </header>
       {error && (
         <p className="load-error" role="alert">
-          {error} Текущая карта сохранена.
+          {error} The current map has been kept.
         </p>
       )}
       <div className="graph-meta">
         <div className="legend">
           <span>
             <i className="selector-dot" />
-            Чтение данных
+            State reads
           </span>
           <span>
             <i className="action-dot" />
-            Действия
+            Actions
           </span>
         </div>
         <p aria-live="polite">
           {activeFeature ? (
             <>
-              Связи фичи{" "}
+              Connections for{" "}
               <strong>
                 {graph.features.find((f) => f.id === activeFeature)?.label}
               </strong>
             </>
           ) : (
-            "Наведите на фичу, чтобы увидеть её связи и слоты"
+            "Hover a feature to see its connections and slots"
           )}
         </p>
-        <span className="direct-label">Прямые связи</span>
+        <span className="direct-label">Direct dependencies</span>
       </div>
       <DependencyGraph
         graph={graph}
@@ -133,12 +133,12 @@ export function App({
       />
       <footer className="app-footer">
         <span>
-          {graph.selectors.length} селекторов<span>·</span>
-          {graph.features.length} фич<span>·</span>
+          {graph.selectors.length} selectors<span>·</span>
+          {graph.features.length} features<span>·</span>
           {graph.actions.length} actions
         </span>
         <span>
-          Tab — выбрать фичу <span>·</span> Esc — сбросить выделение
+          Tab — focus a feature <span>·</span> Esc — clear selection
         </span>
       </footer>
     </main>

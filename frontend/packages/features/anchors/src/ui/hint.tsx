@@ -1,11 +1,11 @@
 "use client";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
-import { useCameraModeValue, useEditorTool } from "@camera-path/store";
+import { useCameraState, useEditorTool } from "@camera-path/store";
 
 import { MousePointerClick } from "lucide-react";
 export function AnchorHint() {
   const tool = useEditorTool().activeTool;
-  const mode = useCameraModeValue();
+  const mode = useCameraState().cameraMode;
   const canEdit = useAuth().canEdit;
   if (!canEdit || mode !== "orbit" || tool === "cloud") return null;
   return (

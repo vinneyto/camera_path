@@ -15,9 +15,9 @@ afterEach(cleanup);
 describe("module map viewer", () => {
   it("filters both side columns on hover, shows slots, and restores independent searches", () => {
     render(<App initialReport={reportFixture()} />);
-    const selectors = screen.getByRole("region", { name: "Селекторы Zustand" });
+    const selectors = screen.getByRole("region", { name: "Zustand selectors" });
     const actions = screen.getByRole("region", { name: "Actions" });
-    const features = screen.getByRole("region", { name: "Фичи" });
+    const features = screen.getByRole("region", { name: "Features" });
     expect(screen.getAllByRole("searchbox")).toHaveLength(2);
     expect(within(features).queryByRole("searchbox")).toBeNull();
     fireEvent.change(within(selectors).getByRole("searchbox"), {
@@ -26,7 +26,7 @@ describe("module map viewer", () => {
     fireEvent.change(within(actions).getByRole("searchbox"), {
       target: { value: "remove" },
     });
-    const alpha = screen.getByRole("button", { name: "Фича alpha" });
+    const alpha = screen.getByRole("button", { name: "Feature alpha" });
     fireEvent.mouseEnter(alpha);
     expect(screen.getByRole("tooltip").textContent).toContain("project.scene");
     expect(screen.getByRole("tooltip").textContent).toContain("AlphaScene");
@@ -43,12 +43,14 @@ describe("module map viewer", () => {
   });
   it("supports keyboard focus, empty dependencies and Escape", () => {
     render(<App initialReport={reportFixture()} />);
-    const empty = screen.getByRole("button", { name: "Фича empty" });
+    const empty = screen.getByRole("button", { name: "Feature empty" });
     fireEvent.focus(empty);
-    expect(screen.getByText("У этой фичи нет селекторов Zustand")).toBeTruthy();
-    expect(screen.getByText("У этой фичи нет actions")).toBeTruthy();
+    expect(
+      screen.getByText("This feature has no Zustand selectors"),
+    ).toBeTruthy();
+    expect(screen.getByText("This feature has no actions")).toBeTruthy();
     expect(screen.getByRole("tooltip").textContent).toContain(
-      "Фича не экспортирует слоты.",
+      "This feature exports no slots.",
     );
     fireEvent.keyDown(empty, { key: "Escape" });
     expect(screen.queryByRole("tooltip")).toBeNull();
@@ -56,7 +58,7 @@ describe("module map viewer", () => {
   });
   it("loads a local report, clears filters and keeps the current graph on invalid input", async () => {
     render(<App initialReport={reportFixture()} />);
-    const input = screen.getByLabelText("Открыть JSON");
+    const input = screen.getByLabelText("Open JSON");
     fireEvent.change(input, {
       target: {
         files: [new File(["{}"], "invalid.json", { type: "application/json" })],
@@ -64,14 +66,14 @@ describe("module map viewer", () => {
     });
     await waitFor(() =>
       expect(screen.getByRole("alert").textContent).toContain(
-        "Текущая карта сохранена",
+        "The current map has been kept",
       ),
     );
-    expect(screen.getByRole("button", { name: "Фича alpha" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Feature alpha" })).toBeTruthy();
     const report = reportFixture();
     report.modules = [report.modules[2]];
     fireEvent.change(
-      screen.getByRole("searchbox", { name: "Поиск: Actions" }),
+      screen.getByRole("searchbox", { name: "Search: Actions" }),
       { target: { value: "move" } },
     );
     fireEvent.change(input, {
@@ -87,11 +89,11 @@ describe("module map viewer", () => {
       expect(screen.getByText("new-report.json")).toBeTruthy(),
     );
     expect(screen.queryByRole("alert")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Фича alpha" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Feature alpha" })).toBeNull();
     expect(
       (
         screen.getByRole("searchbox", {
-          name: "Поиск: Actions",
+          name: "Search: Actions",
         }) as HTMLInputElement
       ).value,
     ).toBe("");

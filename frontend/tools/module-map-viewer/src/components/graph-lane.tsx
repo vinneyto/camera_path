@@ -36,14 +36,14 @@ export function GraphLane({
             </svg>
             <input
               type="search"
-              aria-label={`Поиск: ${title}`}
-              placeholder="Поиск по имени…"
+              aria-label={`Search: ${title}`}
+              placeholder="Search by name…"
               value={query}
               onChange={(event) => onSearch(event.target.value)}
             />
           </label>
         ) : (
-          <p className="lane-hint">Наведите, чтобы выделить связи</p>
+          <p className="lane-hint">Hover to highlight connections</p>
         )}
       </div>
       <div className="lane-body">{children}</div>

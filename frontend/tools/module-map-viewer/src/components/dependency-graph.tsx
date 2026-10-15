@@ -67,7 +67,7 @@ export function DependencyGraph({
           ))}
         </svg>
         <GraphLane
-          title="Селекторы Zustand"
+          title="Zustand selectors"
           kind="selector"
           count={view.selectors.length}
           total={graph.selectors.length}
@@ -80,13 +80,13 @@ export function DependencyGraph({
           {!view.selectors.length && (
             <p className="lane-empty">
               {selectorQuery
-                ? "Селекторы не найдены"
-                : "У этой фичи нет селекторов Zustand"}
+                ? "No matching selectors"
+                : "This feature has no Zustand selectors"}
             </p>
           )}
         </GraphLane>
         <GraphLane
-          title="Фичи"
+          title="Features"
           kind="feature"
           count={graph.features.length}
           total={graph.features.length}
@@ -102,7 +102,7 @@ export function DependencyGraph({
             />
           ))}
           {!graph.features.length && (
-            <p className="lane-empty">В отчёте нет фич</p>
+            <p className="lane-empty">No features in this report</p>
           )}
         </GraphLane>
         <GraphLane
@@ -118,7 +118,9 @@ export function DependencyGraph({
           ))}
           {!view.actions.length && (
             <p className="lane-empty">
-              {actionQuery ? "Actions не найдены" : "У этой фичи нет actions"}
+              {actionQuery
+                ? "No matching actions"
+                : "This feature has no actions"}
             </p>
           )}
         </GraphLane>

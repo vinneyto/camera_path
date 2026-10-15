@@ -41,7 +41,7 @@ export function FeatureCard({
         ref={setReference}
         data-node-id={feature.id}
         className={`graph-node feature-card${active ? " is-active" : ""}${dimmed ? " is-dimmed" : ""}`}
-        aria-label={`Фича ${feature.label}`}
+        aria-label={`Feature ${feature.label}`}
         aria-describedby={active ? tooltipId : undefined}
         onMouseEnter={() => onHover(feature.id)}
         onMouseLeave={() => onHover(null)}
@@ -55,7 +55,7 @@ export function FeatureCard({
           <strong>{feature.label}</strong>
         </span>
         <span className="feature-counts">
-          <span>{feature.selectorIds.length} сел.</span>
+          <span>{feature.selectorIds.length} sel.</span>
           <span className="count-divider" />
           <span>{feature.actionIds.length} act.</span>
         </span>

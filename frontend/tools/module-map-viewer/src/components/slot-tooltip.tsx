@@ -8,7 +8,7 @@ export function SlotTooltip({ feature }: { feature: FeatureNode }) {
       <div className="tooltip-heading">
         <span className="feature-symbol">◈</span>
         <strong>{feature.label}</strong>
-        <span className="tooltip-label">СЛОТЫ</span>
+        <span className="tooltip-label">SLOTS</span>
       </div>
       {rows.length ? (
         <div className="slot-rows">
@@ -21,13 +21,13 @@ export function SlotTooltip({ feature }: { feature: FeatureNode }) {
                     {component.name}
                   </code>
                 ))}
-                {!row.components.length && <span>пусто</span>}
+                {!row.components.length && <span>empty</span>}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="tooltip-empty">Фича не экспортирует слоты.</p>
+        <p className="tooltip-empty">This feature exports no slots.</p>
       )}
     </>
   );
