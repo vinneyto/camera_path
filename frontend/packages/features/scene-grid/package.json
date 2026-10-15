@@ -1,0 +1,17 @@
+{
+  "name": "@camera-path/feature-scene-grid",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@camera-path/api": "*",
+    "@camera-path/scene-runtime": "*",
+    "@camera-path/types": "*",
+    "@react-three/fiber": "^9.7.0",
+    "three": "^0.185.1",
+    "@camera-path/slots": "*",
+    "@camera-path/render-pipeline": "*"
+  }
+}

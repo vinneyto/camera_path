@@ -1,0 +1,13 @@
+{
+  "name": "@camera-path/feature-renderer-preferences",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@camera-path/api": "*",
+    "@camera-path/ui-kit": "*",
+    "@camera-path/slots": "*"
+  }
+}

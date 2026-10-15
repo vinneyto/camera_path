@@ -1,0 +1,19 @@
+{
+  "name": "@camera-path/feature-library",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@camera-path/actions": "*",
+    "@camera-path/api": "*",
+    "@camera-path/store": "*",
+    "@camera-path/types": "*",
+    "@camera-path/ui-kit": "*",
+    "lucide-react": "^1.39.0",
+    "next": "^16.4.0",
+    "react": "^19.2.8",
+    "@camera-path/slots": "*"
+  }
+}

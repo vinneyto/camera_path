@@ -1,0 +1,17 @@
+{
+  "name": "@camera-path/feature-speed-track",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@camera-path/actions": "*",
+    "@camera-path/api": "*",
+    "@camera-path/store": "*",
+    "@camera-path/trajectory-math": "*",
+    "@camera-path/ui-kit": "*",
+    "react": "^19.2.8",
+    "@camera-path/slots": "*"
+  }
+}

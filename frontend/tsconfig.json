@@ -19,7 +19,117 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@host/*": ["./apps/host/src/*"],
+      "@camera-path/types": ["./packages/types/src/index.ts"],
+      "@camera-path/types/*": ["./packages/types/src/*"],
+      "@camera-path/store": ["./packages/store/src/index.ts"],
+      "@camera-path/store/*": ["./packages/store/src/*"],
+      "@camera-path/actions": ["./packages/actions/src/index.ts"],
+      "@camera-path/actions/*": ["./packages/actions/src/*"],
+      "@camera-path/api": ["./packages/api/src/index.ts"],
+      "@camera-path/api/*": ["./packages/api/src/*"],
+      "@camera-path/ui-kit": ["./packages/ui-kit/src/index.ts"],
+      "@camera-path/ui-kit/*": ["./packages/ui-kit/src/*"],
+      "@camera-path/scene-runtime": ["./packages/scene-runtime/src/index.ts"],
+      "@camera-path/scene-runtime/*": ["./packages/scene-runtime/src/*"],
+      "@camera-path/trajectory-math": [
+        "./packages/trajectory-math/src/index.ts"
+      ],
+      "@camera-path/trajectory-math/*": ["./packages/trajectory-math/src/*"],
+      "@camera-path/feature-appearance": [
+        "./packages/features/appearance/src/index.ts"
+      ],
+      "@camera-path/feature-appearance/*": [
+        "./packages/features/appearance/src/*"
+      ],
+      "@camera-path/feature-camera-view": [
+        "./packages/features/camera-view/src/index.ts"
+      ],
+      "@camera-path/feature-camera-view/*": [
+        "./packages/features/camera-view/src/*"
+      ],
+      "@camera-path/feature-depth-of-field": [
+        "./packages/features/depth-of-field/src/index.ts"
+      ],
+      "@camera-path/feature-depth-of-field/*": [
+        "./packages/features/depth-of-field/src/*"
+      ],
+      "@camera-path/feature-projects": [
+        "./packages/features/projects/src/index.ts"
+      ],
+      "@camera-path/feature-projects/*": ["./packages/features/projects/src/*"],
+      "@camera-path/feature-scene-models": [
+        "./packages/features/scene-models/src/index.ts"
+      ],
+      "@camera-path/feature-scene-models/*": [
+        "./packages/features/scene-models/src/*"
+      ],
+      "@camera-path/feature-chat-agent": [
+        "./packages/features/chat-agent/src/index.ts"
+      ],
+      "@camera-path/feature-chat-agent/*": [
+        "./packages/features/chat-agent/src/*"
+      ],
+      "@camera-path/feature-speed-track": [
+        "./packages/features/speed-track/src/index.ts"
+      ],
+      "@camera-path/feature-speed-track/*": [
+        "./packages/features/speed-track/src/*"
+      ],
+      "@camera-path/feature-camera-aim": [
+        "./packages/features/camera-aim/src/index.ts"
+      ],
+      "@camera-path/feature-camera-aim/*": [
+        "./packages/features/camera-aim/src/*"
+      ],
+      "@camera-path/feature-identity": [
+        "./packages/features/identity/src/index.ts"
+      ],
+      "@camera-path/feature-identity/*": ["./packages/features/identity/src/*"],
+      "@camera-path/feature-scene-grid": [
+        "./packages/features/scene-grid/src/index.ts"
+      ],
+      "@camera-path/feature-scene-grid/*": [
+        "./packages/features/scene-grid/src/*"
+      ],
+      "@camera-path/feature-trajectory": [
+        "./packages/features/trajectory/src/index.ts"
+      ],
+      "@camera-path/feature-trajectory/*": [
+        "./packages/features/trajectory/src/*"
+      ],
+      "@camera-path/feature-camera-orientation": [
+        "./packages/features/camera-orientation/src/index.ts"
+      ],
+      "@camera-path/feature-camera-orientation/*": [
+        "./packages/features/camera-orientation/src/*"
+      ],
+      "@camera-path/feature-anchors": [
+        "./packages/features/anchors/src/index.ts"
+      ],
+      "@camera-path/feature-anchors/*": ["./packages/features/anchors/src/*"],
+      "@camera-path/feature-playback": [
+        "./packages/features/playback/src/index.ts"
+      ],
+      "@camera-path/feature-playback/*": ["./packages/features/playback/src/*"],
+      "@camera-path/feature-lidar": ["./packages/features/lidar/src/index.ts"],
+      "@camera-path/feature-lidar/*": ["./packages/features/lidar/src/*"],
+      "@camera-path/feature-library": [
+        "./packages/features/library/src/index.ts"
+      ],
+      "@camera-path/feature-library/*": ["./packages/features/library/src/*"],
+      "@camera-path/feature-renderer-preferences": [
+        "./packages/features/renderer-preferences/src/index.ts"
+      ],
+      "@camera-path/feature-renderer-preferences/*": [
+        "./packages/features/renderer-preferences/src/*"
+      ],
+      "@camera-path/slots": ["./packages/slots/src/index.ts"],
+      "@camera-path/commands": ["./packages/commands/src/index.ts"],
+      "@camera-path/render-pipeline": [
+        "./packages/render-pipeline/src/index.ts"
+      ]
     }
   },
   "include": [

@@ -9,9 +9,11 @@
     "lint": "eslint .",
     "test": "vitest run",
     "api:generate": "orval --config orval.config.ts",
-    "api:check": "npm run api:generate && git diff --exit-code -- src/shared/api/generated && test -z \"$(git ls-files --others --exclude-standard src/shared/api/generated)\"",
+    "api:check": "npm run api:generate && git diff --exit-code -- packages/api/src/client/generated packages/types/src/api && test -z \"$(git ls-files --others --exclude-standard packages/api/src/client/generated packages/types/src/api)\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "boundaries:check": "node scripts/check-boundaries.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.24",
@@ -51,5 +53,10 @@
     "typescript": "^5.9.2",
     "vitest": "^4.1.11",
     "wgsl_reflect": "^1.6.0"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "packages/features/*"
+  ]
 }

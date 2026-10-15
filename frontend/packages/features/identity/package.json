@@ -1,0 +1,15 @@
+{
+  "name": "@camera-path/feature-identity",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@camera-path/api": "*",
+    "@camera-path/ui-kit": "*",
+    "lucide-react": "^1.39.0",
+    "react": "^19.2.8",
+    "@camera-path/slots": "*"
+  }
+}

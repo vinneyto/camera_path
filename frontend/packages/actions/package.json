@@ -1,0 +1,17 @@
+{
+  "name": "@camera-path/actions",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@camera-path/api": "*",
+    "@camera-path/store": "*",
+    "@camera-path/trajectory-math": "*",
+    "@camera-path/types": "*",
+    "@tanstack/react-query": "^5.102.8",
+    "react": "^19.2.8"
+  }
+}
