@@ -25,3 +25,5 @@ export * from "./use-cloud-placement";
 export * from "./use-seek-playback";
 export * from "./use-set-active-editor-tool";
 export * from "./use-update-library-defaults-mutation";
+export * from "./user-settings/create-user-settings-actions";
+export * from "./user-settings/user-settings-actions-provider";

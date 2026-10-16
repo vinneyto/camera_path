@@ -13,7 +13,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "boundaries:check": "node scripts/check-boundaries.mjs"
+    "boundaries:check": "node scripts/check-boundaries.mjs",
+    "modules:scan": "node scripts/scan-frontend.mjs",
+    "modules:check": "node scripts/scan-frontend.mjs --check",
+    "modules:viewer": "npm --prefix tools/module-map-viewer run dev"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.24",

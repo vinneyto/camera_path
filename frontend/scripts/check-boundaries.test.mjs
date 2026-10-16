@@ -85,8 +85,60 @@ it("allows a feature to use its own implementation and shared store", () => {
   expect(
     inspectSource(
       feature,
-      'import {useEditorStore} from "store";',
+      'import {usePlaybackState} from "store";',
       () => `${base}/packages/store/src/index.ts`,
     ),
   ).toEqual([]);
+});
+it.each([
+  'import {useEditorStoreApi as raw} from "@camera-path/store";',
+  'import {useEditorStore} from "@camera-path/store";',
+  'import type {EditorState} from "@camera-path/store";',
+  'import {createEditorStore} from "@camera-path/store";',
+  'import * as store from "@camera-path/store";',
+  'export {useEditorStoreApi} from "@camera-path/store";',
+  'const raw = import("@camera-path/store");',
+  'const raw = require("@camera-path/store");',
+  'import {useEditorStoreApi} from "@camera-path/store/store-provider";',
+  'import {useEditorStoreApi} from "aliased-store";',
+])("rejects feature access to raw store/state in %s", (text) => {
+  expect(
+    inspectSource(
+      feature,
+      text,
+      () => `${base}/packages/store/src/index.ts`,
+    ).join(),
+  ).toContain("public selector hooks only");
+});
+it("allows all four section hooks and scope hooks, including local aliases", () => {
+  expect(
+    inspectSource(
+      feature,
+      'import {useCameraState, usePlaybackState as playback, useEditorTool, useSceneInteraction, useUserSettings, useProjectId, useAssetId} from "@camera-path/store";',
+      () => `${base}/packages/store/src/index.ts`,
+    ),
+  ).toEqual([]);
+  expect(
+    inspectSource(
+      host,
+      'import {useEditorStoreApi} from "@camera-path/store";',
+      () => `${base}/packages/store/src/index.ts`,
+    ),
+  ).toEqual([]);
+});
+it("rejects private store paths and direct Zustand imports in features", () => {
+  expect(
+    inspectSource(
+      feature,
+      'import {usePlaybackState} from "private-store";',
+      () => `${base}/packages/store/src/use-playback-state.ts`,
+    ).join(),
+  ).toContain("public selector hooks only");
+  expect(
+    inspectSource(
+      feature,
+      'import {useStore} from "zustand";',
+      () => undefined,
+    ).join(),
+  ).toContain("instead of accessing Zustand directly");
 });

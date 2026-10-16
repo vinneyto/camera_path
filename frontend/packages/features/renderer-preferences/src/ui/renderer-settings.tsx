@@ -1,9 +1,11 @@
 "use client";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettingsActions } from "@camera-path/actions";
+import { useUserSettings } from "@camera-path/store";
 import { Button } from "@camera-path/ui-kit";
 import { GaussianDprSelect } from "./gaussian-dpr-select";
 export function RendererSettings() {
   const settings = useUserSettings();
+  const actions = useUserSettingsActions();
   return (
     <>
       <label className="flex items-center gap-2 text-xs">
@@ -12,7 +14,7 @@ export function RendererSettings() {
           disabled={!settings.ready || settings.saving}
           className="accent-primary"
           onChange={(event) =>
-            void settings.save({ webgpu_tile_renderer: event.target.checked })
+            void actions.save({ webgpu_tile_renderer: event.target.checked })
           }
           type="checkbox"
         />
@@ -30,7 +32,7 @@ export function RendererSettings() {
             {settings.error.message}
           </p>
           {!settings.ready && (
-            <Button onClick={settings.retry} size="sm" variant="outline">
+            <Button onClick={actions.retry} size="sm" variant="outline">
               Retry
             </Button>
           )}

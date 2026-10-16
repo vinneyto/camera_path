@@ -1,4 +1,4 @@
-import { UserSettingsProvider } from "@camera-path/api/settings";
+import { UserSettingsProvider } from "@host/providers/user-settings-provider";
 import { ThemeProvider } from "@camera-path/ui-kit/theme/theme-provider";
 // @vitest-environment happy-dom
 import { AuthProvider } from "@camera-path/api/identity/auth-provider";
