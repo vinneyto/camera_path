@@ -18,7 +18,7 @@ export function createStateReader(context, resolve) {
     const type = checker.getTypeAtLocation(node);
     return [type.symbol, type.aliasSymbol].some(
       (symbol) =>
-        symbol?.name === "EditorState" &&
+        ["EditorState", "UserSettingsState"].includes(symbol?.name) &&
         symbol.declarations?.some(
           (d) =>
             moduleOf(d.getSourceFile().fileName)?.name === "@camera-path/store",
@@ -156,7 +156,12 @@ export function createStateReader(context, resolve) {
           moduleOf(callee.declaration.getSourceFile().fileName)?.name ===
             "@camera-path/store"
         ) {
-          if (callee.symbol.name === "useEditorStore" && node.arguments[0]) {
+          if (
+            ["useEditorStore", "useUserSettingsStore"].includes(
+              callee.symbol.name,
+            ) &&
+            node.arguments[0]
+          ) {
             for (const p of selectorPaths(node.arguments[0]) ?? [])
               paths.add(p);
           } else for (const p of hookPaths(callee, next)) paths.add(p);

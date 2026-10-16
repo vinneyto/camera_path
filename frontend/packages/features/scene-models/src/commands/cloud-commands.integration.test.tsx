@@ -7,32 +7,15 @@ import { WorkspaceCommands } from "@host/ui/commands/workspace-commands";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useCloudPlacement } from "@camera-path/actions";
-import { useUserSettings } from "@camera-path/api/settings";
+import {
+  useCloudPlacement,
+  useUserSettingsActions,
+} from "@camera-path/actions";
+import { useUserSettings } from "@camera-path/store";
 
 const mutate = vi.hoisted(() => vi.fn());
-let showGrid = true;
 let canEdit = true;
 let clouds: { id: string; name: string }[] = [];
-vi.mock("@camera-path/api/settings", async () => {
-  const { useState } = await import("react");
-  return {
-    useUserSettings: () => {
-      const [grid, setGrid] = useState(showGrid);
-      return {
-        showGrid: grid,
-        ready: true,
-        saving: false,
-        error: null,
-        save: (changes: { show_grid: boolean }) => {
-          showGrid = changes.show_grid;
-          setGrid(changes.show_grid);
-        },
-      };
-    },
-  };
-});
-
 vi.mock("@camera-path/api/resources", () => ({
   useLibraryCatalog: () => ({
     data: {
@@ -71,7 +54,8 @@ vi.mock("@camera-path/actions", async (importOriginal) => ({
 function PlacementState() {
   const { pendingCloud } = useCloudPlacement();
   const settings = useUserSettings();
-  const toggleGrid = () => settings.save({ show_grid: !settings.showGrid });
+  const actions = useUserSettingsActions();
+  const toggleGrid = () => actions.save({ show_grid: !settings.showGrid });
   return (
     <>
       <button onClick={toggleGrid} type="button">
@@ -90,7 +74,6 @@ function openAddCloud() {
 }
 
 beforeEach(() => {
-  showGrid = true;
   canEdit = true;
   clouds = [];
 });

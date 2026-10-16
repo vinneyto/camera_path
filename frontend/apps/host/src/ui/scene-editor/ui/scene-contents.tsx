@@ -2,7 +2,7 @@
 import { Slot } from "@camera-path/slots";
 
 import { useCompiledTrajectoryQuery } from "@camera-path/api/project";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettings } from "@camera-path/store";
 import {
   SceneSurfaceProvider,
   useGaussianRenderingBackend,

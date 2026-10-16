@@ -1,5 +1,5 @@
 "use client";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettings } from "@camera-path/store";
 
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { useSurfaceEvents } from "@camera-path/scene-runtime/viewport/use-surface-events";

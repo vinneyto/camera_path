@@ -6,3 +6,6 @@ export * from "./use-camera-state";
 export * from "./use-editor-tool";
 export * from "./use-playback-state";
 export * from "./use-scene-interaction";
+export * from "./user-settings-store";
+export { UserSettingsStoreProvider } from "./user-settings-store-provider";
+export * from "./use-user-settings";

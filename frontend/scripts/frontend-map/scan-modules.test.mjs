@@ -153,6 +153,52 @@ it("extracts named/inline selector paths, shared hook paths, snapshot aliases an
   ).toMatchObject({ kind: "api-hook" });
 });
 
+it("maps the application settings selector and its separate save action", () => {
+  const report = scanModules(
+    fixture({
+      "packages/store/src/index.ts": `
+      export interface UserSettingsState { userSettings: { showGrid: boolean } }
+      export function useUserSettingsStore<T>(select: (s: UserSettingsState) => T): T { throw new Error(); }
+      export function useUserSettings() { return useUserSettingsStore(s => s.userSettings); }
+      export function createUserSettingsStore() { return { getState: (): UserSettingsState => { throw new Error(); } }; }
+    `,
+      "packages/actions/src/index.ts": `
+      import { createUserSettingsStore } from "@camera-path/store";
+      export function useUserSettingsActions() { return { save: () => {} }; }
+      export function readSettingsInInfrastructure() { return createUserSettingsStore().getState().userSettings.showGrid; }
+    `,
+      "packages/features/demo/src/view.tsx": `
+      import { useUserSettings } from "@camera-path/store";
+      import { useUserSettingsActions } from "@camera-path/actions";
+      export function View() { const data = useUserSettings(); useUserSettingsActions().save(); return data.showGrid; }
+    `,
+    }),
+  );
+  const feature = report.modules.find((m) => m.kind === "feature");
+  expect(feature.selectors).toHaveLength(1);
+  expect(feature.selectors[0]).toMatchObject({
+    name: "useUserSettings",
+    package: "@camera-path/store",
+    kind: "store-hook",
+    statePaths: ["userSettings"],
+  });
+  expect(feature.actions.map((a) => a.name)).toContain(
+    "useUserSettingsActions.save",
+  );
+  expect(
+    report.modules.find((m) => m.name === "@camera-path/actions").selectors,
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        name: "getState",
+        kind: "store-snapshot",
+        statePaths: ["userSettings.showGrid"],
+      }),
+    ]),
+  );
+  expect(report.diagnostics).toEqual([]);
+});
+
 it("reports dynamic and cyclic slots without executing application code or overflowing", () => {
   const dynamic = scanModules(
     fixture({

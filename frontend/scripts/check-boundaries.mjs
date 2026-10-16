@@ -52,6 +52,7 @@ export function inspectSource(
     ) {
       const hooks = new Set([
         "useCameraState",
+        "useUserSettings",
         "usePlaybackState",
         "useEditorTool",
         "useSceneInteraction",

@@ -95,8 +95,8 @@ export function scanModules(configPath) {
     }
     function snapshot(access, node) {
       const type = checker.getTypeAtLocation(access.root);
-      const symbol = [type.symbol, type.aliasSymbol].find(
-        (s) => s?.name === "EditorState",
+      const symbol = [type.symbol, type.aliasSymbol].find((s) =>
+        ["EditorState", "UserSettingsState"].includes(s?.name),
       );
       add(
         selectors,
@@ -169,20 +169,28 @@ export function scanModules(configPath) {
             target.symbol.name.startsWith("use") &&
             owner === "@camera-path/store"
           ) {
-            const paths =
-              target.symbol.name === "useEditorStore"
-                ? node.arguments[0] && state.selectorPaths(node.arguments[0])
-                : state.hookPaths(target);
+            const paths = ["useEditorStore", "useUserSettingsStore"].includes(
+              target.symbol.name,
+            )
+              ? node.arguments[0] && state.selectorPaths(node.arguments[0])
+              : state.hookPaths(target);
             add(
               selectors,
               target,
-              target.symbol.name === "useEditorStore"
+              ["useEditorStore", "useUserSettingsStore"].includes(
+                target.symbol.name,
+              )
                 ? "store-selector"
                 : "store-hook",
               node,
               paths ?? [],
             );
-            if (target.symbol.name === "useEditorStore" && paths == null)
+            if (
+              ["useEditorStore", "useUserSettingsStore"].includes(
+                target.symbol.name,
+              ) &&
+              paths == null
+            )
               diagnostics.push({
                 severity: "warning",
                 code: "unresolved-selector",

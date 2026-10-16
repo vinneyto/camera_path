@@ -114,7 +114,7 @@ it("allows all four section hooks and scope hooks, including local aliases", () 
   expect(
     inspectSource(
       feature,
-      'import {useCameraState, usePlaybackState as playback, useEditorTool, useSceneInteraction, useProjectId, useAssetId} from "@camera-path/store";',
+      'import {useCameraState, usePlaybackState as playback, useEditorTool, useSceneInteraction, useUserSettings, useProjectId, useAssetId} from "@camera-path/store";',
       () => `${base}/packages/store/src/index.ts`,
     ),
   ).toEqual([]);

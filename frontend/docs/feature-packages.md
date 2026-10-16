@@ -227,3 +227,19 @@ npm run format:check
 Обработчики, установленные эффектом, читают актуальные значения хуков через
 React `useEffectEvent`, сохраняя время жизни подписки. Playback считывает elapsed
 при запуске сессии и ведёт локальный счётчик кадров, не перезапуская RAF на каждом кадре.
+
+## Пользовательские настройки
+
+`useUserSettings()` из `@camera-path/store` возвращает только данные и статус
+настроек. `useUserSettingsActions()` из `@camera-path/actions` предоставляет
+`save(changes)` и `retry()`. Фичи не используют API hooks для пользовательских
+настроек и не получают методы изменения из selector hooks.
+
+Хост создаёт один `createUserSettingsStore()` и один `createUserSettingsActions(store)`
+на всё приложение в `apps/host/src/providers/user-settings-provider.tsx`, выше project
+providers. Смена проекта не сбрасывает настройки. Actions загружают значения через
+HTTP client из API, восстанавливают localStorage, сохраняют изменения и обновляют
+Zustand. У API больше нет settings provider или дополнительной копии этих данных
+в query cache. Переключение рендерера сохраняет предпочтение и перезагружает документ,
+не переключая существующий Canvas на лету. Ответы старой сессии не перезаписывают
+новые настройки гостя.

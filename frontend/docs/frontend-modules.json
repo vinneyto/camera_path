@@ -34,7 +34,11 @@
         "packages/actions/src/use-cloud-placement.ts",
         "packages/actions/src/use-seek-playback.ts",
         "packages/actions/src/use-set-active-editor-tool.ts",
-        "packages/actions/src/use-update-library-defaults-mutation.ts"
+        "packages/actions/src/use-update-library-defaults-mutation.ts",
+        "packages/actions/src/user-settings/create-user-settings-actions.ts",
+        "packages/actions/src/user-settings/editor-settings-key.ts",
+        "packages/actions/src/user-settings/read-editor-settings.ts",
+        "packages/actions/src/user-settings/user-settings-actions-provider.tsx"
       ],
       "slots": {},
       "actions": [
@@ -65,6 +69,60 @@
               "line": 15,
               "column": 30,
               "expression": "Context"
+            }
+          ]
+        },
+        {
+          "name": "Context",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+            "line": 6,
+            "column": 7
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+              "line": 15,
+              "column": 11,
+              "expression": "Context"
+            },
+            {
+              "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+              "line": 15,
+              "column": 56,
+              "expression": "Context"
+            },
+            {
+              "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+              "line": 19,
+              "column": 30,
+              "expression": "Context"
+            }
+          ]
+        },
+        {
+          "name": "apply",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 42,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 75,
+              "column": 9,
+              "expression": "apply"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 101,
+              "column": 9,
+              "expression": "apply"
             }
           ]
         },
@@ -201,6 +259,54 @@
           ]
         },
         {
+          "name": "failure",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 49,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 80,
+              "column": 19,
+              "expression": "failure"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 113,
+              "column": 21,
+              "expression": "failure"
+            }
+          ]
+        },
+        {
+          "name": "load",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 54,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 120,
+              "column": 5,
+              "expression": "load"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 121,
+              "column": 12,
+              "expression": "load"
+            }
+          ]
+        },
+        {
           "name": "onAccepted",
           "kind": "action",
           "package": "@camera-path/actions",
@@ -221,6 +327,144 @@
               "line": 27,
               "column": 7,
               "expression": "onAccepted"
+            }
+          ]
+        },
+        {
+          "name": "patch",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 23,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 29,
+              "column": 5,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 43,
+              "column": 5,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 58,
+              "column": 5,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 77,
+              "column": 7,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 81,
+              "column": 7,
+              "expression": "patch"
+            }
+          ]
+        },
+        {
+          "name": "preferences",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 34,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 88,
+              "column": 22,
+              "expression": "preferences"
+            }
+          ]
+        },
+        {
+          "name": "readEditorSettings",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/read-editor-settings.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 73,
+              "column": 26,
+              "expression": "readEditorSettings"
+            }
+          ]
+        },
+        {
+          "name": "save",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 85,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 122,
+              "column": 5,
+              "expression": "save"
+            }
+          ]
+        },
+        {
+          "name": "status",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 28,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 59,
+              "column": 5,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 83,
+              "column": 34,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 97,
+              "column": 5,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 116,
+              "column": 7,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 129,
+              "column": 7,
+              "expression": "status"
             }
           ]
         },
@@ -437,6 +681,55 @@
               "expression": "useProjectId(explicitProjectId)"
             }
           ]
+        },
+        {
+          "name": "getState",
+          "kind": "store-snapshot",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/user-settings-store.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": [
+            "userSettings",
+            "userSettings.gaussianDpr",
+            "userSettings.ready",
+            "userSettings.showGrid",
+            "userSettings.webGpuTileRenderer"
+          ],
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 35,
+              "column": 19,
+              "expression": "store.getState().userSettings"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 37,
+              "column": 29,
+              "expression": "state.webGpuTileRenderer"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 38,
+              "column": 18,
+              "expression": "state.showGrid"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 39,
+              "column": 21,
+              "expression": "state.gaussianDpr"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 86,
+              "column": 10,
+              "expression": "store.getState().userSettings.ready"
+            }
+          ]
         }
       ]
     },
@@ -473,32 +766,11 @@
         "packages/api/src/resources/use-scene-points.ts",
         "packages/api/src/resources/use-speed-timeline.ts",
         "packages/api/src/resources/use-trajectory-geometry.ts",
-        "packages/api/src/settings/index.ts",
-        "packages/api/src/settings/read-editor-settings.ts",
-        "packages/api/src/settings/user-settings-provider.tsx",
         "packages/api/src/upload-library-file.ts"
       ],
       "slots": {},
       "actions": [],
       "selectors": [
-        {
-          "name": "useAuth",
-          "kind": "api-hook",
-          "package": "@camera-path/api",
-          "definition": {
-            "file": "packages/api/src/identity/auth-provider.tsx",
-            "line": 166,
-            "column": 1
-          },
-          "usages": [
-            {
-              "file": "packages/api/src/settings/user-settings-provider.tsx",
-              "line": 36,
-              "column": 16,
-              "expression": "useAuth()"
-            }
-          ]
-        },
         {
           "name": "useGetAimTimeline",
           "kind": "api-hook",
@@ -2854,33 +3126,101 @@
             {
               "name": "RendererSettings",
               "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
-              "line": 5,
+              "line": 6,
               "column": 1
             }
           ]
         }
       },
-      "actions": [],
-      "selectors": [
+      "actions": [
         {
-          "name": "useUserSettings",
-          "kind": "api-hook",
-          "package": "@camera-path/api",
+          "name": "createUserSettingsActions.retry",
+          "kind": "action",
+          "package": "@camera-path/actions",
           "definition": {
-            "file": "packages/api/src/settings/user-settings-provider.tsx",
-            "line": 102,
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 121,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 35,
+              "column": 30,
+              "expression": "actions.retry"
+            }
+          ]
+        },
+        {
+          "name": "save",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 122,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
+              "line": 17,
+              "column": 11,
+              "expression": "actions.save"
+            },
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 17,
+              "column": 18,
+              "expression": "actions.save"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettingsActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+            "line": 18,
             "column": 1
           },
           "usages": [
             {
               "file": "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
-              "line": 5,
+              "line": 7,
+              "column": 19,
+              "expression": "useUserSettingsActions"
+            },
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 8,
+              "column": 19,
+              "expression": "useUserSettingsActions"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useUserSettings",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-user-settings.ts",
+            "line": 4,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
+              "line": 6,
               "column": 20,
               "expression": "useUserSettings()"
             },
             {
               "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
-              "line": 6,
+              "line": 7,
               "column": 20,
               "expression": "useUserSettings()"
             }
@@ -2905,7 +3245,7 @@
             {
               "name": "GridSettings",
               "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
-              "line": 4,
+              "line": 5,
               "column": 1
             }
           ]
@@ -2921,17 +3261,61 @@
           ]
         }
       },
-      "actions": [],
+      "actions": [
+        {
+          "name": "save",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 122,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useUserSettingsActions().save"
+            },
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 14,
+              "column": 35,
+              "expression": "save"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettingsActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+            "line": 18,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useUserSettingsActions"
+            }
+          ]
+        }
+      ],
       "selectors": [
         {
           "name": "useUserSettings",
-          "kind": "api-hook",
-          "package": "@camera-path/api",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
           "definition": {
-            "file": "packages/api/src/settings/user-settings-provider.tsx",
-            "line": 102,
+            "file": "packages/store/src/use-user-settings.ts",
+            "line": 4,
             "column": 1
           },
+          "statePaths": ["userSettings"],
           "usages": [
             {
               "file": "packages/features/scene-grid/src/scene/scene.tsx",
@@ -2941,14 +3325,8 @@
             },
             {
               "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
-              "line": 5,
-              "column": 20,
-              "expression": "useUserSettings()"
-            },
-            {
-              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
               "line": 6,
-              "column": 16,
+              "column": 20,
               "expression": "useUserSettings()"
             }
           ]
@@ -3631,6 +4009,7 @@
         "apps/host/src/composition/feature-slots.ts",
         "apps/host/src/providers/application-ui.tsx",
         "apps/host/src/providers/project-providers.tsx",
+        "apps/host/src/providers/user-settings-provider.tsx",
         "apps/host/src/server/proxy-api-request.ts",
         "apps/host/src/testing/editor-host.tsx",
         "apps/host/src/ui/commands/workspace-commands.tsx",
@@ -3734,9 +4113,87 @@
             },
             {
               "file": "apps/host/src/testing/editor-host.tsx",
-              "line": 19,
+              "line": 33,
               "column": 36,
               "expression": "createEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "createUserSettingsActions.cancel",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 131,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 23,
+              "column": 12,
+              "expression": "actions.cancel"
+            }
+          ]
+        },
+        {
+          "name": "createUserSettingsActions.setCanEdit",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 123,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 19,
+              "column": 5,
+              "expression": "actions.setCanEdit"
+            }
+          ]
+        },
+        {
+          "name": "createUserSettingsActions",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 16,
+              "column": 36,
+              "expression": "createUserSettingsActions"
+            },
+            {
+              "file": "apps/host/src/testing/editor-host.tsx",
+              "line": 30,
+              "column": 5,
+              "expression": "createUserSettingsActions"
+            }
+          ]
+        },
+        {
+          "name": "load",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 120,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 22,
+              "column": 10,
+              "expression": "actions.load"
             }
           ]
         },
@@ -3799,6 +4256,12 @@
               "line": 7,
               "column": 33,
               "expression": "useAuth()"
+            },
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 17,
+              "column": 23,
+              "expression": "useAuth()"
             }
           ]
         },
@@ -3859,30 +4322,6 @@
               "line": 21,
               "column": 24,
               "expression": "useProjectQuery(projectId)"
-            }
-          ]
-        },
-        {
-          "name": "useUserSettings",
-          "kind": "api-hook",
-          "package": "@camera-path/api",
-          "definition": {
-            "file": "packages/api/src/settings/user-settings-provider.tsx",
-            "line": 102,
-            "column": 1
-          },
-          "usages": [
-            {
-              "file": "apps/host/src/ui/project-workspace/ui/project-workspace.tsx",
-              "line": 20,
-              "column": 60,
-              "expression": "useUserSettings()"
-            },
-            {
-              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 33,
-              "column": 27,
-              "expression": "useUserSettings()"
             }
           ]
         },
@@ -3978,6 +4417,31 @@
               "line": 16,
               "column": 5,
               "expression": "useSceneInteraction()"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettings",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-user-settings.ts",
+            "line": 4,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/project-workspace.tsx",
+              "line": 20,
+              "column": 60,
+              "expression": "useUserSettings()"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+              "line": 33,
+              "column": 27,
+              "expression": "useUserSettings()"
             }
           ]
         }
@@ -4136,7 +4600,10 @@
         "packages/store/src/use-camera-state.ts",
         "packages/store/src/use-editor-tool.ts",
         "packages/store/src/use-playback-state.ts",
-        "packages/store/src/use-scene-interaction.ts"
+        "packages/store/src/use-scene-interaction.ts",
+        "packages/store/src/use-user-settings.ts",
+        "packages/store/src/user-settings-store-provider.tsx",
+        "packages/store/src/user-settings-store.ts"
       ],
       "slots": {},
       "actions": [],
@@ -4194,6 +4661,25 @@
               "line": 4,
               "column": 10,
               "expression": "useEditorStore((s) => s.sceneInteraction)"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettingsStore",
+          "kind": "store-selector",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/user-settings-store-provider.tsx",
+            "line": 22,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "packages/store/src/use-user-settings.ts",
+              "line": 5,
+              "column": 10,
+              "expression": "useUserSettingsStore((state) => state.userSettings)"
             }
           ]
         }

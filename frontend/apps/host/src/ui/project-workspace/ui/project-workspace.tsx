@@ -7,7 +7,7 @@ import {
   useCompiledTrajectoryQuery,
   useProjectQuery,
 } from "@camera-path/api/project";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettings } from "@camera-path/store";
 
 import { ProjectHeader } from "@host/ui/project-workspace/ui/project-header";
 import { ProjectScene } from "@host/ui/project-workspace/ui/project-scene";
