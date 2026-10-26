@@ -1,11 +1,11 @@
 import type { UserSettings } from "@camera-path/types/api";
 
-const KEY = "camera-path-editor-settings";
+import { EDITOR_SETTINGS_KEY } from "./editor-settings-key";
 
 export function readEditorSettings(fallback: UserSettings): UserSettings {
   try {
     const saved = JSON.parse(
-      localStorage.getItem(KEY) ?? "null",
+      localStorage.getItem(EDITOR_SETTINGS_KEY) ?? "null",
     ) as Partial<UserSettings> | null;
     if (!saved || typeof saved !== "object") return fallback;
     return {

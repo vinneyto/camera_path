@@ -1,6 +1,6 @@
 "use client";
 import { useCompiledTrajectoryResource } from "@camera-path/api/resources";
-import { useCameraModeValue, usePlaybackState } from "@camera-path/store";
+import { useCameraState, usePlaybackState } from "@camera-path/store";
 
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { evaluateDepthOfFieldKeyframe } from "@camera-path/trajectory-math";
@@ -10,7 +10,7 @@ import { DepthOfFieldFocusHelper } from "./depth-of-field-focus-helper";
 export function DepthOfFieldScene() {
   const trajectory = useCompiledTrajectoryResource().data?.data;
   const playback = usePlaybackState();
-  const mode = useCameraModeValue();
+  const mode = useCameraState().cameraMode;
   const { depthSupported, radius, requestDepth } = useSceneServices();
   const keyframe = trajectory
     ? evaluateDepthOfFieldKeyframe(trajectory, playback.pathPosition)

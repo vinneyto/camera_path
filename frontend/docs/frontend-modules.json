@@ -1,0 +1,4776 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "name": "@camera-path/actions",
+      "kind": "shared",
+      "root": "packages/actions",
+      "entrypoint": "packages/actions/src/index.ts",
+      "files": [
+        "packages/actions/src/actions-provider.tsx",
+        "packages/actions/src/create-editor-actions.ts",
+        "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+        "packages/actions/src/deletions/api/use-delete-anchor.ts",
+        "packages/actions/src/deletions/api/use-delete-camera-keyframe.ts",
+        "packages/actions/src/deletions/api/use-delete-camera-orientation-keyframe.ts",
+        "packages/actions/src/deletions/api/use-delete-depth-of-field-keyframe.ts",
+        "packages/actions/src/deletions/api/use-delete-project.ts",
+        "packages/actions/src/deletions/api/use-delete-speed-keyframe.ts",
+        "packages/actions/src/deletions/api/use-project-deletions.ts",
+        "packages/actions/src/deletions/index.ts",
+        "packages/actions/src/index.ts",
+        "packages/actions/src/mutations/anchors/use-add-anchor.ts",
+        "packages/actions/src/mutations/anchors/use-update-anchor.ts",
+        "packages/actions/src/mutations/camera-orientation/use-add-camera-orientation-keyframe.ts",
+        "packages/actions/src/mutations/camera-orientation/use-update-camera-orientation-keyframe.ts",
+        "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
+        "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+        "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
+        "packages/actions/src/mutations/library/use-delete-library-assets.ts",
+        "packages/actions/src/mutations/library/use-upload-library-file.ts",
+        "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
+        "packages/actions/src/mutations/projects/use-create-project.ts",
+        "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+        "packages/actions/src/use-cloud-placement.ts",
+        "packages/actions/src/use-seek-playback.ts",
+        "packages/actions/src/use-set-active-editor-tool.ts",
+        "packages/actions/src/use-update-library-defaults-mutation.ts",
+        "packages/actions/src/user-settings/create-user-settings-actions.ts",
+        "packages/actions/src/user-settings/editor-settings-key.ts",
+        "packages/actions/src/user-settings/read-editor-settings.ts",
+        "packages/actions/src/user-settings/user-settings-actions-provider.tsx"
+      ],
+      "slots": {},
+      "actions": [
+        {
+          "name": "Context",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 4,
+            "column": 7
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/actions-provider.tsx",
+              "line": 12,
+              "column": 11,
+              "expression": "Context"
+            },
+            {
+              "file": "packages/actions/src/actions-provider.tsx",
+              "line": 12,
+              "column": 56,
+              "expression": "Context"
+            },
+            {
+              "file": "packages/actions/src/actions-provider.tsx",
+              "line": 15,
+              "column": 30,
+              "expression": "Context"
+            }
+          ]
+        },
+        {
+          "name": "Context",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+            "line": 6,
+            "column": 7
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+              "line": 15,
+              "column": 11,
+              "expression": "Context"
+            },
+            {
+              "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+              "line": 15,
+              "column": 56,
+              "expression": "Context"
+            },
+            {
+              "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+              "line": 19,
+              "column": 30,
+              "expression": "Context"
+            }
+          ]
+        },
+        {
+          "name": "apply",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 42,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 75,
+              "column": 9,
+              "expression": "apply"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 101,
+              "column": 9,
+              "expression": "apply"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.hoverObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 21,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+              "line": 20,
+              "column": 7,
+              "expression": "actions.hoverObject"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-anchor.ts",
+              "line": 18,
+              "column": 7,
+              "expression": "actions.hoverObject"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.resetPlayback",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 51,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+              "line": 21,
+              "column": 7,
+              "expression": "actions.resetPlayback"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.selectObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 23,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+              "line": 19,
+              "column": 7,
+              "expression": "actions.selectObject"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-anchor.ts",
+              "line": 19,
+              "column": 7,
+              "expression": "actions.selectObject"
+            },
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+              "line": 34,
+              "column": 9,
+              "expression": "actions.selectObject"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.setActiveTool",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 38,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/use-cloud-placement.ts",
+              "line": 10,
+              "column": 19,
+              "expression": "actions.setActiveTool"
+            },
+            {
+              "file": "packages/actions/src/use-set-active-editor-tool.ts",
+              "line": 4,
+              "column": 10,
+              "expression": "useEditorActions().setActiveTool"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.setPlaybackFrame",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 55,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/use-seek-playback.ts",
+              "line": 15,
+              "column": 5,
+              "expression": "actions.setPlaybackFrame"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.startCloudPlacement",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 45,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/use-cloud-placement.ts",
+              "line": 9,
+              "column": 12,
+              "expression": "actions.startCloudPlacement"
+            }
+          ]
+        },
+        {
+          "name": "failure",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 49,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 80,
+              "column": 19,
+              "expression": "failure"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 113,
+              "column": 21,
+              "expression": "failure"
+            }
+          ]
+        },
+        {
+          "name": "load",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 54,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 120,
+              "column": 5,
+              "expression": "load"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 121,
+              "column": 12,
+              "expression": "load"
+            }
+          ]
+        },
+        {
+          "name": "onAccepted",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+            "line": 13,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+              "line": 13,
+              "column": 3,
+              "expression": "onAccepted"
+            },
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+              "line": 27,
+              "column": 7,
+              "expression": "onAccepted"
+            }
+          ]
+        },
+        {
+          "name": "patch",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 23,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 29,
+              "column": 5,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 43,
+              "column": 5,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 58,
+              "column": 5,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 77,
+              "column": 7,
+              "expression": "patch"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 81,
+              "column": 7,
+              "expression": "patch"
+            }
+          ]
+        },
+        {
+          "name": "preferences",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 34,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 88,
+              "column": 22,
+              "expression": "preferences"
+            }
+          ]
+        },
+        {
+          "name": "readEditorSettings",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/read-editor-settings.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 73,
+              "column": 26,
+              "expression": "readEditorSettings"
+            }
+          ]
+        },
+        {
+          "name": "save",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 85,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 122,
+              "column": 5,
+              "expression": "save"
+            }
+          ]
+        },
+        {
+          "name": "status",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 28,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 59,
+              "column": 5,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 83,
+              "column": 34,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 97,
+              "column": 5,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 116,
+              "column": 7,
+              "expression": "status"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 129,
+              "column": 7,
+              "expression": "status"
+            }
+          ]
+        },
+        {
+          "name": "updateObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 7,
+            "column": 9
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/create-editor-actions.ts",
+              "line": 22,
+              "column": 7,
+              "expression": "updateObject"
+            },
+            {
+              "file": "packages/actions/src/create-editor-actions.ts",
+              "line": 24,
+              "column": 7,
+              "expression": "updateObject"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+              "line": 14,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-anchor.ts",
+              "line": 11,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+              "line": 19,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/use-cloud-placement.ts",
+              "line": 6,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/use-seek-playback.ts",
+              "line": 11,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/use-set-active-editor-tool.ts",
+              "line": 4,
+              "column": 10,
+              "expression": "useEditorActions"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/use-seek-playback.ts",
+              "line": 9,
+              "column": 17,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
+          "usages": [
+            {
+              "file": "packages/actions/src/use-cloud-placement.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 19,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+              "line": 12,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-anchor.ts",
+              "line": 12,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-camera-keyframe.ts",
+              "line": 9,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-camera-orientation-keyframe.ts",
+              "line": 9,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-depth-of-field-keyframe.ts",
+              "line": 9,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/deletions/api/use-delete-speed-keyframe.ts",
+              "line": 9,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/anchors/use-add-anchor.ts",
+              "line": 10,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/anchors/use-update-anchor.ts",
+              "line": 15,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/camera-orientation/use-add-camera-orientation-keyframe.ts",
+              "line": 13,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/camera-orientation/use-update-camera-orientation-keyframe.ts",
+              "line": 18,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
+              "line": 10,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+              "line": 17,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
+              "line": 13,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
+              "line": 12,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+              "line": 20,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            }
+          ]
+        },
+        {
+          "name": "getState",
+          "kind": "store-snapshot",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/user-settings-store.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": [
+            "userSettings",
+            "userSettings.gaussianDpr",
+            "userSettings.ready",
+            "userSettings.showGrid",
+            "userSettings.webGpuTileRenderer"
+          ],
+          "usages": [
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 35,
+              "column": 19,
+              "expression": "store.getState().userSettings"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 37,
+              "column": 29,
+              "expression": "state.webGpuTileRenderer"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 38,
+              "column": 18,
+              "expression": "state.showGrid"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 39,
+              "column": 21,
+              "expression": "state.gaussianDpr"
+            },
+            {
+              "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+              "line": 86,
+              "column": 10,
+              "expression": "store.getState().userSettings.ready"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/api",
+      "kind": "shared",
+      "root": "packages/api",
+      "entrypoint": "packages/api/src/index.ts",
+      "files": [
+        "packages/api/src/client/orval-fetch.ts",
+        "packages/api/src/config.ts",
+        "packages/api/src/identity/auth-provider.tsx",
+        "packages/api/src/index.ts",
+        "packages/api/src/project/index.ts",
+        "packages/api/src/project/invalidate-project-resource.ts",
+        "packages/api/src/project/project-api.ts",
+        "packages/api/src/project/project-keys.ts",
+        "packages/api/src/project/project-queries.ts",
+        "packages/api/src/project/use-compiled-trajectory-query.ts",
+        "packages/api/src/project/use-project-query.ts",
+        "packages/api/src/project/use-projects-query.ts",
+        "packages/api/src/resources/index.ts",
+        "packages/api/src/resources/use-aim-timeline.ts",
+        "packages/api/src/resources/use-anchors.ts",
+        "packages/api/src/resources/use-chat-history.ts",
+        "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+        "packages/api/src/resources/use-depth-of-field-timeline.ts",
+        "packages/api/src/resources/use-library-asset-resource.ts",
+        "packages/api/src/resources/use-library-catalog.ts",
+        "packages/api/src/resources/use-lidar-timeline-resource.ts",
+        "packages/api/src/resources/use-orientation-timeline.ts",
+        "packages/api/src/resources/use-projects-catalog.ts",
+        "packages/api/src/resources/use-scene-models.ts",
+        "packages/api/src/resources/use-scene-points.ts",
+        "packages/api/src/resources/use-speed-timeline.ts",
+        "packages/api/src/resources/use-trajectory-geometry.ts",
+        "packages/api/src/upload-library-file.ts"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": [
+        {
+          "name": "useGetAimTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 2813,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 27,
+              "column": 15,
+              "expression": "useGetAimTimeline(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-aim-timeline.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetAimTimeline(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetCompiledTrajectory",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 7895,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-compiled-trajectory-query.ts",
+              "line": 6,
+              "column": 10,
+              "expression": "useGetCompiledTrajectory(projectId, {\n    query: { select: (response) => response.data as CompiledTrajectory },\n  })"
+            },
+            {
+              "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+              "line": 6,
+              "column": 17,
+              "expression": "useGetCompiledTrajectory(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetDepthOfFieldTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 3063,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 29,
+              "column": 24,
+              "expression": "useGetDepthOfFieldTimeline(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-depth-of-field-timeline.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetDepthOfFieldTimeline(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetLibraryAsset",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 1154,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-library-asset-resource.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetLibraryAsset(useAssetId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetLidarTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 4050,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 30,
+              "column": 17,
+              "expression": "useGetLidarTimeline(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-lidar-timeline-resource.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetLidarTimeline(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetOrientationTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 4300,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 28,
+              "column": 23,
+              "expression": "useGetOrientationTimeline(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-orientation-timeline.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetOrientationTimeline(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetProject",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 2066,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 22,
+              "column": 20,
+              "expression": "useGetProject(projectId)"
+            }
+          ]
+        },
+        {
+          "name": "useGetSpeedTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 6030,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 26,
+              "column": 17,
+              "expression": "useGetSpeedTimeline(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-speed-timeline.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetSpeedTimeline(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useGetTrajectory",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 7764,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 25,
+              "column": 22,
+              "expression": "useGetTrajectory(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-trajectory-geometry.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useGetTrajectory(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useListAnchors",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 2316,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 23,
+              "column": 19,
+              "expression": "useListAnchors(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-anchors.ts",
+              "line": 6,
+              "column": 17,
+              "expression": "useListAnchors(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useListChatMessages",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 5040,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 31,
+              "column": 16,
+              "expression": "useListChatMessages(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-chat-history.ts",
+              "line": 6,
+              "column": 17,
+              "expression": "useListChatMessages(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useListLibraryAssets",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 708,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-library-catalog.ts",
+              "line": 4,
+              "column": 17,
+              "expression": "useListLibraryAssets()"
+            }
+          ]
+        },
+        {
+          "name": "useListProjectClouds",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 5533,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-scene-models.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useListProjectClouds(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useListProjects",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 1708,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-projects-query.ts",
+              "line": 6,
+              "column": 10,
+              "expression": "useListProjects({\n    query: {\n      select: (response) => {\n        response.data.forEach((project) =>\n          rememberProjectRevision(project.id, project.revision),\n        );\n        return response.data;\n      },\n    },\n  })"
+            },
+            {
+              "file": "packages/api/src/resources/use-projects-catalog.ts",
+              "line": 4,
+              "column": 17,
+              "expression": "useListProjects()"
+            }
+          ]
+        },
+        {
+          "name": "useListScenePoints",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 6770,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/project/use-project-query.ts",
+              "line": 24,
+              "column": 18,
+              "expression": "useListScenePoints(projectId)"
+            },
+            {
+              "file": "packages/api/src/resources/use-scene-points.ts",
+              "line": 6,
+              "column": 17,
+              "expression": "useListScenePoints(useProjectId(id))"
+            }
+          ]
+        },
+        {
+          "name": "useAssetId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 27,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-library-asset-resource.ts",
+              "line": 5,
+              "column": 36,
+              "expression": "useAssetId(id)"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 19,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-aim-timeline.ts",
+              "line": 5,
+              "column": 35,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-anchors.ts",
+              "line": 6,
+              "column": 32,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-chat-history.ts",
+              "line": 6,
+              "column": 37,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+              "line": 6,
+              "column": 42,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-depth-of-field-timeline.ts",
+              "line": 5,
+              "column": 44,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-lidar-timeline-resource.ts",
+              "line": 5,
+              "column": 37,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-orientation-timeline.ts",
+              "line": 5,
+              "column": 43,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-scene-models.ts",
+              "line": 5,
+              "column": 38,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-scene-points.ts",
+              "line": 6,
+              "column": 36,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-speed-timeline.ts",
+              "line": 5,
+              "column": 37,
+              "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-trajectory-geometry.ts",
+              "line": 5,
+              "column": 34,
+              "expression": "useProjectId(id)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/commands",
+      "kind": "shared",
+      "root": "packages/commands",
+      "entrypoint": "packages/commands/src/index.ts",
+      "files": [
+        "packages/commands/src/index.ts",
+        "packages/commands/src/model/use-register-commands.ts",
+        "packages/commands/src/types.ts",
+        "packages/commands/src/ui/command-palette.tsx",
+        "packages/commands/src/ui/command.tsx",
+        "packages/commands/src/ui/commands-provider.tsx"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": []
+    },
+    {
+      "name": "@camera-path/feature-anchors",
+      "kind": "feature",
+      "root": "packages/features/anchors",
+      "entrypoint": "packages/features/anchors/src/index.ts",
+      "files": [
+        "packages/features/anchors/src/index.ts",
+        "packages/features/anchors/src/lib/get-anchor-label.ts",
+        "packages/features/anchors/src/lib/get-anchor-tool-modifier.ts",
+        "packages/features/anchors/src/lib/get-world-y-axis-lift.ts",
+        "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
+        "packages/features/anchors/src/ports/use-active-editor-tool.tsx",
+        "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+        "packages/features/anchors/src/scene/anchor-height-editing-overlay.tsx",
+        "packages/features/anchors/src/scene/anchor-height-ruler.tsx",
+        "packages/features/anchors/src/scene/anchor-marker-content.tsx",
+        "packages/features/anchors/src/scene/anchor-marker.tsx",
+        "packages/features/anchors/src/scene/anchor-placement-constants.ts",
+        "packages/features/anchors/src/scene/anchor-placement-preview.tsx",
+        "packages/features/anchors/src/scene/scene.tsx",
+        "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
+        "packages/features/anchors/src/scene/use-anchor-placement.ts",
+        "packages/features/anchors/src/ui/anchor-tool-shortcut.tsx",
+        "packages/features/anchors/src/ui/hint.tsx",
+        "packages/features/anchors/src/ui/status.tsx"
+      ],
+      "slots": {
+        "project": {
+          "scene": [
+            {
+              "name": "AnchorsScene",
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 25,
+              "column": 1
+            }
+          ],
+          "hints": [
+            {
+              "name": "AnchorHint",
+              "file": "packages/features/anchors/src/ui/hint.tsx",
+              "line": 6,
+              "column": 1
+            }
+          ],
+          "headerStatus": [
+            {
+              "name": "AnchorStatus",
+              "file": "packages/features/anchors/src/ui/status.tsx",
+              "line": 6,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "createEditorActions.hoverObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 21,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 9,
+              "column": 17,
+              "expression": "useEditorActions().hoverObject"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 13,
+              "column": 26,
+              "expression": "hover"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 14,
+              "column": 6,
+              "expression": "hover"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 17,
+              "column": 26,
+              "expression": "hover"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 18,
+              "column": 6,
+              "expression": "hover"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.selectObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 23,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 10,
+              "column": 18,
+              "expression": "useEditorActions().selectObject"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 21,
+              "column": 26,
+              "expression": "select"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 22,
+              "column": 6,
+              "expression": "select"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 25,
+              "column": 26,
+              "expression": "select"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 26,
+              "column": 6,
+              "expression": "select"
+            }
+          ]
+        },
+        {
+          "name": "useAddAnchorMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/anchors/use-add-anchor.ts",
+            "line": 9,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 33,
+              "column": 15,
+              "expression": "useAddAnchorMutation"
+            }
+          ]
+        },
+        {
+          "name": "useDeleteAnchorMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-delete-anchor.ts",
+            "line": 10,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 35,
+              "column": 20,
+              "expression": "useDeleteAnchorMutation"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 9,
+              "column": 17,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 10,
+              "column": 18,
+              "expression": "useEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "useSetActiveEditorTool",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-set-active-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
+              "line": 11,
+              "column": 25,
+              "expression": "useSetActiveEditorTool"
+            },
+            {
+              "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
+              "line": 54,
+              "column": 25,
+              "expression": "useSetActiveEditorTool"
+            },
+            {
+              "file": "packages/features/anchors/src/scene/use-anchor-placement.ts",
+              "line": 21,
+              "column": 25,
+              "expression": "useSetActiveEditorTool"
+            }
+          ]
+        },
+        {
+          "name": "useUpdateAnchorMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/anchors/use-update-anchor.ts",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 34,
+              "column": 18,
+              "expression": "useUpdateAnchorMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAnchors",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-anchors.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 26,
+              "column": 17,
+              "expression": "useAnchors()"
+            },
+            {
+              "file": "packages/features/anchors/src/ui/status.tsx",
+              "line": 7,
+              "column": 17,
+              "expression": "useAnchors()"
+            }
+          ]
+        },
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 29,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/anchors/src/ui/hint.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCameraState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/scene/scene.tsx",
+              "line": 28,
+              "column": 16,
+              "expression": "useCameraState()"
+            },
+            {
+              "file": "packages/features/anchors/src/ui/hint.tsx",
+              "line": 8,
+              "column": 16,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
+              "line": 10,
+              "column": 26,
+              "expression": "useEditorTool()"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-active-editor-tool.tsx",
+              "line": 5,
+              "column": 10,
+              "expression": "useEditorTool()"
+            },
+            {
+              "file": "packages/features/anchors/src/ui/hint.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 8,
+              "column": 17,
+              "expression": "useSceneInteraction()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-appearance",
+      "kind": "feature",
+      "root": "packages/features/appearance",
+      "entrypoint": "packages/features/appearance/src/index.ts",
+      "files": [
+        "packages/features/appearance/src/index.ts",
+        "packages/features/appearance/src/ui/theme-toggle.tsx"
+      ],
+      "slots": {
+        "header": {
+          "controls": [
+            {
+              "name": "ThemeToggle",
+              "file": "packages/features/appearance/src/ui/theme-toggle.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [],
+      "selectors": []
+    },
+    {
+      "name": "@camera-path/feature-camera-aim",
+      "kind": "feature",
+      "root": "packages/features/camera-aim",
+      "entrypoint": "packages/features/camera-aim/src/index.ts",
+      "files": [
+        "packages/features/camera-aim/src/index.ts",
+        "packages/features/camera-aim/src/timeline/aim-keyframe-marker.tsx",
+        "packages/features/camera-aim/src/timeline/create-aim-track.tsx",
+        "packages/features/camera-aim/src/timeline/timeline.tsx"
+      ],
+      "slots": {
+        "timeline": {
+          "tracks": [
+            {
+              "name": "CameraAimTimeline",
+              "file": "packages/features/camera-aim/src/timeline/timeline.tsx",
+              "line": 11,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useDeleteCameraKeyframeMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-delete-camera-keyframe.ts",
+            "line": 8,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-aim/src/timeline/timeline.tsx",
+              "line": 14,
+              "column": 20,
+              "expression": "useDeleteCameraKeyframeMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-aim/src/timeline/timeline.tsx",
+              "line": 13,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-aim/src/timeline/timeline.tsx",
+              "line": 12,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useScenePoints",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-scene-points.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-aim/src/timeline/timeline.tsx",
+              "line": 15,
+              "column": 18,
+              "expression": "useScenePoints()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-camera-orientation",
+      "kind": "feature",
+      "root": "packages/features/camera-orientation",
+      "entrypoint": "packages/features/camera-orientation/src/index.ts",
+      "files": [
+        "packages/features/camera-orientation/src/index.ts",
+        "packages/features/camera-orientation/src/timeline/create-orientation-track.tsx",
+        "packages/features/camera-orientation/src/timeline/timeline.tsx"
+      ],
+      "slots": {
+        "timeline": {
+          "tracks": [
+            {
+              "name": "CameraOrientationTimeline",
+              "file": "packages/features/camera-orientation/src/timeline/timeline.tsx",
+              "line": 8,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useDeleteCameraOrientationKeyframeMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-delete-camera-orientation-keyframe.ts",
+            "line": 8,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-orientation/src/timeline/timeline.tsx",
+              "line": 11,
+              "column": 20,
+              "expression": "useDeleteCameraOrientationKeyframeMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-orientation/src/timeline/timeline.tsx",
+              "line": 10,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-orientation/src/timeline/timeline.tsx",
+              "line": 9,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-camera-view",
+      "kind": "feature",
+      "root": "packages/features/camera-view",
+      "entrypoint": "packages/features/camera-view/src/index.ts",
+      "files": [
+        "packages/features/camera-view/src/index.ts",
+        "packages/features/camera-view/src/lib/activate-trajectory-camera.ts",
+        "packages/features/camera-view/src/lib/apply-camera-view-offset.ts",
+        "packages/features/camera-view/src/lib/create-playback-camera-helper-segments.ts",
+        "packages/features/camera-view/src/lib/stop-orbit-controls-inertia.ts",
+        "packages/features/camera-view/src/ports/use-camera-mode.tsx",
+        "packages/features/camera-view/src/scene/camera-view-offset.tsx",
+        "packages/features/camera-view/src/scene/playback-camera.tsx",
+        "packages/features/camera-view/src/scene/scene.tsx",
+        "packages/features/camera-view/src/scene/trajectory-camera-control.tsx",
+        "packages/features/camera-view/src/scene/use-stop-orbit-controls-inertia.ts",
+        "packages/features/camera-view/src/ui/camera-mode-toggle.tsx",
+        "packages/features/camera-view/src/ui/toolbar.tsx"
+      ],
+      "slots": {
+        "project": {
+          "scene": [
+            {
+              "name": "CameraViewScene",
+              "file": "packages/features/camera-view/src/scene/scene.tsx",
+              "line": 15,
+              "column": 1
+            }
+          ],
+          "toolbar": [
+            {
+              "name": "CameraViewToolbar",
+              "file": "packages/features/camera-view/src/ui/toolbar.tsx",
+              "line": 6,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "createEditorActions.setCameraMode",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 25,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-view/src/ports/use-camera-mode.tsx",
+              "line": 7,
+              "column": 15,
+              "expression": "useEditorActions().setCameraMode"
+            },
+            {
+              "file": "packages/features/camera-view/src/ports/use-camera-mode.tsx",
+              "line": 8,
+              "column": 45,
+              "expression": "set"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-view/src/ports/use-camera-mode.tsx",
+              "line": 7,
+              "column": 15,
+              "expression": "useEditorActions"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-view/src/scene/scene.tsx",
+              "line": 16,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            },
+            {
+              "file": "packages/features/camera-view/src/ui/toolbar.tsx",
+              "line": 7,
+              "column": 17,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useCameraState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "packages/features/camera-view/src/ports/use-camera-mode.tsx",
+              "line": 6,
+              "column": 16,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
+          "usages": [
+            {
+              "file": "packages/features/camera-view/src/scene/scene.tsx",
+              "line": 18,
+              "column": 16,
+              "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "usePlaybackState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-playback-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["playback"],
+          "usages": [
+            {
+              "file": "packages/features/camera-view/src/scene/scene.tsx",
+              "line": 17,
+              "column": 20,
+              "expression": "usePlaybackState()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-chat-agent",
+      "kind": "feature",
+      "root": "packages/features/chat-agent",
+      "entrypoint": "packages/features/chat-agent/src/index.ts",
+      "files": [
+        "packages/features/chat-agent/src/index.ts",
+        "packages/features/chat-agent/src/model/use-chat-composer.ts",
+        "packages/features/chat-agent/src/ports/editor-only.tsx",
+        "packages/features/chat-agent/src/ui/anchor-reference-picker.tsx",
+        "packages/features/chat-agent/src/ui/auto-growing-textarea.tsx",
+        "packages/features/chat-agent/src/ui/chat-markdown-code-block.tsx",
+        "packages/features/chat-agent/src/ui/chat-markdown-link.tsx",
+        "packages/features/chat-agent/src/ui/chat-markdown-table.tsx",
+        "packages/features/chat-agent/src/ui/chat-markdown.tsx",
+        "packages/features/chat-agent/src/ui/chat-message.tsx",
+        "packages/features/chat-agent/src/ui/chat-panel.tsx",
+        "packages/features/chat-agent/src/ui/responsive-chat-panel.tsx",
+        "packages/features/chat-agent/src/ui/sidebar.tsx"
+      ],
+      "slots": {
+        "project": {
+          "sidebar": [
+            {
+              "name": "ChatSidebar",
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 9,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useSendChatMessageMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
+            "line": 16,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 13,
+              "column": 20,
+              "expression": "useSendChatMessageMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAnchors",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-anchors.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 11,
+              "column": 23,
+              "expression": "useAnchors()"
+            }
+          ]
+        },
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ports/editor-only.tsx",
+              "line": 12,
+              "column": 10,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 10,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useChatHistory",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-chat-history.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 12,
+              "column": 19,
+              "expression": "useChatHistory()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 19,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 13,
+              "column": 47,
+              "expression": "useProjectId()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-depth-of-field",
+      "kind": "feature",
+      "root": "packages/features/depth-of-field",
+      "entrypoint": "packages/features/depth-of-field/src/index.ts",
+      "files": [
+        "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+        "packages/features/depth-of-field/src/index.ts",
+        "packages/features/depth-of-field/src/scene/depth-of-field-focus-helper.tsx",
+        "packages/features/depth-of-field/src/scene/depth-of-field.tsx",
+        "packages/features/depth-of-field/src/scene/scene.tsx",
+        "packages/features/depth-of-field/src/timeline/create-depth-of-field-track.tsx",
+        "packages/features/depth-of-field/src/timeline/timeline.tsx"
+      ],
+      "slots": {
+        "project": {
+          "commands": [
+            {
+              "name": "AddDepthOfFieldCommand",
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 8,
+              "column": 1
+            }
+          ],
+          "scene": [
+            {
+              "name": "DepthOfFieldScene",
+              "file": "packages/features/depth-of-field/src/scene/scene.tsx",
+              "line": 10,
+              "column": 1
+            }
+          ]
+        },
+        "timeline": {
+          "tracks": [
+            {
+              "name": "DepthOfFieldTimeline",
+              "file": "packages/features/depth-of-field/src/timeline/timeline.tsx",
+              "line": 11,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useAddDepthOfFieldKeyframeMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
+            "line": 12,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 12,
+              "column": 20,
+              "expression": "useAddDepthOfFieldKeyframeMutation"
+            }
+          ]
+        },
+        {
+          "name": "useDeleteDepthOfFieldKeyframeMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-delete-depth-of-field-keyframe.ts",
+            "line": 8,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/timeline/timeline.tsx",
+              "line": 14,
+              "column": 20,
+              "expression": "useDeleteDepthOfFieldKeyframeMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 11,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/depth-of-field/src/timeline/timeline.tsx",
+              "line": 13,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/scene/scene.tsx",
+              "line": 11,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            },
+            {
+              "file": "packages/features/depth-of-field/src/timeline/timeline.tsx",
+              "line": 12,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useDepthOfFieldTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-depth-of-field-timeline.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 9,
+              "column": 20,
+              "expression": "useDepthOfFieldTimeline()"
+            }
+          ]
+        },
+        {
+          "name": "useScenePoints",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-scene-points.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/timeline/timeline.tsx",
+              "line": 15,
+              "column": 18,
+              "expression": "useScenePoints()"
+            }
+          ]
+        },
+        {
+          "name": "useCameraState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/scene/scene.tsx",
+              "line": 13,
+              "column": 16,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "usePlaybackState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-playback-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["playback"],
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "usePlaybackState()"
+            },
+            {
+              "file": "packages/features/depth-of-field/src/scene/scene.tsx",
+              "line": 12,
+              "column": 20,
+              "expression": "usePlaybackState()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-identity",
+      "kind": "feature",
+      "root": "packages/features/identity",
+      "entrypoint": "packages/features/identity/src/index.ts",
+      "files": [
+        "packages/features/identity/src/index.ts",
+        "packages/features/identity/src/ui/profile-control.tsx"
+      ],
+      "slots": {
+        "header": {
+          "controls": [
+            {
+              "name": "ProfileControl",
+              "file": "packages/features/identity/src/ui/profile-control.tsx",
+              "line": 8,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/identity/src/ui/profile-control.tsx",
+              "line": 9,
+              "column": 16,
+              "expression": "useAuth()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-library",
+      "kind": "feature",
+      "root": "packages/features/library",
+      "entrypoint": "packages/features/library/src/index.ts",
+      "files": [
+        "packages/features/library/src/index.ts",
+        "packages/features/library/src/ports/editor-only.tsx",
+        "packages/features/library/src/ui/content.tsx",
+        "packages/features/library/src/ui/details.tsx",
+        "packages/features/library/src/ui/library-asset-defaults.tsx",
+        "packages/features/library/src/ui/library-asset-details.tsx",
+        "packages/features/library/src/ui/library-asset-list.tsx",
+        "packages/features/library/src/ui/library-selection-actions.tsx",
+        "packages/features/library/src/ui/library-upload-form.tsx"
+      ],
+      "slots": {
+        "library": {
+          "content": [
+            {
+              "name": "LibraryContent",
+              "file": "packages/features/library/src/ui/content.tsx",
+              "line": 5,
+              "column": 1
+            }
+          ],
+          "details": [
+            {
+              "name": "LibraryDetails",
+              "file": "packages/features/library/src/ui/details.tsx",
+              "line": 4,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useDeleteLibraryAssetsMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/library/use-delete-library-assets.ts",
+            "line": 11,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/library/src/ui/library-asset-list.tsx",
+              "line": 15,
+              "column": 20,
+              "expression": "useDeleteLibraryAssetsMutation"
+            }
+          ]
+        },
+        {
+          "name": "useUpdateLibraryDefaultsMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-update-library-defaults-mutation.ts",
+            "line": 9,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/library/src/ui/library-asset-defaults.tsx",
+              "line": 18,
+              "column": 16,
+              "expression": "useUpdateLibraryDefaultsMutation"
+            }
+          ]
+        },
+        {
+          "name": "useUploadLibraryFileMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/library/use-upload-library-file.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/library/src/ui/library-upload-form.tsx",
+              "line": 9,
+              "column": 18,
+              "expression": "useUploadLibraryFileMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/library/src/ports/editor-only.tsx",
+              "line": 12,
+              "column": 10,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useLibraryAssetResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-library-asset-resource.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/library/src/ui/library-asset-details.tsx",
+              "line": 13,
+              "column": 17,
+              "expression": "useLibraryAssetResource(assetId)"
+            }
+          ]
+        },
+        {
+          "name": "useLibraryCatalog",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-library-catalog.ts",
+            "line": 3,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/library/src/ui/library-asset-list.tsx",
+              "line": 13,
+              "column": 19,
+              "expression": "useLibraryCatalog()"
+            }
+          ]
+        },
+        {
+          "name": "useAssetId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 27,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/features/library/src/ui/details.tsx",
+              "line": 5,
+              "column": 40,
+              "expression": "useAssetId()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-lidar",
+      "kind": "feature",
+      "root": "packages/features/lidar",
+      "entrypoint": "packages/features/lidar/src/index.ts",
+      "files": [
+        "packages/features/lidar/src/commands/add-lidar-command.tsx",
+        "packages/features/lidar/src/index.ts",
+        "packages/features/lidar/src/timeline/create-lidar-track.tsx",
+        "packages/features/lidar/src/timeline/timeline.tsx",
+        "packages/features/lidar/src/ui/lidar-cloud.tsx",
+        "packages/features/lidar/src/ui/scene.tsx"
+      ],
+      "slots": {
+        "project": {
+          "commands": [
+            {
+              "name": "AddLidarCommand",
+              "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ],
+          "scene": [
+            {
+              "name": "LidarScene",
+              "file": "packages/features/lidar/src/ui/scene.tsx",
+              "line": 8,
+              "column": 1
+            }
+          ]
+        },
+        "timeline": {
+          "tracks": [
+            {
+              "name": "LidarTimeline",
+              "file": "packages/features/lidar/src/timeline/timeline.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useSetLidarTimelineMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
+            "line": 11,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useSetLidarTimelineMutation"
+            },
+            {
+              "file": "packages/features/lidar/src/timeline/timeline.tsx",
+              "line": 9,
+              "column": 20,
+              "expression": "useSetLidarTimelineMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/lidar/src/ui/scene.tsx",
+              "line": 9,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useLidarTimelineResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-lidar-timeline-resource.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 8,
+              "column": 20,
+              "expression": "useLidarTimelineResource()"
+            },
+            {
+              "file": "packages/features/lidar/src/timeline/timeline.tsx",
+              "line": 8,
+              "column": 20,
+              "expression": "useLidarTimelineResource()"
+            },
+            {
+              "file": "packages/features/lidar/src/ui/scene.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useLidarTimelineResource()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-playback",
+      "kind": "feature",
+      "root": "packages/features/playback",
+      "entrypoint": "packages/features/playback/src/index.ts",
+      "files": [
+        "packages/features/playback/src/index.ts",
+        "packages/features/playback/src/model/use-trajectory-playback.ts",
+        "packages/features/playback/src/ui/controls.tsx",
+        "packages/features/playback/src/ui/playback-controls.tsx",
+        "packages/features/playback/src/ui/playback-loop.tsx",
+        "packages/features/playback/src/ui/trajectory-playback-loop.tsx"
+      ],
+      "slots": {
+        "project": {
+          "root": [
+            {
+              "name": "PlaybackLoop",
+              "file": "packages/features/playback/src/ui/playback-loop.tsx",
+              "line": 5,
+              "column": 1
+            }
+          ]
+        },
+        "timeline": {
+          "controls": [
+            {
+              "name": "PlaybackControls",
+              "file": "packages/features/playback/src/ui/controls.tsx",
+              "line": 9,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "createEditorActions.resetPlayback",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 51,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 13,
+              "column": 17,
+              "expression": "useEditorActions().resetPlayback"
+            },
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 35,
+              "column": 23,
+              "expression": "reset"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 26,
+              "column": 17,
+              "expression": "useEditorActions().resetPlayback"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 37,
+              "column": 10,
+              "expression": "reset"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 38,
+              "column": 7,
+              "expression": "reset"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.selectObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 23,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/ui/controls.tsx",
+              "line": 13,
+              "column": 18,
+              "expression": "useEditorActions().selectObject"
+            },
+            {
+              "file": "packages/features/playback/src/ui/controls.tsx",
+              "line": 19,
+              "column": 43,
+              "expression": "select"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.setPlaybackFrame",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 55,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 14,
+              "column": 17,
+              "expression": "useEditorActions().setPlaybackFrame"
+            },
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 25,
+              "column": 12,
+              "expression": "frame"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 27,
+              "column": 17,
+              "expression": "useEditorActions().setPlaybackFrame"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 50,
+              "column": 14,
+              "expression": "frame"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 54,
+              "column": 12,
+              "expression": "frame"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 63,
+              "column": 26,
+              "expression": "frame"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.setPlaying",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 65,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 16,
+              "column": 16,
+              "expression": "useEditorActions().setPlaying"
+            },
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 27,
+              "column": 10,
+              "expression": "play"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 28,
+              "column": 16,
+              "expression": "useEditorActions().setPlaying"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 51,
+              "column": 14,
+              "expression": "play"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 63,
+              "column": 33,
+              "expression": "play"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 13,
+              "column": 17,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 14,
+              "column": 17,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 16,
+              "column": 16,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/playback/src/ui/controls.tsx",
+              "line": 13,
+              "column": 18,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 26,
+              "column": 17,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 27,
+              "column": 17,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 28,
+              "column": 16,
+              "expression": "useEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "useSeekPlayback",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-seek-playback.ts",
+            "line": 8,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 15,
+              "column": 22,
+              "expression": "useSeekPlayback"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/playback/src/ui/controls.tsx",
+              "line": 10,
+              "column": 17,
+              "expression": "useCompiledTrajectoryResource()"
+            },
+            {
+              "file": "packages/features/playback/src/ui/playback-loop.tsx",
+              "line": 6,
+              "column": 17,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "usePlaybackState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-playback-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["playback"],
+          "usages": [
+            {
+              "file": "packages/features/playback/src/model/use-trajectory-playback.ts",
+              "line": 12,
+              "column": 46,
+              "expression": "usePlaybackState()"
+            },
+            {
+              "file": "packages/features/playback/src/ui/trajectory-playback-loop.tsx",
+              "line": 25,
+              "column": 32,
+              "expression": "usePlaybackState()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/playback/src/ui/controls.tsx",
+              "line": 12,
+              "column": 5,
+              "expression": "useSceneInteraction()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-projects",
+      "kind": "feature",
+      "root": "packages/features/projects",
+      "entrypoint": "packages/features/projects/src/index.ts",
+      "files": [
+        "packages/features/projects/src/index.ts",
+        "packages/features/projects/src/ports/editor-only.tsx",
+        "packages/features/projects/src/ui/content.tsx",
+        "packages/features/projects/src/ui/project-create-form.tsx",
+        "packages/features/projects/src/ui/project-list.tsx"
+      ],
+      "slots": {
+        "dashboard": {
+          "content": [
+            {
+              "name": "ProjectsContent",
+              "file": "packages/features/projects/src/ui/content.tsx",
+              "line": 10,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useCreateProjectMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/projects/use-create-project.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/projects/src/ui/content.tsx",
+              "line": 13,
+              "column": 18,
+              "expression": "useCreateProjectMutation"
+            }
+          ]
+        },
+        {
+          "name": "useDeleteProjectMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-delete-project.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/projects/src/ui/content.tsx",
+              "line": 14,
+              "column": 20,
+              "expression": "useDeleteProjectMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/projects/src/ports/editor-only.tsx",
+              "line": 12,
+              "column": 10,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/projects/src/ui/content.tsx",
+              "line": 12,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectsCatalog",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-projects-catalog.ts",
+            "line": 3,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/projects/src/ui/content.tsx",
+              "line": 11,
+              "column": 17,
+              "expression": "useProjectsCatalog()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-renderer-preferences",
+      "kind": "feature",
+      "root": "packages/features/renderer-preferences",
+      "entrypoint": "packages/features/renderer-preferences/src/index.ts",
+      "files": [
+        "packages/features/renderer-preferences/src/index.ts",
+        "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
+        "packages/features/renderer-preferences/src/ui/renderer-settings.tsx"
+      ],
+      "slots": {
+        "settings": {
+          "content": [
+            {
+              "name": "RendererSettings",
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 6,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "createUserSettingsActions.retry",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 121,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 35,
+              "column": 30,
+              "expression": "actions.retry"
+            }
+          ]
+        },
+        {
+          "name": "save",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 122,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
+              "line": 17,
+              "column": 11,
+              "expression": "actions.save"
+            },
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 17,
+              "column": 18,
+              "expression": "actions.save"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettingsActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+            "line": 18,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
+              "line": 7,
+              "column": 19,
+              "expression": "useUserSettingsActions"
+            },
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 8,
+              "column": 19,
+              "expression": "useUserSettingsActions"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useUserSettings",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-user-settings.ts",
+            "line": 4,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "packages/features/renderer-preferences/src/ui/gaussian-dpr-select.tsx",
+              "line": 6,
+              "column": 20,
+              "expression": "useUserSettings()"
+            },
+            {
+              "file": "packages/features/renderer-preferences/src/ui/renderer-settings.tsx",
+              "line": 7,
+              "column": 20,
+              "expression": "useUserSettings()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-scene-grid",
+      "kind": "feature",
+      "root": "packages/features/scene-grid",
+      "entrypoint": "packages/features/scene-grid/src/index.ts",
+      "files": [
+        "packages/features/scene-grid/src/index.ts",
+        "packages/features/scene-grid/src/scene/scene-grid.tsx",
+        "packages/features/scene-grid/src/scene/scene.tsx",
+        "packages/features/scene-grid/src/ui/grid-settings.tsx"
+      ],
+      "slots": {
+        "settings": {
+          "content": [
+            {
+              "name": "GridSettings",
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 5,
+              "column": 1
+            }
+          ]
+        },
+        "project": {
+          "scene": [
+            {
+              "name": "SceneGrid",
+              "file": "packages/features/scene-grid/src/scene/scene.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "save",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 122,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useUserSettingsActions().save"
+            },
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 14,
+              "column": 35,
+              "expression": "save"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettingsActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/user-settings-actions-provider.tsx",
+            "line": 18,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useUserSettingsActions"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useUserSettings",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-user-settings.ts",
+            "line": 4,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "packages/features/scene-grid/src/scene/scene.tsx",
+              "line": 8,
+              "column": 23,
+              "expression": "useUserSettings()"
+            },
+            {
+              "file": "packages/features/scene-grid/src/ui/grid-settings.tsx",
+              "line": 6,
+              "column": 20,
+              "expression": "useUserSettings()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-scene-models",
+      "kind": "feature",
+      "root": "packages/features/scene-models",
+      "entrypoint": "packages/features/scene-models/src/index.ts",
+      "files": [
+        "packages/features/scene-models/src/commands/add-cloud-command.tsx",
+        "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
+        "packages/features/scene-models/src/index.ts",
+        "packages/features/scene-models/src/lib/merge-surface-bounds.ts",
+        "packages/features/scene-models/src/lib/resolve-initial-scene-bounds.ts",
+        "packages/features/scene-models/src/lib/update-loading-ring-angle.ts",
+        "packages/features/scene-models/src/scene/cloud-loading-ring.tsx",
+        "packages/features/scene-models/src/scene/create-placement-preview-cloud.ts",
+        "packages/features/scene-models/src/scene/project-cloud-surface.tsx",
+        "packages/features/scene-models/src/scene/scene-clouds.tsx",
+        "packages/features/scene-models/src/scene/scene.tsx",
+        "packages/features/scene-models/src/scene/transform-project-cloud-bounds.ts",
+        "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
+        "packages/features/scene-models/src/scene/use-cloud-placement-raycast.ts",
+        "packages/features/scene-models/src/ui/hint.tsx"
+      ],
+      "slots": {
+        "project": {
+          "scene": [
+            {
+              "name": "SceneModels",
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 28,
+              "column": 1
+            }
+          ],
+          "hints": [
+            {
+              "name": "CloudPlacementHint",
+              "file": "packages/features/scene-models/src/ui/hint.tsx",
+              "line": 6,
+              "column": 1
+            }
+          ],
+          "commands": [
+            {
+              "name": "AddCloudCommand",
+              "file": "packages/features/scene-models/src/commands/add-cloud-command.tsx",
+              "line": 8,
+              "column": 1
+            },
+            {
+              "name": "RemoveCloudCommand",
+              "file": "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
+              "line": 9,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useCloudPlacement.cancel",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-cloud-placement.ts",
+            "line": 10,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
+              "line": 90,
+              "column": 7,
+              "expression": "cancel"
+            }
+          ]
+        },
+        {
+          "name": "useCloudPlacement.start",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-cloud-placement.ts",
+            "line": 9,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/add-cloud-command.tsx",
+              "line": 24,
+              "column": 9,
+              "expression": "placement.start"
+            }
+          ]
+        },
+        {
+          "name": "useCloudPlacement",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-cloud-placement.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/add-cloud-command.tsx",
+              "line": 11,
+              "column": 21,
+              "expression": "useCloudPlacement"
+            },
+            {
+              "file": "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
+              "line": 30,
+              "column": 36,
+              "expression": "useCloudPlacement"
+            }
+          ]
+        },
+        {
+          "name": "useProjectCloudActionMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+            "line": 19,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
+              "line": 13,
+              "column": 19,
+              "expression": "useProjectCloudActionMutation"
+            },
+            {
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 37,
+              "column": 18,
+              "expression": "useProjectCloudActionMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/add-cloud-command.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
+              "line": 10,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 31,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/hint.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useLibraryCatalog",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-library-catalog.ts",
+            "line": 3,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/add-cloud-command.tsx",
+              "line": 10,
+              "column": 19,
+              "expression": "useLibraryCatalog()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneModels",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-scene-models.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
+              "line": 12,
+              "column": 25,
+              "expression": "useSceneModels(projectId)"
+            },
+            {
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 29,
+              "column": 17,
+              "expression": "useSceneModels()"
+            }
+          ]
+        },
+        {
+          "name": "useCameraState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 32,
+              "column": 16,
+              "expression": "useCameraState()"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/hint.tsx",
+              "line": 8,
+              "column": 16,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 33,
+              "column": 16,
+              "expression": "useEditorTool()"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/hint.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 19,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
+              "line": 11,
+              "column": 21,
+              "expression": "useProjectId()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-speed-track",
+      "kind": "feature",
+      "root": "packages/features/speed-track",
+      "entrypoint": "packages/features/speed-track/src/index.ts",
+      "files": [
+        "packages/features/speed-track/src/index.ts",
+        "packages/features/speed-track/src/ports/editor-only.tsx",
+        "packages/features/speed-track/src/timeline/timeline.tsx",
+        "packages/features/speed-track/src/ui/speed-graph.tsx"
+      ],
+      "slots": {
+        "timeline": {
+          "tracks": [
+            {
+              "name": "SpeedTimeline",
+              "file": "packages/features/speed-track/src/timeline/timeline.tsx",
+              "line": 8,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useDeleteSpeedKeyframeMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-delete-speed-keyframe.ts",
+            "line": 8,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/speed-track/src/timeline/timeline.tsx",
+              "line": 12,
+              "column": 20,
+              "expression": "useDeleteSpeedKeyframeMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/speed-track/src/ports/editor-only.tsx",
+              "line": 12,
+              "column": 10,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/speed-track/src/timeline/timeline.tsx",
+              "line": 11,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/speed-track/src/timeline/timeline.tsx",
+              "line": 9,
+              "column": 22,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "usePlaybackState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-playback-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["playback"],
+          "usages": [
+            {
+              "file": "packages/features/speed-track/src/timeline/timeline.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "usePlaybackState()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-trajectory",
+      "kind": "feature",
+      "root": "packages/features/trajectory",
+      "entrypoint": "packages/features/trajectory/src/index.ts",
+      "files": [
+        "packages/features/trajectory/src/index.ts",
+        "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+        "packages/features/trajectory/src/scene/scene.tsx",
+        "packages/features/trajectory/src/scene/trajectory-line.tsx",
+        "packages/features/trajectory/src/ui/status.tsx"
+      ],
+      "slots": {
+        "project": {
+          "scene": [
+            {
+              "name": "TrajectoryScene",
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 19,
+              "column": 1
+            }
+          ],
+          "headerStatus": [
+            {
+              "name": "TrajectoryStatus",
+              "file": "packages/features/trajectory/src/ui/status.tsx",
+              "line": 6,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "createEditorActions.hoverObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 21,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 9,
+              "column": 17,
+              "expression": "useEditorActions().hoverObject"
+            },
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 12,
+              "column": 16,
+              "expression": "hover"
+            },
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 13,
+              "column": 6,
+              "expression": "hover"
+            },
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 16,
+              "column": 16,
+              "expression": "hover"
+            },
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 17,
+              "column": 6,
+              "expression": "hover"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.selectObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 23,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 27,
+              "column": 18,
+              "expression": "useEditorActions().selectObject"
+            },
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 52,
+              "column": 28,
+              "expression": "select"
+            }
+          ]
+        },
+        {
+          "name": "useClearTrajectoryMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+            "line": 11,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 28,
+              "column": 20,
+              "expression": "useClearTrajectoryMutation"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 9,
+              "column": 17,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 27,
+              "column": 18,
+              "expression": "useEditorActions"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 26,
+              "column": 19,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 20,
+              "column": 17,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useTrajectoryGeometry",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-trajectory-geometry.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/ui/status.tsx",
+              "line": 7,
+              "column": 17,
+              "expression": "useTrajectoryGeometry()"
+            }
+          ]
+        },
+        {
+          "name": "useCameraState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 22,
+              "column": 16,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 23,
+              "column": 16,
+              "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
+              "line": 8,
+              "column": 17,
+              "expression": "useSceneInteraction()"
+            },
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 25,
+              "column": 5,
+              "expression": "useSceneInteraction()"
+            },
+            {
+              "file": "packages/features/trajectory/src/scene/scene.tsx",
+              "line": 38,
+              "column": 19,
+              "expression": "useSceneInteraction()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/host",
+      "kind": "host",
+      "root": "apps/host",
+      "entrypoint": null,
+      "files": [
+        "apps/host/src/composition/feature-slots.ts",
+        "apps/host/src/providers/application-ui.tsx",
+        "apps/host/src/providers/project-providers.tsx",
+        "apps/host/src/providers/user-settings-provider.tsx",
+        "apps/host/src/server/proxy-api-request.ts",
+        "apps/host/src/testing/editor-host.tsx",
+        "apps/host/src/ui/commands/workspace-commands.tsx",
+        "apps/host/src/ui/header/auth-control.tsx",
+        "apps/host/src/ui/header/index.ts",
+        "apps/host/src/ui/header/settings-menu.tsx",
+        "apps/host/src/ui/project-list/index.ts",
+        "apps/host/src/ui/project-list/ui/project-list-page.tsx",
+        "apps/host/src/ui/project-workspace/index.ts",
+        "apps/host/src/ui/project-workspace/ui/project-header.tsx",
+        "apps/host/src/ui/project-workspace/ui/project-scene.tsx",
+        "apps/host/src/ui/project-workspace/ui/project-workspace.tsx",
+        "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
+        "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+        "apps/host/src/ui/project-workspace/ui/use-element-height.ts",
+        "apps/host/src/ui/scene-editor/index.ts",
+        "apps/host/src/ui/scene-editor/lib/is-gaussian-surface-pick-active.ts",
+        "apps/host/src/ui/scene-editor/ui/frame-surface.ts",
+        "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+        "apps/host/src/ui/scene-editor/ui/scene-message.tsx",
+        "apps/host/src/ui/scene-editor/ui/scene-viewport-frame.tsx",
+        "apps/host/src/ui/scene-editor/ui/scene-viewport-types.ts",
+        "apps/host/src/ui/scene-editor/ui/scene-viewport.tsx",
+        "apps/host/src/ui/scene-editor/ui/scene-webgpu-viewport.tsx",
+        "apps/host/src/ui/scene-editor/ui/use-webgpu-availability.ts",
+        "src/app/api/v1/[...path]/route.ts",
+        "src/app/layout.tsx",
+        "src/app/library/[assetId]/page.tsx",
+        "src/app/library/page.tsx",
+        "src/app/page.tsx",
+        "src/app/projects/[projectId]/page.tsx",
+        "src/app/projects/[projectId]/viewer/page.tsx",
+        "src/app/providers/app-providers.tsx",
+        "src/app/providers/index.ts"
+      ],
+      "slots": {},
+      "actions": [
+        {
+          "name": "createEditorActions.hoverObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 21,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
+              "line": 19,
+              "column": 34,
+              "expression": "actions.hoverObject"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.selectObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 23,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
+              "line": 21,
+              "column": 39,
+              "expression": "actions.selectObject"
+            },
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 17,
+              "column": 18,
+              "expression": "useEditorActions().selectObject"
+            },
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 37,
+              "column": 24,
+              "expression": "select"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/project-providers.tsx",
+              "line": 21,
+              "column": 36,
+              "expression": "createEditorActions"
+            },
+            {
+              "file": "apps/host/src/testing/editor-host.tsx",
+              "line": 33,
+              "column": 36,
+              "expression": "createEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "createUserSettingsActions.cancel",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 131,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 23,
+              "column": 12,
+              "expression": "actions.cancel"
+            }
+          ]
+        },
+        {
+          "name": "createUserSettingsActions.setCanEdit",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 123,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 19,
+              "column": 5,
+              "expression": "actions.setCanEdit"
+            }
+          ]
+        },
+        {
+          "name": "createUserSettingsActions",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 16,
+              "column": 36,
+              "expression": "createUserSettingsActions"
+            },
+            {
+              "file": "apps/host/src/testing/editor-host.tsx",
+              "line": 30,
+              "column": 5,
+              "expression": "createUserSettingsActions"
+            }
+          ]
+        },
+        {
+          "name": "load",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/user-settings/create-user-settings-actions.ts",
+            "line": 120,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 22,
+              "column": 10,
+              "expression": "actions.load"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
+              "line": 13,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 17,
+              "column": 18,
+              "expression": "useEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "useSeekPlayback",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/use-seek-playback.ts",
+            "line": 8,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 18,
+              "column": 16,
+              "expression": "useSeekPlayback"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/providers/application-ui.tsx",
+              "line": 7,
+              "column": 33,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "apps/host/src/providers/user-settings-provider.tsx",
+              "line": 17,
+              "column": 23,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryQuery",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/project/use-compiled-trajectory-query.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/project-workspace.tsx",
+              "line": 22,
+              "column": 27,
+              "expression": "useCompiledTrajectoryQuery(projectId)"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+              "line": 35,
+              "column": 17,
+              "expression": "useCompiledTrajectoryQuery(useProjectId())"
+            }
+          ]
+        },
+        {
+          "name": "useCompiledTrajectoryResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-compiled-trajectory-resource.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 13,
+              "column": 17,
+              "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectQuery",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/project/use-project-query.ts",
+            "line": 20,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/project-workspace.tsx",
+              "line": 21,
+              "column": 24,
+              "expression": "useProjectQuery(projectId)"
+            }
+          ]
+        },
+        {
+          "name": "useCameraState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-camera-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["camera"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+              "line": 34,
+              "column": 23,
+              "expression": "useCameraState()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorTool",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-editor-tool.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["tool"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
+              "line": 12,
+              "column": 16,
+              "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "usePlaybackState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-playback-state.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["playback"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 14,
+              "column": 20,
+              "expression": "usePlaybackState()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 19,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+              "line": 35,
+              "column": 44,
+              "expression": "useProjectId()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
+              "line": 16,
+              "column": 5,
+              "expression": "useSceneInteraction()"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettings",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-user-settings.ts",
+            "line": 4,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "apps/host/src/ui/project-workspace/ui/project-workspace.tsx",
+              "line": 20,
+              "column": 60,
+              "expression": "useUserSettings()"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+              "line": 33,
+              "column": 27,
+              "expression": "useUserSettings()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/render-pipeline",
+      "kind": "shared",
+      "root": "packages/render-pipeline",
+      "entrypoint": "packages/render-pipeline/src/index.ts",
+      "files": [
+        "packages/render-pipeline/src/composite-depth-tested-premultiplied-over.ts",
+        "packages/render-pipeline/src/composite-premultiplied-over.ts",
+        "packages/render-pipeline/src/configure-interactive-raycaster-layers.ts",
+        "packages/render-pipeline/src/create-perspective-view-depth-node.ts",
+        "packages/render-pipeline/src/create-render-pipeline-events.ts",
+        "packages/render-pipeline/src/create-webgpu-renderer.ts",
+        "packages/render-pipeline/src/index.ts",
+        "packages/render-pipeline/src/render-pipeline-canvas.tsx",
+        "packages/render-pipeline/src/render-pipeline-provider.tsx",
+        "packages/render-pipeline/src/render-pipeline-scene-layers.ts",
+        "packages/render-pipeline/src/render-pipeline-types.ts",
+        "packages/render-pipeline/src/sort-render-pipeline-intersections.ts"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": []
+    },
+    {
+      "name": "@camera-path/scene-runtime",
+      "kind": "shared",
+      "root": "packages/scene-runtime",
+      "entrypoint": null,
+      "files": [
+        "packages/scene-runtime/src/picking/raycast-placement-surfaces.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-hit-kernel.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-hit-node.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-projection-node.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-ray-node.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-tile-raster-depth-nodes.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/download-gaussian-cloud.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/get-gaussian-resolution-scale.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/install-webgpu-draw-diagnostics.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/logging-gaussian-backend.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/test-helpers/build-compute-node.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/test-helpers/build-compute.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/test-helpers/execute-compute.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-gaussian-cloud-instance.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-gaussian-highlight-volume.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-gaussian-lidar.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-lidar-frame-node.ts",
+        "packages/scene-runtime/src/surface/adapters/spark/spark-gaussian-cloud-instance.ts",
+        "packages/scene-runtime/src/surface/adapters/spark/spark-gaussian-rendering-backend.ts",
+        "packages/scene-runtime/src/surface/index.ts",
+        "packages/scene-runtime/src/surface/model/enable-additional-object-layers.ts",
+        "packages/scene-runtime/src/surface/model/gaussian-cloud-load-progress.ts",
+        "packages/scene-runtime/src/surface/model/gaussian-cloud-resource-cache.ts",
+        "packages/scene-runtime/src/surface/model/gaussian-dpr-mode.ts",
+        "packages/scene-runtime/src/surface/model/gaussian-lidar.ts",
+        "packages/scene-runtime/src/surface/model/gaussian-rendering-backend.ts",
+        "packages/scene-runtime/src/surface/model/scene-surface-types.ts",
+        "packages/scene-runtime/src/surface/ui/gaussian-highlight-volume.tsx",
+        "packages/scene-runtime/src/surface/ui/scene-surface-provider.tsx",
+        "packages/scene-runtime/src/surface/ui/scene-surface.tsx",
+        "packages/scene-runtime/src/surface/ui/use-gaussian-cloud.ts",
+        "packages/scene-runtime/src/surface/ui/use-gaussian-rendering-backend.ts",
+        "packages/scene-runtime/src/three/center-weighted-autofocus-pattern.ts",
+        "packages/scene-runtime/src/three/create-screen-space-line-geometry.ts",
+        "packages/scene-runtime/src/three/create-webgpu-screen-space-line.ts",
+        "packages/scene-runtime/src/three/for-each-center-weighted-autofocus-ray.ts",
+        "packages/scene-runtime/src/three/get-camera-forward-ndc.ts",
+        "packages/scene-runtime/src/three/get-line2-raycast-threshold.ts",
+        "packages/scene-runtime/src/three/index.ts",
+        "packages/scene-runtime/src/three/normalize-screen-space-line-points.ts",
+        "packages/scene-runtime/src/three/screen-space-line.tsx",
+        "packages/scene-runtime/src/three/surface-target-ring.tsx",
+        "packages/scene-runtime/src/three/webgl-screen-space-line.tsx",
+        "packages/scene-runtime/src/three/webgpu-screen-space-line.tsx",
+        "packages/scene-runtime/src/three/weighted-median-focus-distance.ts",
+        "packages/scene-runtime/src/viewport/scene-events.ts",
+        "packages/scene-runtime/src/viewport/scene-services-provider.tsx",
+        "packages/scene-runtime/src/viewport/trajectory-pose-provider.tsx",
+        "packages/scene-runtime/src/viewport/use-scene-event.ts",
+        "packages/scene-runtime/src/viewport/use-surface-events.ts",
+        "packages/scene-runtime/src/viewport/viewport-provider.tsx"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": [
+        {
+          "name": "useEditorStoreApi",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/store-provider.tsx",
+            "line": 16,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/scene-runtime/src/viewport/trajectory-pose-provider.tsx",
+              "line": 28,
+              "column": 17,
+              "expression": "useEditorStoreApi()"
+            }
+          ]
+        },
+        {
+          "name": "getState",
+          "kind": "store-snapshot",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/editor-store.ts",
+            "line": 7,
+            "column": 1
+          },
+          "statePaths": ["playback.pathPosition"],
+          "usages": [
+            {
+              "file": "packages/scene-runtime/src/viewport/trajectory-pose-provider.tsx",
+              "line": 37,
+              "column": 7,
+              "expression": "store.getState().playback.pathPosition"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/slots",
+      "kind": "shared",
+      "root": "packages/slots",
+      "entrypoint": "packages/slots/src/index.ts",
+      "files": [
+        "packages/slots/src/feature-slots.ts",
+        "packages/slots/src/index.ts",
+        "packages/slots/src/slot-provider.tsx",
+        "packages/slots/src/slot.tsx"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": []
+    },
+    {
+      "name": "@camera-path/store",
+      "kind": "shared",
+      "root": "packages/store",
+      "entrypoint": "packages/store/src/index.ts",
+      "files": [
+        "packages/store/src/editor-store.ts",
+        "packages/store/src/index.ts",
+        "packages/store/src/resource-scope-provider.tsx",
+        "packages/store/src/store-provider.tsx",
+        "packages/store/src/use-camera-state.ts",
+        "packages/store/src/use-editor-tool.ts",
+        "packages/store/src/use-playback-state.ts",
+        "packages/store/src/use-scene-interaction.ts",
+        "packages/store/src/use-user-settings.ts",
+        "packages/store/src/user-settings-store-provider.tsx",
+        "packages/store/src/user-settings-store.ts"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": [
+        {
+          "name": "useEditorStoreApi",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/store-provider.tsx",
+            "line": 16,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/store/src/store-provider.tsx",
+              "line": 22,
+              "column": 19,
+              "expression": "useEditorStoreApi()"
+            }
+          ]
+        },
+        {
+          "name": "useEditorStore",
+          "kind": "store-selector",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/store-provider.tsx",
+            "line": 21,
+            "column": 1
+          },
+          "statePaths": ["camera", "playback", "sceneInteraction", "tool"],
+          "usages": [
+            {
+              "file": "packages/store/src/use-camera-state.ts",
+              "line": 4,
+              "column": 10,
+              "expression": "useEditorStore((s) => s.camera)"
+            },
+            {
+              "file": "packages/store/src/use-editor-tool.ts",
+              "line": 4,
+              "column": 10,
+              "expression": "useEditorStore((s) => s.tool)"
+            },
+            {
+              "file": "packages/store/src/use-playback-state.ts",
+              "line": 4,
+              "column": 10,
+              "expression": "useEditorStore((s) => s.playback)"
+            },
+            {
+              "file": "packages/store/src/use-scene-interaction.ts",
+              "line": 4,
+              "column": 10,
+              "expression": "useEditorStore((s) => s.sceneInteraction)"
+            }
+          ]
+        },
+        {
+          "name": "useUserSettingsStore",
+          "kind": "store-selector",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/user-settings-store-provider.tsx",
+            "line": 22,
+            "column": 1
+          },
+          "statePaths": ["userSettings"],
+          "usages": [
+            {
+              "file": "packages/store/src/use-user-settings.ts",
+              "line": 5,
+              "column": 10,
+              "expression": "useUserSettingsStore((state) => state.userSettings)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/trajectory-math",
+      "kind": "shared",
+      "root": "packages/trajectory-math",
+      "entrypoint": "packages/trajectory-math/src/index.ts",
+      "files": [
+        "packages/trajectory-math/src/index.ts",
+        "packages/trajectory-math/src/lib/aim-direction.ts",
+        "packages/trajectory-math/src/lib/create-playback-table.ts",
+        "packages/trajectory-math/src/lib/evaluate-aim.ts",
+        "packages/trajectory-math/src/lib/evaluate-bezier-tangent.ts",
+        "packages/trajectory-math/src/lib/evaluate-bezier.ts",
+        "packages/trajectory-math/src/lib/evaluate-camera-orientation.ts",
+        "packages/trajectory-math/src/lib/evaluate-depth-of-field-keyframe.ts",
+        "packages/trajectory-math/src/lib/evaluate-speed.ts",
+        "packages/trajectory-math/src/lib/evaluate-trajectory-camera-pose.ts",
+        "packages/trajectory-math/src/lib/get-aim-label.ts",
+        "packages/trajectory-math/src/lib/interpolation-weight.ts",
+        "packages/trajectory-math/src/lib/locate-on-path.ts",
+        "packages/trajectory-math/src/lib/path-position-at-time.ts",
+        "packages/trajectory-math/src/lib/sample-trajectory.ts",
+        "packages/trajectory-math/src/lib/speed-controls.ts",
+        "packages/trajectory-math/src/lib/time-at-path-position.ts"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": []
+    },
+    {
+      "name": "@camera-path/types",
+      "kind": "shared",
+      "root": "packages/types",
+      "entrypoint": "packages/types/src/index.ts",
+      "files": [
+        "packages/types/src/anchor-object-id.ts",
+        "packages/types/src/editor-state.ts",
+        "packages/types/src/gpu-views.ts",
+        "packages/types/src/index.ts",
+        "packages/types/src/path-position.ts",
+        "packages/types/src/project.ts",
+        "packages/types/src/scene-object-id.ts",
+        "packages/types/src/scene-object-update.ts",
+        "packages/types/src/timeline-track.ts",
+        "packages/types/src/timeline-views.ts",
+        "packages/types/src/trajectory-object-id.ts",
+        "packages/types/src/trajectory.ts"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": []
+    },
+    {
+      "name": "@camera-path/ui-kit",
+      "kind": "shared",
+      "root": "packages/ui-kit",
+      "entrypoint": "packages/ui-kit/src/index.ts",
+      "files": [
+        "packages/ui-kit/src/badge.tsx",
+        "packages/ui-kit/src/button.tsx",
+        "packages/ui-kit/src/card.tsx",
+        "packages/ui-kit/src/checkbox.tsx",
+        "packages/ui-kit/src/confirmation-dialog.tsx",
+        "packages/ui-kit/src/context-menu.tsx",
+        "packages/ui-kit/src/dropdown-menu.tsx",
+        "packages/ui-kit/src/editable-provider.tsx",
+        "packages/ui-kit/src/index.ts",
+        "packages/ui-kit/src/input.tsx",
+        "packages/ui-kit/src/lib/cn.ts",
+        "packages/ui-kit/src/lib/use-pointer-tap.ts",
+        "packages/ui-kit/src/modal.tsx",
+        "packages/ui-kit/src/separator.tsx",
+        "packages/ui-kit/src/textarea.tsx",
+        "packages/ui-kit/src/theme/theme-provider.tsx",
+        "packages/ui-kit/src/timeline/graph-layout.ts",
+        "packages/ui-kit/src/timeline/key-lane-track.tsx",
+        "packages/ui-kit/src/timeline/keyframe-timeline.tsx",
+        "packages/ui-kit/src/timeline/path-position-from-client-x.ts",
+        "packages/ui-kit/src/timeline/timeline-lane.tsx",
+        "packages/ui-kit/src/timeline/timeline-stack.tsx",
+        "packages/ui-kit/src/timeline/timeline-track-header.tsx",
+        "packages/ui-kit/src/z-order.ts"
+      ],
+      "slots": {},
+      "actions": [],
+      "selectors": []
+    }
+  ],
+  "diagnostics": []
+}

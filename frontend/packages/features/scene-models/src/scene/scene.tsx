@@ -1,7 +1,7 @@
 "use client";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useSceneModels } from "@camera-path/api/resources";
-import { useCameraModeValue, useEditorTool } from "@camera-path/store";
+import { useCameraState, useEditorTool } from "@camera-path/store";
 
 import { useProjectCloudActionMutation } from "@camera-path/actions";
 import type { SceneSurfaceReady } from "@camera-path/scene-runtime/surface";
@@ -29,7 +29,7 @@ export function SceneModels() {
   const query = useSceneModels();
   const clouds = query.data?.data ?? EMPTY;
   const canEdit = useAuth().canEdit;
-  const mode = useCameraModeValue();
+  const mode = useCameraState().cameraMode;
   const tool = useEditorTool();
   const services = useSceneServices();
   const viewport = useViewportServices();

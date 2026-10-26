@@ -178,6 +178,13 @@ hits, anchors обрабатывает их. Это связь с нейтрал
 построенную траекторию. Scope проекта задаётся provider и проверяется при явном ID.
 Ключ страницы по project ID создаёт новый store/actions при переходе к другому проекту.
 
+## Карта модулей
+
+`npm run modules:scan` строит `docs/frontend-modules.json`: дерево слотов каждого
+workspace и используемые actions/селекторы с исходными файлами и строками. Анализ использует
+TypeScript AST и type checker. Формат и ограничения описаны в [frontend-module-map.md](frontend-module-map.md).
+`npm run modules:check` проверяет актуальность отчёта в CI.
+
 ## Проверки
 
 `npm run boundaries:check` анализирует статические, type-only, re-export, dynamic и require imports,
@@ -193,6 +200,7 @@ Host может импортировать только объекты `slots` �
 npm ci
 npm run api:check
 npm run boundaries:check
+npm run modules:check
 npm run typecheck
 npm run lint
 npm test
@@ -203,3 +211,35 @@ npm run format:check
 Начать ревью: `store/src/editor-store.ts`, `actions/src/create-editor-actions.ts`,
 `api/src/resources`, `slots/src/feature-slots.ts`, затем `apps/host/src/composition/feature-slots.ts`,
 `apps/host/src/providers` и публичные `features/*/src/index.ts`.
+
+## Чтение editor state
+
+Фичи получают только разделы через `useCameraState()` (`camera`),
+`usePlaybackState()` (`playback`), `useEditorTool()` (`tool`) и
+`useSceneInteraction()` (`sceneInteraction`). Хуки подписываются на соответствующий
+раздел Zustand; обновление другого раздела не вызывает перерисовку подписчика.
+`useProjectId` и `useAssetId` остаются хуками resource scope.
+
+Фичи не импортируют `useEditorStoreApi`, общий `useEditorStore`, `EditorState`,
+создание стора или внутренние пути store-пакета. `boundaries:check` проверяет
+эту границу по AST, включая алиасы и namespace/dynamic imports. Сам store и его
+императивный API остаются деталями общей инфраструктуры; изменения выполняют actions.
+Обработчики, установленные эффектом, читают актуальные значения хуков через
+React `useEffectEvent`, сохраняя время жизни подписки. Playback считывает elapsed
+при запуске сессии и ведёт локальный счётчик кадров, не перезапуская RAF на каждом кадре.
+
+## Пользовательские настройки
+
+`useUserSettings()` из `@camera-path/store` возвращает только данные и статус
+настроек. `useUserSettingsActions()` из `@camera-path/actions` предоставляет
+`save(changes)` и `retry()`. Фичи не используют API hooks для пользовательских
+настроек и не получают методы изменения из selector hooks.
+
+Хост создаёт один `createUserSettingsStore()` и один `createUserSettingsActions(store)`
+на всё приложение в `apps/host/src/providers/user-settings-provider.tsx`, выше project
+providers. Смена проекта не сбрасывает настройки. Actions загружают значения через
+HTTP client из API, восстанавливают localStorage, сохраняют изменения и обновляют
+Zustand. У API больше нет settings provider или дополнительной копии этих данных
+в query cache. Переключение рендерера сохраняет предпочтение и перезагружает документ,
+не переключая существующий Canvas на лету. Ответы старой сессии не перезаписывают
+новые настройки гостя.

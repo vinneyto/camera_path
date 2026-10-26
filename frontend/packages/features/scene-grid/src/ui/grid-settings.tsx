@@ -1,9 +1,10 @@
 "use client";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettingsActions } from "@camera-path/actions";
+import { useUserSettings } from "@camera-path/store";
 
 export function GridSettings() {
   const settings = useUserSettings();
-  const save = useUserSettings().save;
+  const save = useUserSettingsActions().save;
   return (
     <label className="flex items-center gap-2 text-xs">
       <input

@@ -1,10 +1,10 @@
 "use client";
 import { useEditorActions } from "@camera-path/actions";
-import { useEditorStoreApi, usePlaybackState } from "@camera-path/store";
+import { usePlaybackState } from "@camera-path/store";
 
 import type { PlaybackTrajectory } from "@camera-path/types/timeline-views";
 
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 import {
   createPlaybackTable,
@@ -22,11 +22,13 @@ export function TrajectoryPlaybackLoop({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const table = trajectory ? createPlaybackTable(trajectory) : [];
   const duration = table.at(-1)?.time ?? 0;
-  const playing = usePlaybackState().playing;
+  const { playing, elapsed } = usePlaybackState();
   const reset = useEditorActions().resetPlayback;
   const frame = useEditorActions().setPlaybackFrame;
   const play = useEditorActions().setPlaying;
-  const store = useEditorStoreApi();
+  // Read the subscribed elapsed value when a playback session starts, without
+  // restarting its RAF loop after every frame update.
+  const onPlaybackStart = useEffectEvent(() => elapsed);
   const trajectoryKey = trajectory
     ? `${trajectory.project_id}:${trajectory.revision}`
     : null;
@@ -39,7 +41,7 @@ export function TrajectoryPlaybackLoop({
     if (!playing || duration <= 0) return;
     let animationFrame = 0;
     let previous = performance.now();
-    let currentElapsed = store.getState().playback.elapsed;
+    let currentElapsed = onPlaybackStart();
 
     function animate(now: number) {
       currentElapsed += (now - previous) / 1000;
@@ -58,7 +60,7 @@ export function TrajectoryPlaybackLoop({
 
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
-  }, [duration, playing, frame, play, store, table]);
+  }, [duration, playing, frame, play, table]);
 
   return null;
 }

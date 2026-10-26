@@ -1,8 +1,10 @@
 "use client";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettingsActions } from "@camera-path/actions";
+import { useUserSettings } from "@camera-path/store";
 
 export function GaussianDprSelect() {
   const settings = useUserSettings();
+  const actions = useUserSettingsActions();
 
   return (
     <label className="flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-[10px] text-muted-foreground">
@@ -12,7 +14,7 @@ export function GaussianDprSelect() {
         className="bg-transparent text-[10px] font-medium text-foreground outline-none"
         disabled={!settings.ready || settings.saving}
         onChange={(event) =>
-          settings.save({
+          actions.save({
             gaussian_dpr: event.target.value === "system" ? "system" : "1x",
           })
         }

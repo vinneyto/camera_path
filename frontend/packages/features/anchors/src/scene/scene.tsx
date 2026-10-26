@@ -2,7 +2,7 @@
 import { useDeleteAnchorMutation } from "@camera-path/actions";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useAnchors } from "@camera-path/api/resources";
-import { useCameraModeValue } from "@camera-path/store";
+import { useCameraState } from "@camera-path/store";
 
 import {
   useAddAnchorMutation,
@@ -25,7 +25,7 @@ const EMPTY: Anchor[] = [];
 export function AnchorsScene() {
   const query = useAnchors();
   const items = query.data?.data ?? EMPTY;
-  const mode = useCameraModeValue();
+  const mode = useCameraState().cameraMode;
   const canEdit = useAuth().canEdit;
   const activeTool = useActiveEditorTool();
   const services = useSceneServices();

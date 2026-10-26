@@ -6,8 +6,9 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@camera-path/api": "*",
     "@camera-path/ui-kit": "*",
-    "@camera-path/slots": "*"
+    "@camera-path/slots": "*",
+    "@camera-path/store": "*",
+    "@camera-path/actions": "*"
   }
 }

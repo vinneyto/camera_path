@@ -2,7 +2,7 @@
 import { Slot } from "@camera-path/slots";
 
 import { useCompiledTrajectoryQuery } from "@camera-path/api/project";
-import { useUserSettings } from "@camera-path/api/settings";
+import { useUserSettings } from "@camera-path/store";
 import {
   SceneSurfaceProvider,
   useGaussianRenderingBackend,
@@ -12,7 +12,7 @@ import {
 import { DEPTH_OF_FIELD_AUTOFOCUS_LAYER } from "@camera-path/render-pipeline";
 import { SceneServicesProvider } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { TrajectoryPoseProvider } from "@camera-path/scene-runtime/viewport/trajectory-pose-provider";
-import { useEditorStore, useProjectId } from "@camera-path/store";
+import { useCameraState, useProjectId } from "@camera-path/store";
 import type { Vec3 } from "@camera-path/types/project";
 import { useThree } from "@react-three/fiber";
 import { useState } from "react";
@@ -31,7 +31,7 @@ export function SceneContents({
 }) {
   const camera = useThree((s) => s.camera);
   const { gaussianDpr } = useUserSettings();
-  const interactive = useEditorStore((s) => s.camera.cameraMode === "orbit");
+  const interactive = useCameraState().cameraMode === "orbit";
   const query = useCompiledTrajectoryQuery(useProjectId());
   const trajectory = query.data ?? null;
   const [orbitTarget, setOrbitTarget] = useState<Vec3>([0, 0, 0]);

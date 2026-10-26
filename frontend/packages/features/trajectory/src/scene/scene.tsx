@@ -6,7 +6,7 @@ import {
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useCompiledTrajectoryResource } from "@camera-path/api/resources";
 import {
-  useCameraModeValue,
+  useCameraState,
   useEditorTool,
   useSceneInteraction,
 } from "@camera-path/store";
@@ -19,7 +19,7 @@ import { TrajectoryLine } from "./trajectory-line";
 export function TrajectoryScene() {
   const query = useCompiledTrajectoryResource();
   const trajectory = query.data?.data;
-  const mode = useCameraModeValue();
+  const mode = useCameraState().cameraMode;
   const tool = useEditorTool().activeTool;
   const selected =
     useSceneInteraction().selectedObjectId === trajectoryObjectId;

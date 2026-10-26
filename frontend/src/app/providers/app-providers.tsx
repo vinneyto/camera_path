@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { AuthProvider } from "@camera-path/api/identity/auth-provider";
-import { UserSettingsProvider } from "@camera-path/api/settings";
+import { UserSettingsProvider } from "@host/providers/user-settings-provider";
 import { ThemeProvider } from "@camera-path/ui-kit/theme/theme-provider";
 
 export function AppProviders({
