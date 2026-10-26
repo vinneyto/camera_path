@@ -96,7 +96,9 @@ it("enables LiDAR through the shared command palette, blocks duplicate pending r
       ),
     );
   });
-  await waitFor(() => expect(screen.queryByRole("combobox")).toBeNull());
+  fireEvent.focus(search);
+  await screen.findByRole("option", { name: "LiDAR: Remove" });
+  expect(screen.queryByRole("option", { name: "LiDAR: Add" })).toBeNull();
 });
 
 it.each([
@@ -104,7 +106,7 @@ it.each([
   [false, true],
   [true, true],
 ])(
-  "registers no LiDAR command when canEdit=%s and alreadyEnabled=%s",
+  "registers no add command when canEdit=%s and alreadyEnabled=%s",
   async (canEdit, alreadyEnabled) => {
     auth.canEdit = canEdit;
     vi.stubGlobal(
@@ -122,6 +124,14 @@ it.each([
     );
     const client = mount();
     await waitFor(() => expect(client.isFetching()).toBe(0));
-    expect(screen.queryByRole("combobox")).toBeNull();
+    const search = screen.queryByRole("combobox");
+    if (canEdit && alreadyEnabled) {
+      expect(search).not.toBeNull();
+      fireEvent.focus(search!);
+      expect(screen.queryByRole("option", { name: "LiDAR: Add" })).toBeNull();
+      expect(
+        screen.getByRole("option", { name: "LiDAR: Remove" }),
+      ).toBeTruthy();
+    } else expect(search).toBeNull();
   },
 );
