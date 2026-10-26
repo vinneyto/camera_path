@@ -30,6 +30,7 @@ it("preserves scene, timeline, settings and header order from the previous host 
     "RemoveCloudCommand",
     "AddDepthOfFieldCommand",
     "AddLidarCommand",
+    "RemoveLidarCommand",
   ]);
   expect(
     features.flatMap((f) => f.settings?.content ?? []).map((c) => c.name),
