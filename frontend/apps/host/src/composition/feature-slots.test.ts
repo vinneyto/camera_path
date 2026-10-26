@@ -28,6 +28,7 @@ it("preserves scene, timeline, settings and header order from the previous host 
   ).toEqual([
     "AddCloudCommand",
     "RemoveCloudCommand",
+    "RemoveTrajectoryCommand",
     "AddDepthOfFieldCommand",
     "AddLidarCommand",
   ]);
