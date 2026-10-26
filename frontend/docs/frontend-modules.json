@@ -223,6 +223,24 @@
           ]
         },
         {
+          "name": "createEditorActions.setCameraMode",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 25,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/deletions/api/use-clear-trajectory.ts",
+              "line": 22,
+              "column": 7,
+              "expression": "actions.setCameraMode"
+            }
+          ]
+        },
+        {
           "name": "createEditorActions.setPlaybackFrame",
           "kind": "action",
           "package": "@camera-path/actions",
@@ -3738,6 +3756,7 @@
       "root": "packages/features/trajectory",
       "entrypoint": "packages/features/trajectory/src/index.ts",
       "files": [
+        "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
         "packages/features/trajectory/src/index.ts",
         "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
         "packages/features/trajectory/src/scene/scene.tsx",
@@ -3746,6 +3765,14 @@
       ],
       "slots": {
         "project": {
+          "commands": [
+            {
+              "name": "RemoveTrajectoryCommand",
+              "file": "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
+              "line": 9,
+              "column": 1
+            }
+          ],
           "scene": [
             {
               "name": "TrajectoryScene",
@@ -3842,6 +3869,12 @@
           },
           "usages": [
             {
+              "file": "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
+              "line": 13,
+              "column": 20,
+              "expression": "useClearTrajectoryMutation"
+            },
+            {
               "file": "packages/features/trajectory/src/scene/scene.tsx",
               "line": 28,
               "column": 20,
@@ -3886,6 +3919,12 @@
           },
           "usages": [
             {
+              "file": "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
+              "line": 10,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
               "file": "packages/features/trajectory/src/scene/scene.tsx",
               "line": 26,
               "column": 19,
@@ -3921,6 +3960,12 @@
             "column": 1
           },
           "usages": [
+            {
+              "file": "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
+              "line": 12,
+              "column": 22,
+              "expression": "useTrajectoryGeometry()"
+            },
             {
               "file": "packages/features/trajectory/src/ui/status.tsx",
               "line": 7,
@@ -3978,6 +4023,12 @@
           },
           "statePaths": ["sceneInteraction"],
           "usages": [
+            {
+              "file": "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
+              "line": 11,
+              "column": 20,
+              "expression": "useSceneInteraction()"
+            },
             {
               "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
               "line": 8,

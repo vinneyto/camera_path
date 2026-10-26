@@ -6,6 +6,7 @@ type Resource =
   | "anchors"
   | "scenePoints"
   | "segments"
+  | "trajectory"
   | "speed"
   | "aim"
   | "orientation"
@@ -42,13 +43,21 @@ export async function invalidateProjectResource(
     lidar: 8,
     chat: 9,
   } as const;
-  const affected = resource === "all" ? keys : [keys[target[resource]]];
+  const affected =
+    resource === "all"
+      ? keys
+      : resource === "trajectory"
+        ? keys.slice(3, 9)
+        : [keys[target[resource]]];
   if (resource !== "chat") {
     affected.push(projectKeys.trajectory(projectId));
   }
   await Promise.all([
     ...affected.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-    ...(resource === "anchors" || resource === "segments" || resource === "all"
+    ...(resource === "anchors" ||
+    resource === "segments" ||
+    resource === "trajectory" ||
+    resource === "all"
       ? [queryClient.invalidateQueries({ queryKey: projectKeys.list() })]
       : []),
   ]);
