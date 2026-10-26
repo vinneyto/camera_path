@@ -41,7 +41,7 @@ export function createUserSettingsActions(store: UserSettingsStoreApi) {
   }
   function apply(value: UserSettings) {
     patch({
-      webGpuTileRenderer: value.webgpu_tile_renderer ?? true,
+      webGpuTileRenderer: value.webgpu_tile_renderer ?? false,
       showGrid: value.show_grid ?? true,
       gaussianDpr: value.gaussian_dpr ?? "1x",
     });
@@ -59,7 +59,7 @@ export function createUserSettingsActions(store: UserSettingsStoreApi) {
     status();
     try {
       let fallback: UserSettings = {
-        webgpu_tile_renderer: true,
+        webgpu_tile_renderer: false,
         show_grid: true,
         gaussian_dpr: "1x",
       };

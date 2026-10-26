@@ -74,6 +74,7 @@ it("keeps viewer settings available offline and ignores malformed local values",
   );
   await actions.load();
   expect(store.getState().userSettings).toMatchObject({
+    webGpuTileRenderer: false,
     showGrid: true,
     gaussianDpr: "1x",
     ready: true,
@@ -241,4 +242,43 @@ it("reports local persistence failures and recovers through retry", async () => 
     ready: true,
     error: null,
   });
+});
+
+it("starts with Spark and keeps it when a fresh profile finishes loading, without reloading", async () => {
+  expect(store.getState().userSettings.webGpuTileRenderer).toBe(false);
+  vi.mocked(getUserSettings).mockResolvedValueOnce({
+    data: { ...server, webgpu_tile_renderer: false },
+    status: 200,
+    headers: new Headers(),
+  });
+  await actions.load();
+  expect(store.getState().userSettings).toMatchObject({
+    webGpuTileRenderer: false,
+    ready: true,
+  });
+  expect(reload).not.toHaveBeenCalled();
+});
+
+it.each([true, false])(
+  "preserves the explicit local renderer choice %s over the server fallback",
+  async (webgpu) => {
+    localStorage.setItem(
+      EDITOR_SETTINGS_KEY,
+      JSON.stringify({ webgpu_tile_renderer: webgpu }),
+    );
+    vi.mocked(getUserSettings).mockResolvedValueOnce({
+      data: { ...server, webgpu_tile_renderer: !webgpu },
+      status: 200,
+      headers: new Headers(),
+    });
+    await actions.load();
+    expect(store.getState().userSettings.webGpuTileRenderer).toBe(webgpu);
+    expect(reload).not.toHaveBeenCalled();
+  },
+);
+
+it("preserves an existing server WebGPU preference when no local choice exists", async () => {
+  await actions.load();
+  expect(store.getState().userSettings.webGpuTileRenderer).toBe(true);
+  expect(reload).not.toHaveBeenCalled();
 });

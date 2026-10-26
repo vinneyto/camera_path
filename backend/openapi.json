@@ -2700,7 +2700,7 @@
             "type": "boolean"
           },
           "webgpu_tile_renderer": {
-            "default": true,
+            "default": false,
             "title": "Webgpu Tile Renderer",
             "type": "boolean"
           }

@@ -29,22 +29,22 @@ async def test_settings_persist_across_apps_and_are_scoped_to_current_user(tmp_p
             AsyncClient(transport=ASGITransport(app=bob_app), base_url="http://test") as bob,
         ):
             assert (await alice.get(URL)).json() == {
-                "webgpu_tile_renderer": True,
+                "webgpu_tile_renderer": False,
                 "show_grid": True,
                 "gaussian_dpr": "1x",
             }
-            assert (await alice.patch(URL, json={"webgpu_tile_renderer": False})).json() == {
-                "webgpu_tile_renderer": False,
+            assert (await alice.patch(URL, json={"webgpu_tile_renderer": True})).json() == {
+                "webgpu_tile_renderer": True,
                 "show_grid": True,
                 "gaussian_dpr": "1x",
             }
             assert (await alice.patch(URL, json={"show_grid": False})).json() == {
-                "webgpu_tile_renderer": False,
+                "webgpu_tile_renderer": True,
                 "show_grid": False,
                 "gaussian_dpr": "1x",
             }
             assert (await bob.get(URL)).json() == {
-                "webgpu_tile_renderer": True,
+                "webgpu_tile_renderer": False,
                 "show_grid": True,
                 "gaussian_dpr": "1x",
             }
@@ -63,7 +63,7 @@ async def test_settings_persist_across_apps_and_are_scoped_to_current_user(tmp_p
             transport=ASGITransport(app=application), base_url="http://test"
         ) as c:
             assert (await c.get(URL)).json() == {
-                "webgpu_tile_renderer": False,
+                "webgpu_tile_renderer": True,
                 "show_grid": False,
                 "gaussian_dpr": "1x",
             }
@@ -78,12 +78,12 @@ async def test_concurrent_partial_first_writes_preserve_both_fields(tmp_path) ->
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             responses = await asyncio.gather(
-                client.patch(URL, json={"webgpu_tile_renderer": False}),
+                client.patch(URL, json={"webgpu_tile_renderer": True}),
                 client.patch(URL, json={"show_grid": False}),
             )
             assert all(response.status_code == 200 for response in responses)
             assert (await client.get(URL)).json() == {
-                "webgpu_tile_renderer": False,
+                "webgpu_tile_renderer": True,
                 "show_grid": False,
                 "gaussian_dpr": "1x",
             }
@@ -123,10 +123,39 @@ def test_settings_migration_and_postgres_ddl(tmp_path, monkeypatch) -> None:
         connection.execute("INSERT INTO user_settings (user_id) VALUES ('u')")
         assert connection.execute(
             "SELECT webgpu_tile_renderer, show_grid FROM user_settings"
-        ).fetchone() == (1, 1)
+        ).fetchone() == (0, 1)
         assert connection.execute("SELECT name FROM projects").fetchone() == ("Keep",)
     ddl = str(CreateTable(UserSettingsRecord.__table__).compile(dialect=postgresql.dialect()))
-    assert "BOOLEAN DEFAULT true NOT NULL" in ddl
+    assert "webgpu_tile_renderer BOOLEAN DEFAULT false NOT NULL" in ddl
     command.downgrade(config, "20260925_0009")
     with sqlite3.connect(path) as connection:
         assert connection.execute("SELECT name FROM projects").fetchone() == ("Keep",)
+
+
+def test_spark_default_migration_preserves_existing_preferences(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "renderer-default.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20261011_0013")
+    with sqlite3.connect(path) as connection:
+        connection.execute("INSERT INTO user_settings (user_id) VALUES ('old-default')")
+        connection.execute(
+            "INSERT INTO user_settings (user_id, webgpu_tile_renderer, show_grid) "
+            "VALUES ('spark', 0, 0)"
+        )
+    command.upgrade(config, "head")
+    with sqlite3.connect(path) as connection:
+        connection.execute("INSERT INTO user_settings (user_id) VALUES ('new-default')")
+        assert connection.execute(
+            "SELECT user_id, webgpu_tile_renderer, show_grid FROM user_settings ORDER BY user_id"
+        ).fetchall() == [("new-default", 0, 1), ("old-default", 1, 1), ("spark", 0, 0)]
+    command.downgrade(config, "20261011_0013")
+    with sqlite3.connect(path) as connection:
+        connection.execute("INSERT INTO user_settings (user_id) VALUES ('downgraded')")
+        assert connection.execute(
+            "SELECT webgpu_tile_renderer FROM user_settings WHERE user_id = 'downgraded'"
+        ).fetchone() == (1,)
+        assert connection.execute(
+            "SELECT user_id, webgpu_tile_renderer, show_grid FROM user_settings "
+            "WHERE user_id != 'downgraded' ORDER BY user_id"
+        ).fetchall() == [("new-default", 0, 1), ("old-default", 1, 1), ("spark", 0, 0)]

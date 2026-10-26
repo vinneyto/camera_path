@@ -18,7 +18,7 @@ class UserSettingsUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     # Defaults allow omitted PATCH fields; exclude_unset keeps them out of the write.
-    webgpu_tile_renderer: StrictBool = True
+    webgpu_tile_renderer: StrictBool = False
     show_grid: StrictBool = True
     gaussian_dpr: Literal["1x", "system"] = "1x"
 
@@ -32,7 +32,7 @@ class UserSettingsService:
         return (
             UserSettings.model_validate(record)
             if record is not None
-            else UserSettings(webgpu_tile_renderer=True, show_grid=True)
+            else UserSettings(webgpu_tile_renderer=False, show_grid=True)
         )
 
     async def update(self, user_id: str, data: UserSettingsUpdate) -> UserSettings:
