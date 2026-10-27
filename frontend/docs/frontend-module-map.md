@@ -31,6 +31,8 @@ npm run modules:scan -- --project ./tsconfig.json --output /tmp/frontend-modules
 - `slots`: вложенное дерево экспортированного объекта `slots`. Листья — массивы компонентов
   с именем и расположением определения (`file`, `line`, `column`). Порядок массивов сохранён.
   Если модуль не экспортирует слоты, дерево пустое.
+  Самостоятельные страницы представлены как `pages → /путь → component/icon` с
+  определениями компонентов; это метаданные страницы, а не пути контейнеров `<Slot>`.
 - `actions`: используемые callable-символы из `@camera-path/actions`, включая hooks,
   методы `useEditorActions()`, передачу обработчиков и локальные алиасы.
 - `selectors`: вызовы hooks стора и API. `kind` различает `store-selector`, `store-hook`,

@@ -3809,15 +3809,25 @@
         "packages/features/sift/src/worker/sift.worker.ts"
       ],
       "slots": {
-        "sift": {
-          "content": [
-            {
-              "name": "SiftPage",
-              "file": "packages/features/sift/src/ui/sift-page.tsx",
-              "line": 8,
-              "column": 1
-            }
-          ]
+        "pages": {
+          "/sift": {
+            "component": [
+              {
+                "name": "SiftPage",
+                "file": "packages/features/sift/src/ui/sift-page.tsx",
+                "line": 8,
+                "column": 1
+              }
+            ],
+            "icon": [
+              {
+                "name": "ScanSearch",
+                "file": "node_modules/lucide-react/dist/lucide-react.d.ts",
+                "line": 17904,
+                "column": 15
+              }
+            ]
+          }
         }
       },
       "actions": [],
@@ -4237,6 +4247,8 @@
       "root": "apps/host",
       "entrypoint": null,
       "files": [
+        "apps/host/src/composition/collect-feature-pages.ts",
+        "apps/host/src/composition/feature-pages.ts",
         "apps/host/src/composition/feature-slots.ts",
         "apps/host/src/providers/application-ui.tsx",
         "apps/host/src/providers/project-providers.tsx",
@@ -4250,6 +4262,7 @@
         "apps/host/src/ui/app-shell/navigation-links.tsx",
         "apps/host/src/ui/app-shell/profile-menu.tsx",
         "apps/host/src/ui/commands/workspace-commands.tsx",
+        "apps/host/src/ui/feature-page-route.tsx",
         "apps/host/src/ui/project-list/index.ts",
         "apps/host/src/ui/project-list/ui/project-list-page.tsx",
         "apps/host/src/ui/project-workspace/index.ts",
@@ -4270,6 +4283,7 @@
         "apps/host/src/ui/scene-editor/ui/scene-viewport.tsx",
         "apps/host/src/ui/scene-editor/ui/scene-webgpu-viewport.tsx",
         "apps/host/src/ui/scene-editor/ui/use-webgpu-availability.ts",
+        "src/app/[...featurePath]/page.tsx",
         "src/app/api/v1/[...path]/route.ts",
         "src/app/layout.tsx",
         "src/app/library/[assetId]/page.tsx",
@@ -4278,8 +4292,7 @@
         "src/app/projects/[projectId]/page.tsx",
         "src/app/projects/[projectId]/viewer/page.tsx",
         "src/app/providers/app-providers.tsx",
-        "src/app/providers/index.ts",
-        "src/app/sift/page.tsx"
+        "src/app/providers/index.ts"
       ],
       "slots": {},
       "actions": [
@@ -4820,6 +4833,7 @@
       "root": "packages/slots",
       "entrypoint": "packages/slots/src/index.ts",
       "files": [
+        "packages/slots/src/feature-page.ts",
         "packages/slots/src/feature-slots.ts",
         "packages/slots/src/index.ts",
         "packages/slots/src/slot-provider.tsx",
@@ -5007,6 +5021,7 @@
         "packages/ui-kit/src/timeline/timeline-lane.tsx",
         "packages/ui-kit/src/timeline/timeline-stack.tsx",
         "packages/ui-kit/src/timeline/timeline-track-header.tsx",
+        "packages/ui-kit/src/tooltip-provider.tsx",
         "packages/ui-kit/src/tooltip.tsx",
         "packages/ui-kit/src/z-order.ts"
       ],

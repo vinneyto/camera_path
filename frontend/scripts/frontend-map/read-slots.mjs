@@ -112,14 +112,55 @@ export function readSlots(source, context, resolve, diagnostics) {
       return [{ name: target.name, ...location(target.declaration) }];
     });
   }
+  function pages(node, seen) {
+    const value = unwrap(node);
+    if (!value || !ts.isArrayLiteralExpression(value) || seen.has(value)) {
+      fail(node, "Expected a static feature pages array.");
+      return {};
+    }
+    const next = new Set(seen).add(value);
+    const result = {};
+    for (const element of value.elements) {
+      if (ts.isSpreadElement(element)) {
+        Object.assign(result, pages(element.expression, next));
+        continue;
+      }
+      const fields = object(element, next);
+      const path = unwrap(fields.get("path"));
+      if (!path || !ts.isStringLiteralLike(path)) {
+        fail(element, "Feature page paths must be static strings.");
+        continue;
+      }
+      const entry = {};
+      for (const field of ["component", "icon"]) {
+        const component = fields.get(field);
+        const target = component && resolve(component);
+        if (
+          !target ||
+          !checker.getTypeAtLocation(component).getCallSignatures().length
+        ) {
+          fail(
+            element,
+            `Feature page ${field} must resolve to a callable symbol.`,
+          );
+          continue;
+        }
+        entry[field] = [{ name: target.name, ...location(target.declaration) }];
+      }
+      result[path.text] = entry;
+    }
+    return result;
+  }
   function tree(node, seen = new Set()) {
     const result = {};
     for (const [name, expression] of object(node, seen)) {
       const value = unwrap(expression);
       result[name] =
-        value && ts.isArrayLiteralExpression(value)
-          ? array(expression, seen)
-          : tree(expression, new Set(seen).add(unwrap(node)));
+        name === "pages" && seen.size === 0
+          ? pages(expression, seen)
+          : value && ts.isArrayLiteralExpression(value)
+            ? array(expression, seen)
+            : tree(expression, new Set(seen).add(unwrap(node)));
     }
     return result;
   }

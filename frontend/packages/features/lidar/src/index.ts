@@ -1,4 +1,3 @@
-"use client";
 import type { FeatureSlots } from "@camera-path/slots";
 import { AddLidarCommand } from "./commands/add-lidar-command";
 import { RemoveLidarCommand } from "./commands/remove-lidar-command";

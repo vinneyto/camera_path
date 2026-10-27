@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { FeatureSlots, SlotName } from "./feature-slots";
+import type { FeaturePage } from "./feature-page";
 declare const Component: ComponentType;
 declare const RequiresProps: ComponentType<{ required: string }>;
 export const empty: FeatureSlots = {};
@@ -23,4 +24,22 @@ export const props: FeatureSlots = {
       RequiresProps,
     ],
   },
+};
+export const page: FeaturePage = {
+  path: "/example",
+  label: "Example",
+  icon: Component,
+  component: Component,
+};
+// @ts-expect-error Page definitions are not slot component arrays.
+export const pageSlot: SlotName = "pages.component";
+export const pageProps: FeaturePage = {
+  ...page,
+  // @ts-expect-error The host cannot supply page-specific required props.
+  component: RequiresProps,
+};
+export const relativePage: FeaturePage = {
+  ...page,
+  // @ts-expect-error Standalone pages must use absolute paths.
+  path: "example",
 };

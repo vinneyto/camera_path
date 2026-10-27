@@ -1,6 +1,7 @@
 "use client";
-import { FolderOpen, Library, ScanSearch } from "lucide-react";
+import { FolderOpen, Library } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { featurePages } from "@host/composition/feature-pages";
 import { NavigationLink } from "./navigation-link";
 
 export function NavigationLinks({
@@ -32,14 +33,17 @@ export function NavigationLinks({
         variant={variant}
         onNavigate={onNavigate}
       />
-      <NavigationLink
-        href="/sift"
-        label="SIFT lab"
-        icon={ScanSearch}
-        active={pathname === "/sift"}
-        variant={variant}
-        onNavigate={onNavigate}
-      />
+      {featurePages.map((page) => (
+        <NavigationLink
+          key={page.path}
+          href={page.path}
+          label={page.label}
+          icon={page.icon}
+          active={pathname === page.path}
+          variant={variant}
+          onNavigate={onNavigate}
+        />
+      ))}
     </nav>
   );
 }
