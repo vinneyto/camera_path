@@ -10,6 +10,7 @@ import {
   EditorStoreProvider,
   ResourceScopeProvider,
 } from "@camera-path/store";
+import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
 import type {
   CompiledDepthOfFieldKeyframe,
   CompiledTrajectory,
@@ -64,6 +65,7 @@ function mount() {
   function Harness() {
     const [store] = useState(() => {
       const store = createEditorStore();
+      createEditorActions(store).selectObject({ id: trajectoryObjectId });
       createEditorActions(store).setPlaybackFrame({
         pathPosition: 0.25,
         elapsed: 0.5,
@@ -108,14 +110,23 @@ it("adds and deletes a keyframe through the real shared client/cache using featu
         writes.push({ method, path, input });
         key =
           method === "POST"
-            ? { id: "dof", ...input, focus_range_scale: 0.1, bokeh_scale: 1 }
+            ? {
+                id: "dof",
+                path_position: 0,
+                focus: { kind: "center_weighted_9" },
+                focus_range_scale: 0.25,
+                bokeh_scale: 6,
+              }
             : null;
         revision++;
         return method === "POST"
-          ? Response.json(key, {
-              status: 201,
-              headers: { ETag: `"${revision}"` },
-            })
+          ? Response.json(
+              { keyframes: { dof: key } },
+              {
+                status: 200,
+                headers: { ETag: `"${revision}"` },
+              },
+            )
           : new Response(null, {
               status: 204,
               headers: { ETag: `"${revision}"` },
@@ -132,7 +143,9 @@ it("adds and deletes a keyframe through the real shared client/cache using featu
           }
         : path.endsWith("/depth-of-field")
           ? { keyframes: key ? { dof: key } : {} }
-          : [];
+          : path.endsWith("/trajectory")
+            ? { segments: [{ id: "segment" }] }
+            : [];
       return Response.json(data, { headers: { ETag: `"${revision}"` } });
     }),
   );
@@ -158,8 +171,8 @@ it("adds and deletes a keyframe through the real shared client/cache using featu
   fireEvent.keyDown(screen.getByRole("combobox"), { key: "Escape" });
   expect(writes[0]).toEqual({
     method: "POST",
-    path: "/api/v1/projects/project/camera/depth-of-field/keyframes",
-    input: { path_position: 0.25, focus: { kind: "center_weighted_9" } },
+    path: "/api/v1/projects/project/camera/depth-of-field",
+    input: null,
   });
   fireEvent.contextMenu(marker);
   fireEvent.click(
@@ -188,9 +201,11 @@ it("shows action errors in the palette and registers no commands for a viewer", 
         : Response.json(
             path.endsWith("/compiled")
               ? compiled
-              : path.endsWith("/scene-points")
-                ? []
-                : { keyframes: {} },
+              : path.endsWith("/trajectory")
+                ? { segments: [{ id: "segment" }] }
+                : path.endsWith("/scene-points")
+                  ? []
+                  : { keyframes: {} },
             { headers: { ETag: '"10"' } },
           ),
     ),

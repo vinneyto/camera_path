@@ -3220,6 +3220,120 @@ export function useGetDepthOfFieldTimeline<TData = Awaited<ReturnType<typeof get
 
 
 
+export type createDepthOfFieldTimelineResponse200 = {
+  data: DepthOfFieldTimeline
+  status: 200
+}
+
+export type createDepthOfFieldTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createDepthOfFieldTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createDepthOfFieldTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createDepthOfFieldTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type createDepthOfFieldTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type createDepthOfFieldTimelineResponseSuccess = (createDepthOfFieldTimelineResponse200) & {
+  headers: Headers;
+};
+export type createDepthOfFieldTimelineResponseError = (createDepthOfFieldTimelineResponse401 | createDepthOfFieldTimelineResponse404 | createDepthOfFieldTimelineResponse409 | createDepthOfFieldTimelineResponse422 | createDepthOfFieldTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type createDepthOfFieldTimelineResponse = (createDepthOfFieldTimelineResponseSuccess | createDepthOfFieldTimelineResponseError)
+
+export const getCreateDepthOfFieldTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera/depth-of-field`
+}
+
+/**
+ * Initialize an absent timeline with default focus settings at the path start. Preserve an existing timeline without adding or replacing keyframes.
+ * @summary Create the default depth-of-field timeline
+ */
+export const createDepthOfFieldTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<createDepthOfFieldTimelineResponse> => {
+
+  return orvalFetch<createDepthOfFieldTimelineResponse>(getCreateDepthOfFieldTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateDepthOfFieldTimelineMutationKey = () => ['createDepthOfFieldTimeline'] as const;
+
+export const getCreateDepthOfFieldTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDepthOfFieldTimeline>>, TError,CreateDepthOfFieldTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDepthOfFieldTimeline>>, TError,CreateDepthOfFieldTimelineMutationVariables, TContext> => {
+
+const mutationKey = getCreateDepthOfFieldTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDepthOfFieldTimeline>>, CreateDepthOfFieldTimelineMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  createDepthOfFieldTimeline(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDepthOfFieldTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof createDepthOfFieldTimeline>>>
+
+    export type CreateDepthOfFieldTimelineMutationError = void | ErrorResponse
+    export type CreateDepthOfFieldTimelineMutationVariables = {projectId: string}
+
+    /**
+ * @summary Create the default depth-of-field timeline
+ */
+export const useCreateDepthOfFieldTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDepthOfFieldTimeline>>, TError,CreateDepthOfFieldTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createDepthOfFieldTimeline>>,
+        TError,
+        CreateDepthOfFieldTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateDepthOfFieldTimelineMutationOptions(options), queryClient);
+    }
+
 export type createDepthOfFieldKeyframeResponse201 = {
   data: DepthOfFieldKeyframe
   status: 201

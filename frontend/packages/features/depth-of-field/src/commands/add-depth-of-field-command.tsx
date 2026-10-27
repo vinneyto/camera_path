@@ -1,17 +1,24 @@
 "use client";
-import { useAddDepthOfFieldKeyframeMutation } from "@camera-path/actions";
+import { useCreateDepthOfFieldTimelineMutation } from "@camera-path/actions";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
-import { useDepthOfFieldTimeline } from "@camera-path/api/resources";
-import { usePlaybackState } from "@camera-path/store";
+import {
+  useDepthOfFieldTimeline,
+  useTrajectoryGeometry,
+} from "@camera-path/api/resources";
+import { useSceneInteraction } from "@camera-path/store";
 
+import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
 import { Command } from "@camera-path/commands";
 export function AddDepthOfFieldCommand() {
   const timeline = useDepthOfFieldTimeline();
-  const playback = usePlaybackState();
+  const selected = useSceneInteraction().selectedObjectId;
+  const trajectory = useTrajectoryGeometry();
   const canEdit = useAuth().canEdit;
-  const mutation = useAddDepthOfFieldKeyframeMutation();
+  const mutation = useCreateDepthOfFieldTimelineMutation();
   if (
     !canEdit ||
+    selected !== trajectoryObjectId ||
+    !trajectory.data?.data.segments?.length ||
     !timeline.data ||
     Object.keys(timeline.data.data.keyframes ?? {}).length
   )
@@ -23,12 +30,7 @@ export function AddDepthOfFieldCommand() {
       searchText="dof focus autofocus effect"
       disabled={mutation.isPending}
       actionError={mutation.error?.message}
-      onSelect={() =>
-        mutation.mutate({
-          path_position: playback.pathPosition,
-          focus: { kind: "center_weighted_9" },
-        })
-      }
+      onSelect={() => mutation.mutate()}
     />
   );
 }
