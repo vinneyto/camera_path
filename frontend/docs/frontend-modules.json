@@ -2554,6 +2554,7 @@
       "entrypoint": "packages/features/lidar/src/index.ts",
       "files": [
         "packages/features/lidar/src/commands/add-lidar-command.tsx",
+        "packages/features/lidar/src/commands/remove-lidar-command.tsx",
         "packages/features/lidar/src/index.ts",
         "packages/features/lidar/src/timeline/create-lidar-track.tsx",
         "packages/features/lidar/src/timeline/timeline.tsx",
@@ -2566,6 +2567,12 @@
             {
               "name": "AddLidarCommand",
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 7,
+              "column": 1
+            },
+            {
+              "name": "RemoveLidarCommand",
+              "file": "packages/features/lidar/src/commands/remove-lidar-command.tsx",
               "line": 7,
               "column": 1
             }
@@ -2608,6 +2615,12 @@
               "expression": "useSetLidarTimelineMutation"
             },
             {
+              "file": "packages/features/lidar/src/commands/remove-lidar-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useSetLidarTimelineMutation"
+            },
+            {
               "file": "packages/features/lidar/src/timeline/timeline.tsx",
               "line": 9,
               "column": 20,
@@ -2629,6 +2642,12 @@
           "usages": [
             {
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/lidar/src/commands/remove-lidar-command.tsx",
               "line": 9,
               "column": 19,
               "expression": "useAuth()"
@@ -2665,6 +2684,12 @@
           "usages": [
             {
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 8,
+              "column": 20,
+              "expression": "useLidarTimelineResource()"
+            },
+            {
+              "file": "packages/features/lidar/src/commands/remove-lidar-command.tsx",
               "line": 8,
               "column": 20,
               "expression": "useLidarTimelineResource()"
