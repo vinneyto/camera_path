@@ -1,15 +1,26 @@
 use crate::{GrayImage, Params, detect_cached};
-use burn::tensor::{Device, wgpu::WgpuBackend};
+use burn::tensor::Device;
+#[cfg(not(feature = "wasm-cpu"))]
+use burn::tensor::wgpu::WgpuBackend;
 use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console, js_name = error)]
+    fn report_panic(message: &str);
+}
 #[wasm_bindgen]
 pub struct Detector {
     device: Device,
-    plan: Option<crate::pyramid::PyramidPlan>,
+    plan: Option<crate::detector_plan::DetectorPlan>,
 }
 #[wasm_bindgen]
 impl Detector {
     /// A worker owns one WebGPU device for its entire camera session.
     pub async fn create() -> Result<Detector, JsValue> {
+        std::panic::set_hook(Box::new(|info| report_panic(&info.to_string())));
+        #[cfg(feature = "wasm-cpu")]
+        let device = Device::flex();
+        #[cfg(not(feature = "wasm-cpu"))]
         let device = Device::wgpu_options()
             .graphics_api(WgpuBackend::WebGpu)
             .init_async()

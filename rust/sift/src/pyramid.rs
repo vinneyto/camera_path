@@ -24,28 +24,34 @@ struct BlurPlan {
     xs: Tensor<1, Int>,
     ys: Tensor<1, Int>,
 }
+pub(crate) fn gaussian_weights(sigmas: &[f64]) -> (usize, Vec<f32>) {
+    let radii: Vec<usize> = sigmas
+        .iter()
+        .map(|sigma| (((sigma * 8.0 + 1.0).round_ties_even() as usize) | 1) / 2)
+        .collect();
+    let radius = *radii.iter().max().unwrap();
+    let length = radius * 2 + 1;
+    let filters = sigmas.len();
+    let mut kernel = vec![0.0f32; filters * length];
+    for (i, (&sigma, &r)) in sigmas.iter().zip(&radii).enumerate() {
+        let weights: Vec<f64> = (0..r * 2 + 1)
+            .map(|j| {
+                let x = j as f64 - r as f64;
+                (-x * x / (2.0 * sigma * sigma)).exp()
+            })
+            .collect();
+        let total: f64 = weights.iter().sum();
+        for (j, weight) in weights.iter().enumerate() {
+            kernel[i * length + radius - r + j] = (weight / total) as f32;
+        }
+    }
+    (radius, kernel)
+}
 impl BlurPlan {
     fn new(h: usize, w: usize, sigmas: &[f64], device: &Device) -> Self {
-        let radii: Vec<usize> = sigmas
-            .iter()
-            .map(|sigma| (((sigma * 8.0 + 1.0).round_ties_even() as usize) | 1) / 2)
-            .collect();
-        let radius = *radii.iter().max().unwrap();
+        let (radius, kernel) = gaussian_weights(sigmas);
         let length = radius * 2 + 1;
         let filters = sigmas.len();
-        let mut kernel = vec![0.0f32; filters * length];
-        for (i, (&sigma, &r)) in sigmas.iter().zip(&radii).enumerate() {
-            let weights: Vec<f64> = (0..r * 2 + 1)
-                .map(|j| {
-                    let x = j as f64 - r as f64;
-                    (-x * x / (2.0 * sigma * sigma)).exp()
-                })
-                .collect();
-            let total: f64 = weights.iter().sum();
-            for (j, weight) in weights.iter().enumerate() {
-                kernel[i * length + radius - r + j] = (weight / total) as f32;
-            }
-        }
         Self {
             radius,
             filters,

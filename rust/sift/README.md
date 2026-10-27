@@ -12,18 +12,30 @@ the upper left. Fields are `x`, `y`, `size`, `octave`, `class_id`, `response`.
 
 ## Backends
 
-Burn 0.22 runs Gaussian convolutions and DoG as tensor operations. A custom
-CubeCL kernel, registered through Burn's backend extension and Fusion dispatch,
-checks absolute contrast and all 26 neighbors in one pass per octave. It preserves
+Burn 0.22 dispatches custom CubeCL kernels through its backend extension and
+Fusion graph. Separable Gaussian kernels load reflected tiles into workgroup
+memory. The vertical octave pass also computes DoG and decimates the selected
+Gaussian layer for the next octave, without materializing the full Gaussian
+stack or reflection/index tensors. The same Gaussian weights are cached between
+frames. A specialized extrema kernel checks absolute contrast and all 26
+neighbors in one pass per octave. It preserves
 strict inequalities, including rejection of equal neighbors, and handles minima
 and maxima independently of their sign. The CPU reference uses equivalent pooled
 groups of 18 + 6 + 2 neighbors.
-Gaussian kernels and reflection/downsampling index tensors are cached between frames.
-All sigma layers of an octave share a horizontal convolution and a grouped vertical
-convolution to reduce the number of CPU-to-GPU dispatches. Browser WASM explicitly initializes **WebGPU**, with no CPU
+The CPU reference uses Burn convolutions with cached kernels and reflection
+indices. Browser WASM explicitly initializes **WebGPU**, with no CPU
 fallback. All octaves register their candidate masks and DoG volumes in one
 frame-level transaction, followed by one explicit flush and one asynchronous
 readback. Small 3×3 localization solves run on the host for those candidates.
+
+`gpu-localization` is an opt-in experiment. It collects extrema into a compact
+GPU candidate buffer, performs the five localization attempts and contrast/edge
+rejection on GPU, and reads candidate records instead of dense DoG/mask volumes.
+The atomic count detects capacity overflow; the octave is retried at the exact
+required capacity, so points are never silently truncated. Host sorting restores
+the original convergence-iteration/scale/y/x order and preserves duplicates.
+It passes native and browser parity checks, but measured slower than the default
+path on this machine, so the production WASM build leaves it disabled.
 
 The native CLI defaults to Burn's **wgpu** backend (Metal/Vulkan/DX12 as selected
 by wgpu). `--backend cpu` explicitly selects Burn Flex for reproducible reference
@@ -144,16 +156,55 @@ cargo test --release --manifest-path rust/sift/Cargo.toml --locked -- --include-
 
 The kernel test covers all 26 equal-neighbor positions, both signs, negative
 maxima and positive minima, exact contrast equality, odd dispatch dimensions and
-transposed input strides.
+transposed input strides. Gaussian tests compare tiny and odd images at the
+supported sigma/layer limits, including halos wider than an image. To also run
+compact GPU localization, ordering and forced-overflow tests:
+
+```sh
+cargo test --release --manifest-path rust/sift/Cargo.toml --locked \
+  --features gpu-localization -- --include-ignored
+```
 
 ## Reproducing the browser performance comparison
 
+On this Mac / in-app browser, the fixed 384×512 notebook frame (192 points)
+measured as follows on 2026-10-27:
+
+| Backend / implementation          |      p50 |      p95 |
+| --------------------------------- | -------: | -------: |
+| Original WebGPU (`66c4983`)       | 165.9 ms | 174.4 ms |
+| Default optimized WebGPU          |  53.4 ms |  56.4 ms |
+| GPU localization experiment       |  72.5 ms |  75.1 ms |
+| CPU / Flex, same current detector |  68.7 ms |  69.7 ms |
+
+The default GPU result is bitwise identical to the original serialized point
+array. The GPU localization experiment differs by at most 0.00001 px; CPU differs
+by at most 0.0003 px. The default therefore remains the faster hybrid path. Full
+samples, parameters, hashes and the earlier readback/extrema-only comparison are
+saved in [`benchmarks/webgpu-2026-10-27.json`](benchmarks/webgpu-2026-10-27.json).
+These warmed measurements describe this input/browser/device, not phone FPS.
+
 `scripts/benchmark-webgpu.mjs` serves a fixed PNG and three saved release WASM
-packages. Prepare a directory with `frame.png` and `before/`, `batch/`, `after/`,
+packages. Prepare a directory with `frame.png` and `before/`, `batch/`, `after/`, `gaussian/`, `sparse/`, `cpu/`,
 each containing `camera_path_sift.js` and `camera_path_sift_bg.wasm`. Build each
 revision with `npm run sift:build`, then copy those two generated files before
-building the next revision. `before` is commit `66c4983`; `batch` changes only the
-frame-level transaction; `after` also enables the custom extrema kernel.
+building the next revision. `before` is commit `66c4983`; `batch` is the optional
+frame-level-transaction-only intermediate; `after` is commit `5b1e95c` with the
+custom extrema kernel; `gaussian` is the current default optimized GPU build.
+For the same current source, build `sparse` and `cpu` as follows (all variants
+use release optimization level 2):
+
+```sh
+CARGO_PROFILE_RELEASE_OPT_LEVEL=2 wasm-pack build rust/sift --target web --release \
+  --out-dir /absolute/benchmark-directory/sparse --out-name camera_path_sift \
+  --no-default-features --features wasm,gpu-localization --locked
+CARGO_PROFILE_RELEASE_OPT_LEVEL=2 wasm-pack build rust/sift --target web --release \
+  --out-dir /absolute/benchmark-directory/cpu --out-name camera_path_sift \
+  --no-default-features --features wasm-cpu --locked
+```
+
+`wasm-cpu` exists only for explicit benchmark builds. The application's build
+script always selects `wasm` / WebGPU; there is no automatic CPU fallback.
 
 ```sh
 node rust/sift/scripts/benchmark-webgpu.mjs /absolute/benchmark-directory 3110
@@ -164,6 +215,9 @@ Each run uses 12 warm-up detections and 30 measured detections with default
 parameters, reusing the detector and GPU session. It reports p50/p95 of the
 awaited WASM call, excludes camera/capture/rendering, checks deterministic output
 on every call and compares the complete serialized point array with Before.
+It also verifies count, octave/layer and nearest-point numerical tolerance
+(0.005 px/size, 0.0002 response), preserving multiplicity for CPU/GPU float32
+differences.
 Expand **Raw measurements** to save the full results. Repeating a variant reuses
 its existing detector; reload the page for a fresh session. Stage timings include
 lazy Burn work and should not be interpreted as GPU timestamp measurements.

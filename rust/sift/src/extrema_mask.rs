@@ -1,6 +1,8 @@
+#[cfg(feature = "gpu")]
+use burn::tensor::Shape;
 use burn::{
     backend::{Dispatch, backend_extension, tensor::FloatTensor},
-    tensor::{Shape, Tensor},
+    tensor::Tensor,
 };
 
 #[backend_extension(Cube: cfg(feature = "gpu"), Fusion: cfg(feature = "gpu"), Flex: cfg(feature = "cpu"))]
@@ -9,6 +11,7 @@ pub trait SiftExtremaOps: burn::backend::Backend {
     fn sift_extrema_mask(volume: FloatTensor<Self>, threshold: f32) -> FloatTensor<Self>;
 }
 
+#[cfg(feature = "gpu")]
 pub(crate) fn mask_shape(volume: &Shape) -> Shape {
     assert_eq!(volume.num_dims(), 3);
     assert!(volume.iter().all(|&size| size >= 3));

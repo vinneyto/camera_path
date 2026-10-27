@@ -79,7 +79,7 @@ impl SiftExtremaOps for CubeBackend {
 #[cfg(all(test, feature = "cli"))]
 mod tests {
     use crate::extrema_mask::extrema_mask;
-    use burn::tensor::{Device, Tensor, TensorData};
+    use burn::tensor::{Tensor, TensorData};
 
     fn check(volume: Tensor<3>, expected: Vec<f32>, shape: [usize; 3], threshold: f32) {
         let actual = extrema_mask(&volume, threshold);
@@ -94,7 +94,7 @@ mod tests {
     #[test]
     #[ignore = "requires a native GPU; run explicitly for GPU kernel parity"]
     fn strict_kernel_handles_ties_signs_threshold_strides_and_dispatch_tails() {
-        let device = Device::wgpu_options().init().unwrap();
+        let device = crate::test_gpu_device();
         // A maximum may be negative, and a minimum may be positive. Absolute
         // contrast is independent of which extremum comparison succeeds.
         for (center, background) in [(1.0, 0.0), (-1.0, 0.0), (-1.0, -2.0), (1.0, 2.0)] {

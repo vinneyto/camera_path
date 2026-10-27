@@ -1,16 +1,37 @@
 //! Port of photogrammetry/src/sift/sift.py (2026-10-27), detection only.
 mod detector;
+mod detector_plan;
 #[cfg(feature = "gpu")]
 mod extrema_kernel;
 mod extrema_mask;
 #[cfg(any(feature = "cpu", test))]
 mod extrema_mask_reference;
+#[cfg(feature = "gpu")]
+mod gaussian_kernel;
+#[cfg(feature = "gpu")]
+mod gaussian_ops;
+#[cfg(feature = "gpu-localization")]
+mod gpu_detector;
+#[cfg(feature = "gpu")]
+mod gpu_pyramid;
+#[cfg(feature = "gpu-localization")]
+mod localization_kernel;
+#[cfg(feature = "gpu-localization")]
+mod localization_ops;
 mod pyramid;
-#[cfg(feature = "wasm")]
+#[cfg(any(feature = "wasm", feature = "wasm-cpu"))]
 mod wasm;
 pub use detector::find_scale_space_extrema;
 pub use pyramid::{build_dog, build_octaves};
 use serde::{Deserialize, Serialize};
+
+#[cfg(all(test, feature = "cli"))]
+fn test_gpu_device() -> burn::tensor::Device {
+    static DEVICE: std::sync::OnceLock<burn::tensor::Device> = std::sync::OnceLock::new();
+    DEVICE
+        .get_or_init(|| burn::tensor::Device::wgpu_options().init().unwrap())
+        .clone()
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -138,15 +159,21 @@ pub(crate) async fn detect_cached(
     image: &GrayImage,
     params: &Params,
     device: &burn::tensor::Device,
-    plan: &mut Option<pyramid::PyramidPlan>,
+    plan: &mut Option<detector_plan::DetectorPlan>,
 ) -> Result<DetectionReport, String> {
     image.validate()?;
     params.validate()?;
     let start = web_time::Instant::now();
     if plan.as_ref().is_none_or(|p| !p.matches(image, params)) {
-        *plan = Some(pyramid::PyramidPlan::new(image, params, device));
+        *plan = Some(detector_plan::DetectorPlan::new(image, params, device));
     }
-    let dog = build_dog(&plan.as_ref().unwrap().build(image));
+    let dog = plan
+        .as_ref()
+        .unwrap()
+        .build(image)
+        .into_iter()
+        .enumerate()
+        .collect::<Vec<_>>();
     let mut timings = Timings {
         pyramid_setup_ms: start.elapsed().as_secs_f64() * 1000.0,
         ..Timings::default()

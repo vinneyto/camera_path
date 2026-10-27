@@ -52,33 +52,45 @@ fn solve(h: [[f32; 3]; 3], g: [f32; 3]) -> Option<[f32; 3]> {
     v.iter().all(|x| x.is_finite()).then_some(v)
 }
 pub async fn find_scale_space_extrema(dog: &[Octave], p: &Params) -> Result<Vec<KeyPoint>, String> {
-    find_profiled(dog, p, &mut Timings::default()).await
+    let volumes = dog
+        .iter()
+        .enumerate()
+        .filter(|(_, octave)| octave.len() >= 3)
+        .map(|(i, octave)| (i, Tensor::stack(octave.clone(), 0)))
+        .collect::<Vec<_>>();
+    find_profiled(&volumes, p, &mut Timings::default()).await
 }
 pub(crate) async fn find_profiled(
-    dog: &[Octave],
+    dog: &[(usize, Tensor<3>)],
     p: &Params,
     timings: &mut Timings,
 ) -> Result<Vec<KeyPoint>, String> {
+    #[cfg(feature = "gpu-localization")]
+    if let Some((_, _first)) = dog.first() {
+        #[cfg(feature = "cpu")]
+        let is_gpu = _first.device() != burn::tensor::Device::flex();
+        #[cfg(not(feature = "cpu"))]
+        let is_gpu = true;
+        if is_gpu {
+            return crate::gpu_detector::find(dog, p, timings).await;
+        }
+    }
     let threshold = p.contrast_threshold / p.n_octave_layers as f32;
     let mut points = Vec::new();
     let mut transaction = Transaction::default();
     let mut octaves = Vec::new();
     let mut device = None;
-    for (octave, o) in dog.iter().enumerate() {
-        if o.len() < 3 {
-            continue;
-        }
-        let [h, w] = o[0].dims();
-        if w < 3 || h < 3 {
+    for (octave, volume) in dog {
+        let [layers, h, w] = volume.dims();
+        if layers < 3 || w < 3 || h < 3 {
             continue;
         }
         let setup_start = Instant::now();
-        let volume: Tensor<3> = Tensor::stack(o.to_vec(), 0);
-        let mask = extrema_mask(&volume, threshold);
+        let mask = extrema_mask(volume, threshold);
         timings.extrema_setup_ms += setup_start.elapsed().as_secs_f64() * 1000.0;
-        device.get_or_insert_with(|| o[0].device());
-        octaves.push((octave, h, w));
-        transaction = transaction.register(mask).register(volume);
+        device.get_or_insert_with(|| volume.device());
+        octaves.push((*octave, h, w));
+        transaction = transaction.register(mask).register(volume.clone());
     }
     if octaves.is_empty() {
         return Ok(points);

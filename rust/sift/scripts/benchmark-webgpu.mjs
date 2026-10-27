@@ -11,7 +11,15 @@ const files = new Map([
   ["/", html],
   ["/frame.png", path.join(root, "frame.png")],
 ]);
-for (const variant of ["before", "batch", "after"]) {
+for (const variant of [
+  "before",
+  "batch",
+  "after",
+  "gaussian",
+  "compact",
+  "sparse",
+  "cpu",
+]) {
   for (const file of ["camera_path_sift.js", "camera_path_sift_bg.wasm"]) {
     files.set(`/${variant}/${file}`, path.join(root, variant, file));
   }
