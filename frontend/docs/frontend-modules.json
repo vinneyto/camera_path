@@ -4103,6 +4103,7 @@
         "apps/host/src/ui/project-workspace/ui/use-element-height.ts",
         "apps/host/src/ui/scene-editor/index.ts",
         "apps/host/src/ui/scene-editor/lib/is-gaussian-surface-pick-active.ts",
+        "apps/host/src/ui/scene-editor/ui/configure-webgl-viewport.ts",
         "apps/host/src/ui/scene-editor/ui/frame-surface.ts",
         "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
         "apps/host/src/ui/scene-editor/ui/scene-message.tsx",
