@@ -1,5 +1,5 @@
 //! Strict extrema, five localization attempts and rejection before atomic append.
-use crate::localization_ops::LocalizationOps;
+use crate::{detector::BORDER, localization_ops::LocalizationOps};
 use burn::backend::{
     cubecl::dtype_to_storage_type,
     tensor::{FloatTensor, IntTensor},
@@ -117,6 +117,7 @@ fn collect_candidates<F: Float>(
     count: &Tensor<Atomic<i32>>,
     candidates: &mut Tensor<i32>,
     threshold: f32,
+    #[comptime] border: usize,
     #[define(F)] _dtype: ElemType,
 ) {
     let x0 = ABSOLUTE_POS_X as usize + 1;
@@ -125,7 +126,12 @@ fn collect_candidates<F: Float>(
     let width = volume.shape(2);
     let height = volume.shape(1);
     let scales = volume.shape(0);
-    if x0 >= width - 1 || y0 >= height - 1 || s0 >= scales - 1 {
+    if x0 < border
+        || x0 + border >= width
+        || y0 < border
+        || y0 + border >= height
+        || s0 >= scales - 1
+    {
         terminate!();
     }
     let center = at(volume, s0 as i32, y0 as i32, x0 as i32);
@@ -172,6 +178,7 @@ fn localize_points<F: Float>(
     layers: u32,
     #[comptime] subpixel: bool,
     #[comptime] filter: bool,
+    #[comptime] border: usize,
     #[define(F)] _dtype: ElemType,
 ) {
     let destination = ((CUBE_POS_Y * CUBE_COUNT_X + CUBE_POS_X) * 256 + UNIT_POS) as usize;
@@ -207,10 +214,10 @@ fn localize_points<F: Float>(
             let nx = x as f32 + round_even(offset[2]);
             if ns < 1.0
                 || ns >= (scales - 1) as f32
-                || ny < 1.0
-                || ny >= (height - 1) as f32
-                || nx < 1.0
-                || nx >= (width - 1) as f32
+                || ny < border as f32
+                || ny >= height as f32 - border as f32
+                || nx < border as f32
+                || nx >= width as f32 - border as f32
             {
                 terminate!();
             }
@@ -306,6 +313,7 @@ impl LocalizationOps for CubeBackend {
             count.clone().into_tensor_arg(),
             candidates.clone().into_tensor_arg(),
             threshold,
+            BORDER,
             dtype_to_storage_type(volume.dtype),
         );
         #[cfg(feature = "profiling")]
@@ -328,6 +336,7 @@ impl LocalizationOps for CubeBackend {
             layers,
             subpixel,
             filter,
+            BORDER,
             dtype_to_storage_type(volume.dtype),
         );
         (count, points)

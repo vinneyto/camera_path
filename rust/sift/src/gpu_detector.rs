@@ -1,4 +1,4 @@
-use crate::{KeyPoint, Params, Timings, localization_ops};
+use crate::{KeyPoint, Params, Timings, detector::BORDER, localization_ops};
 use burn::tensor::{Tensor, Transaction};
 use web_time::Instant;
 
@@ -19,7 +19,7 @@ async fn find_with_capacity(
     let mut pending = Vec::new();
     for (octave, volume) in dog {
         let [layers, height, width] = volume.dims();
-        if layers < 3 || height < 3 || width < 3 {
+        if layers < 3 || height <= 2 * BORDER || width <= 2 * BORDER {
             continue;
         }
         let positions = (layers - 2) * (height - 2) * (width - 2);

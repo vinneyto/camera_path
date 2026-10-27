@@ -2,6 +2,9 @@ use crate::extrema_mask::extrema_mask;
 use crate::{GrayImage, KeyPoint, Octave, Params, Timings};
 use burn::tensor::{Tensor, Transaction};
 use web_time::Instant;
+
+pub(crate) const BORDER: usize = 5;
+
 fn derivatives(o: &[GrayImage], s: usize, y: usize, x: usize) -> ([f32; 3], [[f32; 3]; 3]) {
     let at = |ds: isize, dy: isize, dx: isize| {
         let l = &o[s.checked_add_signed(ds).unwrap()];
@@ -82,7 +85,7 @@ pub(crate) async fn find_profiled(
     let mut device = None;
     for (octave, volume) in dog {
         let [layers, h, w] = volume.dims();
-        if layers < 3 || w < 3 || h < 3 {
+        if layers < 3 || w <= 2 * BORDER || h <= 2 * BORDER {
             continue;
         }
         let setup_start = Instant::now();
@@ -119,7 +122,13 @@ pub(crate) async fn find_profiled(
         for (i, candidate) in mask.into_iter().enumerate() {
             if candidate {
                 let j = i % plane;
-                ready.push([i / plane + 1, j / (w - 2) + 1, j % (w - 2) + 1]);
+                // Python bounds use the derivative volume, whose coordinates
+                // are one pixel smaller than the original DoG coordinates.
+                let y = j / (w - 2) + 1;
+                let x = j % (w - 2) + 1;
+                if (BORDER..h - BORDER).contains(&y) && (BORDER..w - BORDER).contains(&x) {
+                    ready.push([i / plane + 1, y, x]);
+                }
             }
         }
         let host: Vec<GrayImage> = pixels
@@ -146,10 +155,10 @@ pub(crate) async fn find_profiled(
                     });
                     if next[0] >= 1.0
                         && next[0] < (o.len() - 1) as f64
-                        && next[1] >= 1.0
-                        && next[1] < (h - 1) as f64
-                        && next[2] >= 1.0
-                        && next[2] < (w - 1) as f64
+                        && next[1] >= BORDER as f64
+                        && next[1] < (h - BORDER) as f64
+                        && next[2] >= BORDER as f64
+                        && next[2] < (w - BORDER) as f64
                     {
                         moving.push(next.map(|v| v as usize));
                     }
@@ -195,4 +204,87 @@ pub(crate) async fn find_profiled(
         timings.localization_ms += localize_start.elapsed().as_secs_f64() * 1000.0;
     }
     Ok(points)
+}
+
+#[cfg(all(test, feature = "cli"))]
+mod tests {
+    use super::*;
+    use burn::tensor::{Device, TensorData};
+
+    fn check_border(device: &Device) {
+        let params = Params {
+            enable_edge_like_filtering: false,
+            ..Params::default()
+        };
+        // A quadratic DoG has an exact, known extremum and localization offset.
+        let check = |shape: [usize; 3], peak: [f32; 3], coupling: f32, accepted: bool| {
+            let [layers, height, width] = shape;
+            let mut values = Vec::with_capacity(layers * height * width);
+            for s in 0..layers {
+                for y in 0..height {
+                    for x in 0..width {
+                        let ds = s as f32 - peak[0];
+                        let dy = y as f32 - peak[1];
+                        let dx = x as f32 - peak[2];
+                        values.push(
+                            2.0 - 0.5 * (ds * ds + dy * dy + dx * dx + 2.0 * coupling * dy * dx),
+                        );
+                    }
+                }
+            }
+            let volume = Tensor::from_floats(TensorData::new(values, shape), device);
+            let points = pollster::block_on(find_profiled(
+                &[(0, volume)],
+                &params,
+                &mut Timings::default(),
+            ))
+            .unwrap();
+            assert_eq!(points.len(), usize::from(accepted), "{shape:?}, {peak:?}");
+            if accepted {
+                assert!((points[0].x - peak[2]).abs() < 0.001);
+                assert!((points[0].y - peak[1]).abs() < 0.001);
+                assert_eq!(points[0].class_id, peak[0] as usize);
+            }
+        };
+        // Lower bounds are inclusive and upper bounds exclusive, on both axes.
+        // First/last interior scale layers retain their existing bounds.
+        for (y, x, accepted) in [
+            (10.0, 4.0, false),
+            (10.0, 5.0, true),
+            (10.0, 15.0, true),
+            (10.0, 16.0, false),
+            (4.0, 10.0, false),
+            (5.0, 10.0, true),
+            (15.0, 10.0, true),
+            (16.0, 10.0, false),
+        ] {
+            for s in [1.0, 3.0] {
+                check([5, 21, 21], [s, y, x], 0.0, accepted);
+            }
+        }
+        // Bounds constrain integer positions, not the final subpixel location.
+        for (y, x) in [(10.0, 4.75), (10.0, 15.25), (4.75, 10.0), (15.25, 10.0)] {
+            check([5, 21, 21], [2.0, y, x], 0.0, true);
+        }
+        // Coupled axes make an initial strict extremum move across the border.
+        // Filtering only initial candidates (or final coordinates) is insufficient.
+        for (y, x) in [(10.35, 4.4), (9.65, 15.6), (4.4, 10.35), (15.6, 9.65)] {
+            check([5, 21, 21], [2.0, y, x], 0.8, false);
+        }
+        check([5, 11, 11], [2.0, 5.0, 5.0], 0.0, true);
+        for shape in [[5, 10, 21], [5, 21, 10], [5, 3, 3]] {
+            check(shape, [2.0, 5.0, 5.0], 0.0, false);
+        }
+    }
+
+    #[test]
+    fn border_five_applies_before_and_during_host_localization() {
+        check_border(&Device::flex());
+    }
+
+    #[test]
+    #[ignore = "requires a native GPU; run explicitly for border parity"]
+    fn border_five_applies_before_and_during_gpu_detection() {
+        check_border(&crate::test_gpu_device());
+    }
 }
