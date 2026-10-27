@@ -19,9 +19,10 @@ export function useClearTrajectory(explicitProjectId?: string) {
       actions.selectObject({ id: null, ifCurrentId: trajectoryObjectId });
       actions.hoverObject({ id: null, ifCurrentId: trajectoryObjectId });
       actions.resetPlayback();
-      return invalidateProjectResource(queryClient, projectId, "segments");
+      actions.setCameraMode("orbit");
+      return invalidateProjectResource(queryClient, projectId, "trajectory");
     },
     onError: () =>
-      invalidateProjectResource(queryClient, projectId, "segments"),
+      invalidateProjectResource(queryClient, projectId, "trajectory"),
   });
 }

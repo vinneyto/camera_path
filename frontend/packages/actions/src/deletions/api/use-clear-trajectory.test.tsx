@@ -88,11 +88,20 @@ describe("useClearTrajectory", () => {
       position_segments: [{}],
     });
     queryClient.setQueryData(projectKeys.anchors(project.id), []);
+    const timelineKeys = [
+      projectKeys.speed(project.id),
+      projectKeys.aim(project.id),
+      projectKeys.orientation(project.id),
+      projectKeys.depthOfField(project.id),
+      projectKeys.lidar(project.id),
+    ];
+    for (const key of timelineKeys) queryClient.setQueryData(key, {});
 
     actions.selectObject({ id: trajectoryObjectId });
     actions.hoverObject({ id: trajectoryObjectId });
     actions.setPlaybackFrame({ pathPosition: 0.5, elapsed: 2 });
     actions.setPlaying(true);
+    actions.setCameraMode("trajectory");
     await act(() => result.current.mutateAsync());
     expect(store.getState().sceneInteraction).toEqual({
       hoveredObjectId: null,
@@ -103,8 +112,11 @@ describe("useClearTrajectory", () => {
       elapsed: 0,
       playing: false,
     });
+    expect(store.getState().camera.cameraMode).toBe("orbit");
 
     expect(projectApi.clearTrajectory).toHaveBeenCalledWith(project.id);
+    for (const key of timelineKeys)
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
     expect(
       queryClient.getQueryState(projectKeys.segments(project.id))
         ?.isInvalidated,

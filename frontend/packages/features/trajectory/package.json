@@ -6,6 +6,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@camera-path/commands": "*",
     "@camera-path/actions": "*",
     "@camera-path/api": "*",
     "@camera-path/scene-runtime": "*",
