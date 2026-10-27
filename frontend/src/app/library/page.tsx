@@ -1,21 +1,10 @@
 import { Slot } from "@camera-path/slots";
-import { AuthControl } from "@host/ui/header";
-import Link from "next/link";
 
 export default function LibraryPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-5 py-12">
+    <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-5 py-12">
       <div>
-        <Link
-          className="text-xs text-muted-foreground hover:underline"
-          href="/"
-        >
-          ← Projects
-        </Link>
-        <div className="flex justify-end">
-          <AuthControl />
-        </div>
-        <h1 className="mt-4 text-xl font-semibold">3DGS library</h1>
+        <h1 className="text-xl font-semibold">3DGS library</h1>
         <p className="mt-1 text-xs text-muted-foreground">
           Upload reconstruction files here. Projects will be able to reuse them.
         </p>

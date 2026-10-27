@@ -21,8 +21,8 @@ import type { FeatureSlots } from "@camera-path/slots";
 /** Catalog order, followed by local component order, defines each slot's order. */
 export const featureSlots = [
   rendererPreferencesSlots,
-  identitySlots,
   appearanceSlots,
+  identitySlots,
   cameraViewSlots,
   sceneGridSlots,
   sceneModelsSlots,

@@ -2,6 +2,7 @@
 
 import { SlotProvider } from "@camera-path/slots";
 import { featureSlots } from "@host/composition/feature-slots";
+import { AppShell } from "@host/ui/app-shell/app-shell";
 import { ApplicationUi } from "@host/providers/application-ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
@@ -32,7 +33,9 @@ export function AppProviders({
         <AuthProvider>
           <UserSettingsProvider>
             <SlotProvider features={featureSlots}>
-              <ApplicationUi>{children}</ApplicationUi>
+              <ApplicationUi>
+                <AppShell>{children}</AppShell>
+              </ApplicationUi>
             </SlotProvider>
           </UserSettingsProvider>
         </AuthProvider>

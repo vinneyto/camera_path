@@ -14,7 +14,7 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
   const current = asset.data?.status === 200 ? asset.data.data : null;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-5 py-12">
+    <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-5 py-12">
       <div>
         <Link
           className="text-xs text-muted-foreground hover:underline"

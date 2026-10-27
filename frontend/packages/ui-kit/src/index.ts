@@ -21,3 +21,5 @@ export {
   FLOATING_UI_Z_INDEX_MAX,
   FLOATING_UI_Z_INDEX_MIN,
 } from "@camera-path/ui-kit/z-order";
+
+export { Tooltip } from "@camera-path/ui-kit/tooltip";

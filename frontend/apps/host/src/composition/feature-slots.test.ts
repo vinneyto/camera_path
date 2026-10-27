@@ -38,6 +38,9 @@ it("preserves scene, timeline, settings and header order from the previous host 
     features.flatMap((f) => f.settings?.content ?? []).map((c) => c.name),
   ).toEqual(["RendererSettings", "GridSettings"]);
   expect(
-    features.flatMap((f) => f.header?.controls ?? []).map((c) => c.name),
-  ).toEqual(["ProfileControl", "ThemeToggle"]);
+    features.flatMap((f) => f.profile?.account ?? []).map((c) => c.name),
+  ).toEqual(["ProfileControl"]);
+  expect(
+    features.flatMap((f) => f.navigation?.controls ?? []).map((c) => c.name),
+  ).toEqual(["ThemeToggle"]);
 });

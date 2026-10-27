@@ -40,7 +40,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("keeps the sign-in modal open until a correct email code, then opens the editor menu", async () => {
+it("keeps the sign-in modal open until a correct email code, then shows the editor account", async () => {
   let verified = false;
   const requests: string[] = [];
   vi.stubGlobal(
@@ -84,7 +84,7 @@ it("keeps the sign-in modal open until a correct email code, then opens the edit
   );
   const client = mount();
   const profile = screen.getByRole("button", {
-    name: "Profile",
+    name: "Sign in",
   }) as HTMLButtonElement;
   await waitFor(() => expect(profile.disabled).toBe(false));
   fireEvent.click(profile);
@@ -136,7 +136,7 @@ it("clears a pending challenge when the dialog is cancelled", async () => {
   );
   const client = mount();
   const profile = screen.getByRole("button", {
-    name: "Profile",
+    name: "Sign in",
   }) as HTMLButtonElement;
   await waitFor(() => expect(profile.disabled).toBe(false));
   fireEvent.click(profile);
@@ -157,4 +157,44 @@ it("clears a pending challenge when the dialog is cancelled", async () => {
     "",
   );
   await act(async () => client.clear());
+});
+
+it("shows the signed-in account, retains it on logout failure and returns to sign-in after logout", async () => {
+  let signedIn = true;
+  let failLogout = true;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      if (url.endsWith("/session"))
+        return signedIn
+          ? Response.json({ username: "leo@example.com" })
+          : Response.json({}, { status: 401 });
+      if (url.endsWith("/logout")) {
+        if (failLogout)
+          return Response.json(
+            { detail: "Sign out unavailable" },
+            { status: 503 },
+          );
+        signedIn = false;
+        return new Response(null, { status: 204 });
+      }
+      return Response.json({
+        webgpu_tile_renderer: false,
+        show_grid: true,
+        gaussian_dpr: 1,
+      });
+    }),
+  );
+  const client = mount();
+  expect(await screen.findByText("leo@example.com")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Sign out unavailable",
+  );
+  expect(screen.getByText("leo@example.com")).toBeTruthy();
+  failLogout = false;
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  await screen.findByRole("button", { name: "Sign in" });
+  expect(screen.queryByText("leo@example.com")).toBeNull();
+  client.clear();
 });
