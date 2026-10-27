@@ -862,6 +862,28 @@ async def get_depth_of_field_timeline(
     return DepthOfFieldTimeline(keyframes=project.camera_track.depth_of_field_keyframes)
 
 
+@router.post(
+    "/projects/{project_id}/camera/depth-of-field",
+    response_model=DepthOfFieldTimeline,
+    tags=["Timelines"],
+    summary="Create the default depth-of-field timeline",
+    description="Initialize an absent timeline with default focus settings at the path start. "
+    "Preserve an existing timeline without adding or replacing keyframes.",
+    operation_id="createDepthOfFieldTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def create_depth_of_field_timeline(
+    project_id: str,
+    service: TimelineServiceDep,
+    response: Response,
+    _guard: MutationGuard,
+) -> DepthOfFieldTimeline:
+    project = await service.create_depth_of_field_timeline(project_id)
+    _with_revision(response, project)
+    return DepthOfFieldTimeline(keyframes=project.camera_track.depth_of_field_keyframes)
+
+
 @router.delete(
     "/projects/{project_id}/camera/depth-of-field",
     status_code=status.HTTP_204_NO_CONTENT,

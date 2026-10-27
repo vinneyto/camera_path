@@ -74,3 +74,52 @@ async def test_delete_entire_timeline_is_atomic_persistent_and_preserves_other_t
         ).status_code == 404
         app.dependency_overrides.clear()
         assert (await client.delete(url, headers={"If-Match": '"2"'})).status_code == 401
+
+
+async def test_default_creation_preserves_existing_keys_and_recreates_after_removal(repository):
+    project = await repository.create(Project(name="DOF defaults"))
+    app = create_editor_app(Settings(_env_file=None), repository)
+    url = f"/api/v1/projects/{project.id}/camera/depth-of-field"
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        assert (await client.post(url)).status_code == 428
+        created = await client.post(url, headers={"If-Match": '"0"'})
+        assert created.status_code == 200
+        assert created.headers["ETag"] == '"1"'
+        (key,) = created.json()["keyframes"].values()
+        assert key == DepthOfFieldKeyframe(id=key["id"], path_position=0).model_dump(mode="json")
+        assert (await repository.get(project.id)).camera_track.depth_of_field_keyframes[
+            key["id"]
+        ].model_dump(mode="json") == key
+        assert (await client.post(url, headers={"If-Match": '"0"'})).status_code == 409
+        repeated = await client.post(url, headers={"If-Match": '"1"'})
+        assert repeated.json() == created.json()
+        assert repeated.headers["ETag"] == '"1"'
+        changed = await client.patch(
+            url + f"/keyframes/{key['id']}",
+            json={"path_position": 0.5, "bokeh_scale": 12},
+            headers={"If-Match": '"1"'},
+        )
+        assert changed.status_code == 200
+        extra = await client.post(
+            url + "/keyframes", json={"path_position": 1}, headers={"If-Match": '"2"'}
+        )
+        assert extra.status_code == 201
+        before = (await client.get(url)).json()
+        preserved = await client.post(url, headers={"If-Match": '"3"'})
+        assert preserved.json() == before
+        assert preserved.headers["ETag"] == '"3"'
+        assert (await client.delete(url, headers={"If-Match": '"3"'})).status_code == 204
+        recreated = await client.post(url, headers={"If-Match": '"4"'})
+        (new_key,) = recreated.json()["keyframes"].values()
+        assert new_key["id"] not in before["keyframes"]
+        assert new_key == DepthOfFieldKeyframe(id=new_key["id"], path_position=0).model_dump(
+            mode="json"
+        )
+        assert (await client.get(url)).json() == recreated.json()
+        assert (
+            await client.post(
+                "/api/v1/projects/missing/camera/depth-of-field", headers={"If-Match": '"0"'}
+            )
+        ).status_code == 404
+        app.dependency_overrides.clear()
+        assert (await client.post(url, headers={"If-Match": '"5"'})).status_code == 401

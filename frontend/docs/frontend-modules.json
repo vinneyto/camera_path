@@ -26,6 +26,7 @@
         "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
         "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
+        "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
         "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
         "packages/actions/src/mutations/library/use-delete-library-assets.ts",
         "packages/actions/src/mutations/library/use-upload-library-file.ts",
@@ -688,6 +689,12 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
+              "file": "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
+              "line": 8,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
               "file": "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
               "line": 8,
               "column": 21,
@@ -826,7 +833,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8009,
+            "line": 8123,
             "column": 1
           },
           "usages": [
@@ -892,7 +899,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4164,
+            "line": 4278,
             "column": 1
           },
           "usages": [
@@ -916,7 +923,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4414,
+            "line": 4528,
             "column": 1
           },
           "usages": [
@@ -958,7 +965,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6144,
+            "line": 6258,
             "column": 1
           },
           "usages": [
@@ -982,7 +989,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7878,
+            "line": 7992,
             "column": 1
           },
           "usages": [
@@ -1030,7 +1037,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5154,
+            "line": 5268,
             "column": 1
           },
           "usages": [
@@ -1072,7 +1079,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5647,
+            "line": 5761,
             "column": 1
           },
           "usages": [
@@ -1114,7 +1121,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6884,
+            "line": 6998,
             "column": 1
           },
           "usages": [
@@ -2151,7 +2158,7 @@
             {
               "name": "AddDepthOfFieldCommand",
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
-              "line": 8,
+              "line": 12,
               "column": 1
             },
             {
@@ -2183,20 +2190,20 @@
       },
       "actions": [
         {
-          "name": "useAddDepthOfFieldKeyframeMutation",
+          "name": "useCreateDepthOfFieldTimelineMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
           "definition": {
-            "file": "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
-            "line": 12,
+            "file": "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
+            "line": 7,
             "column": 1
           },
           "usages": [
             {
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
-              "line": 12,
+              "line": 17,
               "column": 20,
-              "expression": "useAddDepthOfFieldKeyframeMutation"
+              "expression": "useCreateDepthOfFieldTimelineMutation"
             }
           ]
         },
@@ -2250,7 +2257,7 @@
           "usages": [
             {
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
-              "line": 11,
+              "line": 16,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -2304,7 +2311,7 @@
           "usages": [
             {
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
-              "line": 9,
+              "line": 13,
               "column": 20,
               "expression": "useDepthOfFieldTimeline()"
             },
@@ -2331,6 +2338,24 @@
               "line": 15,
               "column": 18,
               "expression": "useScenePoints()"
+            }
+          ]
+        },
+        {
+          "name": "useTrajectoryGeometry",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-trajectory-geometry.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 15,
+              "column": 22,
+              "expression": "useTrajectoryGeometry()"
             }
           ]
         },
@@ -2365,16 +2390,29 @@
           "statePaths": ["playback"],
           "usages": [
             {
-              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
-              "line": 10,
-              "column": 20,
-              "expression": "usePlaybackState()"
-            },
-            {
               "file": "packages/features/depth-of-field/src/scene/scene.tsx",
               "line": 12,
               "column": 20,
               "expression": "usePlaybackState()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+              "line": 14,
+              "column": 20,
+              "expression": "useSceneInteraction()"
             }
           ]
         }

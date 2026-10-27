@@ -29,3 +29,5 @@ export * from "./user-settings/create-user-settings-actions";
 export * from "./user-settings/user-settings-actions-provider";
 
 export { useDeleteDepthOfFieldTimeline as useDeleteDepthOfFieldTimelineMutation } from "./mutations/depth-of-field/use-delete-depth-of-field-timeline";
+
+export { useCreateDepthOfFieldTimeline as useCreateDepthOfFieldTimelineMutation } from "./mutations/depth-of-field/use-create-depth-of-field-timeline";

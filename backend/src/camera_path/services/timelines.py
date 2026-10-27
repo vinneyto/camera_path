@@ -172,6 +172,15 @@ class TimelineService(ServiceBase):
         )
         return await self._save_orientation(draft, expected)
 
+    async def create_depth_of_field_timeline(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        if draft.camera_track.depth_of_field_keyframes:
+            return draft
+        expected = draft.revision
+        item = DepthOfFieldKeyframe(path_position=0)
+        draft.camera_track.depth_of_field_keyframes[item.id] = item
+        return await self._save_depth_of_field(draft, expected)
+
     async def add_depth_of_field_keyframe(
         self, project_id: str, data: DepthOfFieldKeyframeCreate
     ) -> Project:
