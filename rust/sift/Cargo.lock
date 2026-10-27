@@ -1159,7 +1159,9 @@ name = "camera-path-sift"
 version = "0.1.0"
 dependencies = [
  "burn",
+ "burn-cubecl",
  "clap",
+ "cubecl",
  "getrandom 0.4.3",
  "image",
  "pollster",

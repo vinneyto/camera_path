@@ -12,14 +12,18 @@ the upper left. Fields are `x`, `y`, `size`, `octave`, `class_id`, `response`.
 
 ## Backends
 
-Burn 0.22 runs Gaussian convolutions, DoG and all 26-neighbor comparisons as
-tensor operations. The neighbor test partitions them into 18 + 6 + 2 disjoint
-groups, using two pooling passes for both signs while preserving strict inequalities.
+Burn 0.22 runs Gaussian convolutions and DoG as tensor operations. A custom
+CubeCL kernel, registered through Burn's backend extension and Fusion dispatch,
+checks absolute contrast and all 26 neighbors in one pass per octave. It preserves
+strict inequalities, including rejection of equal neighbors, and handles minima
+and maxima independently of their sign. The CPU reference uses equivalent pooled
+groups of 18 + 6 + 2 neighbors.
 Gaussian kernels and reflection/downsampling index tensors are cached between frames.
 All sigma layers of an octave share a horizontal convolution and a grouped vertical
 convolution to reduce the number of CPU-to-GPU dispatches. Browser WASM explicitly initializes **WebGPU**, with no CPU
-fallback. Each octave uses an asynchronous transaction to read its candidate mask
-and DoG. Small 3×3 localization solves run on the host for those candidates.
+fallback. All octaves register their candidate masks and DoG volumes in one
+frame-level transaction, followed by one explicit flush and one asynchronous
+readback. Small 3×3 localization solves run on the host for those candidates.
 
 The native CLI defaults to Burn's **wgpu** backend (Metal/Vulkan/DX12 as selected
 by wgpu). `--backend cpu` explicitly selects Burn Flex for reproducible reference
@@ -131,3 +135,35 @@ points within octave/layer, preserving multiplicity, and rejects count or positi
 changes. Float32 convolution/solve ordering can cause small numeric differences;
 this is not a bitwise-equivalence claim. Browser resampling/grayscale can differ
 from OpenCV's resize and integer grayscale conversion.
+
+Run the GPU fixture and specialized-kernel tests explicitly on a GPU machine:
+
+```sh
+cargo test --release --manifest-path rust/sift/Cargo.toml --locked -- --include-ignored
+```
+
+The kernel test covers all 26 equal-neighbor positions, both signs, negative
+maxima and positive minima, exact contrast equality, odd dispatch dimensions and
+transposed input strides.
+
+## Reproducing the browser performance comparison
+
+`scripts/benchmark-webgpu.mjs` serves a fixed PNG and three saved release WASM
+packages. Prepare a directory with `frame.png` and `before/`, `batch/`, `after/`,
+each containing `camera_path_sift.js` and `camera_path_sift_bg.wasm`. Build each
+revision with `npm run sift:build`, then copy those two generated files before
+building the next revision. `before` is commit `66c4983`; `batch` changes only the
+frame-level transaction; `after` also enables the custom extrema kernel.
+
+```sh
+node rust/sift/scripts/benchmark-webgpu.mjs /absolute/benchmark-directory 3110
+```
+
+Open `http://localhost:3110`, run **Before** first and then the other variants.
+Each run uses 12 warm-up detections and 30 measured detections with default
+parameters, reusing the detector and GPU session. It reports p50/p95 of the
+awaited WASM call, excludes camera/capture/rendering, checks deterministic output
+on every call and compares the complete serialized point array with Before.
+Expand **Raw measurements** to save the full results. Repeating a variant reuses
+its existing detector; reload the page for a fresh session. Stage timings include
+lazy Burn work and should not be interpreted as GPU timestamp measurements.

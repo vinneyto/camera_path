@@ -61,31 +61,47 @@ pub(crate) async fn find_profiled(
 ) -> Result<Vec<KeyPoint>, String> {
     let threshold = p.contrast_threshold / p.n_octave_layers as f32;
     let mut points = Vec::new();
+    let mut transaction = Transaction::default();
+    let mut octaves = Vec::new();
+    let mut device = None;
     for (octave, o) in dog.iter().enumerate() {
+        if o.len() < 3 {
+            continue;
+        }
         let [h, w] = o[0].dims();
-        if o.len() < 3 || w < 3 || h < 3 {
+        if w < 3 || h < 3 {
             continue;
         }
         let setup_start = Instant::now();
         let volume: Tensor<3> = Tensor::stack(o.to_vec(), 0);
         let mask = extrema_mask(&volume, threshold);
-        // One async transaction reads the mask and DoG data after GPU completion.
-        // Sparse 3×3 localization avoids dispatching tiny kernels for each point.
         timings.extrema_setup_ms += setup_start.elapsed().as_secs_f64() * 1000.0;
-        let submit_start = Instant::now();
-        o[0].device().flush().map_err(|e| e.to_string())?;
-        timings.gpu_submit_ms += submit_start.elapsed().as_secs_f64() * 1000.0;
-        let read_start = Instant::now();
-        let data = Transaction::default()
-            .register(mask)
-            .register(volume)
-            .execute_async()
-            .await
-            .map_err(|e| e.to_string())?;
-        timings.gpu_readback_ms += read_start.elapsed().as_secs_f64() * 1000.0;
+        device.get_or_insert_with(|| o[0].device());
+        octaves.push((octave, h, w));
+        transaction = transaction.register(mask).register(volume);
+    }
+    if octaves.is_empty() {
+        return Ok(points);
+    }
+    // Queue every octave before the single frame-level synchronization/readback.
+    // Data remains registered in octave order, independent of device execution order.
+    let submit_start = Instant::now();
+    device.unwrap().flush().map_err(|e| e.to_string())?;
+    timings.gpu_submit_ms += submit_start.elapsed().as_secs_f64() * 1000.0;
+    let read_start = Instant::now();
+    let data = transaction
+        .execute_async()
+        .await
+        .map_err(|e| e.to_string())?;
+    timings.gpu_readback_ms += read_start.elapsed().as_secs_f64() * 1000.0;
+    for ((octave, h, w), octave_data) in octaves.into_iter().zip(data.as_chunks::<2>().0) {
         let localize_start = Instant::now();
-        let mask = data[0].try_to_vec_as::<bool>().map_err(|e| e.to_string())?;
-        let pixels = data[1].try_to_vec::<f32>().map_err(|e| e.to_string())?;
+        let mask = octave_data[0]
+            .try_to_vec_as::<bool>()
+            .map_err(|e| e.to_string())?;
+        let pixels = octave_data[1]
+            .try_to_vec::<f32>()
+            .map_err(|e| e.to_string())?;
         let plane = (h - 2) * (w - 2);
         let mut ready = Vec::new();
         for (i, candidate) in mask.into_iter().enumerate() {

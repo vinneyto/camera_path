@@ -11,11 +11,13 @@ crate-type = ["cdylib", "rlib"]
 default = ["cli"]
 cli = ["dep:image", "dep:clap", "dep:pollster", "cpu", "gpu"]
 cpu = ["burn/flex"]
-gpu = ["burn/wgpu", "burn/fusion"]
+gpu = ["burn/wgpu", "burn/fusion", "dep:burn-cubecl", "dep:cubecl"]
 wasm = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "gpu", "burn/webgpu"]
 
 [dependencies]
-burn = { version = "=0.22.0", default-features = false, features = ["std"] }
+burn = { version = "=0.22.0", default-features = false, features = ["std", "extension"] }
+burn-cubecl = { version = "=0.22.0", default-features = false, optional = true }
+cubecl = { version = "=0.11.3", default-features = false, optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 web-time = "1"

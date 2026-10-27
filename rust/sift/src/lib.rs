@@ -1,6 +1,10 @@
 //! Port of photogrammetry/src/sift/sift.py (2026-10-27), detection only.
 mod detector;
+#[cfg(feature = "gpu")]
+mod extrema_kernel;
 mod extrema_mask;
+#[cfg(any(feature = "cpu", test))]
+mod extrema_mask_reference;
 mod pyramid;
 #[cfg(feature = "wasm")]
 mod wasm;
