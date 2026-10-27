@@ -1,5 +1,5 @@
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
-import { Color, WebGLRenderer } from "three";
+import { Color, SRGBColorSpace, WebGLRenderer } from "three";
 
 import { SparkGaussianCloudInstance } from "@camera-path/scene-runtime/surface/adapters/spark/spark-gaussian-cloud-instance";
 import { enableAdditionalObjectLayers } from "@camera-path/scene-runtime/surface/model/enable-additional-object-layers";
@@ -43,7 +43,12 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     if (this.disposed)
       throw new Error("SparkGaussianRenderingBackend is disposed");
     this.renderer.setClearColor(
-      new Color().setRGB(background[0], background[1], background[2]),
+      new Color().setRGB(
+        background[0],
+        background[1],
+        background[2],
+        SRGBColorSpace,
+      ),
       background[3],
     );
   }

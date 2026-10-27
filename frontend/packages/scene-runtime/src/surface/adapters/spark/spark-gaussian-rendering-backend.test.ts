@@ -1,4 +1,10 @@
-import { Object3D, type WebGLRenderer } from "three";
+import {
+  ACESFilmicToneMapping,
+  Color,
+  Object3D,
+  SRGBColorSpace,
+  type WebGLRenderer,
+} from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import { SparkGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/spark/spark-gaussian-rendering-backend";
@@ -32,6 +38,38 @@ vi.mock("@sparkjsdev/spark", async () => {
 });
 
 describe("Spark reference backend", () => {
+  it.each([0x0c1017, 0xebe9e5])(
+    "preserves the sRGB background #%s without changing scene color settings",
+    (hex) => {
+      const previousColor = new Color("#123456");
+      const setClearColor = vi.fn();
+      const renderer = {
+        getClearColor: (target: Color) => target.copy(previousColor),
+        getClearAlpha: () => 0.4,
+        setClearColor,
+        outputColorSpace: SRGBColorSpace,
+        toneMapping: ACESFilmicToneMapping,
+        toneMappingExposure: 1.7,
+      } as unknown as WebGLRenderer;
+      const backend = new SparkGaussianRenderingBackend({ renderer });
+      backend.setBackground([
+        ((hex >> 16) & 255) / 255,
+        ((hex >> 8) & 255) / 255,
+        (hex & 255) / 255,
+        0.8,
+      ]);
+      const [color, alpha] = setClearColor.mock.lastCall!;
+      expect((color as Color).getHex(SRGBColorSpace)).toBe(hex);
+      expect((color as Color).equals(new Color(hex))).toBe(true);
+      expect(alpha).toBe(0.8);
+      expect(renderer.outputColorSpace).toBe(SRGBColorSpace);
+      expect(renderer.toneMapping).toBe(ACESFilmicToneMapping);
+      expect(renderer.toneMappingExposure).toBe(1.7);
+      backend.dispose();
+      expect(setClearColor).toHaveBeenLastCalledWith(previousColor, 0.4);
+    },
+  );
+
   it("loads a project cloud, exposes its scene object, and releases it", async () => {
     sparkState.disposedMeshes = 0;
     sparkState.disposedRenderers = 0;

@@ -3,6 +3,7 @@ import type { ThreeElement, ThreeEvent } from "@react-three/fiber";
 import type { Object3D } from "three";
 
 export type SceneSurfacePoint = [number, number, number];
+/** Display sRGB components in [0, 1], followed by alpha. */
 export type SceneSurfaceBackground = readonly [number, number, number, number];
 
 export interface SceneSurfaceBounds {
