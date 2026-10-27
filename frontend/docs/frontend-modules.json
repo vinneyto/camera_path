@@ -1640,7 +1640,7 @@
         "packages/features/appearance/src/ui/theme-toggle.tsx"
       ],
       "slots": {
-        "header": {
+        "navigation": {
           "controls": [
             {
               "name": "ThemeToggle",
@@ -2425,15 +2425,16 @@
       "entrypoint": "packages/features/identity/src/index.ts",
       "files": [
         "packages/features/identity/src/index.ts",
+        "packages/features/identity/src/ui/profile-account.tsx",
         "packages/features/identity/src/ui/profile-control.tsx"
       ],
       "slots": {
-        "header": {
-          "controls": [
+        "profile": {
+          "account": [
             {
               "name": "ProfileControl",
               "file": "packages/features/identity/src/ui/profile-control.tsx",
-              "line": 8,
+              "line": 9,
               "column": 1
             }
           ]
@@ -2452,8 +2453,14 @@
           },
           "usages": [
             {
+              "file": "packages/features/identity/src/ui/profile-account.tsx",
+              "line": 7,
+              "column": 16,
+              "expression": "useAuth()"
+            },
+            {
               "file": "packages/features/identity/src/ui/profile-control.tsx",
-              "line": 9,
+              "line": 10,
               "column": 16,
               "expression": "useAuth()"
             }
@@ -4207,10 +4214,11 @@
         "apps/host/src/providers/user-settings-provider.tsx",
         "apps/host/src/server/proxy-api-request.ts",
         "apps/host/src/testing/editor-host.tsx",
+        "apps/host/src/ui/app-shell/app-shell.tsx",
+        "apps/host/src/ui/app-shell/app-sidebar.tsx",
+        "apps/host/src/ui/app-shell/navigation-link.tsx",
+        "apps/host/src/ui/app-shell/profile-menu.tsx",
         "apps/host/src/ui/commands/workspace-commands.tsx",
-        "apps/host/src/ui/header/auth-control.tsx",
-        "apps/host/src/ui/header/index.ts",
-        "apps/host/src/ui/header/settings-menu.tsx",
         "apps/host/src/ui/project-list/index.ts",
         "apps/host/src/ui/project-list/ui/project-list-page.tsx",
         "apps/host/src/ui/project-workspace/index.ts",
@@ -4967,6 +4975,7 @@
         "packages/ui-kit/src/timeline/timeline-lane.tsx",
         "packages/ui-kit/src/timeline/timeline-stack.tsx",
         "packages/ui-kit/src/timeline/timeline-track-header.tsx",
+        "packages/ui-kit/src/tooltip.tsx",
         "packages/ui-kit/src/z-order.ts"
       ],
       "slots": {},

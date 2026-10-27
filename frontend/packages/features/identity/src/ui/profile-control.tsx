@@ -1,9 +1,10 @@
 "use client";
+import { ProfileAccount } from "./profile-account";
 import { UserRound } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@camera-path/api/identity/auth-provider";
-import { Button, DropdownMenu, Input, Modal } from "@camera-path/ui-kit";
+import { Button, Input, Modal } from "@camera-path/ui-kit";
 
 export function ProfileControl() {
   const auth = useAuth();
@@ -27,14 +28,15 @@ export function ProfileControl() {
   const [password, setPassword] = useState("");
   const trigger = (
     <Button
-      aria-label="Profile"
-      className="size-10 md:size-8"
+      aria-label="Sign in"
+      className="h-9 px-3"
       disabled={auth.loading || auth.pending}
-      size="icon"
+      size="sm"
       title={auth.username ? `Profile: ${auth.username}` : "Sign in"}
-      variant="ghost"
+      variant="outline"
     >
       <UserRound className="size-4" />
+      Sign in
     </Button>
   );
 
@@ -52,35 +54,7 @@ export function ProfileControl() {
     }
   }
 
-  if (auth.canEdit) {
-    return (
-      <div className="relative">
-        <DropdownMenu
-          trigger={trigger}
-          items={[
-            {
-              label: auth.username ?? "Profile",
-              onSelect: () => {},
-              disabled: true,
-            },
-            {
-              label: "Sign out",
-              onSelect: () => void auth.logout(),
-              disabled: auth.pending,
-            },
-          ]}
-        />
-        {auth.error && (
-          <p
-            className="absolute right-0 top-full w-60 rounded-md border bg-popover p-2 text-xs text-destructive shadow-lg"
-            role="alert"
-          >
-            {auth.error.message}
-          </p>
-        )}
-      </div>
-    );
-  }
+  if (auth.canEdit) return <ProfileAccount />;
 
   return (
     <Modal

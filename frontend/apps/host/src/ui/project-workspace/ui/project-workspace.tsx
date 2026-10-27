@@ -25,7 +25,7 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
 
   if (projectQuery.isPending || trajectoryQuery.isPending || settingsLoading) {
     return (
-      <main className="flex h-screen items-center justify-center">
+      <main className="flex h-full items-center justify-center">
         <LoaderCircle className="size-5 animate-spin text-muted-foreground" />
       </main>
     );
@@ -33,14 +33,14 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
 
   if (!project) {
     return (
-      <main className="flex h-screen items-center justify-center p-6 text-xs text-destructive">
+      <main className="flex h-full items-center justify-center p-6 text-xs text-destructive">
         {queryError instanceof Error ? queryError.message : "Project not found"}
       </main>
     );
   }
 
   return (
-    <main className="grid h-dvh min-h-0 grid-cols-1 grid-rows-1 overflow-hidden [&:has([data-project-sidebar]>*)]:grid-rows-[minmax(0,1fr)_auto] md:[&:has([data-project-sidebar]>*)]:grid-cols-[minmax(0,1fr)_300px] md:[&:has([data-project-sidebar]>*)]:grid-rows-1">
+    <main className="grid h-full min-h-0 grid-cols-1 grid-rows-1 overflow-hidden [&:has([data-project-sidebar]>*)]:grid-rows-[minmax(0,1fr)_auto] md:[&:has([data-project-sidebar]>*)]:grid-cols-[minmax(0,1fr)_300px] md:[&:has([data-project-sidebar]>*)]:grid-rows-1">
       <Slot name="project.root" />
       <div className="flex min-h-0 min-w-0 flex-col">
         <ProjectHeader title={project.name} revision={project.revision} />

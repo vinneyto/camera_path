@@ -9,7 +9,8 @@ export interface FeatureSlots {
     readonly content?: SlotComponents;
     readonly details?: SlotComponents;
   };
-  readonly header?: { readonly controls?: SlotComponents };
+  readonly profile?: { readonly account?: SlotComponents };
+  readonly navigation?: { readonly controls?: SlotComponents };
   readonly project?: {
     readonly root?: SlotComponents;
     readonly scene?: SlotComponents;

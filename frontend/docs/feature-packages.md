@@ -64,7 +64,7 @@ mount/cleanup выполняет React. Данные и действия не п
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Страница проектов            | `ProjectsContent`                                                                                                   |
 | Страница библиотеки / модели | `LibraryContent`, `LibraryDetails`                                                                                  |
-| Header controls              | `ProfileControl`, `ThemeToggle`                                                                                     |
+| Боковая панель / профиль     | `ThemeToggle`, `ProfileControl`                                                                                     |
 | Settings modal               | `RendererSettings`, `GridSettings`                                                                                  |
 | Project root                 | `PlaybackLoop`                                                                                                      |
 | Project header status        | `AnchorStatus`, `TrajectoryStatus`                                                                                  |
@@ -74,6 +74,14 @@ mount/cleanup выполняет React. Данные и действия не п
 | Scene hints / toolbar        | `AnchorHint`, `CloudPlacementHint`, `CameraViewToolbar`                                                             |
 | Timeline controls            | `PlaybackControls`                                                                                                  |
 | Timeline tracks              | `SpeedTimeline`, `CameraAimTimeline`, `CameraOrientationTimeline`, `DepthOfFieldTimeline`, `LidarTimeline`          |
+
+Общий `AppShell` находится в host и монтируется один раз под providers приложения.
+Он содержит постоянную боковую навигацию и прокручиваемую карточку контента.
+`navigation.controls` предоставляет переключатель темы, `profile.account` — вход/выход
+и текущий аккаунт. Host объединяет `profile.account` и `settings.content` в одном диалоге
+профиля. Контейнеры слотов остаются в host; фичи не монтируют другие фичи.
+Страницы используют высоту карточки (`h-full`), а canvas и оверлеи измеряют свою область,
+без ручного вычитания ширины навигации из размеров окна.
 
 В `apps/host/src/ui/scene-editor/ui/scene-contents.tsx`:
 
