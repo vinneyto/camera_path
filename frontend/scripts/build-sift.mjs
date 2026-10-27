@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { prepareSiftToolchain } from "./prepare-sift-toolchain.mjs";
 const frontend = fileURLToPath(new URL("..", import.meta.url));
 const crate = path.resolve(frontend, "../rust/sift");
 const output = path.join(frontend, "public/sift");
@@ -23,6 +24,9 @@ execFileSync(
   ],
   {
     stdio: "inherit",
-    env: { ...process.env, CARGO_PROFILE_RELEASE_OPT_LEVEL: "2" },
+    env: {
+      ...(await prepareSiftToolchain()),
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: "2",
+    },
   },
 );

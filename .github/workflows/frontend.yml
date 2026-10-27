@@ -25,7 +25,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust/sift
-      - run: cargo install wasm-pack --version 0.13.1 --locked
+      - run: cargo install wasm-pack --version 0.15.0 --locked
       - run: cargo fmt --manifest-path rust/sift/Cargo.toml --check
       - run: cargo test --manifest-path rust/sift/Cargo.toml --locked
       - run: cargo clippy --manifest-path rust/sift/Cargo.toml --locked -- -D warnings

@@ -27,11 +27,11 @@ checks and CI. These share the same detector and parameters.
 
 ## Local browser demo
 
-Requires Rust >= 1.95, Node 24, and wasm-pack 0.13.1:
+Requires Rust >= 1.95, Node 24 and wasm-pack:
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo install wasm-pack --version 0.13.1 --locked
+cargo install wasm-pack --version 0.15.0 --locked
 cd frontend
 npm ci
 npm run dev -- --port 3107
@@ -39,6 +39,8 @@ npm run dev -- --port 3107
 
 `predev` and `prebuild` build the WASM assets into ignored `frontend/public/sift`.
 To rebuild explicitly, run `npm run sift:build` in `frontend`.
+On Vercel, the build script installs the stable minimal Rust toolchain and WASM
+target and wasm-pack 0.15.0 inside the ephemeral build container when needed.
 Open `http://localhost:3107/sift`, or choose **SIFT lab** in the desktop rail or
 mobile menu. This page works without the Python backend or a project.
 
