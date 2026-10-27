@@ -1,38 +1,23 @@
 "use client";
 import { Slot } from "@camera-path/slots";
-import { Camera, FolderOpen, Library } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { NavigationLink } from "./navigation-link";
+import { Camera } from "lucide-react";
+import { NavigationLinks } from "./navigation-links";
 import { ProfileMenu } from "./profile-menu";
 
 export function AppSidebar() {
-  const pathname = usePathname();
   return (
     <aside
       aria-label="Application sidebar"
-      className="relative z-50 flex h-full w-14 shrink-0 flex-col items-center px-1.5 py-3 sm:w-[68px] sm:px-2 sm:py-4"
+      className="relative z-50 hidden h-full w-12 shrink-0 flex-col items-center px-1 py-2 md:flex"
     >
       <div
         aria-label="Camera Path"
-        className="mb-7 flex size-10 shrink-0 items-center justify-center text-foreground sm:size-11"
+        className="mb-5 flex size-8 shrink-0 items-center justify-center text-foreground"
       >
-        <Camera className="size-[23px]" strokeWidth={1.6} aria-hidden="true" />
+        <Camera className="size-[18px]" strokeWidth={1.6} aria-hidden="true" />
       </div>
-      <nav aria-label="Main navigation" className="flex flex-col gap-2">
-        <NavigationLink
-          href="/"
-          label="Projects"
-          icon={FolderOpen}
-          active={pathname === "/" || pathname.startsWith("/projects/")}
-        />
-        <NavigationLink
-          href="/library"
-          label="Library"
-          icon={Library}
-          active={pathname === "/library" || pathname.startsWith("/library/")}
-        />
-      </nav>
-      <div className="mt-auto flex flex-col items-center gap-2 pt-8 [&_button]:size-10 [&_button]:rounded-xl [&_svg]:size-[18px] sm:[&_button]:size-11">
+      <NavigationLinks />
+      <div className="mt-auto flex flex-col items-center gap-1 pt-6 [&_button]:size-8 [&_button]:rounded-lg [&_svg]:size-4">
         <Slot name="navigation.controls" />
         <ProfileMenu />
       </div>

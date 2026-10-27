@@ -9,6 +9,8 @@ interface NavigationLinkProps {
   label: string;
   icon: LucideIcon;
   active: boolean;
+  variant?: "rail" | "menu";
+  onNavigate?: () => void;
 }
 
 export function NavigationLink({
@@ -16,22 +18,34 @@ export function NavigationLink({
   label,
   icon: Icon,
   active,
+  variant = "rail",
+  onNavigate,
 }: NavigationLinkProps) {
-  return (
-    <Tooltip label={label}>
-      <Link
-        href={href}
-        aria-label={label}
-        aria-current={active ? "page" : undefined}
-        className={cn(
-          "flex size-10 items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:size-11",
-          active
-            ? "bg-accent text-foreground shadow-sm"
-            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-        )}
-      >
-        <Icon className="size-[19px]" strokeWidth={1.7} aria-hidden="true" />
-      </Link>
-    </Tooltip>
+  const link = (
+    <Link
+      href={href}
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      onClick={onNavigate}
+      className={cn(
+        "flex items-center rounded-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+        variant === "rail"
+          ? "size-8 justify-center"
+          : "h-11 gap-3 px-3 text-sm",
+        active
+          ? "bg-accent text-foreground shadow-sm"
+          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+      )}
+    >
+      <Icon
+        className={variant === "rail" ? "size-4" : "size-[18px]"}
+        strokeWidth={1.7}
+        aria-hidden="true"
+      />
+      <span className={variant === "rail" ? "sr-only" : undefined}>
+        {label}
+      </span>
+    </Link>
   );
+  return variant === "rail" ? <Tooltip label={label}>{link}</Tooltip> : link;
 }
