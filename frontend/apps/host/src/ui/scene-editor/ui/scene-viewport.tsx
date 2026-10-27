@@ -1,5 +1,7 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
+import { createRenderPipelineEvents } from "@camera-path/render-pipeline";
+import { configureWebGlViewport } from "./configure-webgl-viewport";
 import { SceneContents } from "./scene-contents";
 import { SceneViewportFrame } from "./scene-viewport-frame";
 import type { SceneViewportProps } from "./scene-viewport-types";
@@ -13,6 +15,8 @@ export function SceneViewport(props: SceneViewportProps) {
       unavailableMessage="This renderer is unavailable in this browser"
       renderScene={(context) => (
         <Canvas
+          events={createRenderPipelineEvents}
+          onCreated={configureWebGlViewport}
           onPointerMissed={props.onScenePointerMissed}
           camera={{ far: 100, fov: 42, near: 0.01, position: [4, 3, 6] }}
           dpr={[1, 2]}
