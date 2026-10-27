@@ -862,6 +862,29 @@ async def get_depth_of_field_timeline(
     return DepthOfFieldTimeline(keyframes=project.camera_track.depth_of_field_keyframes)
 
 
+@router.delete(
+    "/projects/{project_id}/camera/depth-of-field",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Timelines"],
+    summary="Delete the depth-of-field timeline",
+    description=(
+        "Remove every depth-of-field keyframe while preserving the trajectory and other timelines."
+    ),
+    operation_id="deleteDepthOfFieldTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def delete_depth_of_field_timeline(
+    project_id: str,
+    service: TimelineServiceDep,
+    _guard: MutationGuard,
+) -> Response:
+    try:
+        return _deleted(await service.delete_depth_of_field_timeline(project_id))
+    except KeyError as error:
+        raise _not_found(error) from error
+
+
 @router.post(
     "/projects/{project_id}/camera/depth-of-field/keyframes",
     response_model=DepthOfFieldKeyframe,

@@ -30,6 +30,7 @@ it("preserves scene, timeline, settings and header order from the previous host 
     "RemoveCloudCommand",
     "RemoveTrajectoryCommand",
     "AddDepthOfFieldCommand",
+    "RemoveDepthOfFieldCommand",
     "AddLidarCommand",
     "RemoveLidarCommand",
   ]);

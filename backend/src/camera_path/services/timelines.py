@@ -198,6 +198,12 @@ class TimelineService(ServiceBase):
         )
         return await self._save_depth_of_field(draft, expected)
 
+    async def delete_depth_of_field_timeline(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.camera_track.depth_of_field_keyframes.clear()
+        return await self._save_depth_of_field(draft, expected)
+
     async def delete_depth_of_field_keyframe(self, project_id: str, keyframe_id: str) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision
