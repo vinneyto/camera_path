@@ -16,6 +16,7 @@ import { slots as sceneGridSlots } from "@camera-path/feature-scene-grid";
 import { slots as sceneModelsSlots } from "@camera-path/feature-scene-models";
 import { slots as speedTrackSlots } from "@camera-path/feature-speed-track";
 import { slots as trajectorySlots } from "@camera-path/feature-trajectory";
+import { slots as siftSlots } from "@camera-path/feature-sift";
 import type { FeatureSlots } from "@camera-path/slots";
 
 /** Catalog order, followed by local component order, defines each slot's order. */
@@ -37,4 +38,5 @@ export const featureSlots = [
   chatAgentSlots,
   projectsSlots,
   librarySlots,
+  siftSlots,
 ] as const satisfies readonly FeatureSlots[];

@@ -1,0 +1,4428 @@
+{
+  "client_date": "2026-10-27",
+  "timezone": "Europe/Moscow",
+  "baseline_commit": "b0ba2e3b086baf4d9c8e962fceaae55133ae6579",
+  "environment": {
+    "os": "macOS 27.0.1",
+    "browser": "Codex in-app browser",
+    "execution": "WebGPU in one persistent dedicated worker",
+    "rust": "1.99.0",
+    "burn": "0.22.0",
+    "cubecl": "0.11.3",
+    "wasm_pack": "0.13.1",
+    "release_opt_level": 2,
+    "features": "wasm,profiling"
+  },
+  "input": {
+    "width": 384,
+    "height": 512,
+    "description": "Same fixed grayscale PNG as webgpu-2026-10-27.json; no resizing in browser",
+    "png_sha256": "8c839d5441338fed6491ad0f98e11e49d34b89ac8f81a1559da7fa7018a9e9b7"
+  },
+  "wasm_sha256": "bddac7152f3ee24745a3759bec26a033a626677f268d469b8039f2c815657dd6",
+  "method": {
+    "unprofiled_session_warmup": 120,
+    "warmup_per_mode": 12,
+    "samples_per_mode": 30,
+    "sequence": ["baseline", "apis", "host", "frame", "kernels", "baseline"],
+    "params": {
+      "n_octave_layers": 3,
+      "contrast_threshold": 0.04,
+      "edge_threshold": 10,
+      "sigma": 1.6,
+      "enable_subpixel_localization": true,
+      "enable_edge_like_filtering": true
+    },
+    "notes": [
+      "CPU values are synchronous host wall time, not CPU cycle counters. GPU timestamps use their own clock and overlap host/wait times; do not add them.",
+      "The frame mode keeps the normal single compute pass and adds one outer GPU timestamp window. Its GPU interval is the minimally instrumented reference.",
+      "Kernel timing forces per-kernel pass boundaries and extra submissions. Its GPU window includes profiler-induced idle gaps; it is not production GPU execution cost.",
+      "Missing GPU durations stay null, not zero. The measured kernel sum is partial when coverage is incomplete. Summary fields are separate medians and are not additive.",
+      "API calls below the measured ~0.1 ms CPU clock quantum may show zero. API sync time excludes async wait; async settled latency sums overlap and are not total elapsed readback time.",
+      "Ordinary warmed frames create no GPU buffers, shader modules or compute pipelines. The 12-warmup historical comparison was an early warm-up snapshot, not a steady-state CPU/GPU comparison.",
+      "Default application builds do not enable profiling; shader math, detector parameters and normal batching are unchanged."
+    ]
+  },
+  "early_warmup_control": [
+    {
+      "mode": "baseline",
+      "p50_ms": 53.89999997615814,
+      "p95_ms": 60,
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 3.3,
+        "extrema_setup_ms": 0.7,
+        "gpu_submit_ms": 30.8,
+        "gpu_readback_ms": 13.299999999999999,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      }
+    },
+    {
+      "mode": "apis",
+      "p50_ms": 24.700000047683716,
+      "p95_ms": 27.5,
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 12,
+        "gpu_readback_ms": 8.5,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      }
+    },
+    {
+      "mode": "host",
+      "p50_ms": 25.59999990463257,
+      "p95_ms": 27.700000047683716,
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 11.799999999999999,
+        "gpu_readback_ms": 8.6,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      }
+    },
+    {
+      "mode": "frame",
+      "p50_ms": 26.800000071525574,
+      "p95_ms": 28.200000047683716,
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 11.799999999999999,
+        "gpu_readback_ms": 8.4,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      }
+    },
+    {
+      "mode": "kernels",
+      "p50_ms": 54.200000047683716,
+      "p95_ms": 57.700000047683716,
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 28.2,
+        "extrema_setup_ms": 10.6,
+        "gpu_submit_ms": 0,
+        "gpu_readback_ms": 7.4,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      }
+    },
+    {
+      "mode": "baseline",
+      "p50_ms": 24.899999976158142,
+      "p95_ms": 26.100000023841858,
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 11.799999999999999,
+        "gpu_readback_ms": 8.5,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      }
+    }
+  ],
+  "results": [
+    {
+      "mode": "baseline",
+      "width": 384,
+      "height": 512,
+      "warmup": 12,
+      "measured": 30,
+      "points": 192,
+      "exact_points": true,
+      "prewarm_calls": 120,
+      "calls_before_mode": 120,
+      "prewarm_trace_ms": [
+        145.80000007152557, 59, 58.10000002384186, 53.700000047683716,
+        53.90000009536743, 53.89999997615814, 53.299999952316284,
+        53.299999952316284, 55.5, 53.10000002384186, 58.199999928474426, 55,
+        53.60000002384186, 54.10000002384186, 53.60000002384186,
+        52.799999952316284, 53, 55.39999997615814, 53, 53.5, 53.199999928474426,
+        53.199999928474426, 54.300000071525574, 53.89999997615814,
+        52.89999997615814, 53.60000002384186, 53, 53.299999952316284,
+        53.10000002384186, 53.39999997615814, 52.89999997615814,
+        53.60000002384186, 53.199999928474426, 53.5, 52.700000047683716,
+        52.799999952316284, 52.799999952316284, 53.799999952316284, 53,
+        53.300000071525574, 53.60000002384186, 54.299999952316284,
+        53.200000047683716, 63.799999952316284, 28.699999928474426,
+        26.100000023841858, 23.299999952316284, 23.5, 27.699999928474426,
+        29.600000023841858, 22.899999976158142, 29.700000047683716,
+        31.699999928474426, 24.300000071525574, 28.699999928474426,
+        25.800000071525574, 25.800000071525574, 26.399999976158142,
+        30.200000047683716, 31.100000023841858, 27.100000023841858, 29.5,
+        26.300000071525574, 25.699999928474426, 25.799999952316284,
+        26.399999976158142, 25.700000047683716, 26.100000023841858,
+        23.899999976158142, 25.5, 25.899999976158142, 23.600000023841858,
+        28.100000023841858, 25.5, 25.399999976158142, 26.600000023841858,
+        26.09999990463257, 23.700000047683716, 25, 24.899999976158142,
+        24.899999976158142, 22.899999976158142, 25.100000023841858,
+        24.700000047683716, 25.799999952316284, 25.399999976158142,
+        26.699999928474426, 25.700000047683716, 25.199999928474426,
+        22.399999976158142, 28.600000023841858, 26.299999952316284,
+        25.299999952316284, 23.700000047683716, 28, 23.299999952316284,
+        26.200000047683716, 26.100000023841858, 25.399999976158142,
+        24.899999976158142, 24.700000047683716, 24.299999952316284,
+        24.399999976158142, 27.299999952316284, 22.300000071525574,
+        22.399999976158142, 22.100000023841858, 22, 22.299999952316284,
+        22.399999976158142, 25.100000023841858, 25.199999928474426,
+        24.399999976158142, 25.299999952316284, 22.899999976158142,
+        24.90000009536743, 27, 21.899999976158142, 22, 21.299999952316284
+      ],
+      "cpu_clock_quantum_ms": 0.09999990463256836,
+      "cross_origin_isolated": false,
+      "call_p50_ms": 24.600000023841858,
+      "call_p95_ms": 26.600000023841858,
+      "json_parse_p50_ms": 0,
+      "profile_p50": {
+        "detection_wall_ms": null,
+        "marker_control_wall_ms": null,
+        "resolve_wall_ms": null,
+        "kernel_host_sum_ms": null,
+        "gpu_window_ms": null,
+        "gpu_kernel_sum_ms": null,
+        "gpu_kernel_measured_sum_ms": null,
+        "gpu_kernels_measured": null,
+        "gpu_kernels_unmeasured": null,
+        "gpu_kernel_span_ms": null
+      },
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 11.799999999999999,
+        "gpu_readback_ms": 8.5,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      },
+      "api_cpu_p50_ms": null,
+      "api_p50": {},
+      "host_kernels": {},
+      "gpu_kernels": {},
+      "instrumented": [
+        "GPUDevice.createBuffer",
+        "GPUDevice.createShaderModule",
+        "GPUDevice.createComputePipeline",
+        "GPUDevice.createComputePipelineAsync",
+        "GPUDevice.createBindGroup",
+        "GPUDevice.createBindGroupLayout",
+        "GPUDevice.createPipelineLayout",
+        "GPUDevice.createCommandEncoder",
+        "GPUDevice.createQuerySet",
+        "GPUQueue.submit",
+        "GPUQueue.writeBuffer",
+        "GPUQueue.onSubmittedWorkDone",
+        "GPUCommandEncoder.beginComputePass",
+        "GPUCommandEncoder.copyBufferToBuffer",
+        "GPUCommandEncoder.resolveQuerySet",
+        "GPUCommandEncoder.finish",
+        "GPUComputePassEncoder.setPipeline",
+        "GPUComputePassEncoder.setBindGroup",
+        "GPUComputePassEncoder.dispatchWorkgroups",
+        "GPUComputePassEncoder.end",
+        "GPUBuffer.mapAsync",
+        "GPUBuffer.getMappedRange",
+        "GPUBuffer.unmap",
+        "GPUBuffer.destroy"
+      ],
+      "launches": [],
+      "resolved_synchronously": 0,
+      "timestamp_query": null,
+      "device": null,
+      "samples": [
+        {
+          "call_wall_ms": 27.799999952316284,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.399999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.399999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.90000009536743,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.899999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.699999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.59999990463257,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.09999990463257,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.300000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.199999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.299999952316284,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.200000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.399999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.59999990463257,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.100000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 21.800000071525574,
+          "profile": null
+        }
+      ],
+      "representative": {
+        "call_wall_ms": 24.699999928474426,
+        "json_parse_ms": 0.10000002384185791,
+        "timings": {
+          "grayscale_ms": 0.4,
+          "pyramid_setup_ms": 1.4,
+          "extrema_setup_ms": 0.30000000000000004,
+          "gpu_submit_ms": 11.799999999999999,
+          "gpu_readback_ms": 8.4,
+          "localization_ms": 1.1,
+          "cleanup_ms": 0.1
+        },
+        "profile": null,
+        "apis": {}
+      }
+    },
+    {
+      "mode": "apis",
+      "width": 384,
+      "height": 512,
+      "warmup": 12,
+      "measured": 30,
+      "points": 192,
+      "exact_points": true,
+      "prewarm_calls": 120,
+      "calls_before_mode": 162,
+      "cpu_clock_quantum_ms": 0.09999990463256836,
+      "cross_origin_isolated": false,
+      "call_p50_ms": 25.600000023841858,
+      "call_p95_ms": 28.5,
+      "json_parse_p50_ms": 0,
+      "profile_p50": {
+        "detection_wall_ms": null,
+        "marker_control_wall_ms": null,
+        "resolve_wall_ms": null,
+        "kernel_host_sum_ms": null,
+        "gpu_window_ms": null,
+        "gpu_kernel_sum_ms": null,
+        "gpu_kernel_measured_sum_ms": null,
+        "gpu_kernels_measured": null,
+        "gpu_kernels_unmeasured": null,
+        "gpu_kernel_span_ms": null
+      },
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 12.200000000000001,
+        "gpu_readback_ms": 8.7,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      },
+      "api_cpu_p50_ms": 0.30000007152557373,
+      "api_p50": {
+        "GPUDevice.createBuffer": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createShaderModule": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipeline": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipelineAsync": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroupLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createPipelineLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createCommandEncoder": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createQuerySet": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.submit": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.writeBuffer": {
+          "calls": 1,
+          "sync_cpu_ms": 0.20000004768371582,
+          "bytes": 786432,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.onSubmittedWorkDone": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.beginComputePass": {
+          "calls": 1,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.copyBufferToBuffer": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 8344512,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.resolveQuerySet": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.finish": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setPipeline": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.dispatchWorkgroups": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.end": {
+          "calls": 1,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.mapAsync": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 63.89999985694885,
+          "async_calls": 12,
+          "failures": 0
+        },
+        "GPUBuffer.getMappedRange": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 8381696,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.unmap": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.destroy": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        }
+      },
+      "host_kernels": {},
+      "gpu_kernels": {},
+      "instrumented": [
+        "GPUDevice.createBuffer",
+        "GPUDevice.createShaderModule",
+        "GPUDevice.createComputePipeline",
+        "GPUDevice.createComputePipelineAsync",
+        "GPUDevice.createBindGroup",
+        "GPUDevice.createBindGroupLayout",
+        "GPUDevice.createPipelineLayout",
+        "GPUDevice.createCommandEncoder",
+        "GPUDevice.createQuerySet",
+        "GPUQueue.submit",
+        "GPUQueue.writeBuffer",
+        "GPUQueue.onSubmittedWorkDone",
+        "GPUCommandEncoder.beginComputePass",
+        "GPUCommandEncoder.copyBufferToBuffer",
+        "GPUCommandEncoder.resolveQuerySet",
+        "GPUCommandEncoder.finish",
+        "GPUComputePassEncoder.setPipeline",
+        "GPUComputePassEncoder.setBindGroup",
+        "GPUComputePassEncoder.dispatchWorkgroups",
+        "GPUComputePassEncoder.end",
+        "GPUBuffer.mapAsync",
+        "GPUBuffer.getMappedRange",
+        "GPUBuffer.unmap",
+        "GPUBuffer.destroy"
+      ],
+      "launches": [],
+      "resolved_synchronously": 0,
+      "timestamp_query": null,
+      "device": null,
+      "samples": [
+        {
+          "call_wall_ms": 25.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.90000009536743,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.299999952316284,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.800000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.300000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 28.299999952316284,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.100000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 28,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 27.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.200000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.300000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.300000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.199999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 27.199999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.899999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 28.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 27.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.399999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 29,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 21.800000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 26.199999928474426,
+          "profile": null
+        }
+      ],
+      "representative": {
+        "call_wall_ms": 25.600000023841858,
+        "json_parse_ms": 0,
+        "timings": {
+          "grayscale_ms": 0.3,
+          "pyramid_setup_ms": 1.7,
+          "extrema_setup_ms": 0.2,
+          "gpu_submit_ms": 12,
+          "gpu_readback_ms": 8.8,
+          "localization_ms": 1,
+          "cleanup_ms": 0.1
+        },
+        "profile": null,
+        "apis": {
+          "GPUQueue.writeBuffer": {
+            "calls": 1,
+            "sync_cpu_ms": 0.30000007152557373,
+            "bytes": 786432,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.beginComputePass": {
+            "calls": 1,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setPipeline": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.dispatchWorkgroups": {
+            "calls": 20,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.end": {
+            "calls": 1,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createCommandEncoder": {
+            "calls": 2,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.finish": {
+            "calls": 2,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUQueue.submit": {
+            "calls": 2,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.copyBufferToBuffer": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 8344512,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.mapAsync": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 65.99999988079071,
+            "async_calls": 12,
+            "failures": 0
+          },
+          "GPUBuffer.getMappedRange": {
+            "calls": 12,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 8381696,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.unmap": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          }
+        }
+      }
+    },
+    {
+      "mode": "host",
+      "width": 384,
+      "height": 512,
+      "warmup": 12,
+      "measured": 30,
+      "points": 192,
+      "exact_points": true,
+      "prewarm_calls": 120,
+      "calls_before_mode": 204,
+      "cpu_clock_quantum_ms": 0.09999990463256836,
+      "cross_origin_isolated": false,
+      "call_p50_ms": 25.100000023841858,
+      "call_p95_ms": 26.299999952316284,
+      "json_parse_p50_ms": 0,
+      "profile_p50": {
+        "detection_wall_ms": 24.1,
+        "marker_control_wall_ms": 0,
+        "resolve_wall_ms": 0,
+        "kernel_host_sum_ms": 1.5000000000000002,
+        "gpu_window_ms": null,
+        "gpu_kernel_sum_ms": null,
+        "gpu_kernel_measured_sum_ms": null,
+        "gpu_kernels_measured": 0,
+        "gpu_kernels_unmeasured": 0,
+        "gpu_kernel_span_ms": null
+      },
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 11.799999999999999,
+        "gpu_readback_ms": 8.6,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      },
+      "api_cpu_p50_ms": 0.2999999523162842,
+      "api_p50": {
+        "GPUDevice.createBuffer": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createShaderModule": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipeline": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipelineAsync": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroupLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createPipelineLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createCommandEncoder": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createQuerySet": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.submit": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.writeBuffer": {
+          "calls": 1,
+          "sync_cpu_ms": 0.19999992847442627,
+          "bytes": 786432,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.onSubmittedWorkDone": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.beginComputePass": {
+          "calls": 1,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.copyBufferToBuffer": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 8344512,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.resolveQuerySet": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.finish": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setPipeline": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.dispatchWorkgroups": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.end": {
+          "calls": 1,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.mapAsync": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 63.300000071525574,
+          "async_calls": 12,
+          "failures": 0
+        },
+        "GPUBuffer.getMappedRange": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 8381696,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.unmap": {
+          "calls": 12,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.destroy": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        }
+      },
+      "host_kernels": {
+        "gaussian_horizontal": {
+          "calls_p50": 7,
+          "measured_sum_ms_p50": 0.5,
+          "unmeasured_calls_p50": 0
+        },
+        "gaussian_vertical": {
+          "calls_p50": 1,
+          "measured_sum_ms_p50": 0,
+          "unmeasured_calls_p50": 0
+        },
+        "gaussian_vertical_dog": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 0.6000000000000001,
+          "unmeasured_calls_p50": 0
+        },
+        "strict_extrema": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 0.30000000000000004,
+          "unmeasured_calls_p50": 0
+        }
+      },
+      "gpu_kernels": {},
+      "instrumented": [
+        "GPUDevice.createBuffer",
+        "GPUDevice.createShaderModule",
+        "GPUDevice.createComputePipeline",
+        "GPUDevice.createComputePipelineAsync",
+        "GPUDevice.createBindGroup",
+        "GPUDevice.createBindGroupLayout",
+        "GPUDevice.createPipelineLayout",
+        "GPUDevice.createCommandEncoder",
+        "GPUDevice.createQuerySet",
+        "GPUQueue.submit",
+        "GPUQueue.writeBuffer",
+        "GPUQueue.onSubmittedWorkDone",
+        "GPUCommandEncoder.beginComputePass",
+        "GPUCommandEncoder.copyBufferToBuffer",
+        "GPUCommandEncoder.resolveQuerySet",
+        "GPUCommandEncoder.finish",
+        "GPUComputePassEncoder.setPipeline",
+        "GPUComputePassEncoder.setBindGroup",
+        "GPUComputePassEncoder.dispatchWorkgroups",
+        "GPUComputePassEncoder.end",
+        "GPUBuffer.mapAsync",
+        "GPUBuffer.getMappedRange",
+        "GPUBuffer.unmap",
+        "GPUBuffer.destroy"
+      ],
+      "launches": [
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema"
+      ],
+      "resolved_synchronously": 0,
+      "timestamp_query": true,
+      "device": "",
+      "samples": [
+        {
+          "call_wall_ms": 25.299999952316284,
+          "profile": {
+            "detection_wall_ms": 24.400000000000002,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.100000023841858,
+          "profile": {
+            "detection_wall_ms": 24.2,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.600000023841858,
+          "profile": {
+            "detection_wall_ms": 24.7,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.100000023841858,
+          "profile": {
+            "detection_wall_ms": 25.2,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 22.5,
+          "profile": {
+            "detection_wall_ms": 21.9,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.6,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.200000047683716,
+          "profile": {
+            "detection_wall_ms": 24.400000000000002,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": {
+            "detection_wall_ms": 24,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.0999999999999999,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": {
+            "detection_wall_ms": 24.1,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.4000000000000004,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 22.700000047683716,
+          "profile": {
+            "detection_wall_ms": 21.7,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0.1,
+            "kernel_host_sum_ms": 1.6,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.59999990463257,
+          "profile": {
+            "detection_wall_ms": 24.5,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000004,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.100000023841858,
+          "profile": {
+            "detection_wall_ms": 24.2,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.6000000000000003,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.100000023841858,
+          "profile": {
+            "detection_wall_ms": 23.2,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.3,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": {
+            "detection_wall_ms": 24.1,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24,
+          "profile": {
+            "detection_wall_ms": 23,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.799999952316284,
+          "profile": {
+            "detection_wall_ms": 24,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.300000071525574,
+          "profile": {
+            "detection_wall_ms": 23.3,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.199999928474426,
+          "profile": {
+            "detection_wall_ms": 24,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.2000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.100000023841858,
+          "profile": {
+            "detection_wall_ms": 24.1,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.7000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.299999952316284,
+          "profile": {
+            "detection_wall_ms": 25.5,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.3,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 30.899999976158142,
+          "profile": {
+            "detection_wall_ms": 30,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.4000000000000004,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.899999976158142,
+          "profile": {
+            "detection_wall_ms": 24.8,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 23.100000023841858,
+          "profile": {
+            "detection_wall_ms": 22.1,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.5,
+          "profile": {
+            "detection_wall_ms": 24.6,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000004,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 23.299999952316284,
+          "profile": {
+            "detection_wall_ms": 22.4,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.6000000000000003,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.100000023841858,
+          "profile": {
+            "detection_wall_ms": 24.2,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.3,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.300000071525574,
+          "profile": {
+            "detection_wall_ms": 24.5,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000004,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 22.5,
+          "profile": {
+            "detection_wall_ms": 21.6,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.6000000000000003,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.300000071525574,
+          "profile": {
+            "detection_wall_ms": 24.299999999999997,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.299999952316284,
+          "profile": {
+            "detection_wall_ms": 23.599999999999998,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": {
+            "detection_wall_ms": 24.1,
+            "marker_control_wall_ms": 0,
+            "resolve_wall_ms": 0,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": null,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        }
+      ],
+      "representative": {
+        "call_wall_ms": 25.100000023841858,
+        "json_parse_ms": 0.10000002384185791,
+        "timings": {
+          "grayscale_ms": 0.4,
+          "pyramid_setup_ms": 1.4,
+          "extrema_setup_ms": 0.30000000000000004,
+          "gpu_submit_ms": 11.700000000000001,
+          "gpu_readback_ms": 8.5,
+          "localization_ms": 1.1,
+          "cleanup_ms": 0.1
+        },
+        "profile": {
+          "mode": "host",
+          "device": "",
+          "timestamp_query": true,
+          "detection_wall_ms": 24.2,
+          "marker_control_wall_ms": 0,
+          "resolve_wall_ms": 0,
+          "kernel_host_sum_ms": 1.6000000000000003,
+          "gpu_window_ms": null,
+          "gpu_kernel_sum_ms": null,
+          "gpu_kernel_measured_sum_ms": null,
+          "gpu_kernels_measured": 0,
+          "gpu_kernels_unmeasured": 0,
+          "gpu_kernel_span_ms": null,
+          "launched": [
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema"
+          ],
+          "host_kernels": [
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.3,
+              "end_ms": 0.4,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical",
+              "start_ms": 0.4,
+              "end_ms": 0.5,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.5,
+              "end_ms": 0.6,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 0.6,
+              "end_ms": 0.7,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.7,
+              "end_ms": 0.7,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 0.7,
+              "end_ms": 0.9,
+              "wall_ms": 0.2
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.9,
+              "end_ms": 1,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1,
+              "end_ms": 1,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 1,
+              "end_ms": 1.1,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1.1,
+              "end_ms": 1.2,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 1.2,
+              "end_ms": 1.3,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1.3,
+              "end_ms": 1.5,
+              "wall_ms": 0.2
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 1.5,
+              "end_ms": 1.5,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1.5,
+              "end_ms": 1.6,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.6,
+              "end_ms": 1.6,
+              "wall_ms": 0
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.6,
+              "end_ms": 1.7,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.7,
+              "end_ms": 1.8,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.8,
+              "end_ms": 1.8,
+              "wall_ms": 0
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.8,
+              "end_ms": 1.8,
+              "wall_ms": 0
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.8,
+              "end_ms": 1.9,
+              "wall_ms": 0.1
+            }
+          ],
+          "gpu_kernels": [],
+          "resolved_synchronously": 0
+        },
+        "apis": {
+          "GPUQueue.writeBuffer": {
+            "calls": 1,
+            "sync_cpu_ms": 0.20000004768371582,
+            "bytes": 786432,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.beginComputePass": {
+            "calls": 1,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setPipeline": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.dispatchWorkgroups": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.end": {
+            "calls": 1,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createCommandEncoder": {
+            "calls": 2,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.finish": {
+            "calls": 2,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUQueue.submit": {
+            "calls": 2,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.copyBufferToBuffer": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 8344512,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.mapAsync": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 63.300000071525574,
+            "async_calls": 12,
+            "failures": 0
+          },
+          "GPUBuffer.getMappedRange": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 8381696,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.unmap": {
+            "calls": 12,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          }
+        }
+      }
+    },
+    {
+      "mode": "frame",
+      "width": 384,
+      "height": 512,
+      "warmup": 12,
+      "measured": 30,
+      "points": 192,
+      "exact_points": true,
+      "prewarm_calls": 120,
+      "calls_before_mode": 246,
+      "cpu_clock_quantum_ms": 0.09999990463256836,
+      "cross_origin_isolated": false,
+      "call_p50_ms": 26.699999928474426,
+      "call_p95_ms": 31.40000009536743,
+      "json_parse_p50_ms": 0,
+      "profile_p50": {
+        "detection_wall_ms": 24,
+        "marker_control_wall_ms": 0.9,
+        "resolve_wall_ms": 1,
+        "kernel_host_sum_ms": 1.5000000000000002,
+        "gpu_window_ms": 5.439488,
+        "gpu_kernel_sum_ms": null,
+        "gpu_kernel_measured_sum_ms": null,
+        "gpu_kernels_measured": 0,
+        "gpu_kernels_unmeasured": 0,
+        "gpu_kernel_span_ms": null
+      },
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.4,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 12,
+        "gpu_readback_ms": 8.4,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      },
+      "api_cpu_p50_ms": 0.30000007152557373,
+      "api_p50": {
+        "GPUDevice.createBuffer": {
+          "calls": 3,
+          "sync_cpu_ms": 0,
+          "bytes": 32,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createShaderModule": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipeline": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipelineAsync": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroupLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createPipelineLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createCommandEncoder": {
+          "calls": 4,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createQuerySet": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.submit": {
+          "calls": 4,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.writeBuffer": {
+          "calls": 1,
+          "sync_cpu_ms": 0.19999992847442627,
+          "bytes": 786432,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.onSubmittedWorkDone": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.beginComputePass": {
+          "calls": 1,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.copyBufferToBuffer": {
+          "calls": 14,
+          "sync_cpu_ms": 0,
+          "bytes": 8344528,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.resolveQuerySet": {
+          "calls": 2,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.finish": {
+          "calls": 4,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setPipeline": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.dispatchWorkgroups": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.end": {
+          "calls": 1,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.mapAsync": {
+          "calls": 13,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 62.80000019073486,
+          "async_calls": 13,
+          "failures": 0
+        },
+        "GPUBuffer.getMappedRange": {
+          "calls": 13,
+          "sync_cpu_ms": 0,
+          "bytes": 8381712,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.unmap": {
+          "calls": 13,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.destroy": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        }
+      },
+      "host_kernels": {
+        "gaussian_horizontal": {
+          "calls_p50": 7,
+          "measured_sum_ms_p50": 0.5,
+          "unmeasured_calls_p50": 0
+        },
+        "gaussian_vertical": {
+          "calls_p50": 1,
+          "measured_sum_ms_p50": 0.1,
+          "unmeasured_calls_p50": 0
+        },
+        "gaussian_vertical_dog": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 0.6000000000000001,
+          "unmeasured_calls_p50": 0
+        },
+        "strict_extrema": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 0.30000000000000004,
+          "unmeasured_calls_p50": 0
+        }
+      },
+      "gpu_kernels": {},
+      "instrumented": [
+        "GPUDevice.createBuffer",
+        "GPUDevice.createShaderModule",
+        "GPUDevice.createComputePipeline",
+        "GPUDevice.createComputePipelineAsync",
+        "GPUDevice.createBindGroup",
+        "GPUDevice.createBindGroupLayout",
+        "GPUDevice.createPipelineLayout",
+        "GPUDevice.createCommandEncoder",
+        "GPUDevice.createQuerySet",
+        "GPUQueue.submit",
+        "GPUQueue.writeBuffer",
+        "GPUQueue.onSubmittedWorkDone",
+        "GPUCommandEncoder.beginComputePass",
+        "GPUCommandEncoder.copyBufferToBuffer",
+        "GPUCommandEncoder.resolveQuerySet",
+        "GPUCommandEncoder.finish",
+        "GPUComputePassEncoder.setPipeline",
+        "GPUComputePassEncoder.setBindGroup",
+        "GPUComputePassEncoder.dispatchWorkgroups",
+        "GPUComputePassEncoder.end",
+        "GPUBuffer.mapAsync",
+        "GPUBuffer.getMappedRange",
+        "GPUBuffer.unmap",
+        "GPUBuffer.destroy"
+      ],
+      "launches": [
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema"
+      ],
+      "resolved_synchronously": 0,
+      "timestamp_query": true,
+      "device": "",
+      "samples": [
+        {
+          "call_wall_ms": 24.800000071525574,
+          "profile": {
+            "detection_wall_ms": 22.4,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 0.8,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 3.473408,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.90000009536743,
+          "profile": {
+            "detection_wall_ms": 24.299999999999997,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1.2,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 5.439488,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.5,
+          "profile": {
+            "detection_wall_ms": 22.8,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.6000000000000003,
+            "gpu_window_ms": 4.194304000000001,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 27,
+          "profile": {
+            "detection_wall_ms": 24.5,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 0.7,
+            "kernel_host_sum_ms": 1.6,
+            "gpu_window_ms": 5.505024,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.399999976158142,
+          "profile": {
+            "detection_wall_ms": 21.8,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.4,
+            "gpu_window_ms": 3.014656,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 27.300000071525574,
+          "profile": {
+            "detection_wall_ms": 24.400000000000002,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1.2,
+            "kernel_host_sum_ms": 1.7000000000000002,
+            "gpu_window_ms": 5.439488,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.799999952316284,
+          "profile": {
+            "detection_wall_ms": 24,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 1.1,
+            "kernel_host_sum_ms": 1.3000000000000003,
+            "gpu_window_ms": 5.505024,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.399999976158142,
+          "profile": {
+            "detection_wall_ms": 21.7,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 3.014656,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.699999928474426,
+          "profile": {
+            "detection_wall_ms": 24,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.5999999999999999,
+            "gpu_window_ms": 5.505024,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.90000009536743,
+          "profile": {
+            "detection_wall_ms": 24.1,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.6000000000000003,
+            "gpu_window_ms": 5.505024,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.300000071525574,
+          "profile": {
+            "detection_wall_ms": 21.5,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 2.752512,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 27.399999976158142,
+          "profile": {
+            "detection_wall_ms": 24.7,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1.1,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 5.701632,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 27.09999990463257,
+          "profile": {
+            "detection_wall_ms": 24.2,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1.2,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 5.505024,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.5,
+          "profile": {
+            "detection_wall_ms": 21.5,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1.2,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 2.686976,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 27.300000071525574,
+          "profile": {
+            "detection_wall_ms": 24.6,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 5.767168,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.600000023841858,
+          "profile": {
+            "detection_wall_ms": 24,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 5.439488,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.700000047683716,
+          "profile": {
+            "detection_wall_ms": 21.8,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 1,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 3.014656,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 31.59999990463257,
+          "profile": {
+            "detection_wall_ms": 28.8,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 7.929856000000001,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 28.899999976158142,
+          "profile": {
+            "detection_wall_ms": 25.9,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 1,
+            "kernel_host_sum_ms": 1.9000000000000004,
+            "gpu_window_ms": 5.439488,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 30.300000071525574,
+          "profile": {
+            "detection_wall_ms": 24.9,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.5,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 5.439488,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 31.40000009536743,
+          "profile": {
+            "detection_wall_ms": 28.299999999999997,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 1.2,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 8.060928,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 28.90000009536743,
+          "profile": {
+            "detection_wall_ms": 26.200000000000003,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 0.7,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 5.373952,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 28.199999928474426,
+          "profile": {
+            "detection_wall_ms": 25.2,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 0.9,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 5.5705599999999995,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.700000047683716,
+          "profile": {
+            "detection_wall_ms": 22.700000000000003,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 1.3,
+            "kernel_host_sum_ms": 1.4000000000000004,
+            "gpu_window_ms": 3.60448,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 30.199999928474426,
+          "profile": {
+            "detection_wall_ms": 27.599999999999998,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 0.5,
+            "kernel_host_sum_ms": 1.6,
+            "gpu_window_ms": 7.864319999999999,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 23.5,
+          "profile": {
+            "detection_wall_ms": 20.8,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1,
+            "kernel_host_sum_ms": 1.5000000000000002,
+            "gpu_window_ms": 1.7039360000000001,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 24.299999952316284,
+          "profile": {
+            "detection_wall_ms": 21.4,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 1,
+            "kernel_host_sum_ms": 1.4000000000000001,
+            "gpu_window_ms": 2.031616,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.200000047683716,
+          "profile": {
+            "detection_wall_ms": 22.2,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 1.2,
+            "kernel_host_sum_ms": 1.6000000000000003,
+            "gpu_window_ms": 2.359296,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 25.200000047683716,
+          "profile": {
+            "detection_wall_ms": 21.8,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 1.4,
+            "kernel_host_sum_ms": 1.5000000000000004,
+            "gpu_window_ms": 2.555904,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 26.600000023841858,
+          "profile": {
+            "detection_wall_ms": 24.1,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 0.6,
+            "kernel_host_sum_ms": 1.4000000000000004,
+            "gpu_window_ms": 3.014656,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": null,
+            "gpu_kernels_measured": 0,
+            "gpu_kernels_unmeasured": 0,
+            "gpu_kernel_span_ms": null
+          }
+        }
+      ],
+      "representative": {
+        "call_wall_ms": 26.799999952316284,
+        "json_parse_ms": 0.10000002384185791,
+        "timings": {
+          "grayscale_ms": 0.4,
+          "pyramid_setup_ms": 1.4,
+          "extrema_setup_ms": 0.2,
+          "gpu_submit_ms": 12,
+          "gpu_readback_ms": 8.3,
+          "localization_ms": 1,
+          "cleanup_ms": 0
+        },
+        "profile": {
+          "mode": "frame",
+          "device": "",
+          "timestamp_query": true,
+          "detection_wall_ms": 24,
+          "marker_control_wall_ms": 0.9,
+          "resolve_wall_ms": 1.1,
+          "kernel_host_sum_ms": 1.3000000000000003,
+          "gpu_window_ms": 5.505024,
+          "gpu_kernel_sum_ms": null,
+          "gpu_kernel_measured_sum_ms": null,
+          "gpu_kernels_measured": 0,
+          "gpu_kernels_unmeasured": 0,
+          "gpu_kernel_span_ms": null,
+          "launched": [
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema"
+          ],
+          "host_kernels": [
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.4,
+              "end_ms": 0.4,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_vertical",
+              "start_ms": 0.4,
+              "end_ms": 0.5,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.6,
+              "end_ms": 0.6,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 0.6,
+              "end_ms": 0.7,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.7,
+              "end_ms": 0.8,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 0.8,
+              "end_ms": 0.8,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.8,
+              "end_ms": 1,
+              "wall_ms": 0.2
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1,
+              "end_ms": 1,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 1,
+              "end_ms": 1.1,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1.1,
+              "end_ms": 1.3,
+              "wall_ms": 0.2
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 1.3,
+              "end_ms": 1.3,
+              "wall_ms": 0
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1.3,
+              "end_ms": 1.4,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 1.4,
+              "end_ms": 1.5,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 1.5,
+              "end_ms": 1.6,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.6,
+              "end_ms": 1.6,
+              "wall_ms": 0
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.6,
+              "end_ms": 1.7,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.7,
+              "end_ms": 1.7,
+              "wall_ms": 0
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.7,
+              "end_ms": 1.8,
+              "wall_ms": 0.1
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.8,
+              "end_ms": 1.8,
+              "wall_ms": 0
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 1.8,
+              "end_ms": 1.8,
+              "wall_ms": 0
+            }
+          ],
+          "gpu_kernels": [],
+          "resolved_synchronously": 0
+        },
+        "apis": {
+          "GPUQueue.writeBuffer": {
+            "calls": 1,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 786432,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.beginComputePass": {
+            "calls": 1,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setPipeline": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.dispatchWorkgroups": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.end": {
+            "calls": 1,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createCommandEncoder": {
+            "calls": 4,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.finish": {
+            "calls": 4,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUQueue.submit": {
+            "calls": 4,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.copyBufferToBuffer": {
+            "calls": 14,
+            "sync_cpu_ms": 0,
+            "bytes": 8344528,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.mapAsync": {
+            "calls": 13,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 62.800000071525574,
+            "async_calls": 13,
+            "failures": 0
+          },
+          "GPUBuffer.getMappedRange": {
+            "calls": 13,
+            "sync_cpu_ms": 0,
+            "bytes": 8381712,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.unmap": {
+            "calls": 13,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createBuffer": {
+            "calls": 3,
+            "sync_cpu_ms": 0,
+            "bytes": 32,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.resolveQuerySet": {
+            "calls": 2,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          }
+        }
+      }
+    },
+    {
+      "mode": "kernels",
+      "width": 384,
+      "height": 512,
+      "warmup": 12,
+      "measured": 30,
+      "points": 192,
+      "exact_points": true,
+      "prewarm_calls": 120,
+      "calls_before_mode": 288,
+      "cpu_clock_quantum_ms": 0.09999990463256836,
+      "cross_origin_isolated": false,
+      "call_p50_ms": 55.799999952316284,
+      "call_p95_ms": 58.5,
+      "json_parse_p50_ms": 0,
+      "profile_p50": {
+        "detection_wall_ms": 49.5,
+        "marker_control_wall_ms": 0.9,
+        "resolve_wall_ms": 3.9,
+        "kernel_host_sum_ms": 38.89999999999999,
+        "gpu_window_ms": 36.896768,
+        "gpu_kernel_sum_ms": null,
+        "gpu_kernel_measured_sum_ms": 5.6360959999999976,
+        "gpu_kernels_measured": 17,
+        "gpu_kernels_unmeasured": 3,
+        "gpu_kernel_span_ms": null
+      },
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 28.8,
+        "extrema_setup_ms": 10.6,
+        "gpu_submit_ms": 0,
+        "gpu_readback_ms": 7.9,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      },
+      "api_cpu_p50_ms": 1.000000238418579,
+      "api_p50": {
+        "GPUDevice.createBuffer": {
+          "calls": 63,
+          "sync_cpu_ms": 0.10000002384185791,
+          "bytes": 672,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createShaderModule": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipeline": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createComputePipelineAsync": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createBindGroupLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createPipelineLayout": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createCommandEncoder": {
+          "calls": 63,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUDevice.createQuerySet": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.submit": {
+          "calls": 63,
+          "sync_cpu_ms": 0.2999999523162842,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.writeBuffer": {
+          "calls": 1,
+          "sync_cpu_ms": 0.20000004768371582,
+          "bytes": 786432,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUQueue.onSubmittedWorkDone": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.beginComputePass": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.copyBufferToBuffer": {
+          "calls": 54,
+          "sync_cpu_ms": 0,
+          "bytes": 8344848,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.resolveQuerySet": {
+          "calls": 42,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUCommandEncoder.finish": {
+          "calls": 63,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setPipeline": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.setBindGroup": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.dispatchWorkgroups": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUComputePassEncoder.end": {
+          "calls": 20,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.mapAsync": {
+          "calls": 33,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 500.700000166893,
+          "async_calls": 33,
+          "failures": 0
+        },
+        "GPUBuffer.getMappedRange": {
+          "calls": 33,
+          "sync_cpu_ms": 0,
+          "bytes": 8382032,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.unmap": {
+          "calls": 33,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        },
+        "GPUBuffer.destroy": {
+          "calls": 0,
+          "sync_cpu_ms": 0,
+          "bytes": 0,
+          "async_settled_ms_sum": 0,
+          "async_calls": 0,
+          "failures": 0
+        }
+      },
+      "host_kernels": {
+        "gaussian_horizontal": {
+          "calls_p50": 7,
+          "measured_sum_ms_p50": 13.6,
+          "unmeasured_calls_p50": 0
+        },
+        "gaussian_vertical": {
+          "calls_p50": 1,
+          "measured_sum_ms_p50": 1.8,
+          "unmeasured_calls_p50": 0
+        },
+        "gaussian_vertical_dog": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 13.1,
+          "unmeasured_calls_p50": 0
+        },
+        "strict_extrema": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 10.5,
+          "unmeasured_calls_p50": 0
+        }
+      },
+      "gpu_kernels": {
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass": {
+          "calls_p50": 8,
+          "measured_sum_ms_p50": 2.424832,
+          "unmeasured_calls_p50": 1
+        },
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 2.62144,
+          "unmeasured_calls_p50": 0
+        },
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema": {
+          "calls_p50": 6,
+          "measured_sum_ms_p50": 0.5898240000000001,
+          "unmeasured_calls_p50": 2
+        }
+      },
+      "instrumented": [
+        "GPUDevice.createBuffer",
+        "GPUDevice.createShaderModule",
+        "GPUDevice.createComputePipeline",
+        "GPUDevice.createComputePipelineAsync",
+        "GPUDevice.createBindGroup",
+        "GPUDevice.createBindGroupLayout",
+        "GPUDevice.createPipelineLayout",
+        "GPUDevice.createCommandEncoder",
+        "GPUDevice.createQuerySet",
+        "GPUQueue.submit",
+        "GPUQueue.writeBuffer",
+        "GPUQueue.onSubmittedWorkDone",
+        "GPUCommandEncoder.beginComputePass",
+        "GPUCommandEncoder.copyBufferToBuffer",
+        "GPUCommandEncoder.resolveQuerySet",
+        "GPUCommandEncoder.finish",
+        "GPUComputePassEncoder.setPipeline",
+        "GPUComputePassEncoder.setBindGroup",
+        "GPUComputePassEncoder.dispatchWorkgroups",
+        "GPUComputePassEncoder.end",
+        "GPUBuffer.mapAsync",
+        "GPUBuffer.getMappedRange",
+        "GPUBuffer.unmap",
+        "GPUBuffer.destroy"
+      ],
+      "launches": [
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+        "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+        "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema"
+      ],
+      "resolved_synchronously": 0,
+      "timestamp_query": true,
+      "device": "",
+      "samples": [
+        {
+          "call_wall_ms": 54.10000002384186,
+          "profile": {
+            "detection_wall_ms": 48.800000000000004,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.5,
+            "kernel_host_sum_ms": 38.400000000000006,
+            "gpu_window_ms": 36.569088,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.570559999999998,
+            "gpu_kernels_measured": 17,
+            "gpu_kernels_unmeasured": 3,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.5,
+          "profile": {
+            "detection_wall_ms": 48.9,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 3.9,
+            "kernel_host_sum_ms": 38.800000000000004,
+            "gpu_window_ms": 36.569088,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.6360959999999976,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55,
+          "profile": {
+            "detection_wall_ms": 49.4,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 3.6,
+            "kernel_host_sum_ms": 39.2,
+            "gpu_window_ms": 37.158912,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.6360959999999976,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.39999997615814,
+          "profile": {
+            "detection_wall_ms": 49,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 3.6,
+            "kernel_host_sum_ms": 38.5,
+            "gpu_window_ms": 36.634623999999995,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.505023999999998,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.39999997615814,
+          "profile": {
+            "detection_wall_ms": 48.800000000000004,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.8,
+            "kernel_host_sum_ms": 38.10000000000001,
+            "gpu_window_ms": 36.110336,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.439487999999998,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 56.90000009536743,
+          "profile": {
+            "detection_wall_ms": 50.6,
+            "marker_control_wall_ms": 0.7,
+            "resolve_wall_ms": 4.7,
+            "kernel_host_sum_ms": 39.800000000000004,
+            "gpu_window_ms": 37.158912,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 7.340031999999999,
+            "gpu_kernels_measured": 17,
+            "gpu_kernels_unmeasured": 3,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 58.59999990463257,
+          "profile": {
+            "detection_wall_ms": 52.8,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 3.9,
+            "kernel_host_sum_ms": 40.69999999999999,
+            "gpu_window_ms": 38.928384,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 7.405567999999998,
+            "gpu_kernels_measured": 13,
+            "gpu_kernels_unmeasured": 7,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 57.5,
+          "profile": {
+            "detection_wall_ms": 51.7,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.9,
+            "kernel_host_sum_ms": 41,
+            "gpu_window_ms": 38.273024,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 2.3592959999999996,
+            "gpu_kernels_measured": 13,
+            "gpu_kernels_unmeasured": 7,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 56.60000002384186,
+          "profile": {
+            "detection_wall_ms": 50.8,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 4,
+            "kernel_host_sum_ms": 39.5,
+            "gpu_window_ms": 37.552127999999996,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 4.259839999999999,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 57,
+          "profile": {
+            "detection_wall_ms": 51.1,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 4.1000000000000005,
+            "kernel_host_sum_ms": 40.49999999999999,
+            "gpu_window_ms": 38.01088,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.570559999999997,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 57.799999952316284,
+          "profile": {
+            "detection_wall_ms": 52.2,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.7,
+            "kernel_host_sum_ms": 40.99999999999999,
+            "gpu_window_ms": 39.190528,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.242879999999998,
+            "gpu_kernels_measured": 15,
+            "gpu_kernels_unmeasured": 5,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.89999997615814,
+          "profile": {
+            "detection_wall_ms": 49.099999999999994,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 4,
+            "kernel_host_sum_ms": 38.7,
+            "gpu_window_ms": 36.765696,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.6360959999999976,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55.89999997615814,
+          "profile": {
+            "detection_wall_ms": 49.099999999999994,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 5,
+            "kernel_host_sum_ms": 38.60000000000001,
+            "gpu_window_ms": 35.97926399999999,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 9.306111999999999,
+            "gpu_kernels_measured": 14,
+            "gpu_kernels_unmeasured": 6,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.299999952316284,
+          "profile": {
+            "detection_wall_ms": 48.5,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 3.9,
+            "kernel_host_sum_ms": 37.900000000000006,
+            "gpu_window_ms": 36.175872,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 10.223616,
+            "gpu_kernels_measured": 17,
+            "gpu_kernels_unmeasured": 3,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 56,
+          "profile": {
+            "detection_wall_ms": 49.2,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 4.8,
+            "kernel_host_sum_ms": 38.400000000000006,
+            "gpu_window_ms": 36.438016,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.505023999999998,
+            "gpu_kernels_measured": 17,
+            "gpu_kernels_unmeasured": 3,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 56.800000071525574,
+          "profile": {
+            "detection_wall_ms": 51.4,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 3.7,
+            "kernel_host_sum_ms": 40.699999999999996,
+            "gpu_window_ms": 38.862848,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.373951999999997,
+            "gpu_kernels_measured": 15,
+            "gpu_kernels_unmeasured": 5,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55.300000071525574,
+          "profile": {
+            "detection_wall_ms": 49.6,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.8,
+            "kernel_host_sum_ms": 38.900000000000006,
+            "gpu_window_ms": 36.503552,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.570559999999997,
+            "gpu_kernels_measured": 16,
+            "gpu_kernels_unmeasured": 4,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 56.09999990463257,
+          "profile": {
+            "detection_wall_ms": 50.4,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.8,
+            "kernel_host_sum_ms": 40.800000000000004,
+            "gpu_window_ms": 38.731776,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 8.191999999999997,
+            "gpu_kernels_measured": 17,
+            "gpu_kernels_unmeasured": 3,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.89999997615814,
+          "profile": {
+            "detection_wall_ms": 49.4,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.6,
+            "kernel_host_sum_ms": 38.79999999999999,
+            "gpu_window_ms": 36.569088,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 7.667711999999997,
+            "gpu_kernels_measured": 19,
+            "gpu_kernels_unmeasured": 1,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55,
+          "profile": {
+            "detection_wall_ms": 49.4,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.9,
+            "kernel_host_sum_ms": 38.6,
+            "gpu_window_ms": 36.896768,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 6.160383999999998,
+            "gpu_kernels_measured": 15,
+            "gpu_kernels_unmeasured": 5,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55,
+          "profile": {
+            "detection_wall_ms": 49.5,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.7,
+            "kernel_host_sum_ms": 38.89999999999999,
+            "gpu_window_ms": 37.02784,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.373951999999998,
+            "gpu_kernels_measured": 14,
+            "gpu_kernels_unmeasured": 6,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55.799999952316284,
+          "profile": {
+            "detection_wall_ms": 48.5,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 5.6,
+            "kernel_host_sum_ms": 38.6,
+            "gpu_window_ms": 36.438016,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.570559999999998,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 54.200000047683716,
+          "profile": {
+            "detection_wall_ms": 48.2,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 4.3,
+            "kernel_host_sum_ms": 37.900000000000006,
+            "gpu_window_ms": 35.97926399999999,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 8.060927999999997,
+            "gpu_kernels_measured": 19,
+            "gpu_kernels_unmeasured": 1,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 57.700000047683716,
+          "profile": {
+            "detection_wall_ms": 50,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 6,
+            "kernel_host_sum_ms": 39.9,
+            "gpu_window_ms": 39.190528,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 9.306111999999997,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 57.5,
+          "profile": {
+            "detection_wall_ms": 50.9,
+            "marker_control_wall_ms": 0.8,
+            "resolve_wall_ms": 4.6,
+            "kernel_host_sum_ms": 39.5,
+            "gpu_window_ms": 38.469632,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 13.172735999999997,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 57.699999928474426,
+          "profile": {
+            "detection_wall_ms": 51.4,
+            "marker_control_wall_ms": 1.1,
+            "resolve_wall_ms": 4.3,
+            "kernel_host_sum_ms": 40.400000000000006,
+            "gpu_window_ms": 38.99392,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 11.534335999999998,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55.60000002384186,
+          "profile": {
+            "detection_wall_ms": 49.5,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 4.3,
+            "kernel_host_sum_ms": 38.20000000000001,
+            "gpu_window_ms": 36.569088,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 11.468799999999996,
+            "gpu_kernels_measured": 17,
+            "gpu_kernels_unmeasured": 3,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 56.799999952316284,
+          "profile": {
+            "detection_wall_ms": 50.9,
+            "marker_control_wall_ms": 1,
+            "resolve_wall_ms": 4,
+            "kernel_host_sum_ms": 39.10000000000001,
+            "gpu_window_ms": 35.97926399999999,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.505023999999997,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 58.5,
+          "profile": {
+            "detection_wall_ms": 52.8,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.7,
+            "kernel_host_sum_ms": 42.400000000000006,
+            "gpu_window_ms": 40.173568,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.832703999999996,
+            "gpu_kernels_measured": 19,
+            "gpu_kernels_unmeasured": 1,
+            "gpu_kernel_span_ms": null
+          }
+        },
+        {
+          "call_wall_ms": 55,
+          "profile": {
+            "detection_wall_ms": 49.4,
+            "marker_control_wall_ms": 0.9,
+            "resolve_wall_ms": 3.8,
+            "kernel_host_sum_ms": 38.800000000000004,
+            "gpu_window_ms": 37.02784,
+            "gpu_kernel_sum_ms": null,
+            "gpu_kernel_measured_sum_ms": 5.7016319999999965,
+            "gpu_kernels_measured": 18,
+            "gpu_kernels_unmeasured": 2,
+            "gpu_kernel_span_ms": null
+          }
+        }
+      ],
+      "representative": {
+        "call_wall_ms": 55.89999997615814,
+        "json_parse_ms": 0.10000002384185791,
+        "timings": {
+          "grayscale_ms": 0.3,
+          "pyramid_setup_ms": 29.2,
+          "extrema_setup_ms": 9.7,
+          "gpu_submit_ms": 0,
+          "gpu_readback_ms": 8,
+          "localization_ms": 1.1,
+          "cleanup_ms": 0.1
+        },
+        "profile": {
+          "mode": "kernels",
+          "device": "",
+          "timestamp_query": true,
+          "detection_wall_ms": 49.099999999999994,
+          "marker_control_wall_ms": 0.9,
+          "resolve_wall_ms": 5,
+          "kernel_host_sum_ms": 38.60000000000001,
+          "gpu_window_ms": 35.97926399999999,
+          "gpu_kernel_sum_ms": null,
+          "gpu_kernel_measured_sum_ms": 9.306111999999999,
+          "gpu_kernels_measured": 14,
+          "gpu_kernels_unmeasured": 6,
+          "gpu_kernel_span_ms": null,
+          "launched": [
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+            "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+            "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema"
+          ],
+          "host_kernels": [
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 0.1,
+              "end_ms": 2.1,
+              "wall_ms": 2
+            },
+            {
+              "name": "gaussian_vertical",
+              "start_ms": 2.1,
+              "end_ms": 3.8,
+              "wall_ms": 1.7
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 3.8,
+              "end_ms": 5.6,
+              "wall_ms": 1.8
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 5.6,
+              "end_ms": 8,
+              "wall_ms": 2.4
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 8.1,
+              "end_ms": 10.4,
+              "wall_ms": 2.3
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 10.5,
+              "end_ms": 12.6,
+              "wall_ms": 2.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 12.6,
+              "end_ms": 14.3,
+              "wall_ms": 1.7
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 14.4,
+              "end_ms": 16.7,
+              "wall_ms": 2.3
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 16.7,
+              "end_ms": 18.599999999999998,
+              "wall_ms": 1.9
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 18.599999999999998,
+              "end_ms": 21.1,
+              "wall_ms": 2.5
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 21.1,
+              "end_ms": 23.2,
+              "wall_ms": 2.1
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 23.2,
+              "end_ms": 25.3,
+              "wall_ms": 2.1
+            },
+            {
+              "name": "gaussian_horizontal",
+              "start_ms": 25.3,
+              "end_ms": 27.3,
+              "wall_ms": 2
+            },
+            {
+              "name": "gaussian_vertical_dog",
+              "start_ms": 27.3,
+              "end_ms": 29.3,
+              "wall_ms": 2
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 29.3,
+              "end_ms": 30.900000000000002,
+              "wall_ms": 1.6
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 30.900000000000002,
+              "end_ms": 32.5,
+              "wall_ms": 1.6
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 32.5,
+              "end_ms": 34.1,
+              "wall_ms": 1.6
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 34.1,
+              "end_ms": 35.7,
+              "wall_ms": 1.6
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 35.7,
+              "end_ms": 37.400000000000006,
+              "wall_ms": 1.7
+            },
+            {
+              "name": "strict_extrema",
+              "start_ms": 37.400000000000006,
+              "end_ms": 39,
+              "wall_ms": 1.6
+            }
+          ],
+          "gpu_kernels": [
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": 0.26214400000000004,
+              "start_ms": 0,
+              "end_ms": 0.2621440887451172
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": 0.13107200000000002,
+              "start_ms": 0.786432147026062,
+              "end_ms": 0.917504072189331
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": 1.507328,
+              "start_ms": 2.5559040307998657,
+              "end_ms": 4.063232064247131
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+              "timing_method": "device",
+              "gpu_ms": 1.6383999999999999,
+              "start_ms": 4.915200114250183,
+              "end_ms": 6.553600072860718
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": 0.32768,
+              "start_ms": 7.012351989746094,
+              "end_ms": 7.34003210067749
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+              "timing_method": "device",
+              "gpu_ms": 0.458752,
+              "start_ms": 9.56825602054596,
+              "end_ms": 10.027008056640625
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": 0.196608,
+              "start_ms": 11.468800067901611,
+              "end_ms": 11.66540801525116
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+              "timing_method": "device",
+              "gpu_ms": 0.13107200000000002,
+              "start_ms": 13.303808093070984,
+              "end_ms": 13.434880137443542
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": null,
+              "start_ms": null,
+              "end_ms": null
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+              "timing_method": "device",
+              "gpu_ms": 2.424832,
+              "start_ms": 17.694720149040222,
+              "end_ms": 20.11955201625824
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": null,
+              "start_ms": null,
+              "end_ms": null
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+              "timing_method": "device",
+              "gpu_ms": 0.13107200000000002,
+              "start_ms": 22.21670401096344,
+              "end_ms": 22.347776055336
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::gaussian_pass::GaussianPass",
+              "timing_method": "device",
+              "gpu_ms": null,
+              "start_ms": null,
+              "end_ms": null
+            },
+            {
+              "name": "camera_path_sift::gaussian_kernel::vertical_dog::VerticalDog",
+              "timing_method": "device",
+              "gpu_ms": 0.06553600000000001,
+              "start_ms": 26.27993607521057,
+              "end_ms": 26.34547209739685
+            },
+            {
+              "name": "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+              "timing_method": "device",
+              "gpu_ms": 0.32768,
+              "start_ms": 27.918336033821106,
+              "end_ms": 28.246016025543213
+            },
+            {
+              "name": "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+              "timing_method": "device",
+              "gpu_ms": 0.13107200000000002,
+              "start_ms": 29.55673599243164,
+              "end_ms": 29.6878080368042
+            },
+            {
+              "name": "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+              "timing_method": "device",
+              "gpu_ms": 1.572864,
+              "start_ms": 31.195136070251465,
+              "end_ms": 32.76800012588501
+            },
+            {
+              "name": "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+              "timing_method": "device",
+              "gpu_ms": null,
+              "start_ms": null,
+              "end_ms": null
+            },
+            {
+              "name": "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+              "timing_method": "device",
+              "gpu_ms": null,
+              "start_ms": null,
+              "end_ms": null
+            },
+            {
+              "name": "camera_path_sift::extrema_kernel::strict_extrema::StrictExtrema",
+              "timing_method": "device",
+              "gpu_ms": null,
+              "start_ms": null,
+              "end_ms": null
+            }
+          ],
+          "resolved_synchronously": 0
+        },
+        "apis": {
+          "GPUQueue.writeBuffer": {
+            "calls": 1,
+            "sync_cpu_ms": 0.20000004768371582,
+            "bytes": 786432,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.beginComputePass": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setPipeline": {
+            "calls": 20,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.setBindGroup": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.dispatchWorkgroups": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUComputePassEncoder.end": {
+            "calls": 20,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createCommandEncoder": {
+            "calls": 63,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.finish": {
+            "calls": 63,
+            "sync_cpu_ms": 0.10000002384185791,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUQueue.submit": {
+            "calls": 63,
+            "sync_cpu_ms": 0.29999983310699463,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUDevice.createBuffer": {
+            "calls": 63,
+            "sync_cpu_ms": 0,
+            "bytes": 672,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.resolveQuerySet": {
+            "calls": 42,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUCommandEncoder.copyBufferToBuffer": {
+            "calls": 54,
+            "sync_cpu_ms": 0,
+            "bytes": 8344848,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.mapAsync": {
+            "calls": 33,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 494.0999997854233,
+            "async_calls": 33,
+            "failures": 0
+          },
+          "GPUBuffer.getMappedRange": {
+            "calls": 33,
+            "sync_cpu_ms": 0,
+            "bytes": 8382032,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          },
+          "GPUBuffer.unmap": {
+            "calls": 33,
+            "sync_cpu_ms": 0,
+            "bytes": 0,
+            "async_settled_ms_sum": 0,
+            "async_calls": 0,
+            "failures": 0
+          }
+        }
+      }
+    },
+    {
+      "mode": "baseline",
+      "width": 384,
+      "height": 512,
+      "warmup": 12,
+      "measured": 30,
+      "points": 192,
+      "exact_points": true,
+      "prewarm_calls": 120,
+      "calls_before_mode": 330,
+      "cpu_clock_quantum_ms": 0.09999990463256836,
+      "cross_origin_isolated": false,
+      "call_p50_ms": 24.699999928474426,
+      "call_p95_ms": 25.200000047683716,
+      "json_parse_p50_ms": 0,
+      "profile_p50": {
+        "detection_wall_ms": null,
+        "marker_control_wall_ms": null,
+        "resolve_wall_ms": null,
+        "kernel_host_sum_ms": null,
+        "gpu_window_ms": null,
+        "gpu_kernel_sum_ms": null,
+        "gpu_kernel_measured_sum_ms": null,
+        "gpu_kernels_measured": null,
+        "gpu_kernels_unmeasured": null,
+        "gpu_kernel_span_ms": null
+      },
+      "timings_p50": {
+        "grayscale_ms": 0.3,
+        "pyramid_setup_ms": 1.3,
+        "extrema_setup_ms": 0.30000000000000004,
+        "gpu_submit_ms": 11.799999999999999,
+        "gpu_readback_ms": 8.4,
+        "localization_ms": 1.1,
+        "cleanup_ms": 0
+      },
+      "api_cpu_p50_ms": null,
+      "api_p50": {},
+      "host_kernels": {},
+      "gpu_kernels": {},
+      "instrumented": [
+        "GPUDevice.createBuffer",
+        "GPUDevice.createShaderModule",
+        "GPUDevice.createComputePipeline",
+        "GPUDevice.createComputePipelineAsync",
+        "GPUDevice.createBindGroup",
+        "GPUDevice.createBindGroupLayout",
+        "GPUDevice.createPipelineLayout",
+        "GPUDevice.createCommandEncoder",
+        "GPUDevice.createQuerySet",
+        "GPUQueue.submit",
+        "GPUQueue.writeBuffer",
+        "GPUQueue.onSubmittedWorkDone",
+        "GPUCommandEncoder.beginComputePass",
+        "GPUCommandEncoder.copyBufferToBuffer",
+        "GPUCommandEncoder.resolveQuerySet",
+        "GPUCommandEncoder.finish",
+        "GPUComputePassEncoder.setPipeline",
+        "GPUComputePassEncoder.setBindGroup",
+        "GPUComputePassEncoder.dispatchWorkgroups",
+        "GPUComputePassEncoder.end",
+        "GPUBuffer.mapAsync",
+        "GPUBuffer.getMappedRange",
+        "GPUBuffer.unmap",
+        "GPUBuffer.destroy"
+      ],
+      "launches": [],
+      "resolved_synchronously": 0,
+      "timestamp_query": null,
+      "device": null,
+      "samples": [
+        {
+          "call_wall_ms": 25.199999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.799999952316284,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.300000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.199999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.899999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.299999952316284,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.800000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.90000009536743,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.200000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.100000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.59999990463257,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.800000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.5,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.200000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 25.199999928474426,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.600000023841858,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.800000071525574,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 23,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.700000047683716,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 22.899999976158142,
+          "profile": null
+        },
+        {
+          "call_wall_ms": 24.699999928474426,
+          "profile": null
+        }
+      ],
+      "representative": {
+        "call_wall_ms": 24.700000047683716,
+        "json_parse_ms": 0,
+        "timings": {
+          "grayscale_ms": 0.3,
+          "pyramid_setup_ms": 1.4,
+          "extrema_setup_ms": 0.2,
+          "gpu_submit_ms": 11.700000000000001,
+          "gpu_readback_ms": 8.4,
+          "localization_ms": 1.1,
+          "cleanup_ms": 0
+        },
+        "profile": null,
+        "apis": {}
+      }
+    }
+  ],
+  "conclusion": "The historical 31 ms submit phase is host-side queue/runtime work, not GPU shader duration. With longer warm-up baseline p50 is 24.6 ms initially and 24.7 ms in the final control; submit wall time is ~11.8 ms, the frame GPU interval ~5.44 ms, readback/wait ~8.5 ms. This profile does not identify the exact host runtime function behind the residual cost."
+}

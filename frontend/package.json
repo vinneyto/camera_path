@@ -16,7 +16,10 @@
     "boundaries:check": "node scripts/check-boundaries.mjs",
     "modules:scan": "node scripts/scan-frontend.mjs",
     "modules:check": "node scripts/scan-frontend.mjs --check",
-    "modules:viewer": "npm --prefix tools/module-map-viewer run dev"
+    "modules:viewer": "npm --prefix tools/module-map-viewer run dev",
+    "sift:build": "node scripts/build-sift.mjs",
+    "predev": "npm run sift:build",
+    "prebuild": "npm run sift:build"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.24",

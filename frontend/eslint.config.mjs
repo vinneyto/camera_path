@@ -32,6 +32,7 @@ export default defineConfig([
   },
   globalIgnores([
     ".next/**",
+    "public/sift/**",
     "out/**",
     "next-env.d.ts",
     "tools/module-map-viewer/dist/**",

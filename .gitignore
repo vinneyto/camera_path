@@ -11,3 +11,7 @@ out/
 *.tsbuildinfo
 cdk.out/
 infra/cdk.context.json
+
+# SIFT native/WASM build outputs
+rust/sift/target/
+frontend/public/sift/

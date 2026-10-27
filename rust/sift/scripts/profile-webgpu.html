@@ -1,0 +1,181 @@
+<!doctype html><meta charset="utf-8" /><title>SIFT CPU / GPU profile</title>
+<style>
+  body {
+    font: 15px system-ui;
+    max-width: 1120px;
+    margin: 24px auto;
+    padding: 16px;
+    background: #111;
+    color: #eee;
+  }
+  button,
+  select {
+    font: inherit;
+    margin: 8px;
+    padding: 8px;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td,
+  th {
+    border: 1px solid #555;
+    padding: 8px;
+  }
+  pre {
+    white-space: pre-wrap;
+    font-size: 12px;
+  }
+  img {
+    max-height: 160px;
+  }
+</style>
+<h1>SIFT CPU / GPU profile</h1>
+<p>
+  One persistent WebGPU worker and fixed pixels. First: 120 unprofiled calls to
+  warm the runtime. Then: 12 warm-ups + 30 measured calls per mode, ending with
+  another baseline. GPU timestamps and CPU wall time overlap; do not add them.
+  Per-kernel profiling changes command batching; partial GPU sums show measured
+  coverage.
+</p>
+<img src="/frame.png" alt="Fixed notebook frame" /><br />
+<label
+  >Mode
+  <select id="mode">
+    <option>baseline</option>
+    <option>apis</option>
+    <option>host</option>
+    <option>frame</option>
+    <option>kernels</option>
+  </select></label
+>
+<button id="run">Run mode</button><button id="all">Run all modes</button
+><button id="download">Save JSON</button>
+<p id="status">Ready</p>
+<table>
+  <thead>
+    <tr>
+      <th>Mode</th>
+      <th>Call p50 / p95 (ms)</th>
+      <th>Host kernel work</th>
+      <th>WebGPU API CPU</th>
+      <th>GPU window</th>
+      <th>GPU kernel sum</th>
+      <th>Points</th>
+    </tr>
+  </thead>
+  <tbody id="summary"></tbody>
+</table>
+<details>
+  <summary>Raw profile</summary>
+  <pre id="results"></pre>
+</details>
+<script type="module">
+  const results = [];
+  const worker = new Worker("/profile-worker.mjs", { type: "module" });
+  const bitmap = await createImageBitmap(
+    await (await fetch("/frame.png")).blob(),
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const context = canvas.getContext("2d");
+  context.drawImage(bitmap, 0, 0);
+  const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data
+    .buffer;
+  const params = JSON.stringify({
+    n_octave_layers: 3,
+    contrast_threshold: 0.04,
+    edge_threshold: 10,
+    sigma: 1.6,
+    enable_subpixel_localization: true,
+    enable_edge_like_filtering: true,
+  });
+  let pending;
+  const status = document.querySelector("#status");
+  const number = (value) =>
+    typeof value === "number" ? value.toFixed(2) : "—";
+  worker.onmessage = ({ data }) => {
+    if (data.kind === "progress") {
+      status.textContent = `${data.mode}: ${data.text}`;
+      return;
+    }
+    if (data.kind === "error") {
+      status.textContent = data.message;
+      pending?.reject(new Error(data.message));
+      pending = null;
+      return;
+    }
+    const r = data.result;
+    results.push(r);
+    document.querySelector("#results").textContent = JSON.stringify(
+      results,
+      null,
+      2,
+    );
+    const row = document.createElement("tr");
+    for (const value of [
+      r.mode,
+      `${number(r.call_p50_ms)} / ${number(r.call_p95_ms)}`,
+      number(r.profile_p50.kernel_host_sum_ms),
+      number(r.api_cpu_p50_ms),
+      number(r.profile_p50.gpu_window_ms),
+      r.profile_p50.gpu_kernel_measured_sum_ms === null
+        ? "—"
+        : `${number(r.profile_p50.gpu_kernel_measured_sum_ms)} (${r.profile_p50.gpu_kernels_measured}/${r.launches.length})`,
+      r.points,
+    ]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.appendChild(cell);
+    }
+    document.querySelector("#summary").appendChild(row);
+    status.textContent = `Complete: ${r.mode}`;
+    pending?.resolve();
+    pending = null;
+  };
+  worker.onerror = (event) => {
+    status.textContent = event.message;
+    pending?.reject(new Error(event.message));
+    pending = null;
+  };
+  const run = (mode) =>
+    new Promise((resolve, reject) => {
+      pending = { resolve, reject };
+      worker.postMessage({
+        mode,
+        width: canvas.width,
+        height: canvas.height,
+        rgba,
+        params,
+      });
+    });
+  const execute = async (modes) => {
+    document.querySelector("#run").disabled = true;
+    document.querySelector("#all").disabled = true;
+    try {
+      for (const mode of modes) await run(mode);
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      document.querySelector("#run").disabled = false;
+      document.querySelector("#all").disabled = false;
+    }
+  };
+  document.querySelector("#run").onclick = () =>
+    execute([document.querySelector("#mode").value]);
+  document.querySelector("#all").onclick = () =>
+    execute(["baseline", "apis", "host", "frame", "kernels", "baseline"]);
+  document.querySelector("#download").onclick = () => {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(results, null, 2)], {
+        type: "application/json",
+      }),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sift-cpu-gpu-profile.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+</script>

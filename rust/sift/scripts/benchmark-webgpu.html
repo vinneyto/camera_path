@@ -1,0 +1,240 @@
+<!doctype html><meta charset="utf-8" /><title>SIFT WebGPU benchmark</title>
+<style>
+  body {
+    font: 15px system-ui;
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 16px;
+    background: #111;
+    color: #eee;
+  }
+  button,
+  select {
+    font: inherit;
+    margin: 8px;
+    padding: 8px;
+  }
+  pre {
+    white-space: pre-wrap;
+  }
+  img {
+    max-height: 240px;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td,
+  th {
+    border: 1px solid #555;
+    padding: 8px;
+  }
+</style>
+<h1>SIFT WebGPU benchmark</h1>
+<p>
+  Fixed PNG pixels, default detector parameters, 12 warm-up calls and 30
+  measured calls. One detector and GPU session per run. No camera or Three.js
+  rendering.
+</p>
+<img src="/frame.png" alt="Benchmark input" /><br />
+<label
+  >Variant
+  <select id="variant">
+    <option value="before">Before</option>
+    <option value="batch">Batched readback</option>
+    <option value="after">Batched + custom kernel</option>
+    <option value="gaussian">Optimized GPU (default)</option>
+    <option value="sparse">GPU localization experiment</option>
+    <option value="cpu">CPU / Flex (comparison only)</option>
+  </select></label
+>
+<button id="run">Run benchmark</button>
+<p id="status">Ready</p>
+<table>
+  <thead>
+    <tr>
+      <th>Variant</th>
+      <th>p50 (ms)</th>
+      <th>p95 (ms)</th>
+      <th>Points</th>
+      <th>Exact match</th>
+      <th>Max coordinate error (px)</th>
+    </tr>
+  </thead>
+  <tbody id="summary"></tbody>
+</table>
+<details>
+  <summary>Raw measurements</summary>
+  <pre id="results"></pre>
+</details>
+<script type="module">
+  const params = JSON.stringify({
+    n_octave_layers: 3,
+    contrast_threshold: 0.04,
+    edge_threshold: 10,
+    sigma: 1.6,
+    enable_subpixel_localization: true,
+    enable_edge_like_filtering: true,
+  });
+  const results = [];
+  // Burn registers one runtime per module/device. Reuse each module's detector
+  // when repeating a variant, just as the production worker reuses its session.
+  const detectors = new Map();
+  let baselinePoints;
+  const bitmap = await createImageBitmap(
+    await (await fetch("/frame.png")).blob(),
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0);
+  const pixels = new Uint8Array(
+    ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer,
+  );
+  const percentile = (values, p) =>
+    [...values].sort((a, b) => a - b)[Math.ceil(values.length * p) - 1];
+  const compare = (actual, baseline) => {
+    if (!baseline) return null;
+    const remaining = JSON.parse(actual);
+    const expected = JSON.parse(baseline);
+    if (remaining.length !== expected.length)
+      throw new Error(
+        `Point count changed: ${remaining.length} vs ${expected.length}`,
+      );
+    const errors = { coordinate: 0, size: 0, response: 0 };
+    for (const point of expected) {
+      let closest = -1,
+        distance = Infinity;
+      remaining.forEach((other, i) => {
+        if (other.octave !== point.octave || other.class_id !== point.class_id)
+          return;
+        const d = (other.x - point.x) ** 2 + (other.y - point.y) ** 2;
+        if (d < distance) {
+          distance = d;
+          closest = i;
+        }
+      });
+      if (closest < 0) throw new Error("Point octave/layer changed");
+      const other = remaining.splice(closest, 1)[0];
+      errors.coordinate = Math.max(
+        errors.coordinate,
+        Math.abs(other.x - point.x),
+        Math.abs(other.y - point.y),
+      );
+      errors.size = Math.max(errors.size, Math.abs(other.size - point.size));
+      errors.response = Math.max(
+        errors.response,
+        Math.abs(other.response - point.response),
+      );
+    }
+    if (
+      errors.coordinate >= 0.005 ||
+      errors.size >= 0.005 ||
+      errors.response >= 0.0002
+    )
+      throw new Error(
+        `Point error exceeds reference tolerance: ${JSON.stringify(errors)}`,
+      );
+    return errors;
+  };
+  document.querySelector("#run").onclick = async () => {
+    const button = document.querySelector("#run"),
+      select = document.querySelector("#variant"),
+      status = document.querySelector("#status");
+    button.disabled = true;
+    select.disabled = true;
+    try {
+      const variant = select.value;
+      status.textContent = `Initializing ${variant}`;
+      const wasm = await import(`/${variant}/camera_path_sift.js`);
+      await wasm.default({
+        module_or_path: `/${variant}/camera_path_sift_bg.wasm`,
+      });
+      let detector = detectors.get(variant);
+      if (!detector) {
+        detector = await wasm.Detector.create();
+        detectors.set(variant, detector);
+      }
+      const times = [],
+        reports = [];
+      let points;
+      for (let i = 0; i < 42; i++) {
+        status.textContent =
+          i < 12 ? `Warm-up ${i + 1}/12` : `Measuring ${i - 11}/30`;
+        const start = performance.now();
+        const report = JSON.parse(
+          await detector.detect_rgba(
+            canvas.width,
+            canvas.height,
+            pixels,
+            params,
+          ),
+        );
+        const elapsed = performance.now() - start;
+        const serialized = JSON.stringify(report.points);
+        if (points !== undefined && points !== serialized)
+          throw new Error("Detections changed between identical calls");
+        points = serialized;
+        if (i >= 12) {
+          times.push(elapsed);
+          reports.push(report.timings);
+        }
+      }
+      if (variant === "before") baselinePoints = points;
+      const result = {
+        variant,
+        width: canvas.width,
+        height: canvas.height,
+        warmup: 12,
+        samples: times.length,
+        points: JSON.parse(points).length,
+        sameAsBaseline:
+          baselinePoints === undefined ? null : baselinePoints === points,
+        max_errors: compare(points, baselinePoints),
+        p50_ms: percentile(times, 0.5),
+        p95_ms: percentile(times, 0.95),
+        min_ms: Math.min(...times),
+        timings_p50: Object.fromEntries(
+          Object.keys(reports[0]).map((key) => [
+            key,
+            percentile(
+              reports.map((report) => report[key]),
+              0.5,
+            ),
+          ]),
+        ),
+        samples_ms: times,
+      };
+      results.push(result);
+      document.querySelector("#results").textContent = JSON.stringify(
+        results,
+        null,
+        2,
+      );
+      const row = document.createElement("tr");
+      for (const value of [
+        variant,
+        result.p50_ms.toFixed(1),
+        result.p95_ms.toFixed(1),
+        result.points,
+        result.sameAsBaseline === null
+          ? "Run Before first"
+          : result.sameAsBaseline
+            ? "Yes"
+            : "NO",
+        result.max_errors?.coordinate.toFixed(6) ?? "Run Before first",
+      ]) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+      }
+      document.querySelector("#summary").appendChild(row);
+      status.textContent = `Complete: ${variant}`;
+    } catch (error) {
+      status.textContent = `Error: ${error.stack ?? error}`;
+    } finally {
+      button.disabled = false;
+      select.disabled = false;
+    }
+  };
+</script>

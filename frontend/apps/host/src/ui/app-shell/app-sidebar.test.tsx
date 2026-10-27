@@ -13,6 +13,7 @@ it.each([
   ["/projects/scene", "Projects"],
   ["/library", "Library"],
   ["/library/cloud", "Library"],
+  ["/sift", "SIFT lab"],
   ["/unknown", null],
 ])("highlights the current section at %s", (pathname, active) => {
   route.pathname = pathname;
@@ -21,13 +22,13 @@ it.each([
       <AppSidebar />
     </SlotProvider>,
   );
-  for (const label of ["Projects", "Library"]) {
+  for (const label of ["Projects", "Library", "SIFT lab"]) {
     const link = screen.getByRole("link", { name: label });
     expect(link.getAttribute("aria-current")).toBe(
       label === active ? "page" : null,
     );
     expect(link.getAttribute("href")).toBe(
-      label === "Projects" ? "/" : "/library",
+      label === "Projects" ? "/" : label === "Library" ? "/library" : "/sift",
     );
   }
 });

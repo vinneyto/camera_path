@@ -8,3 +8,5 @@ next-env.d.ts
 package-lock.json
 packages/api/src/client/generated
 packages/types/src/api
+
+public/sift

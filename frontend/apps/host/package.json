@@ -5,6 +5,7 @@
   "dependencies": {
     "@camera-path/actions": "*",
     "@camera-path/api": "*",
+    "@camera-path/commands": "*",
     "@camera-path/feature-anchors": "*",
     "@camera-path/feature-appearance": "*",
     "@camera-path/feature-camera-aim": "*",
@@ -22,7 +23,9 @@
     "@camera-path/feature-scene-models": "*",
     "@camera-path/feature-speed-track": "*",
     "@camera-path/feature-trajectory": "*",
+    "@camera-path/render-pipeline": "*",
     "@camera-path/scene-runtime": "*",
+    "@camera-path/slots": "*",
     "@camera-path/store": "*",
     "@camera-path/types": "*",
     "@camera-path/ui-kit": "*",
@@ -31,8 +34,6 @@
     "next": "^16.4.0",
     "react": "^19.2.8",
     "three": "^0.185.1",
-    "@camera-path/slots": "*",
-    "@camera-path/commands": "*",
-    "@camera-path/render-pipeline": "*"
+    "@camera-path/feature-sift": "*"
   }
 }
