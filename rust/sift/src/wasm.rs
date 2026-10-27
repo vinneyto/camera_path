@@ -47,4 +47,29 @@ impl Detector {
         report.timings.grayscale_ms = gray_ms;
         serde_json::to_string(&report).map_err(|e| JsValue::from_str(&e.to_string()))
     }
+
+    /// Diagnostic build only. Production detect_rgba never installs profiling hooks.
+    #[cfg(feature = "profiling")]
+    pub async fn profile_rgba(
+        &mut self,
+        width: usize,
+        height: usize,
+        rgba: Vec<u8>,
+        params: String,
+        mode: String,
+    ) -> Result<String, JsValue> {
+        let mode = crate::profiling::Mode::parse(&mode).map_err(|e| JsValue::from_str(&e))?;
+        let p: Params =
+            serde_json::from_str(&params).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let start = web_time::Instant::now();
+        let image =
+            GrayImage::from_rgba(width, height, &rgba).map_err(|e| JsValue::from_str(&e))?;
+        let gray_ms = start.elapsed().as_secs_f64() * 1000.0;
+        let mut result =
+            crate::profiling::detect_cached(&image, &p, &self.device, &mut self.plan, mode)
+                .await
+                .map_err(|e| JsValue::from_str(&e))?;
+        result.report.timings.grayscale_ms = gray_ms;
+        serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
 }

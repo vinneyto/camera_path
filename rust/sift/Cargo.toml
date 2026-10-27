@@ -13,6 +13,7 @@ cli = ["dep:image", "dep:clap", "dep:pollster", "cpu", "gpu"]
 cpu = ["burn/flex"]
 gpu = ["burn/wgpu", "burn/fusion", "dep:burn-cubecl", "dep:cubecl"]
 gpu-localization = ["gpu"]
+profiling = ["gpu"]
 wasm = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "gpu", "burn/webgpu"]
 wasm-cpu = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "cpu"]
 

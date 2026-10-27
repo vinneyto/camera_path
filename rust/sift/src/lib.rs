@@ -18,6 +18,8 @@ mod gpu_pyramid;
 mod localization_kernel;
 #[cfg(feature = "gpu-localization")]
 mod localization_ops;
+#[cfg(feature = "profiling")]
+pub mod profiling;
 mod pyramid;
 #[cfg(any(feature = "wasm", feature = "wasm-cpu"))]
 mod wasm;

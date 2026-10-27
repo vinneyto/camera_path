@@ -184,6 +184,10 @@ samples, parameters, hashes and the earlier readback/extrema-only comparison are
 saved in [`benchmarks/webgpu-2026-10-27.json`](benchmarks/webgpu-2026-10-27.json).
 These warmed measurements describe this input/browser/device, not phone FPS.
 
+The follow-up profile below found that 12 warm-up calls were insufficient for
+steady-state runtime performance. Keep the table above as an early-warm-up
+snapshot; do not compare its CPU row with the longer-warmed GPU figures below.
+
 `scripts/benchmark-webgpu.mjs` serves a fixed PNG and three saved release WASM
 packages. Prepare a directory with `frame.png` and `before/`, `batch/`, `after/`, `gaussian/`, `sparse/`, `cpu/`,
 each containing `camera_path_sift.js` and `camera_path_sift_bg.wasm`. Build each
@@ -221,3 +225,77 @@ differences.
 Expand **Raw measurements** to save the full results. Repeating a variant reuses
 its existing detector; reload the page for a fresh session. Stage timings include
 lazy Burn work and should not be interpreted as GPU timestamp measurements.
+
+## Separating CPU/WASM, WebGPU submission and GPU execution
+
+The optional `profiling` feature adds `Detector.profile_rgba` and the native
+`profiling::detect` diagnostic entrypoint. Normal frontend builds use only
+`wasm`, so they install no launch observers, host spans or WebGPU API wrappers.
+The detector algorithm and normal batching are unchanged.
+
+Reuse the fixed `frame.png` from the comparison above. Prepare an artifact
+directory containing that PNG and build a diagnostic package into `pkg/`:
+
+```sh
+CARGO_PROFILE_RELEASE_OPT_LEVEL=2 wasm-pack build rust/sift --target web --release \
+  --out-dir /absolute/profile-directory/pkg --out-name camera_path_sift \
+  --no-default-features --features wasm,profiling --locked
+node rust/sift/scripts/profile-webgpu.mjs /absolute/profile-directory 3111
+```
+
+Open `http://localhost:3111` and choose **Run all modes**. One persistent worker
+first performs 120 unprofiled detections. Each mode then gets 12 warm-up calls
+and 30 measurements, followed by another unprofiled baseline. Every call must
+produce exactly the same serialized point array. **Save JSON** exports samples,
+representative timelines, API counts/bytes and the warm-up curve. Camera capture,
+Three.js rendering and worker message transfer are outside the measured call.
+
+The 384×512 / 192-point run on 2026-10-27 produced:
+
+| Mode                          | Call p50 / p95 |          GPU timestamp interval | Queue submissions / frame |
+| ----------------------------- | -------------: | ------------------------------: | ------------------------: |
+| Baseline after 120 calls      | 24.6 / 26.6 ms |                    Not measured |                Not probed |
+| WebGPU API probe              | 25.6 / 28.5 ms |                    Not measured |                         2 |
+| Host kernel spans + API probe | 25.1 / 26.3 ms |                    Not measured |                         2 |
+| One outer GPU window          | 26.7 / 31.4 ms |                         5.44 ms |                         4 |
+| Per-kernel GPU windows        | 55.8 / 58.5 ms | 36.90 ms including induced gaps |                        63 |
+| Final baseline control        | 24.7 / 25.2 ms |                    Not measured |                Not probed |
+
+`gpu_submit_ms` is the host wall time of `Device.flush()`, not a GPU duration.
+It fell from about 31 ms in the earlier short warm-up to about 11.8 ms after
+longer warm-up. In host mode, synchronous custom-kernel handlers total about
+1.5 ms and the nested synchronous WebGPU API calls about 0.3 ms (the browser's
+CPU clock quantum was about 0.1 ms). These are nested measurements, not separate
+pieces to add or subtract from medians. Much of the host runtime work happens
+outside our kernel handlers; this profile does not identify the exact Fusion,
+CubeCL or wgpu function responsible for that residual cost.
+
+The minimally instrumented GPU window contains 20 dispatches: 7 horizontal
+Gaussian passes, 1 initial vertical pass, 6 fused vertical/DoG/decimation passes
+and 6 extrema passes. Ordinary warmed frames create no GPU buffers, shader
+modules or compute pipelines. They upload 786,432 bytes and copy 8,344,512 bytes
+back across 12 mapped buffers. The roughly 8.5 ms readback/wait phase includes
+GPU execution, copy/map and host processing, so it must not be added to the GPU
+interval as an independent cost.
+
+Per-kernel timing is deliberately a separate experiment: CubeCL's deferred
+timers preserve asynchronous reads but split compute passes and submit work for
+their queries. The 36.90 ms interval therefore includes profiler-induced gaps.
+Short kernels sometimes have no resolved measurement; these remain `null`, and
+the partial sum reports its coverage. System-clock fallbacks are never labeled
+GPU time. GPU-relative timelines are normalized to the first measured GPU event
+and are not aligned to the CPU clock. Without timestamp-query support, use
+`host` mode; GPU modes return a clear error.
+
+Full data: [`benchmarks/profile-webgpu-2026-10-27.json`](benchmarks/profile-webgpu-2026-10-27.json).
+The next investigation should focus on host queue/runtime processing and dense
+readback, while retaining the same warm-up protocol. The historical CPU and
+GPU-localization comparisons also need that protocol before drawing new
+steady-state conclusions.
+
+```sh
+cargo test --release --manifest-path rust/sift/Cargo.toml --features profiling \
+  profiles_preserve_points_and_release_observer -- --ignored --test-threads=1
+```
+
+GPU profiling tests run serially because the launch observer is process-wide.

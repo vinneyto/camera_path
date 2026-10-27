@@ -27,12 +27,13 @@ jobs:
           workspaces: rust/sift
       - run: cargo install wasm-pack --version 0.15.0 --locked
       - run: cargo fmt --manifest-path rust/sift/Cargo.toml --check
-      - run: cargo test --manifest-path rust/sift/Cargo.toml --features gpu-localization --locked
+      - run: cargo test --manifest-path rust/sift/Cargo.toml --features gpu-localization,profiling --locked
       - run: cargo clippy --manifest-path rust/sift/Cargo.toml --all-targets --all-features --locked -- -D warnings
       - run: npm ci
         working-directory: frontend
       - run: npm run sift:build
         working-directory: frontend
+      - run: cargo check --manifest-path rust/sift/Cargo.toml --target wasm32-unknown-unknown --no-default-features --features wasm,profiling --locked
       - run: npm run api:check
         working-directory: frontend
       - run: npm run boundaries:check

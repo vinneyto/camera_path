@@ -266,6 +266,8 @@ impl LocalizationOps for CubeBackend {
         subpixel: bool,
         filter: bool,
     ) -> (IntTensor<Self>, FloatTensor<Self>) {
+        #[cfg(feature = "profiling")]
+        let collect_host = crate::profiling::HostSpan::new("collect_candidates");
         let shape = volume.meta.shape();
         let count = CubeTensor::new_contiguous(
             volume.client.clone(),
@@ -306,6 +308,10 @@ impl LocalizationOps for CubeBackend {
             threshold,
             dtype_to_storage_type(volume.dtype),
         );
+        #[cfg(feature = "profiling")]
+        drop(collect_host);
+        #[cfg(feature = "profiling")]
+        let _localize_host = crate::profiling::HostSpan::new("localize_points");
         let groups = capacity.div_ceil(256);
         let columns = groups.min(65535);
         localize_points::launch(

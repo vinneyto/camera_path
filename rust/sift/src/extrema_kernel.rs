@@ -48,6 +48,8 @@ fn strict_extrema<F: Float>(
 
 impl SiftExtremaOps for CubeBackend {
     fn sift_extrema_mask(volume: FloatTensor<Self>, threshold: f32) -> FloatTensor<Self> {
+        #[cfg(feature = "profiling")]
+        let _host = crate::profiling::HostSpan::new("strict_extrema");
         let shape = mask_shape(volume.meta.shape());
         let dtype = volume.dtype;
         let output = CubeTensor::new_contiguous(

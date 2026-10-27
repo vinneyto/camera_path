@@ -144,6 +144,12 @@ impl GaussianOps for CubeBackend {
         weights: FloatTensor<Self>,
         vertical: bool,
     ) -> FloatTensor<Self> {
+        #[cfg(feature = "profiling")]
+        let _host = crate::profiling::HostSpan::new(if vertical {
+            "gaussian_vertical"
+        } else {
+            "gaussian_horizontal"
+        });
         let shape = blur_shape(input.meta.shape(), weights.meta.shape());
         let output = empty_like(&input, shape.clone());
         gaussian_pass::launch(
@@ -170,6 +176,8 @@ impl GaussianOps for CubeBackend {
         weights: FloatTensor<Self>,
         next_layer: u32,
     ) -> (FloatTensor<Self>, FloatTensor<Self>) {
+        #[cfg(feature = "profiling")]
+        let _host = crate::profiling::HostSpan::new("gaussian_vertical_dog");
         let shape = horizontal.meta.shape().clone();
         let next_shape = [shape[1].div_ceil(2), shape[2].div_ceil(2)].into();
         let dog = empty_like(&horizontal, shape.clone());
