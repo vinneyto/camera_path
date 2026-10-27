@@ -1,5 +1,5 @@
 "use client";
-import { FolderOpen, Library } from "lucide-react";
+import { FolderOpen, Library, ScanSearch } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { NavigationLink } from "./navigation-link";
 
@@ -29,6 +29,14 @@ export function NavigationLinks({
         label="Library"
         icon={Library}
         active={pathname === "/library" || pathname.startsWith("/library/")}
+        variant={variant}
+        onNavigate={onNavigate}
+      />
+      <NavigationLink
+        href="/sift"
+        label="SIFT lab"
+        icon={ScanSearch}
+        active={pathname === "/sift"}
         variant={variant}
         onNavigate={onNavigate}
       />

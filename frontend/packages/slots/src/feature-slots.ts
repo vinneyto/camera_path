@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 export type SlotComponents = readonly ComponentType[];
 /** The complete list of host containers. Every section and every slot is optional. */
 export interface FeatureSlots {
+  readonly sift?: { readonly content?: SlotComponents };
   readonly settings?: { readonly content?: SlotComponents };
   readonly dashboard?: { readonly content?: SlotComponents };
   readonly library?: {

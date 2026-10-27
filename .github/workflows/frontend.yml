@@ -5,6 +5,7 @@ on:
     paths:
       - "backend/openapi.json"
       - "frontend/**"
+      - "rust/sift/**"
       - ".github/workflows/frontend.yml"
 
 jobs:
@@ -17,7 +18,20 @@ jobs:
           node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/sift
+      - run: cargo install wasm-pack --version 0.13.1 --locked
+      - run: cargo fmt --manifest-path rust/sift/Cargo.toml --check
+      - run: cargo test --manifest-path rust/sift/Cargo.toml --locked
+      - run: cargo clippy --manifest-path rust/sift/Cargo.toml --locked -- -D warnings
       - run: npm ci
+        working-directory: frontend
+      - run: npm run sift:build
         working-directory: frontend
       - run: npm run api:check
         working-directory: frontend

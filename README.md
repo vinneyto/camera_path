@@ -60,3 +60,9 @@ and project ETags on mutations. Existing projects start without a sensor.
 Alembic migration `20261011_0012` adds its normalized singleton record. Deletion,
 configuration changes, unmount and backend replacement release pass, texture,
 compute, geometry and material resources. The Spark example has no LiDAR support.
+
+## SIFT detection lab
+
+The standalone **SIFT lab** page ports the notebook detector to Burn WebGPU/WASM,
+with a Three.js camera preview and a native JSON CLI. See
+[`rust/sift/README.md`](rust/sift/README.md) for setup, timing metrics and checks.

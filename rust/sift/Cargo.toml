@@ -1,0 +1,37 @@
+[package]
+name = "camera-path-sift"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["cli"]
+cli = ["dep:image", "dep:clap", "dep:pollster", "cpu", "gpu"]
+cpu = ["burn/flex"]
+gpu = ["burn/wgpu", "burn/fusion"]
+wasm = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "gpu", "burn/webgpu"]
+
+[dependencies]
+burn = { version = "=0.22.0", default-features = false, features = ["std"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+web-time = "1"
+clap = { version = "4", features = ["derive"], optional = true }
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg"], optional = true }
+wasm-bindgen = { version = "=0.2.117", optional = true }
+pollster = { version = "0.4", optional = true }
+wasm-bindgen-futures = { version = "=0.4.67", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[[bin]]
+name = "sift"
+path = "src/bin/sift.rs"
+required-features = ["cli"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
