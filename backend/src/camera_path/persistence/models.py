@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     Text,
     UniqueConstraint,
+    false,
     true,
 )
 from sqlalchemy import (
@@ -66,7 +67,9 @@ class UserSettingsRecord(Base):
     gaussian_dpr: Mapped[str] = mapped_column(Text, nullable=False, server_default="1x")
 
     user_id: Mapped[str] = mapped_column(Text, primary_key=True)
-    webgpu_tile_renderer: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    webgpu_tile_renderer: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false()
+    )
     show_grid: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
 
 

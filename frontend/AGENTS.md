@@ -8,9 +8,8 @@
 - Move sibling components and reusable helpers into dedicated files instead of accumulating them in a page, widget, or feature module.
 - Keep each contributed command and each rendering effect in its own source file. A command component renders one `Command`; do not group several commands/effects in one implementation or aggregate wrapper. List command components individually in the feature slots object so reviewers can see each contribution and its dependencies. Keep an effect's resource setup, registration and cleanup together. This rule concerns contributed effects, not individual React effect hooks inside one resource owner.
 - Keep scene features renderer-agnostic. Renderer-specific imports belong only in the matching scene-surface adapter.
-- Treat the WebGPU viewport backed by `3dgs-tile-webgpu` as the only supported product rendering path.
-- Keep the Spark/WebGL adapter only as a renderer-integration example. It does not need feature parity or production completeness; unsupported operations may use explicit stubs that throw clear errors.
-- Do not spend effort extending or tuning the Spark path unless a task explicitly requests it.
+- Default to Spark/WebGL when no renderer preference is saved; preserve an explicit WebGPU choice.
+- Keep renderer-specific behavior in its adapter. Changing the default does not require unrelated feature-parity work; unsupported adapter operations must report clear errors.
 - Prefer TSL when custom shader logic is required for the supported WebGPU path.
 - Create disposable Three.js/GPU resources and dispose them in the setup and cleanup of the same `useEffect`. Do not create or memoize such a resource with `useMemo` and dispose it from a separate effect: React Strict Mode may run the effect cleanup and setup again while retaining the memoized resource, causing reuse after `dispose()`.
 - Do not create a ref only to carry the latest prop or state value into an effect. When the resulting update is cheap, apply it directly in a `useEffect` or `useLayoutEffect` and list the value in that effect's dependencies.

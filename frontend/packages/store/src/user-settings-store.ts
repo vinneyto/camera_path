@@ -17,7 +17,7 @@ export type UserSettingsStoreApi = StoreApi<UserSettingsState>;
 export function createUserSettingsStore(): UserSettingsStoreApi {
   return createStore<UserSettingsState>(() => ({
     userSettings: {
-      webGpuTileRenderer: true,
+      webGpuTileRenderer: false,
       showGrid: true,
       gaussianDpr: "1x",
       loading: true,
