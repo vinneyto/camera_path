@@ -1,6 +1,7 @@
 "use client";
-import type { ReactNode } from "react";
+import { useContext, useId, useState, type ReactNode } from "react";
 import { CONTEXT_MENU_Z_INDEX } from "./z-order";
+import { TooltipContext } from "./tooltip-provider";
 
 export function Tooltip({
   label,
@@ -9,16 +10,43 @@ export function Tooltip({
   label: string;
   children: ReactNode;
 }) {
+  const id = useId();
+  const localState = useState<string | null>(null);
+  const [activeId, setActiveId] = useContext(TooltipContext) ?? localState;
+  const close = () =>
+    setActiveId((current) => (current === id ? null : current));
   return (
-    <span className="group/tooltip relative inline-flex">
+    <span
+      className="relative inline-flex"
+      onPointerEnter={(event) => {
+        if (event.currentTarget.contains(event.target as Node)) setActiveId(id);
+      }}
+      onPointerLeave={close}
+      onFocusCapture={(event) => {
+        // A pointer click retains focus, but must not keep its tooltip open.
+        // Ignore focus bubbling from a dialog rendered through a React portal.
+        if (
+          event.currentTarget.contains(event.target) &&
+          event.target.matches(":focus-visible")
+        )
+          setActiveId(id);
+      }}
+      onBlurCapture={close}
+      onClickCapture={close}
+      onKeyDownCapture={(event) => {
+        if (event.key === "Escape") close();
+      }}
+    >
       {children}
-      <span
-        role="tooltip"
-        className="pointer-events-none invisible absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border bg-popover px-2.5 py-1.5 text-xs font-medium text-popover-foreground opacity-0 shadow-md transition-opacity delay-150 group-focus-within/tooltip:visible group-focus-within/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:opacity-100 motion-reduce:transition-none"
-        style={{ zIndex: CONTEXT_MENU_Z_INDEX }}
-      >
-        {label}
-      </span>
+      {activeId === id && (
+        <span
+          role="tooltip"
+          className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border bg-popover px-2.5 py-1.5 text-xs font-medium text-popover-foreground shadow-md"
+          style={{ zIndex: CONTEXT_MENU_Z_INDEX }}
+        >
+          {label}
+        </span>
+      )}
     </span>
   );
 }

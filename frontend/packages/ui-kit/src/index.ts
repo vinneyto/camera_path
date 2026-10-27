@@ -23,3 +23,4 @@ export {
 } from "@camera-path/ui-kit/z-order";
 
 export { Tooltip } from "@camera-path/ui-kit/tooltip";
+export { TooltipProvider } from "@camera-path/ui-kit/tooltip-provider";
