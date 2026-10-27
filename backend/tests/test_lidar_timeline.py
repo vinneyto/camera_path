@@ -99,3 +99,26 @@ async def test_partial_settings_and_clear_reset_remove_the_presence_resource(rep
     await timelines.set_lidar(project.id, LidarSettings())
     await projects.reset_project(project.id)
     assert (await repository.get(project.id)).camera_track.lidar_keyframe is None
+
+
+async def test_create_defaults_preserves_existing_lidar_and_recreates_after_deletion(repository):
+    from camera_path.models import LidarKeyframe, LidarSettings, ProjectCreate
+    from camera_path.services.projects import ProjectService
+    from camera_path.services.timelines import TimelineService
+
+    project = await ProjectService(repository).create_project(ProjectCreate(name="Defaults"))
+    timelines = TimelineService(repository)
+    configured = await timelines.set_lidar(
+        project.id, LidarSettings(vertical_fov_deg=90, horizontal_resolution=1024)
+    )
+    original = configured.camera_track.lidar_keyframe
+    repeated = await timelines.set_lidar(project.id, LidarSettings())
+    assert repeated.camera_track.lidar_keyframe == original
+    assert (await repository.get(project.id)).camera_track.lidar_keyframe == original
+
+    await timelines.set_lidar(project.id, None)
+    recreated = await timelines.set_lidar(project.id, LidarSettings())
+    keyframe = recreated.camera_track.lidar_keyframe
+    assert keyframe.id != original.id
+    assert keyframe == LidarKeyframe(id=keyframe.id)
+    assert (await repository.get(project.id)).camera_track.lidar_keyframe == keyframe

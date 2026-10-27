@@ -3,6 +3,7 @@ import { forgetProjectRevision } from "@camera-path/api/client/orval-fetch";
 import { projectKeys } from "@camera-path/api/project";
 import { CommandsProvider } from "@camera-path/commands";
 import { Slot, SlotProvider } from "@camera-path/slots";
+import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
 import { EditorTestHost } from "@host/testing/editor-host";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -30,14 +31,14 @@ afterEach(() => {
   auth.canEdit = true;
 });
 
-function mount() {
+function mount(selectedObjectId: string | null = trajectoryObjectId) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   clients.push(client);
   render(
     <QueryClientProvider client={client}>
-      <EditorTestHost projectId={projectId}>
+      <EditorTestHost projectId={projectId} selectedObjectId={selectedObjectId}>
         <SlotProvider features={[slots]}>
           <CommandsProvider>
             <Slot name="project.commands" />
@@ -64,7 +65,10 @@ it("removes LiDAR once with If-Match, refreshes its resource and offers creation
         });
       }
       return Response.json(
-        { lidar_keyframe: enabled ? { id: "lidar", path_position: 0 } : null },
+        {
+          segments: [{ id: "segment" }],
+          lidar_keyframe: enabled ? { id: "lidar", path_position: 0 } : null,
+        },
         { headers: { ETag: enabled ? '"10"' : '"11"' } },
       );
     }),
@@ -75,8 +79,12 @@ it("removes LiDAR once with If-Match, refreshes its resource and offers creation
     projectKeys.anchors(projectId),
     projectKeys.depthOfField(projectId),
   ];
-  for (const key of untouched) client.setQueryData(key, { keep: true });
   const search = await screen.findByRole("combobox");
+  await waitFor(() => expect(client.isFetching()).toBe(0));
+  for (const key of untouched) {
+    if (!client.getQueryData(key)) client.setQueryData(key, { keep: true });
+  }
+  const before = untouched.map((key) => client.getQueryData(key));
   fireEvent.focus(search);
   fireEvent.change(search, { target: { value: "remove" } });
   fireEvent.keyDown(search, { key: "Enter" });
@@ -98,8 +106,8 @@ it("removes LiDAR once with If-Match, refreshes its resource and offers creation
   fireEvent.focus(search);
   await screen.findByRole("option", { name: "LiDAR: Add" });
   expect(screen.queryByRole("option", { name: "LiDAR: Remove" })).toBeNull();
-  for (const key of untouched) {
-    expect(client.getQueryData(key)).toEqual({ keep: true });
+  for (const [index, key] of untouched.entries()) {
+    expect(client.getQueryData(key)).toEqual(before[index]);
     expect(client.getQueryState(key)?.isInvalidated).toBe(false);
   }
   cleanup();
@@ -143,7 +151,10 @@ it.each([
     "fetch",
     vi.fn(async () =>
       Response.json(
-        { lidar_keyframe: enabled ? { id: "lidar", path_position: 0 } : null },
+        {
+          segments: [{ id: "segment" }],
+          lidar_keyframe: enabled ? { id: "lidar", path_position: 0 } : null,
+        },
         { headers: { ETag: '"10"' } },
       ),
     ),

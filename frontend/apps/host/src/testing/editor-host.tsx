@@ -15,9 +15,11 @@ import { useState, type ReactNode } from "react";
 export function EditorTestHost({
   children,
   projectId = "project",
+  selectedObjectId = null,
 }: {
   children: ReactNode;
   projectId?: string;
+  selectedObjectId?: string | null;
 }) {
   const [settingsStore] = useState(() => {
     const state = createUserSettingsStore();
@@ -30,7 +32,11 @@ export function EditorTestHost({
     createUserSettingsActions(settingsStore),
   );
   const [store] = useState(createEditorStore);
-  const [actions] = useState(() => createEditorActions(store));
+  const [actions] = useState(() => {
+    const actions = createEditorActions(store);
+    actions.selectObject({ id: selectedObjectId });
+    return actions;
+  });
   return (
     <UserSettingsStoreProvider store={settingsStore}>
       <UserSettingsActionsProvider actions={settingsActions}>
