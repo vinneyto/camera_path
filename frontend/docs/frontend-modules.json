@@ -26,6 +26,7 @@
         "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
         "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
+        "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
         "packages/actions/src/mutations/library/use-delete-library-assets.ts",
         "packages/actions/src/mutations/library/use-upload-library-file.ts",
         "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
@@ -687,6 +688,12 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
+              "file": "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
+              "line": 8,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
               "file": "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
               "line": 12,
               "column": 21,
@@ -819,7 +826,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7895,
+            "line": 8009,
             "column": 1
           },
           "usages": [
@@ -843,7 +850,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3063,
+            "line": 3177,
             "column": 1
           },
           "usages": [
@@ -885,7 +892,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4050,
+            "line": 4164,
             "column": 1
           },
           "usages": [
@@ -909,7 +916,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4300,
+            "line": 4414,
             "column": 1
           },
           "usages": [
@@ -951,7 +958,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6030,
+            "line": 6144,
             "column": 1
           },
           "usages": [
@@ -975,7 +982,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7764,
+            "line": 7878,
             "column": 1
           },
           "usages": [
@@ -1023,7 +1030,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5040,
+            "line": 5154,
             "column": 1
           },
           "usages": [
@@ -1065,7 +1072,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5533,
+            "line": 5647,
             "column": 1
           },
           "usages": [
@@ -1107,7 +1114,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6770,
+            "line": 6884,
             "column": 1
           },
           "usages": [
@@ -2130,6 +2137,7 @@
       "entrypoint": "packages/features/depth-of-field/src/index.ts",
       "files": [
         "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
+        "packages/features/depth-of-field/src/commands/remove-depth-of-field-command.tsx",
         "packages/features/depth-of-field/src/index.ts",
         "packages/features/depth-of-field/src/scene/depth-of-field-focus-helper.tsx",
         "packages/features/depth-of-field/src/scene/depth-of-field.tsx",
@@ -2144,6 +2152,12 @@
               "name": "AddDepthOfFieldCommand",
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
               "line": 8,
+              "column": 1
+            },
+            {
+              "name": "RemoveDepthOfFieldCommand",
+              "file": "packages/features/depth-of-field/src/commands/remove-depth-of-field-command.tsx",
+              "line": 7,
               "column": 1
             }
           ],
@@ -2203,6 +2217,24 @@
               "expression": "useDeleteDepthOfFieldKeyframeMutation"
             }
           ]
+        },
+        {
+          "name": "useDeleteDepthOfFieldTimelineMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/depth-of-field/src/commands/remove-depth-of-field-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useDeleteDepthOfFieldTimelineMutation"
+            }
+          ]
         }
       ],
       "selectors": [
@@ -2219,6 +2251,12 @@
             {
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
               "line": 11,
+              "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/depth-of-field/src/commands/remove-depth-of-field-command.tsx",
+              "line": 9,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -2267,6 +2305,12 @@
             {
               "file": "packages/features/depth-of-field/src/commands/add-depth-of-field-command.tsx",
               "line": 9,
+              "column": 20,
+              "expression": "useDepthOfFieldTimeline()"
+            },
+            {
+              "file": "packages/features/depth-of-field/src/commands/remove-depth-of-field-command.tsx",
+              "line": 8,
               "column": 20,
               "expression": "useDepthOfFieldTimeline()"
             }

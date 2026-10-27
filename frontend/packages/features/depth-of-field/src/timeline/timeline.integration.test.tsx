@@ -148,7 +148,14 @@ it("adds and deletes a keyframe through the real shared client/cache using featu
   const marker = await screen.findByRole("button", {
     name: /Nine-point autofocus/,
   });
-  await waitFor(() => expect(screen.queryByRole("combobox")).toBeNull());
+  fireEvent.focus(screen.getByRole("combobox"));
+  expect(
+    await screen.findByRole("option", { name: "Depth of Field: Remove" }),
+  ).toBeTruthy();
+  expect(
+    screen.queryByRole("option", { name: "Depth of Field: Add" }),
+  ).toBeNull();
+  fireEvent.keyDown(screen.getByRole("combobox"), { key: "Escape" });
   expect(writes[0]).toEqual({
     method: "POST",
     path: "/api/v1/projects/project/camera/depth-of-field/keyframes",

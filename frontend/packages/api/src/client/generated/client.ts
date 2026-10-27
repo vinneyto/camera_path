@@ -2985,6 +2985,120 @@ export const useUpdateCameraTrack = <TError = void | ErrorResponse,
       return useMutation(getUpdateCameraTrackMutationOptions(options), queryClient);
     }
 
+export type deleteDepthOfFieldTimelineResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteDepthOfFieldTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type deleteDepthOfFieldTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteDepthOfFieldTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteDepthOfFieldTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteDepthOfFieldTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteDepthOfFieldTimelineResponseSuccess = (deleteDepthOfFieldTimelineResponse204) & {
+  headers: Headers;
+};
+export type deleteDepthOfFieldTimelineResponseError = (deleteDepthOfFieldTimelineResponse401 | deleteDepthOfFieldTimelineResponse404 | deleteDepthOfFieldTimelineResponse409 | deleteDepthOfFieldTimelineResponse422 | deleteDepthOfFieldTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type deleteDepthOfFieldTimelineResponse = (deleteDepthOfFieldTimelineResponseSuccess | deleteDepthOfFieldTimelineResponseError)
+
+export const getDeleteDepthOfFieldTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera/depth-of-field`
+}
+
+/**
+ * Remove every depth-of-field keyframe while preserving the trajectory and other timelines.
+ * @summary Delete the depth-of-field timeline
+ */
+export const deleteDepthOfFieldTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteDepthOfFieldTimelineResponse> => {
+
+  return orvalFetch<deleteDepthOfFieldTimelineResponse>(getDeleteDepthOfFieldTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteDepthOfFieldTimelineMutationKey = () => ['deleteDepthOfFieldTimeline'] as const;
+
+export const getDeleteDepthOfFieldTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDepthOfFieldTimeline>>, TError,DeleteDepthOfFieldTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDepthOfFieldTimeline>>, TError,DeleteDepthOfFieldTimelineMutationVariables, TContext> => {
+
+const mutationKey = getDeleteDepthOfFieldTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDepthOfFieldTimeline>>, DeleteDepthOfFieldTimelineMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  deleteDepthOfFieldTimeline(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDepthOfFieldTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDepthOfFieldTimeline>>>
+
+    export type DeleteDepthOfFieldTimelineMutationError = void | ErrorResponse
+    export type DeleteDepthOfFieldTimelineMutationVariables = {projectId: string}
+
+    /**
+ * @summary Delete the depth-of-field timeline
+ */
+export const useDeleteDepthOfFieldTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDepthOfFieldTimeline>>, TError,DeleteDepthOfFieldTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDepthOfFieldTimeline>>,
+        TError,
+        DeleteDepthOfFieldTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteDepthOfFieldTimelineMutationOptions(options), queryClient);
+    }
+
 export type getDepthOfFieldTimelineResponse200 = {
   data: DepthOfFieldTimeline
   status: 200

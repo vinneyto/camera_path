@@ -27,3 +27,5 @@ export * from "./use-set-active-editor-tool";
 export * from "./use-update-library-defaults-mutation";
 export * from "./user-settings/create-user-settings-actions";
 export * from "./user-settings/user-settings-actions-provider";
+
+export { useDeleteDepthOfFieldTimeline as useDeleteDepthOfFieldTimelineMutation } from "./mutations/depth-of-field/use-delete-depth-of-field-timeline";
