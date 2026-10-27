@@ -1,4 +1,3 @@
-"use client";
 import type { FeatureSlots } from "@camera-path/slots";
 import { RemoveTrajectoryCommand } from "./commands/remove-trajectory-command";
 import { TrajectoryScene } from "./scene/scene";

@@ -1,5 +1,5 @@
 "use client";
-import type { LucideIcon } from "lucide-react";
+import type { FeaturePage } from "@camera-path/slots";
 import Link from "next/link";
 import { Tooltip } from "@camera-path/ui-kit";
 import { cn } from "@camera-path/ui-kit/lib/cn";
@@ -7,7 +7,7 @@ import { cn } from "@camera-path/ui-kit/lib/cn";
 interface NavigationLinkProps {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: FeaturePage["icon"];
   active: boolean;
   variant?: "rail" | "menu";
   onNavigate?: () => void;

@@ -1,4 +1,3 @@
-"use client";
 import type { FeatureSlots } from "@camera-path/slots";
 import { ChatSidebar } from "./ui/sidebar";
 

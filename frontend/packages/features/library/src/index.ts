@@ -1,4 +1,3 @@
-"use client";
 import type { FeatureSlots } from "@camera-path/slots";
 import { LibraryContent } from "./ui/content";
 import { LibraryDetails } from "./ui/details";

@@ -1,4 +1,3 @@
-"use client";
 import { slots as anchorsSlots } from "@camera-path/feature-anchors";
 import { slots as appearanceSlots } from "@camera-path/feature-appearance";
 import { slots as cameraAimSlots } from "@camera-path/feature-camera-aim";

@@ -1,4 +1,3 @@
-"use client";
 import type { FeatureSlots } from "@camera-path/slots";
 import { DepthOfFieldScene } from "./scene/scene";
 import { AddDepthOfFieldCommand } from "./commands/add-depth-of-field-command";

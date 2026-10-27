@@ -1,4 +1,3 @@
-"use client";
 import type { FeatureSlots } from "@camera-path/slots";
 import { SceneGrid } from "./scene/scene";
 import { GridSettings } from "./ui/grid-settings";

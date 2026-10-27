@@ -111,6 +111,24 @@ it("keeps the nested slot tree, spreads, array order and actual aliased componen
   expect(report.diagnostics).toEqual([]);
 });
 
+it("maps standalone pages and icons without executing feature entrypoints", () => {
+  const report = scanModules(
+    fixture({
+      "packages/features/demo/src/index.ts": `
+      import { Panel, Second } from "./panels";
+      const page = { path: "/tools/demo", label: "Demo", component: Panel, icon: Second };
+      const pages = [page];
+      export const slots = { settings: { content: [Panel] }, pages: [...pages] };
+    `,
+    }),
+  );
+  const feature = report.modules.find((m) => m.kind === "feature");
+  expect(feature.slots.pages["/tools/demo"].component[0].name).toBe("Panel");
+  expect(feature.slots.pages["/tools/demo"].icon[0].name).toBe("Second");
+  expect(feature.slots.settings.content[0].name).toBe("Panel");
+  expect(report.diagnostics).toEqual([]);
+});
+
 it("finds action values through re-exports, namespace/local aliases and destructured methods; ignores unused imports and strings", () => {
   const report = scanModules(fixture());
   const feature = report.modules.find((m) => m.kind === "feature");

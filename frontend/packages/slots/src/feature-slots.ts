@@ -1,9 +1,10 @@
 import type { ComponentType } from "react";
+import type { FeaturePage } from "./feature-page";
 /** Ready components without required props. React owns their mount/cleanup. */
 export type SlotComponents = readonly ComponentType[];
 /** The complete list of host containers. Every section and every slot is optional. */
 export interface FeatureSlots {
-  readonly sift?: { readonly content?: SlotComponents };
+  readonly pages?: readonly FeaturePage[];
   readonly settings?: { readonly content?: SlotComponents };
   readonly dashboard?: { readonly content?: SlotComponents };
   readonly library?: {
@@ -27,8 +28,9 @@ export interface FeatureSlots {
     readonly tracks?: SlotComponents;
   };
 }
+export type SlotSection = Exclude<keyof FeatureSlots, "pages">;
 export type SlotName = {
   [
-    Section in keyof FeatureSlots
+    Section in SlotSection
   ]-?: `${Section}.${keyof NonNullable<FeatureSlots[Section]> & string}`;
-}[keyof FeatureSlots];
+}[SlotSection];
