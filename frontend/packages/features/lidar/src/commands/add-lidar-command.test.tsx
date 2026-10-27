@@ -2,6 +2,7 @@
 import { CommandsProvider } from "@camera-path/commands";
 import { Slot, SlotProvider } from "@camera-path/slots";
 import { forgetProjectRevision } from "@camera-path/api/client/orval-fetch";
+import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
 import { EditorTestHost } from "@host/testing/editor-host";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -28,14 +29,17 @@ afterEach(() => {
   auth.canEdit = true;
 });
 
-function mount() {
+function mount(selectedObjectId: string | null = trajectoryObjectId) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   clients.push(client);
   render(
     <QueryClientProvider client={client}>
-      <EditorTestHost projectId="lidar-command-project">
+      <EditorTestHost
+        projectId="lidar-command-project"
+        selectedObjectId={selectedObjectId}
+      >
         <SlotProvider features={[slots]}>
           <CommandsProvider>
             <Slot name="project.commands" />
@@ -62,7 +66,10 @@ it("enables LiDAR through the shared command palette, blocks duplicate pending r
         });
       }
       return Response.json(
-        { lidar_keyframe: enabled ? { id: "lidar", path_position: 0 } : null },
+        {
+          segments: [{ id: "segment" }],
+          lidar_keyframe: enabled ? { id: "lidar", path_position: 0 } : null,
+        },
         { headers: { ETag: enabled ? '"11"' : '"10"' } },
       );
     }),
@@ -114,6 +121,7 @@ it.each([
       vi.fn(async () =>
         Response.json(
           {
+            segments: [{ id: "segment" }],
             lidar_keyframe: alreadyEnabled
               ? { id: "lidar", path_position: 0 }
               : null,
@@ -135,3 +143,53 @@ it.each([
     } else expect(search).toBeNull();
   },
 );
+
+it.each([
+  [null, true],
+  ["anchor", true],
+  [trajectoryObjectId, false],
+])(
+  "hides creation without a selected existing trajectory (%s, %s)",
+  async (selected, hasPath) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            segments: hasPath ? [{ id: "segment" }] : [],
+            lidar_keyframe: null,
+          },
+          { headers: { ETag: '\"10\"' } },
+        ),
+      ),
+    );
+    const client = mount(selected);
+    await waitFor(() => expect(client.isFetching()).toBe(0));
+    expect(screen.queryByRole("combobox")).toBeNull();
+  },
+);
+
+it("reports a failed creation without adding a local LiDAR track", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_path: string, options: RequestInit) =>
+      options.method === "PATCH"
+        ? Response.json(
+            { detail: "LiDAR creation unavailable" },
+            { status: 503 },
+          )
+        : Response.json(
+            { segments: [{ id: "segment" }], lidar_keyframe: null },
+            { headers: { ETag: '\"10\"' } },
+          ),
+    ),
+  );
+  mount();
+  const search = await screen.findByRole("combobox");
+  fireEvent.focus(search);
+  fireEvent.keyDown(search, { key: "Enter" });
+  await screen.findByText("LiDAR creation unavailable");
+  fireEvent.focus(search);
+  expect(screen.getByRole("option", { name: "LiDAR: Add" })).toBeTruthy();
+  expect(screen.queryByRole("option", { name: "LiDAR: Remove" })).toBeNull();
+});

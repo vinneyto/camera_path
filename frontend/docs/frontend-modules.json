@@ -2567,7 +2567,7 @@
             {
               "name": "AddLidarCommand",
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
-              "line": 7,
+              "line": 12,
               "column": 1
             },
             {
@@ -2610,7 +2610,7 @@
           "usages": [
             {
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
-              "line": 10,
+              "line": 17,
               "column": 20,
               "expression": "useSetLidarTimelineMutation"
             },
@@ -2642,7 +2642,7 @@
           "usages": [
             {
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
-              "line": 9,
+              "line": 16,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -2684,7 +2684,7 @@
           "usages": [
             {
               "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
-              "line": 8,
+              "line": 15,
               "column": 20,
               "expression": "useLidarTimelineResource()"
             },
@@ -2705,6 +2705,43 @@
               "line": 10,
               "column": 20,
               "expression": "useLidarTimelineResource()"
+            }
+          ]
+        },
+        {
+          "name": "useTrajectoryGeometry",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-trajectory-geometry.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 14,
+              "column": 22,
+              "expression": "useTrajectoryGeometry()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/lidar/src/commands/add-lidar-command.tsx",
+              "line": 13,
+              "column": 20,
+              "expression": "useSceneInteraction()"
             }
           ]
         }
@@ -4153,6 +4190,12 @@
           },
           "usages": [
             {
+              "file": "apps/host/src/testing/editor-host.tsx",
+              "line": 37,
+              "column": 5,
+              "expression": "actions.selectObject"
+            },
+            {
               "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
               "line": 21,
               "column": 39,
@@ -4190,8 +4233,8 @@
             },
             {
               "file": "apps/host/src/testing/editor-host.tsx",
-              "line": 33,
-              "column": 36,
+              "line": 36,
+              "column": 21,
               "expression": "createEditorActions"
             }
           ]
@@ -4250,7 +4293,7 @@
             },
             {
               "file": "apps/host/src/testing/editor-host.tsx",
-              "line": 30,
+              "line": 32,
               "column": 5,
               "expression": "createUserSettingsActions"
             }
