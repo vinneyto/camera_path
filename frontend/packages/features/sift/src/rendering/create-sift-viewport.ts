@@ -113,10 +113,14 @@ export function createSiftViewport(
       heldTexture.generateMipmaps = false;
       heldTexture.needsUpdate = true;
       planeMaterial.map = heldTexture;
+      // Video and canvas maps use different sRGB decoding paths in the shader.
+      planeMaterial.needsUpdate = true;
     },
     releaseMedia() {
       texture.needsUpdate = true;
+      if (planeMaterial.map === texture) return;
       planeMaterial.map = texture;
+      planeMaterial.needsUpdate = true;
     },
     clearPoints() {
       geometry.setDrawRange(0, 0);
