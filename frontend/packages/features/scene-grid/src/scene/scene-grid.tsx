@@ -50,6 +50,8 @@ export function SceneGrid({
     return { position: event.point.toArray() as Vec3, normal: [0, 1, 0] };
   }
 
+  // Keep both transparent grid objects before splats (default order 0).
+  // Distance sorting alone can put the plane or lines on top of the cloud.
   return (
     <group>
       <mesh
@@ -70,7 +72,7 @@ export function SceneGrid({
         }}
         raycast={interactive ? undefined : () => undefined}
         userData={{ sceneSurfacePickable: interactive }}
-        renderOrder={0}
+        renderOrder={-2}
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[40, 40]} />
@@ -86,7 +88,7 @@ export function SceneGrid({
         args={[40, 40]}
         onUpdate={assignRenderLayer}
         raycast={() => undefined}
-        renderOrder={1}
+        renderOrder={-1}
       >
         <lineBasicMaterial
           color={dark ? "#9baac3" : "#526073"}
