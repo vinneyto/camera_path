@@ -10,7 +10,7 @@ export function createSiftViewport(
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x09090b);
-  renderer.domElement.setAttribute("aria-label", "Camera with SIFT keypoints");
+  renderer.domElement.setAttribute("aria-label", "Media with SIFT keypoints");
   target.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
@@ -36,6 +36,8 @@ export function createSiftViewport(
     depthWrite: false,
     toneMapped: false,
   });
+  let heldCanvas: HTMLCanvasElement | null = null;
+  let heldTexture: THREE.CanvasTexture | null = null;
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
   scene.add(plane);
   let geometry = new THREE.BufferGeometry();
@@ -92,6 +94,40 @@ export function createSiftViewport(
   fit();
   renderer.setAnimationLoop(() => renderer.render(scene, camera));
   return {
+    holdMedia() {
+      if (!(media instanceof HTMLVideoElement) || planeMaterial.map !== texture)
+        return;
+      heldCanvas ??= document.createElement("canvas");
+      if (heldCanvas.width !== media.videoWidth)
+        heldCanvas.width = media.videoWidth;
+      if (heldCanvas.height !== media.videoHeight)
+        heldCanvas.height = media.videoHeight;
+      const context = heldCanvas.getContext("2d");
+      if (!context)
+        throw new Error("Could not hold the displayed video frame.");
+      context.drawImage(media, 0, 0);
+      heldTexture ??= new THREE.CanvasTexture(heldCanvas);
+      heldTexture.colorSpace = THREE.SRGBColorSpace;
+      heldTexture.minFilter = THREE.LinearFilter;
+      heldTexture.magFilter = THREE.LinearFilter;
+      heldTexture.generateMipmaps = false;
+      heldTexture.needsUpdate = true;
+      planeMaterial.map = heldTexture;
+      // Video and canvas maps use different sRGB decoding paths in the shader.
+      planeMaterial.needsUpdate = true;
+    },
+    releaseMedia() {
+      texture.needsUpdate = true;
+      if (planeMaterial.map === texture) return;
+      planeMaterial.map = texture;
+      planeMaterial.needsUpdate = true;
+    },
+    clearPoints() {
+      geometry.setDrawRange(0, 0);
+    },
+    refreshMedia() {
+      texture.needsUpdate = true;
+    },
     setPoints(points: KeyPoint[], width: number, height: number) {
       imageWidth = width;
       imageHeight = height;
@@ -140,6 +176,8 @@ export function createSiftViewport(
       observer.disconnect();
       renderer.setAnimationLoop(null);
       texture.dispose();
+      heldTexture?.dispose();
+      if (heldCanvas) heldCanvas.width = heldCanvas.height = 0;
       planeGeometry.dispose();
       planeMaterial.dispose();
       geometry.dispose();

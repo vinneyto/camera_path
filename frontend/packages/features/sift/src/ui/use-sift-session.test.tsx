@@ -3,7 +3,14 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { useSiftSession } from "./use-sift-session";
 import type { DetectorParams, SessionSource, WorkerResponse } from "../types";
-const viewport = vi.hoisted(() => ({ setPoints: vi.fn(), dispose: vi.fn() }));
+const viewport = vi.hoisted(() => ({
+  setPoints: vi.fn(),
+  clearPoints: vi.fn(),
+  refreshMedia: vi.fn(),
+  holdMedia: vi.fn(),
+  releaseMedia: vi.fn(),
+  dispose: vi.fn(),
+}));
 vi.mock("../rendering/create-sift-viewport", () => ({
   createSiftViewport: () => viewport,
 }));

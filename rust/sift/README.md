@@ -74,6 +74,43 @@ phone; after access is granted, the camera selector lists available devices.
 the Three.js resources. **Open image** allows repeatable testing without a camera. **Detect again** reuses
 the current image and GPU session to measure warmed execution.
 
+**Open video** loads a local MOV, MP4 or another browser-decodable video without
+uploading it. The first decoded frame is analyzed while paused. Use **Play/Pause**,
+the keyboard-accessible seek bar and the elapsed/duration display; **Replay**
+restarts an ended clip. Playback is muted. MOV/H.264 and MP4/H.264 were verified
+in the local in-app browser; container support alone does not guarantee support
+for its codec (for example, a phone's HEVC recording). Unsupported files show a
+message suggesting MP4/H.264. There is no transcoder or server upload.
+
+**Previous frame / Next frame** pause playback and analyze the adjacent displayed
+frame. A single step keeps the previous image and its points visible until the
+new detection is ready, then presents the new frame and points together. Rapid
+repeated steps (less than 250 ms apart) switch immediately to a preview without
+points. Detection resumes after 250 ms without another step and shows points
+only for the final selected frame. Step targets still accumulate while detection
+is pending; superseded results cannot release a held frame or restore old points.
+
+The frame counter uses presentation timestamps read locally by a separate
+Mediabunny metadata worker, including variable frame rates and MOV/MP4 B-frame
+reordering; it does not assume 30 FPS. Buttons are disabled while indexing, at
+the first/last frame, or if the file's timeline cannot be read. Playback and
+seeking remain available if indexing fails. Indexing is cancelled on source cleanup.
+
+**Maximize video** (upper-right corner of the viewer) hides the settings and
+analysis panels, giving the video the available application area with a compact
+playback bar. Restore with the same button or **Esc**. This preserves the decoder,
+position and GPU session and does not enter browser fullscreen.
+
+Video uses the same Three.js VideoTexture and Burn WebGPU worker as the camera.
+During playback the overlay is the latest completed detection, so fast motion
+can show the detector's latency. Pausing, seeking or changing settings normally
+clears the old overlay and analyzes the selected frame; a pending single step instead keeps
+the previous complete image and detection until its replacement is ready.
+Results already in flight from a previous position/settings are discarded. Only one detection is in flight;
+paused playback does not repeatedly detect the same frame. Stop, source changes
+and navigation abort loading, unload the decoder, revoke its object URL and
+dispose the worker and rendering resources. The Rust detector is unchanged.
+
 A phone must open a **trusted HTTPS origin**, rather than an HTTP LAN address.
 For local HTTPS, use Next's `--experimental-https` with a certificate trusted by
 the phone (for example, a local CA installed on that device). Certificate trust
