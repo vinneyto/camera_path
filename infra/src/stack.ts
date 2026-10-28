@@ -18,7 +18,6 @@ export interface BackendStackProps extends StackProps {
   deploymentId: string;
   domain: DomainConfig;
   revision: string;
-  backendImageId: string;
   frontendOrigins: string[];
   localAccess?: boolean;
   releaseToken?: string;
@@ -41,7 +40,7 @@ export class BackendStack extends Stack {
     jwt.grantRead(role);
     openai.grantRead(role);
 
-    const { instance, subnet } = createBackend(this, vpc, role, props.backendImageId);
+    const { instance, subnet } = createBackend(this, vpc, role);
     const { volume, attachment } = createDatabaseVolume(this, subnet, instance);
     const api = createApi(this, instance, props.domain);
     const config: DeploymentConfig = {

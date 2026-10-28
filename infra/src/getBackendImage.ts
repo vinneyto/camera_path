@@ -5,10 +5,10 @@ export const UBUNTU_IMAGE_PARAMETER =
 
 type AwsRead = (service: string, operation: string, args: string[]) => any;
 
-export function awsReader(region: string): AwsRead {
+export function awsReader(region: string, profile?: string): AwsRead {
   return (service, operation, args) => {
     const result = execFileSync('aws', [service, operation, ...args, '--region', region,
-      '--output', 'json', '--no-cli-pager'], {
+      '--output', 'json', '--no-cli-pager', ...(profile ? ['--profile', profile] : [])], {
       encoding: 'utf8', timeout: 60_000, stdio: ['ignore', 'pipe', 'pipe'],
     });
     return JSON.parse(result);

@@ -13,7 +13,7 @@ function template(revision = 'a'.repeat(40), localAccess = false) {
   } });
   return Template.fromStack(new BackendStack(app, 'test', {
     env: { account: '992382434156', region: 'us-east-1' },
-    backendImageId: 'ami-0123456789abcdef0', deploymentId: 'test-deployment', domain: { domainName: 'example.com', hostedZoneId: 'ZTEST123', tlsEmail: 'ops@example.com' }, revision, frontendOrigins: ['http://localhost:3000'], localAccess,
+    deploymentId: 'test-deployment', domain: { domainName: 'example.com', hostedZoneId: 'ZTEST123', tlsEmail: 'ops@example.com' }, revision, frontendOrigins: ['http://localhost:3000'], localAccess,
   }));
 }
 
@@ -67,7 +67,8 @@ test('release is tied to exact revision, script and instance, without replacing 
     JSON.stringify(a.Resources[id]) !== JSON.stringify(b.Resources[id]));
   assert.deepEqual(changed, [Object.keys(a.Resources).find(id => id.startsWith('BackendRelease'))]);
   const instance = instances(a)[0][1] as any;
-  assert.deepEqual(instance.Properties.ImageId, { 'Fn::GetAtt': [Object.keys(a.Resources).find(id => a.Resources[id].Type === 'AWS::SSM::Parameter'), 'Value'] });
+  assert.deepEqual(instance.Properties.ImageId, { Ref: 'BackendImageId' });
+  assert.equal(a.Parameters.BackendImageId.Type, 'AWS::EC2::Image::Id');
   assert.ok(!JSON.stringify(a).includes('/stable/current/'));
 
   const release = Object.values<any>(b.Resources).find(r => r.Type === 'AWS::CloudFormation::CustomResource');
@@ -150,19 +151,22 @@ test('email release settings preserve the pre-SES bootstrap payload byte for byt
   }
 });
 
-test('assembly references the managed image state without a literal ImageId or W9010', () => {
+test('assembly uses a required image parameter without SSM, a literal default or W9010', () => {
   const app = new App({ context: {
     'availability-zones:account=992382434156:region=us-east-1': ['us-east-1a', 'us-east-1b'],
   } });
   const stack = new BackendStack(app, 'image-assembly', {
     env: { account: '992382434156', region: 'us-east-1' },
     deploymentId: 'test-deployment', domain: { domainName: 'example.com', hostedZoneId: 'ZTEST123', tlsEmail: 'ops@example.com' },
-    revision: 'a'.repeat(40), frontendOrigins: [], backendImageId: 'ami-0123456789abcdef0',
+    revision: 'a'.repeat(40), frontendOrigins: [],
   });
   const assembly = app.synth();
   const artifact = assembly.getStackArtifact(stack.artifactId);
-  const image = Object.values<any>(artifact.template.Resources).find(r => r.Type === 'AWS::SSM::Parameter');
-  assert.equal(image.Properties.Value, 'ami-0123456789abcdef0');
+  assert.deepEqual(artifact.template.Parameters.BackendImageId, {
+    Type: 'AWS::EC2::Image::Id',
+    Description: 'Automatically supplied by npm run cdk from the existing EC2 or initial Ubuntu lookup.',
+  });
+  assert.equal(Object.values<any>(artifact.template.Resources).filter(r => r.Type === 'AWS::SSM::Parameter').length, 0);
   const report = JSON.parse(readFileSync(resolve(assembly.directory, 'validation-report.json'), 'utf8'));
   assert.ok(!JSON.stringify(report).includes('W9010'));
 });

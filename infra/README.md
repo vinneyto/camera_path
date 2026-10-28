@@ -94,95 +94,94 @@ Add the production frontend origin to `CP_FRONTEND_ORIGINS` when deploying it.
 
 ## Stable AMI and backend releases (M4)
 
-Every normal `cdk synth`, `diff` or `deploy` reads AWS state through AWS CLI, using
-its active profile/login and `CP_AWS_REGION`. The CLI identity must match CDK's
-target account; cross-account deployments require logging into that account first.
-No `cdk.context.json`, local cache, manually supplied AMI ID or AWS write is needed
-for image selection.
+Use **`npm run cdk -- diff` / `npm run cdk -- deploy`** from `infra/`.
+The npm entrypoint resolves the AMI and passes the concrete value as
+`--parameters <stack-name>:BackendImageId=<resolved-id>` to the installed CDK CLI.
+No manual AMI ID, AMI environment variable, context cache or state-saving step is
+required. `BackendImageId` is an ordinary CloudFormation parameter of type
+`AWS::EC2::Image::Id`, with **no default**. EC2 uses `Ref: BackendImageId`.
+CloudFormation stores the supplied ID with the deployed stack.
 
-- **New stack:** only the exact CloudFormation `ValidationError: Stack with id
-  <stack-name> does not exist` permits reading the Ubuntu 24.04 amd64 SSM `current`
-  parameter. The selected ImageId is saved by CloudFormation in a stack-managed SSM String
-  parameter `/camera-path/<stack-name>/backend-image`. EC2 references its `Value`
-  with `Fn::GetAtt`, without a literal ImageId, mapping or warning suppression.
-- **Existing stack, including the first M4 adoption:** `DescribeStacks` supplies
-  the existing `InstanceId` output, and `DescribeInstances` supplies its actual
-  `ImageId`. This automatically populates the same managed SSM record on adoption, during
-  the operator's normal deployment; no manual save step or self-reference exists.
-  Future invocations never read Ubuntu `current`. The live EC2 remains the source
-  of truth, and the record documents the chosen AMI in durable AWS state.
-- Missing/ambiguous outputs, missing/terminated instances, AWS errors, wrong
-  accounts and stacks in an unstable state abort synthesis. They do not select
-  a newer AMI. A deleted stack is a new environment; this is not an EBS recovery
-  procedure. A failed first creation requires recovery before retrying.
+The CLI is pinned to **2.1146.1**, which supports parameters for both diff and
+deploy. Run `npm ci` after updating the checkout. Version 2.1129.0 did not forward
+parameters into the diff change set. The wrapper forces `--method=change-set` for
+diff, so a failed change-set comparison cannot fall back to a speculative template
+diff. Direct `npx cdk diff/deploy`, alternate assemblies, manual BackendImageId
+values, template-only comparisons and hotswap/watch are not this release workflow.
 
-The deployer's additional read access is `sts:GetCallerIdentity`,
-`cloudformation:DescribeStacks` scoped to this stack, `ec2:DescribeInstances`
-(resource `*`, optionally region-restricted), and `ssm:GetParameter` scoped to
-`arn:aws:ssm:<region>::parameter/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id`
-for initial creation. CloudFormation's deployment/execution identity also needs
-SSM parameter lifecycle permissions (`ssm:PutParameter`, `ssm:DeleteParameter`,
-`ssm:GetParameters`, `ssm:AddTagsToResource`, `ssm:RemoveTagsFromResource`,
-`ssm:ListTagsForResource`) scoped to
-`arn:aws:ssm:<region>:<account>:parameter/camera-path/<stack-name>/backend-image`.
-No EC2 application-role or release-provider permissions change.
-The existing CDK deploy/lookup permissions remain necessary.
+- **Existing stack / first adoption:** AWS CLI `DescribeStacks` reads the deployed
+  `InstanceId` output; `DescribeInstances` reads that instance's actual `ImageId`.
+  The same concrete ID is supplied to CreateChangeSet for diff and deploy. It is
+  known when CloudFormation evaluates replacements, unlike GetAtt of a new SSM
+  resource. No new SSM resource or ambiguous computed AMI reference is introduced.
+- **New stack:** only the exact named-stack-not-found CloudFormation service error
+  permits reading Ubuntu 24.04 amd64's public SSM `current` parameter. The chosen
+  value is supplied automatically on creation. Once the stack exists, subsequent
+  invocations use the deployed instance and never read Ubuntu `current`.
+- AWS access/transport/JSON failures, missing/ambiguous instances or outputs,
+  wrong accounts and unstable stack states abort before invoking CDK. They do not
+  authorize a latest fallback. Deleting a stack creates a new environment; this
+  mechanism does not restore/import its retained database volume.
 
-This stores the actual image ID deliberately: with an SSM parameter type,
-[UsePreviousValue preserves the key, and CloudFormation reads its latest value](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-supplied-parameter-types.html#cfn-system-parameter-types-considerations).
-[DescribeInstances exposes the instance's ImageId](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-data-inventory.html).
-The SSM resource value is selected from live AWS at synthesis time, so it remains
-stable across clean checkouts. Its creation precedes EC2 through the GetAtt
-reference. The standard CDK synthesizer, bootstrap roles and assets are unchanged. Always run
-CDK from source for each review/deploy; do not deploy an old `cdk.out` assembly.
-Do not edit the managed image record to request an OS upgrade. An AMI/OS upgrade and EC2
-replacement require a separate reviewed operation and disk migration plan. Normal
-releases do not patch the OS, detach EBS or reboot EC2.
+`--profile NAME` / `--profile=NAME` is applied to both AWS CLI reads and CDK;
+otherwise both use the active AWS profile/login. `CP_AWS_REGION` selects the target
+region (default `us-east-1`). The wrapper supplies CDK's account from the verified
+AWS identity. Log into the target account first; cross-account role overrides
+are not supported. AMI selection performs only AWS reads. Standard CDK diff may
+upload template assets and create/delete its unexecuted review change set.
+
+The deployer needs `sts:GetCallerIdentity`, `cloudformation:DescribeStacks` scoped
+to this stack, `ec2:DescribeInstances` (resource `*`, optionally region-restricted),
+and `ssm:GetParameter` scoped to the regional public Ubuntu parameter for initial
+creation. There are **no new SSM lifecycle grants**, application IAM changes or
+release-provider IAM changes. Existing CDK bootstrap/asset/deployment permissions
+remain necessary.
+
+A plain image-ID parameter is deliberate: for SSM-typed CloudFormation parameters,
+[UsePreviousValue preserves the key and reads its latest value](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-supplied-parameter-types.html).
+[DescribeInstances exposes the live ImageId](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-data-inventory.html).
+Do not update the AMI parameter manually to upgrade the OS. AMI/OS upgrades and EC2
+replacement need a separate reviewed operation. Ordinary releases do not patch
+the OS, reboot EC2 or detach/migrate EBS.
 
 ### Review and release
 
-Push/merge the intended commit and update the local checkout. **A previously
-exported `CP_BACKEND_REVISION` continues to win over HEAD.** Unset it to follow the
-checkout, or explicitly set the full SHA of an already published commit. CDK prints
-the selected SHA, its source, adopted AMI and stack name before synthesizing.
-`BackendRevision` output and `BackendRelease.Revision` must match the intended SHA.
+**An exported `CP_BACKEND_REVISION` overrides HEAD**, even if it is an older SHA.
+Unset it to follow the published checkout, or intentionally set a published full
+SHA. Check the printed AMI, account, stack and revision before reviewing the diff.
 
 ```bash
-# From infra/, with the same environment/domain settings as the existing stack:
+# From infra/, with the existing environment/domain settings and target AWS login:
 npm ci
 npm run build
-# Activate a Python environment containing boto3 before running npm test.
-npm test
-unset CP_BACKEND_REVISION        # or export the exact published SHA intentionally
-unset CP_RELEASE_TOKEN           # preserve it instead if an intentional rerun is needed
+# Activate a Python environment containing boto3 before npm test.
+PYTHONDONTWRITEBYTECODE=1 npm test
+unset CP_BACKEND_REVISION  # or deliberately select an exact published SHA
 npm run cdk -- diff
-# Review the default change-set-backed diff before the next command.
+# Inspect the evaluated change-set diff before proceeding:
 npm run cdk -- deploy
 curl --fail --show-error https://api.$CP_DOMAIN/health
 ```
 
-On first adoption, expect removal of the old floating SSM template parameter and
-addition of one `BackendImage` SSM resource, with ImageId now referring to its Value. Its
-resolved value must equal the current EC2 ImageId. Template-only comparisons can
-show an ImageId expression change; use the normal change-set-backed diff to check
-replacement behavior. Stop if the evaluated diff proposes EC2 replacement, data
-volume replacement, attachment/EIP InstanceId changes or unrelated infrastructure
-changes. Do not force-detach the database volume to make a release succeed.
-After adoption, a new SHA changes only `BackendRelease` and the `BackendRevision`
-output (plus genuinely modified release assets/configuration); all other resources
-including UserData, EBS, EIP, network, secrets and IAM remain identical. The same
-SHA/config produces the same template and managed image value. No-op CloudFormation
-updates need not invoke the release provider at all.
+First adoption removes the old floating SSM template parameter and adds the plain
+`BackendImageId` parameter, automatically set to the existing instance's AMI.
+The required acceptance result is **no Backend replacement (including “may be
+replaced”) and no InstanceId change for DatabaseAttachment or EIPAssociation**.
+Stop if any appears. Do not deploy to discover whether the disk can be moved.
+No manual AMI handoff or EBS migration is part of the transition.
 
-`CP_RELEASE_TOKEN` explicitly triggers a rerun, e.g. after setting a secret. When
-invoked with identical revision/environment, the release script checks health and
-returns without running migrations again. The existing exact-SHA fetch, dependency
-preparation, stopped-writer backup, migrations, internal/HTTPS health checks and
-compatible code/database recovery sequence below are unchanged.
+After adoption, changing only the SHA changes BackendRelease / BackendRevision;
+instance/UserData, EBS/attachment, EIP, network, secrets and application IAM stay
+the same. Repeating the same SHA/config/AMI yields identical template/parameters.
+`CP_RELEASE_TOKEN` intentionally triggers a rerun, e.g. after rotating a secret.
+Exact-SHA preparation, stopped-writer backup, migrations, internal/HTTPS health
+checks and recovery remain unchanged. The release does not require a reboot.
 
-Real AWS state, change-set behavior, live W9010 output, InstanceId continuity and
-external health must be checked by the operator. Local tests use mock AWS reads
-and CDK synthesis; they do not prove a live deployment. The M4 PR does not deploy.
+Local tests verify parameter selection/forwarding, actual pinned CLI support,
+legacy resource identity, deterministic synthesis and absence of W9010 without
+suppression. They do not prove AWS replacement evaluation. The operator performs
+the real change-set-backed diff, checks the above acceptance result, deploys only
+after review, and checks InstanceId/data/library continuity and external health.
 
 EC2 user data bootstraps packages, Nginx, Certbot, the application user and systemd.
 After Elastic IP association and the DNS record exist, the release command waits
