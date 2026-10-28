@@ -45,6 +45,7 @@ export function useSiftSession(
     container,
     repeatDetection: () => session.current?.refresh(),
     togglePlayback: () => session.current?.togglePlayback(),
+    stepFrame: (direction: -1 | 1) => session.current?.stepFrame(direction),
     seekTo: (seconds: number) => session.current?.seekTo(seconds),
   };
 }

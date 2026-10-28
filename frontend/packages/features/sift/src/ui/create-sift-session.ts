@@ -6,6 +6,8 @@ import type {
   VideoPlaybackState,
   WorkerResponse,
 } from "../types";
+import { findVideoFrame } from "../video/find-video-frame";
+import { loadVideoFrameIndex } from "./load-video-frame-index";
 import { loadVideoFrame } from "./load-video-frame";
 
 export interface SiftSessionState {
@@ -42,6 +44,8 @@ export function createSiftSession({
   let version = 0;
   let requestVersion = 0;
   let lastCompleted = 0;
+  let frameTimes: Float64Array | null = null;
+  let frameStepError: string | null = null;
   const intervals: number[] = [];
   const listeners: (() => void)[] = [];
   const abort = new AbortController();
@@ -116,6 +120,11 @@ export function createSiftSession({
           : 0,
         paused: video.paused,
         ended: video.ended,
+        frameIndex: frameTimes
+          ? findVideoFrame(frameTimes, video.currentTime)
+          : null,
+        frameCount: frameTimes?.length ?? 0,
+        frameStepError,
       },
     });
   };
@@ -326,6 +335,18 @@ export function createSiftSession({
         ),
       );
       syncPlayback();
+      void loadVideoFrameIndex(source.file, video.duration, abort.signal).then(
+        (times) => {
+          if (disposed) return;
+          frameTimes = times;
+          syncPlayback();
+        },
+        () => {
+          if (disposed) return;
+          frameStepError = "Frame stepping unavailable for this file.";
+          syncPlayback();
+        },
+      );
     }
     capture();
   };
@@ -344,6 +365,27 @@ export function createSiftSession({
         video.currentTime = 0;
       }
       void video.play().catch(fail);
+    },
+    stepFrame: (direction: -1 | 1) => {
+      if (disposed || !viewport || source.kind !== "video" || !frameTimes)
+        return;
+      const current = findVideoFrame(frameTimes, video.currentTime);
+      const next = Math.max(
+        0,
+        Math.min(frameTimes.length - 1, current + direction),
+      );
+      if (next === current) return;
+      try {
+        video.pause();
+        refresh();
+        const start = frameTimes[next];
+        const end = frameTimes[next + 1] ?? video.duration;
+        // Seek just inside the selected frame, avoiding boundary rounding in native decoders.
+        video.currentTime = start + Math.min(0.001, (end - start) / 2);
+        syncPlayback();
+      } catch (cause) {
+        fail(cause);
+      }
     },
     seekTo: (seconds: number) => {
       if (

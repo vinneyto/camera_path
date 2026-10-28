@@ -82,6 +82,18 @@ in the local in-app browser; container support alone does not guarantee support
 for its codec (for example, a phone's HEVC recording). Unsupported files show a
 message suggesting MP4/H.264. There is no transcoder or server upload.
 
+**Previous frame / Next frame** pause playback and analyze the adjacent displayed
+frame. The frame counter uses presentation timestamps read locally by a separate
+Mediabunny metadata worker, including variable frame rates and MOV/MP4 B-frame
+reordering; it does not assume 30 FPS. Buttons are disabled while indexing, at
+the first/last frame, or if the file's timeline cannot be read. Playback and
+seeking remain available if indexing fails. Indexing is cancelled on source cleanup.
+
+**Maximize video** (upper-right corner of the viewer) hides the settings and
+analysis panels, giving the video the available application area with a compact
+playback bar. Restore with the same button or **Esc**. This preserves the decoder,
+position and GPU session and does not enter browser fullscreen.
+
 Video uses the same Three.js VideoTexture and Burn WebGPU worker as the camera.
 During playback the overlay is the latest completed detection, so fast motion
 can show the detector's latency. Pausing, seeking or changing settings clears the

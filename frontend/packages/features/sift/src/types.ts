@@ -35,6 +35,9 @@ export interface VideoPlaybackState {
   duration: number;
   paused: boolean;
   ended: boolean;
+  frameIndex: number | null;
+  frameCount: number;
+  frameStepError: string | null;
 }
 export interface FrameRequest {
   width: number;

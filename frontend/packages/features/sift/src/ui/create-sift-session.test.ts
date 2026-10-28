@@ -15,6 +15,8 @@ const createViewport = vi.hoisted(() => vi.fn(() => viewport));
 vi.mock("../rendering/create-sift-viewport", () => ({
   createSiftViewport: createViewport,
 }));
+const loadIndex = vi.hoisted(() => vi.fn());
+vi.mock("./load-video-frame-index", () => ({ loadVideoFrameIndex: loadIndex }));
 const params: DetectorParams = {
   n_octave_layers: 3,
   sigma: 1.6,
@@ -53,6 +55,7 @@ let ready: number;
 const sessions: ReturnType<typeof createSiftSession>[] = [];
 beforeEach(() => {
   vi.clearAllMocks();
+  loadIndex.mockResolvedValue(new Float64Array([0, 0.04, 0.1, 0.25]));
   videos = [];
   workers.length = 0;
   frames = new Map();
@@ -338,4 +341,62 @@ it("does not create a viewport after stopping during camera device enumeration",
   expect(stop).toHaveBeenCalledOnce();
   expect(createViewport).not.toHaveBeenCalled();
   expect(worker.postMessage).not.toHaveBeenCalled();
+});
+
+it("steps adjacent presentation timestamps, pauses, accumulates rapid clicks and discards old points", async () => {
+  const { session, worker, video, state } = await loaded();
+  await vi.waitFor(() => expect(state.playback?.frameCount).toBe(4));
+  session.togglePlayback();
+  seeking = true;
+  session.stepFrame(1);
+  session.stepFrame(1);
+  expect(video.currentTime).toBeCloseTo(0.101, 8);
+  expect(state.playback?.paused).toBe(true);
+  expect(state.playback?.frameIndex).toBe(2);
+  worker.emit(result); // first frame was still in flight
+  expect(viewport.setPoints).not.toHaveBeenCalled();
+  tick();
+  expect(worker.postMessage).toHaveBeenCalledOnce();
+  seeking = false;
+  video.dispatchEvent(new Event("seeked"));
+  tick();
+  worker.emit(result);
+  expect(viewport.setPoints).toHaveBeenCalledOnce();
+  expect(state.phase).toBe("Video paused");
+  session.stepFrame(-1);
+  expect(video.currentTime).toBeCloseTo(0.041, 8);
+  session.stepFrame(-1);
+  expect(video.currentTime).toBeCloseTo(0.001, 8);
+  session.stepFrame(-1);
+  expect(video.currentTime).toBeCloseTo(0.001, 8);
+  session.seekTo(12);
+  session.stepFrame(1);
+  expect(video.currentTime).toBe(12);
+  session.stepFrame(-1);
+  expect(video.currentTime).toBeCloseTo(0.101, 8);
+});
+it("keeps playback usable when indexing fails and ignores an index arriving after disposal", async () => {
+  loadIndex.mockRejectedValueOnce(new Error("Bad metadata"));
+  const failed = await loaded();
+  await vi.waitFor(() =>
+    expect(failed.state.playback?.frameStepError).toContain("unavailable"),
+  );
+  failed.session.togglePlayback();
+  expect(failed.state.playback?.paused).toBe(false);
+  expect(failed.state.error).toBeNull();
+  let finish!: (times: Float64Array) => void;
+  loadIndex.mockImplementationOnce(
+    () =>
+      new Promise<Float64Array>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const stopped = await loaded();
+  stopped.session.dispose();
+  const previous = stopped.state.playback;
+  finish(new Float64Array([0, 1]));
+  await flush();
+  expect(stopped.state.playback).toBe(previous);
+  const signal = loadIndex.mock.calls.at(-1)![2] as AbortSignal;
+  expect(signal.aborted).toBe(true);
 });
