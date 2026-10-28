@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc --noEmit",
-    "cdk": "cdk",
+    "cdk": "node --import tsx src/cdk.ts",
     "test": "node --import tsx --test tests/*.test.ts && python3 -m unittest discover -s tests -p 'test_*.py'"
   },
   "dependencies": {
@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "aws-cdk": "2.1129.0",
+    "aws-cdk": "2.1146.1",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   }

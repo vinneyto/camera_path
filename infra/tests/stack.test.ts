@@ -62,6 +62,15 @@ test('release is tied to exact revision, script and instance, without replacing 
   const b = template('b'.repeat(40)).toJSON();
   const instances = (j: any) => Object.entries(j.Resources).filter(([, r]: any) => r.Type === 'AWS::EC2::Instance');
   assert.deepEqual(instances(a), instances(b));
+  assert.deepEqual(template().toJSON(), template().toJSON());
+  const changed = Object.keys(a.Resources).filter(id =>
+    JSON.stringify(a.Resources[id]) !== JSON.stringify(b.Resources[id]));
+  assert.deepEqual(changed, [Object.keys(a.Resources).find(id => id.startsWith('BackendRelease'))]);
+  const instance = instances(a)[0][1] as any;
+  assert.deepEqual(instance.Properties.ImageId, { Ref: 'BackendImageId' });
+  assert.equal(a.Parameters.BackendImageId.Type, 'AWS::EC2::Image::Id');
+  assert.ok(!JSON.stringify(a).includes('/stable/current/'));
+
   const release = Object.values<any>(b.Resources).find(r => r.Type === 'AWS::CloudFormation::CustomResource');
   assert.equal(release.Properties.Revision, 'b'.repeat(40));
   assert.ok(release.Properties.Script);
@@ -140,4 +149,24 @@ test('email release settings preserve the pre-SES bootstrap payload byte for byt
     configureBackend(instance, { ...legacyConfig, auth_email_from: sender });
     assert.deepEqual(commands, expected);
   }
+});
+
+test('assembly uses a required image parameter without SSM, a literal default or W9010', () => {
+  const app = new App({ context: {
+    'availability-zones:account=992382434156:region=us-east-1': ['us-east-1a', 'us-east-1b'],
+  } });
+  const stack = new BackendStack(app, 'image-assembly', {
+    env: { account: '992382434156', region: 'us-east-1' },
+    deploymentId: 'test-deployment', domain: { domainName: 'example.com', hostedZoneId: 'ZTEST123', tlsEmail: 'ops@example.com' },
+    revision: 'a'.repeat(40), frontendOrigins: [],
+  });
+  const assembly = app.synth();
+  const artifact = assembly.getStackArtifact(stack.artifactId);
+  assert.deepEqual(artifact.template.Parameters.BackendImageId, {
+    Type: 'AWS::EC2::Image::Id',
+    Description: 'Automatically supplied by npm run cdk from the existing EC2 or initial Ubuntu lookup.',
+  });
+  assert.equal(Object.values<any>(artifact.template.Resources).filter(r => r.Type === 'AWS::SSM::Parameter').length, 0);
+  const report = JSON.parse(readFileSync(resolve(assembly.directory, 'validation-report.json'), 'utf8'));
+  assert.ok(!JSON.stringify(report).includes('W9010'));
 });
