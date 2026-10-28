@@ -24,6 +24,7 @@ export function VideoPlaybackControls({
   const duration = playback?.duration ?? 0;
   const time = Math.min(playback?.currentTime ?? 0, duration);
   const frameIndex = playback?.frameIndex ?? null;
+  const displayedFrameIndex = playback?.displayedFrameIndex ?? null;
   const frameCount = playback?.frameCount ?? 0;
   const label = playback?.ended
     ? "Replay video"
@@ -107,8 +108,8 @@ export function VideoPlaybackControls({
           className="text-xs tabular-nums text-muted-foreground"
           title={`${time.toFixed(3)} s`}
         >
-          {frameIndex !== null
-            ? `Frame ${frameIndex + 1} / ${frameCount}`
+          {displayedFrameIndex !== null
+            ? `Frame ${displayedFrameIndex + 1} / ${frameCount}`
             : (playback?.frameStepError ?? "Indexing frames…")}
         </span>
       </div>

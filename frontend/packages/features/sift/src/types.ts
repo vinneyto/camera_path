@@ -36,6 +36,7 @@ export interface VideoPlaybackState {
   paused: boolean;
   ended: boolean;
   frameIndex: number | null;
+  displayedFrameIndex: number | null;
   frameCount: number;
   frameStepError: string | null;
 }

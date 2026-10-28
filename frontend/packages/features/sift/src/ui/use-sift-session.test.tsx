@@ -7,6 +7,8 @@ const viewport = vi.hoisted(() => ({
   setPoints: vi.fn(),
   clearPoints: vi.fn(),
   refreshMedia: vi.fn(),
+  holdMedia: vi.fn(),
+  releaseMedia: vi.fn(),
   dispose: vi.fn(),
 }));
 vi.mock("../rendering/create-sift-viewport", () => ({

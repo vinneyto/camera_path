@@ -29,6 +29,7 @@ it("exposes loading, playback, seeking and replay controls with an accessible ti
         paused: true,
         ended: false,
         frameIndex: 72,
+        displayedFrameIndex: 72,
         frameCount: 288,
         frameStepError: null,
       }}
@@ -52,6 +53,7 @@ it("exposes loading, playback, seeking and replay controls with an accessible ti
         paused: true,
         ended: true,
         frameIndex: 287,
+        displayedFrameIndex: 287,
         frameCount: 288,
         frameStepError: null,
       }}
@@ -87,6 +89,7 @@ it("exposes single-frame controls and disables steps at the boundaries while com
     paused: true,
     ended: false,
     frameIndex: 0,
+    displayedFrameIndex: 0,
     frameCount: 12,
     frameStepError: null,
   };
@@ -107,7 +110,7 @@ it("exposes single-frame controls and disables steps at the boundaries while com
   rerender(
     <VideoPlaybackControls
       {...props}
-      playback={{ ...playback, frameIndex: 11 }}
+      playback={{ ...playback, frameIndex: 11, displayedFrameIndex: 11 }}
     />,
   );
   expect(
@@ -116,4 +119,37 @@ it("exposes single-frame controls and disables steps at the boundaries while com
   ).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Previous frame" }));
   expect(onStep).toHaveBeenLastCalledWith(-1);
+});
+
+it("labels the held frame while step buttons follow the requested position", () => {
+  render(
+    <VideoPlaybackControls
+      name="clip.mov"
+      playback={{
+        currentTime: 0.1,
+        duration: 1,
+        paused: true,
+        ended: false,
+        frameIndex: 2,
+        displayedFrameIndex: 0,
+        frameCount: 3,
+        frameStepError: null,
+      }}
+      onToggle={vi.fn()}
+      onSeek={vi.fn()}
+      onStep={vi.fn()}
+    />,
+  );
+  expect(screen.getByText("Frame 1 / 3")).toBeTruthy();
+  expect(
+    (screen.getByRole("button", { name: "Next frame" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Previous frame",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(false);
 });

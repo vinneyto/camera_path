@@ -9,6 +9,8 @@ const viewport = vi.hoisted(() => ({
   setPoints: vi.fn(),
   clearPoints: vi.fn(),
   refreshMedia: vi.fn(),
+  holdMedia: vi.fn(),
+  releaseMedia: vi.fn(),
   dispose: vi.fn(),
 }));
 const createViewport = vi.hoisted(() => vi.fn(() => viewport));
@@ -122,6 +124,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   sessions.splice(0).forEach((s) => s.dispose());
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -344,6 +347,7 @@ it("does not create a viewport after stopping during camera device enumeration",
 });
 
 it("steps adjacent presentation timestamps, pauses, accumulates rapid clicks and discards old points", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
   const { session, worker, video, state } = await loaded();
   await vi.waitFor(() => expect(state.playback?.frameCount).toBe(4));
   session.togglePlayback();
@@ -359,6 +363,7 @@ it("steps adjacent presentation timestamps, pauses, accumulates rapid clicks and
   expect(worker.postMessage).toHaveBeenCalledOnce();
   seeking = false;
   video.dispatchEvent(new Event("seeked"));
+  vi.advanceTimersByTime(250);
   tick();
   worker.emit(result);
   expect(viewport.setPoints).toHaveBeenCalledOnce();
@@ -399,4 +404,111 @@ it("keeps playback usable when indexing fails and ignores an index arriving afte
   expect(stopped.state.playback).toBe(previous);
   const signal = loadIndex.mock.calls.at(-1)![2] as AbortSignal;
   expect(signal.aborted).toBe(true);
+});
+
+it("holds a single step's previous image, points and frame counter until the matching detection", async () => {
+  const { session, worker, video, state } = await loaded();
+  worker.emit(result);
+  expect(state.playback?.displayedFrameIndex).toBe(0);
+  session.stepFrame(1);
+  expect(viewport.holdMedia).toHaveBeenCalledOnce();
+  expect(viewport.releaseMedia).not.toHaveBeenCalled();
+  expect(viewport.clearPoints).not.toHaveBeenCalled();
+  expect(state.frame).toBe(result);
+  expect(state.playback?.frameIndex).toBe(1);
+  expect(state.playback?.displayedFrameIndex).toBe(0);
+  video.dispatchEvent(new Event("seeking"));
+  video.dispatchEvent(new Event("seeked"));
+  tick();
+  expect(viewport.releaseMedia).not.toHaveBeenCalled();
+  const next = {
+    ...result,
+    points: [{ x: 4, y: 8, size: 1, octave: 0, class_id: 1, response: 1 }],
+  };
+  worker.emit(next);
+  expect(viewport.setPoints).toHaveBeenLastCalledWith(
+    next.points,
+    next.width,
+    next.height,
+  );
+  expect(viewport.releaseMedia).toHaveBeenCalledOnce();
+  expect(viewport.releaseMedia.mock.invocationCallOrder[0]).toBeGreaterThan(
+    viewport.setPoints.mock.invocationCallOrder.at(-1)!,
+  );
+  expect(viewport.clearPoints).not.toHaveBeenCalled();
+  expect(state.frame).toBe(next);
+  expect(state.playback?.displayedFrameIndex).toBe(1);
+});
+
+it("previews a rapid step burst immediately and only detects after the last input settles", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  const { session, worker, video, state } = await loaded();
+  worker.emit(result);
+  session.stepFrame(1);
+  video.dispatchEvent(new Event("seeked"));
+  tick(); // detection for first step is still in flight
+  expect(worker.postMessage).toHaveBeenCalledTimes(2);
+  vi.advanceTimersByTime(100);
+  session.stepFrame(1);
+  expect(viewport.releaseMedia).toHaveBeenCalledOnce();
+  expect(viewport.clearPoints).toHaveBeenCalled();
+  expect(state.frame).toBeNull();
+  expect(state.playback?.displayedFrameIndex).toBe(2);
+  worker.emit(result); // superseded first step cannot put points on the new preview
+  expect(viewport.setPoints).toHaveBeenCalledOnce();
+  video.dispatchEvent(new Event("seeked"));
+  tick();
+  expect(worker.postMessage).toHaveBeenCalledTimes(2);
+  vi.advanceTimersByTime(200);
+  session.stepFrame(-1);
+  video.dispatchEvent(new Event("seeked"));
+  tick();
+  vi.advanceTimersByTime(249);
+  tick();
+  expect(worker.postMessage).toHaveBeenCalledTimes(2);
+  vi.advanceTimersByTime(1);
+  tick();
+  expect(worker.postMessage).toHaveBeenCalledTimes(3);
+  expect(video.currentTime).toBeCloseTo(0.041, 8);
+  worker.emit(result);
+  expect(viewport.setPoints).toHaveBeenCalledTimes(2);
+  expect(state.phase).toBe("Video paused");
+  expect(frames.size).toBe(0);
+});
+
+it("keeps the held image when a slow second step supersedes an unfinished detection", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  const { session, worker, video, state } = await loaded();
+  worker.emit(result);
+  session.stepFrame(1);
+  video.dispatchEvent(new Event("seeked"));
+  tick();
+  vi.advanceTimersByTime(300);
+  session.stepFrame(1);
+  worker.emit(result);
+  expect(viewport.releaseMedia).not.toHaveBeenCalled();
+  expect(state.playback?.displayedFrameIndex).toBe(0);
+  video.dispatchEvent(new Event("seeked"));
+  tick();
+  worker.emit(result);
+  expect(viewport.releaseMedia).toHaveBeenCalledOnce();
+  expect(state.playback?.displayedFrameIndex).toBe(2);
+});
+
+it("cancels the burst timer on Stop and returns to normal seeking after an interrupted step", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  const { session, worker, state } = await loaded();
+  worker.emit(result);
+  session.stepFrame(1);
+  session.seekTo(7);
+  expect(viewport.releaseMedia).toHaveBeenCalledOnce();
+  expect(state.frame).toBeNull();
+  session.seekTo(0);
+  session.stepFrame(1);
+  session.stepFrame(1);
+  expect(vi.getTimerCount()).toBe(1);
+  session.dispose();
+  expect(vi.getTimerCount()).toBe(0);
+  vi.advanceTimersByTime(1000);
+  expect(frames.size).toBe(0);
 });

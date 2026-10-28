@@ -46,6 +46,13 @@ export function createSiftSession({
   let lastCompleted = 0;
   let frameTimes: Float64Array | null = null;
   let frameStepError: string | null = null;
+  let holdForDetection = false;
+  let heldTime = 0;
+  let lastStepAt = -Infinity;
+  let rapidStepping = false;
+  let settleTimer: ReturnType<typeof setTimeout> | undefined;
+  // A second step within this window enters immediate preview until input settles.
+  const stepBurstMs = 250;
   const intervals: number[] = [];
   const listeners: (() => void)[] = [];
   const abort = new AbortController();
@@ -61,6 +68,7 @@ export function createSiftSession({
     if (disposed) return;
     disposed = true;
     cancelAnimationFrame(raf);
+    clearTimeout(settleTimer);
     listeners.forEach((remove) => remove());
     abort.abort();
     worker.terminate();
@@ -123,6 +131,12 @@ export function createSiftSession({
         frameIndex: frameTimes
           ? findVideoFrame(frameTimes, video.currentTime)
           : null,
+        displayedFrameIndex: frameTimes
+          ? findVideoFrame(
+              frameTimes,
+              holdForDetection ? heldTime : video.currentTime,
+            )
+          : null,
         frameCount: frameTimes?.length ?? 0,
         frameStepError,
       },
@@ -143,10 +157,10 @@ export function createSiftSession({
     version++;
     lastTime = -1;
     pending = true;
-    viewport.clearPoints();
+    if (!holdForDetection) viewport.clearPoints();
     resetRate();
     onUpdate({
-      frame: null,
+      ...(holdForDetection ? {} : { frame: null }),
       phase:
         source.kind === "video"
           ? "Detecting video frame…"
@@ -155,6 +169,13 @@ export function createSiftSession({
             : "Camera running",
     });
     schedule();
+  };
+  const resetStepping = () => {
+    clearTimeout(settleTimer);
+    lastStepAt = -Infinity;
+    rapidStepping = false;
+    holdForDetection = false;
+    viewport?.releaseMedia();
   };
   const listen = (name: string, handler: () => void) => {
     video.addEventListener(name, handler);
@@ -219,7 +240,7 @@ export function createSiftSession({
     if (!context) throw new Error("Could not create the media frame buffer.");
     viewport = createSiftViewport(target, bitmap ?? video);
     capture = () => {
-      if (disposed || inFlight) return;
+      if (disposed || inFlight || rapidStepping) return;
       if (
         !bitmap &&
         (video.currentTime === lastTime ||
@@ -272,8 +293,14 @@ export function createSiftSession({
       if (result.kind !== "frame") return;
       try {
         inFlight = false;
-        if (requestVersion === version && !video.seeking) {
+        if (requestVersion === version && !video.seeking && !rapidStepping) {
           viewport?.setPoints(result.points, result.width, result.height);
+          if (holdForDetection) {
+            // No browser paint can occur between the new geometry and releasing the held image.
+            viewport?.releaseMedia();
+            holdForDetection = false;
+            syncPlayback();
+          }
           const now = performance.now();
           let fps = 0;
           if (
@@ -360,10 +387,9 @@ export function createSiftSession({
         video.pause();
         return;
       }
-      if (video.ended) {
-        refresh();
-        video.currentTime = 0;
-      }
+      resetStepping();
+      refresh();
+      if (video.ended) video.currentTime = 0;
       void video.play().catch(fail);
     },
     stepFrame: (direction: -1 | 1) => {
@@ -376,6 +402,24 @@ export function createSiftSession({
       );
       if (next === current) return;
       try {
+        const now = performance.now();
+        const repeated = now - lastStepAt < stepBurstMs;
+        lastStepAt = now;
+        clearTimeout(settleTimer);
+        if (repeated) {
+          holdForDetection = false;
+          rapidStepping = true;
+          viewport.releaseMedia();
+          settleTimer = setTimeout(() => {
+            rapidStepping = false;
+            schedule();
+          }, stepBurstMs);
+        } else {
+          rapidStepping = false;
+          if (!holdForDetection) heldTime = video.currentTime;
+          viewport.holdMedia();
+          holdForDetection = true;
+        }
         video.pause();
         refresh();
         const start = frameTimes[next];
@@ -397,6 +441,7 @@ export function createSiftSession({
       )
         return;
       try {
+        resetStepping();
         refresh();
         video.currentTime = Math.min(Math.max(0, seconds), video.duration);
         syncPlayback();
