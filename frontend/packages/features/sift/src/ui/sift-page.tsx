@@ -1,9 +1,10 @@
 "use client";
 import { Button } from "@camera-path/ui-kit";
-import { Camera, ScanSearch, Square, Upload } from "lucide-react";
+import { Camera, Film, ScanSearch, Square, Upload } from "lucide-react";
 import { useState } from "react";
 import type { DetectorParams, SessionSource } from "../types";
 import { useSiftSession } from "./use-sift-session";
+import { VideoPlaybackControls } from "./video-playback-controls";
 
 export function SiftPage() {
   const [source, setSource] = useState<SessionSource | null>(null);
@@ -25,6 +26,9 @@ export function SiftPage() {
     phase,
     processedFps,
     repeatDetection,
+    playback,
+    togglePlayback,
+    seekTo,
   } = useSiftSession(source, maxDimension, params);
   const active = source !== null;
   return (
@@ -71,6 +75,21 @@ export function SiftPage() {
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 if (file) setSource({ kind: "image", file });
+                event.target.value = "";
+              }}
+            />
+          </label>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 text-sm focus-within:ring-2 focus-within:ring-ring">
+            <Film className="size-4" />
+            Open video
+            <input
+              aria-label="Open video"
+              type="file"
+              accept="video/*,.mov,.mp4,.m4v"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) setSource({ kind: "video", file });
                 event.target.value = "";
               }}
             />
@@ -174,7 +193,7 @@ export function SiftPage() {
               {(1000 / Math.max(frame.elapsed, 0.001)).toFixed(1)} detector FPS
             </span>
             <span>
-              {source?.kind === "camera"
+              {source?.kind !== "image"
                 ? `${processedFps.toFixed(1)} processed FPS`
                 : "Still image"}
             </span>
@@ -189,15 +208,23 @@ export function SiftPage() {
           {error}
         </p>
       )}
+      {source?.kind === "video" && (
+        <VideoPlaybackControls
+          name={source.file.name}
+          playback={playback}
+          onToggle={togglePlayback}
+          onSeek={seekTo}
+        />
+      )}
       <div className="relative min-h-[360px] flex-1 overflow-hidden rounded-xl border bg-black md:min-h-[500px]">
         <div
           ref={container}
-          aria-label="Three.js camera and keypoint viewer"
+          aria-label="Three.js media and keypoint viewer"
           className="absolute inset-0"
         />
         {!active && (
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-white/60">
-            Start a camera or open an image to inspect keypoints.
+            Start a camera or open an image or video to inspect keypoints.
           </div>
         )}
       </div>

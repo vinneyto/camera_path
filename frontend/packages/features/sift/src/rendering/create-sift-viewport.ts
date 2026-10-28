@@ -10,7 +10,7 @@ export function createSiftViewport(
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x09090b);
-  renderer.domElement.setAttribute("aria-label", "Camera with SIFT keypoints");
+  renderer.domElement.setAttribute("aria-label", "Media with SIFT keypoints");
   target.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
@@ -92,6 +92,12 @@ export function createSiftViewport(
   fit();
   renderer.setAnimationLoop(() => renderer.render(scene, camera));
   return {
+    clearPoints() {
+      geometry.setDrawRange(0, 0);
+    },
+    refreshMedia() {
+      texture.needsUpdate = true;
+    },
     setPoints(points: KeyPoint[], width: number, height: number) {
       imageWidth = width;
       imageHeight = height;

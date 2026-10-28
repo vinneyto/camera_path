@@ -3804,8 +3804,12 @@
         "packages/features/sift/src/rendering/create-sift-viewport.ts",
         "packages/features/sift/src/rendering/plasma.ts",
         "packages/features/sift/src/types.ts",
+        "packages/features/sift/src/ui/create-sift-session.ts",
+        "packages/features/sift/src/ui/format-video-time.ts",
+        "packages/features/sift/src/ui/load-video-frame.ts",
         "packages/features/sift/src/ui/sift-page.tsx",
         "packages/features/sift/src/ui/use-sift-session.ts",
+        "packages/features/sift/src/ui/video-playback-controls.tsx",
         "packages/features/sift/src/worker/sift.worker.ts"
       ],
       "slots": {
@@ -3815,7 +3819,7 @@
               {
                 "name": "SiftPage",
                 "file": "packages/features/sift/src/ui/sift-page.tsx",
-                "line": 8,
+                "line": 9,
                 "column": 1
               }
             ],

@@ -74,6 +74,23 @@ phone; after access is granted, the camera selector lists available devices.
 the Three.js resources. **Open image** allows repeatable testing without a camera. **Detect again** reuses
 the current image and GPU session to measure warmed execution.
 
+**Open video** loads a local MOV, MP4 or another browser-decodable video without
+uploading it. The first decoded frame is analyzed while paused. Use **Play/Pause**,
+the keyboard-accessible seek bar and the elapsed/duration display; **Replay**
+restarts an ended clip. Playback is muted. MOV/H.264 and MP4/H.264 were verified
+in the local in-app browser; container support alone does not guarantee support
+for its codec (for example, a phone's HEVC recording). Unsupported files show a
+message suggesting MP4/H.264. There is no transcoder or server upload.
+
+Video uses the same Three.js VideoTexture and Burn WebGPU worker as the camera.
+During playback the overlay is the latest completed detection, so fast motion
+can show the detector's latency. Pausing, seeking or changing settings clears the
+old overlay and analyzes the selected frame. Results already in flight from a
+previous position/settings are discarded. Only one detection is in flight;
+paused playback does not repeatedly detect the same frame. Stop, source changes
+and navigation abort loading, unload the decoder, revoke its object URL and
+dispose the worker and rendering resources. The Rust detector is unchanged.
+
 A phone must open a **trusted HTTPS origin**, rather than an HTTP LAN address.
 For local HTTPS, use Next's `--experimental-https` with a certificate trusted by
 the phone (for example, a local CA installed on that device). Certificate trust

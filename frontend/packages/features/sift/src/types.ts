@@ -28,7 +28,14 @@ export interface DetectorParams {
   enable_edge_like_filtering: boolean;
 }
 export type SessionSource =
-  { kind: "camera"; deviceId: string } | { kind: "image"; file: File };
+  | { kind: "camera"; deviceId: string }
+  | { kind: "image" | "video"; file: File };
+export interface VideoPlaybackState {
+  currentTime: number;
+  duration: number;
+  paused: boolean;
+  ended: boolean;
+}
 export interface FrameRequest {
   width: number;
   height: number;
