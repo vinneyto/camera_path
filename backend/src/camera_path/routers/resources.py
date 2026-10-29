@@ -519,6 +519,25 @@ async def get_speed_timeline(
     return project.motion_profile
 
 
+@router.delete(
+    "/projects/{project_id}/motion",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Timelines"],
+    summary="Delete the speed timeline",
+    description="Remove speed keyframes and restore default speed, preserving other timelines.",
+    operation_id="deleteSpeedTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def delete_speed_timeline(
+    project_id: str, service: TimelineServiceDep, _guard: MutationGuard
+) -> Response:
+    try:
+        return _deleted(await service.delete_speed_timeline(project_id))
+    except KeyError as error:
+        raise _not_found(error) from error
+
+
 @router.patch(
     "/projects/{project_id}/motion",
     response_model=MotionProfile,
@@ -618,6 +637,25 @@ def _aim(project: Project) -> AimTimeline:
         keyframes=project.camera_track.keyframes,
         world_up=project.camera_track.world_up,
     )
+
+
+@router.delete(
+    "/projects/{project_id}/camera",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Timelines"],
+    summary="Delete the aim timeline",
+    description="Remove aim keyframes and restore camera aim defaults, preserving other timelines.",
+    operation_id="deleteAimTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def delete_aim_timeline(
+    project_id: str, service: TimelineServiceDep, _guard: MutationGuard
+) -> Response:
+    try:
+        return _deleted(await service.delete_aim_timeline(project_id))
+    except KeyError as error:
+        raise _not_found(error) from error
 
 
 @router.get(
@@ -727,6 +765,25 @@ async def delete_aim_keyframe(
 ) -> Response:
     try:
         return _deleted(await service.delete_camera_keyframe(project_id, keyframe_id))
+    except KeyError as error:
+        raise _not_found(error) from error
+
+
+@router.delete(
+    "/projects/{project_id}/camera/orientation",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Timelines"],
+    summary="Delete the orientation timeline",
+    description="Remove orientation keyframes and restore yaw, pitch and roll to zero.",
+    operation_id="deleteOrientationTimeline",
+    responses=MUTATION_ERROR_RESPONSES,
+)
+@authenticated
+async def delete_orientation_timeline(
+    project_id: str, service: TimelineServiceDep, _guard: MutationGuard
+) -> Response:
+    try:
+        return _deleted(await service.delete_orientation_timeline(project_id))
     except KeyError as error:
         raise _not_found(error) from error
 

@@ -1,5 +1,5 @@
 "use client";
-import { useEditorTool } from "@camera-path/store";
+import { useCameraState, useEditorTool } from "@camera-path/store";
 
 import { useEffect, useEffectEvent } from "react";
 
@@ -7,11 +7,13 @@ import { useSetActiveEditorTool } from "@camera-path/actions";
 import { getAnchorToolModifier } from "@camera-path/feature-anchors/lib/get-anchor-tool-modifier";
 
 export function useAnchorToolShortcut() {
+  const { cameraMode } = useCameraState();
   const { activeTool } = useEditorTool();
   const setActiveTool = useSetActiveEditorTool();
 
   const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
     if (
+      cameraMode === "orbit" &&
       event.key === getAnchorToolModifier(event).key &&
       activeTool !== "anchor-height" &&
       activeTool !== "cloud"

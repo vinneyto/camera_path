@@ -11,6 +11,7 @@
     "@camera-path/trajectory-math": "*",
     "@camera-path/types": "*",
     "@camera-path/ui-kit": "*",
-    "@camera-path/slots": "*"
+    "@camera-path/slots": "*",
+    "@camera-path/commands": "*"
   }
 }
