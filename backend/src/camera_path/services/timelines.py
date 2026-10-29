@@ -16,6 +16,7 @@ from camera_path.models import (
     LidarKeyframe,
     LidarSettings,
     LidarTimeline,
+    MotionProfile,
     MotionProfileUpdate,
     OrientationTimeline,
     Project,
@@ -34,6 +35,28 @@ from camera_path.services.base import ServiceBase
 
 
 class TimelineService(ServiceBase):
+    async def delete_speed_timeline(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.motion_profile = MotionProfile()
+        return await self._save_speed(draft, expected)
+
+    async def delete_aim_timeline(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        defaults = AimTimeline()
+        draft.camera_track.default_aim = defaults.default_aim
+        draft.camera_track.world_up = defaults.world_up
+        draft.camera_track.keyframes.clear()
+        return await self._save_aim(draft, expected)
+
+    async def delete_orientation_timeline(self, project_id: str) -> Project:
+        draft = await self.repository.get(project_id)
+        expected = draft.revision
+        draft.camera_track.default_orientation = CameraOrientation()
+        draft.camera_track.orientation_keyframes.clear()
+        return await self._save_orientation(draft, expected)
+
     async def set_lidar(self, project_id: str, data: LidarSettings | None) -> Project:
         draft = await self.repository.get(project_id)
         expected = draft.revision

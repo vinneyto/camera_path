@@ -2,7 +2,8 @@
 import { getAnchorToolModifier } from "../lib/get-anchor-tool-modifier";
 
 import type { ThreeEvent } from "@react-three/fiber";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
+import { useCameraState } from "@camera-path/store";
 
 import { useSetActiveEditorTool } from "@camera-path/actions";
 import type { SceneSurfaceHit } from "@camera-path/scene-runtime/surface";
@@ -17,9 +18,15 @@ interface UseAnchorPlacementOptions {
 }
 
 export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
+  const { cameraMode } = useCameraState();
   const activeTool = useActiveEditorTool();
   const setActiveTool = useSetActiveEditorTool();
   const [previewHit, setPreviewHit] = useState<SceneSurfaceHit | null>(null);
+  const [previousCameraMode, setPreviousCameraMode] = useState(cameraMode);
+  if (previousCameraMode !== cameraMode) {
+    setPreviousCameraMode(cameraMode);
+    setPreviewHit(null);
+  }
 
   function handleTap(hit: SceneSurfaceHit) {
     onPlace(hit.position, hit.normal);
@@ -34,21 +41,23 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
     onTap: handleTap,
   });
 
+  const cancelTap = useEffectEvent(cancelPointerTap);
   useEffect(() => {
-    if (activeTool === null) cancelPointerTap();
-  }, [activeTool, cancelPointerTap]);
+    if (activeTool === null || cameraMode !== "orbit") cancelTap();
+  }, [activeTool, cameraMode]);
 
   function handlePointerDown(
     hit: SceneSurfaceHit,
     event: ThreeEvent<PointerEvent>,
   ) {
     const pointerType = event.nativeEvent.pointerType;
+    const modifierPressed = getAnchorToolModifier(event.nativeEvent).pressed;
     const enabled =
-      activeTool === "anchor" ||
-      getAnchorToolModifier(event.nativeEvent).pressed ||
-      pointerType === "touch";
+      activeTool === "anchor" || modifierPressed || pointerType === "touch";
     if (!enabled) return;
-    if (pointerType === "touch") setActiveTool("anchor");
+    // A modifier may already be held when returning to the editor or refocusing the canvas.
+    if (pointerType === "touch" || (modifierPressed && activeTool === null))
+      setActiveTool("anchor");
     beginPointerTap(hit, event);
     setPreviewHit(hit);
     (event.target as Element | null)?.setPointerCapture?.(event.pointerId);
@@ -62,6 +71,11 @@ export function useAnchorPlacement({ onPlace }: UseAnchorPlacementOptions) {
       activeTool === "anchor" ||
       getAnchorToolModifier(event.nativeEvent).pressed
     ) {
+      if (
+        activeTool === null &&
+        getAnchorToolModifier(event.nativeEvent).pressed
+      )
+        setActiveTool("anchor");
       setPreviewHit(hit);
     }
     const moved = movePointerTap(hit, event);

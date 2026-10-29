@@ -89,65 +89,68 @@ export function AnchorsScene() {
     viewport.setCursor("anchors.scene", cursor);
     return () => viewport.setCursor("anchors.scene", null);
   }, [viewport, cursor]);
-  if (mode !== "orbit") return null;
   return (
     <>
       {canEdit && <AnchorToolShortcut />}
-      {canEdit && placement.previewHit && (
-        <AnchorPlacementPreview
-          backend={services.backend}
-          hit={placement.previewHit}
-          label={getAnchorLabel(items)}
-        />
-      )}
-      {[...items]
-        .sort((a, b) => a.id.localeCompare(b.id))
-        .map((anchor) => (
-          <AnchorMarker
-            key={anchor.id}
-            anchor={
-              height.preview?.anchorId === anchor.id
-                ? {
-                    ...anchor,
-                    lift: height.preview.lift,
-                    lift_axis: "world_up",
-                  }
-                : anchor
-            }
-            hovered={height.hoveredAnchorId === anchor.id}
-            selected={height.selectedAnchorId === anchor.id}
-            {...(canEdit ? height.getAnchorInteractionProps(anchor) : {})}
-            onContextMenu={
-              canEdit
-                ? (event) => {
-                    event.stopPropagation();
-                    event.nativeEvent.preventDefault();
-                    viewport.openMenu(
-                      [
-                        {
-                          destructive: true,
-                          disabled: deletion.isPending,
-                          label: `Delete anchor ${anchor.label}`,
-                          onSelect: () => deletion.mutate(anchor.id),
-                        },
-                      ],
-                      {
-                        x: event.nativeEvent.clientX,
-                        y: event.nativeEvent.clientY,
-                      },
-                    );
-                  }
-                : undefined
-            }
-          />
-        ))}
-      {canEdit && height.activeAnchor && (
-        <AnchorHeightEditingOverlay
-          anchor={height.activeAnchor}
-          backend={services.backend}
-          dragging={height.preview?.dragging ?? false}
-          lift={height.preview?.lift ?? height.activeAnchor.lift}
-        />
+      {mode === "orbit" && (
+        <>
+          {canEdit && placement.previewHit && (
+            <AnchorPlacementPreview
+              backend={services.backend}
+              hit={placement.previewHit}
+              label={getAnchorLabel(items)}
+            />
+          )}
+          {[...items]
+            .sort((a, b) => a.id.localeCompare(b.id))
+            .map((anchor) => (
+              <AnchorMarker
+                key={anchor.id}
+                anchor={
+                  height.preview?.anchorId === anchor.id
+                    ? {
+                        ...anchor,
+                        lift: height.preview.lift,
+                        lift_axis: "world_up",
+                      }
+                    : anchor
+                }
+                hovered={height.hoveredAnchorId === anchor.id}
+                selected={height.selectedAnchorId === anchor.id}
+                {...(canEdit ? height.getAnchorInteractionProps(anchor) : {})}
+                onContextMenu={
+                  canEdit
+                    ? (event) => {
+                        event.stopPropagation();
+                        event.nativeEvent.preventDefault();
+                        viewport.openMenu(
+                          [
+                            {
+                              destructive: true,
+                              disabled: deletion.isPending,
+                              label: `Delete anchor ${anchor.label}`,
+                              onSelect: () => deletion.mutate(anchor.id),
+                            },
+                          ],
+                          {
+                            x: event.nativeEvent.clientX,
+                            y: event.nativeEvent.clientY,
+                          },
+                        );
+                      }
+                    : undefined
+                }
+              />
+            ))}
+          {canEdit && height.activeAnchor && (
+            <AnchorHeightEditingOverlay
+              anchor={height.activeAnchor}
+              backend={services.backend}
+              dragging={height.preview?.dragging ?? false}
+              lift={height.preview?.lift ?? height.activeAnchor.lift}
+            />
+          )}
+        </>
       )}
     </>
   );

@@ -12,19 +12,21 @@ export function SpeedTimeline() {
   const deletion = useDeleteSpeedKeyframeMutation();
   return (
     <>
-      {trajectory.data && (
-        <SpeedGraph
-          trajectory={trajectory.data.data}
-          pathPosition={playback.pathPosition}
-          deletingKeyframeId={
-            deletion.isPending ? deletion.variables : undefined
-          }
-          onDeleteKeyframe={(id) => {
-            if (canEdit && window.confirm("Delete this speed keyframe?"))
-              deletion.mutate(id);
-          }}
-        />
-      )}
+      {trajectory.data &&
+        (trajectory.data.data.motion_profile.keyframes.length > 0 ||
+          trajectory.data.data.motion_profile.default_speed !== 1) && (
+          <SpeedGraph
+            trajectory={trajectory.data.data}
+            pathPosition={playback.pathPosition}
+            deletingKeyframeId={
+              deletion.isPending ? deletion.variables : undefined
+            }
+            onDeleteKeyframe={(id) => {
+              if (canEdit && window.confirm("Delete this speed keyframe?"))
+                deletion.mutate(id);
+            }}
+          />
+        )}
       {(deletion.error ?? trajectory.error) && (
         <p role="alert" className="text-xs text-destructive">
           {(deletion.error ?? trajectory.error)?.message}

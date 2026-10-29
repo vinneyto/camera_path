@@ -31,3 +31,9 @@ export * from "./user-settings/user-settings-actions-provider";
 export { useDeleteDepthOfFieldTimeline as useDeleteDepthOfFieldTimelineMutation } from "./mutations/depth-of-field/use-delete-depth-of-field-timeline";
 
 export { useCreateDepthOfFieldTimeline as useCreateDepthOfFieldTimelineMutation } from "./mutations/depth-of-field/use-create-depth-of-field-timeline";
+
+export { useDeleteSpeedTimeline as useDeleteSpeedTimelineMutation } from "./mutations/speed-track/use-delete-speed-timeline";
+
+export { useDeleteAimTimeline as useDeleteAimTimelineMutation } from "./mutations/camera-aim/use-delete-aim-timeline";
+
+export { useDeleteOrientationTimeline as useDeleteOrientationTimelineMutation } from "./mutations/camera-orientation/use-delete-orientation-timeline";

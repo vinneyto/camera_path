@@ -2735,6 +2735,120 @@ export const useUpdateAnchor = <TError = void | ErrorResponse,
       return useMutation(getUpdateAnchorMutationOptions(options), queryClient);
     }
 
+export type deleteAimTimelineResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteAimTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type deleteAimTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteAimTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteAimTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteAimTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteAimTimelineResponseSuccess = (deleteAimTimelineResponse204) & {
+  headers: Headers;
+};
+export type deleteAimTimelineResponseError = (deleteAimTimelineResponse401 | deleteAimTimelineResponse404 | deleteAimTimelineResponse409 | deleteAimTimelineResponse422 | deleteAimTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type deleteAimTimelineResponse = (deleteAimTimelineResponseSuccess | deleteAimTimelineResponseError)
+
+export const getDeleteAimTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera`
+}
+
+/**
+ * Remove aim keyframes and restore camera aim defaults, preserving other timelines.
+ * @summary Delete the aim timeline
+ */
+export const deleteAimTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteAimTimelineResponse> => {
+
+  return orvalFetch<deleteAimTimelineResponse>(getDeleteAimTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAimTimelineMutationKey = () => ['deleteAimTimeline'] as const;
+
+export const getDeleteAimTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAimTimeline>>, TError,DeleteAimTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAimTimeline>>, TError,DeleteAimTimelineMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAimTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAimTimeline>>, DeleteAimTimelineMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  deleteAimTimeline(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAimTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAimTimeline>>>
+
+    export type DeleteAimTimelineMutationError = void | ErrorResponse
+    export type DeleteAimTimelineMutationVariables = {projectId: string}
+
+    /**
+ * @summary Delete the aim timeline
+ */
+export const useDeleteAimTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAimTimeline>>, TError,DeleteAimTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAimTimeline>>,
+        TError,
+        DeleteAimTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAimTimelineMutationOptions(options), queryClient);
+    }
+
 export type getAimTimelineResponse200 = {
   data: AimTimeline
   status: 200
@@ -4448,6 +4562,120 @@ export const useSetLidarTimeline = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getSetLidarTimelineMutationOptions(options), queryClient);
+    }
+
+export type deleteOrientationTimelineResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteOrientationTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type deleteOrientationTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteOrientationTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteOrientationTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteOrientationTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteOrientationTimelineResponseSuccess = (deleteOrientationTimelineResponse204) & {
+  headers: Headers;
+};
+export type deleteOrientationTimelineResponseError = (deleteOrientationTimelineResponse401 | deleteOrientationTimelineResponse404 | deleteOrientationTimelineResponse409 | deleteOrientationTimelineResponse422 | deleteOrientationTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type deleteOrientationTimelineResponse = (deleteOrientationTimelineResponseSuccess | deleteOrientationTimelineResponseError)
+
+export const getDeleteOrientationTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/camera/orientation`
+}
+
+/**
+ * Remove orientation keyframes and restore yaw, pitch and roll to zero.
+ * @summary Delete the orientation timeline
+ */
+export const deleteOrientationTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteOrientationTimelineResponse> => {
+
+  return orvalFetch<deleteOrientationTimelineResponse>(getDeleteOrientationTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteOrientationTimelineMutationKey = () => ['deleteOrientationTimeline'] as const;
+
+export const getDeleteOrientationTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOrientationTimeline>>, TError,DeleteOrientationTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteOrientationTimeline>>, TError,DeleteOrientationTimelineMutationVariables, TContext> => {
+
+const mutationKey = getDeleteOrientationTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteOrientationTimeline>>, DeleteOrientationTimelineMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  deleteOrientationTimeline(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteOrientationTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof deleteOrientationTimeline>>>
+
+    export type DeleteOrientationTimelineMutationError = void | ErrorResponse
+    export type DeleteOrientationTimelineMutationVariables = {projectId: string}
+
+    /**
+ * @summary Delete the orientation timeline
+ */
+export const useDeleteOrientationTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOrientationTimeline>>, TError,DeleteOrientationTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteOrientationTimeline>>,
+        TError,
+        DeleteOrientationTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteOrientationTimelineMutationOptions(options), queryClient);
     }
 
 export type getOrientationTimelineResponse200 = {
@@ -6178,6 +6406,120 @@ export const useUpdateProjectCloud = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateProjectCloudMutationOptions(options), queryClient);
+    }
+
+export type deleteSpeedTimelineResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteSpeedTimelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type deleteSpeedTimelineResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteSpeedTimelineResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteSpeedTimelineResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteSpeedTimelineResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteSpeedTimelineResponseSuccess = (deleteSpeedTimelineResponse204) & {
+  headers: Headers;
+};
+export type deleteSpeedTimelineResponseError = (deleteSpeedTimelineResponse401 | deleteSpeedTimelineResponse404 | deleteSpeedTimelineResponse409 | deleteSpeedTimelineResponse422 | deleteSpeedTimelineResponse428) & {
+  headers: Headers;
+};
+
+export type deleteSpeedTimelineResponse = (deleteSpeedTimelineResponseSuccess | deleteSpeedTimelineResponseError)
+
+export const getDeleteSpeedTimelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/motion`
+}
+
+/**
+ * Remove speed keyframes and restore default speed, preserving other timelines.
+ * @summary Delete the speed timeline
+ */
+export const deleteSpeedTimeline = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteSpeedTimelineResponse> => {
+
+  return orvalFetch<deleteSpeedTimelineResponse>(getDeleteSpeedTimelineUrl(projectId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSpeedTimelineMutationKey = () => ['deleteSpeedTimeline'] as const;
+
+export const getDeleteSpeedTimelineMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpeedTimeline>>, TError,DeleteSpeedTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSpeedTimeline>>, TError,DeleteSpeedTimelineMutationVariables, TContext> => {
+
+const mutationKey = getDeleteSpeedTimelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSpeedTimeline>>, DeleteSpeedTimelineMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  deleteSpeedTimeline(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSpeedTimelineMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSpeedTimeline>>>
+
+    export type DeleteSpeedTimelineMutationError = void | ErrorResponse
+    export type DeleteSpeedTimelineMutationVariables = {projectId: string}
+
+    /**
+ * @summary Delete the speed timeline
+ */
+export const useDeleteSpeedTimeline = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpeedTimeline>>, TError,DeleteSpeedTimelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSpeedTimeline>>,
+        TError,
+        DeleteSpeedTimelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteSpeedTimelineMutationOptions(options), queryClient);
     }
 
 export type getSpeedTimelineResponse200 = {

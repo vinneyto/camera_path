@@ -21,7 +21,9 @@
         "packages/actions/src/index.ts",
         "packages/actions/src/mutations/anchors/use-add-anchor.ts",
         "packages/actions/src/mutations/anchors/use-update-anchor.ts",
+        "packages/actions/src/mutations/camera-aim/use-delete-aim-timeline.ts",
         "packages/actions/src/mutations/camera-orientation/use-add-camera-orientation-keyframe.ts",
+        "packages/actions/src/mutations/camera-orientation/use-delete-orientation-timeline.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-camera-orientation-keyframe.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
         "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
@@ -33,6 +35,7 @@
         "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
         "packages/actions/src/mutations/projects/use-create-project.ts",
         "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+        "packages/actions/src/mutations/speed-track/use-delete-speed-timeline.ts",
         "packages/actions/src/use-cloud-placement.ts",
         "packages/actions/src/use-seek-playback.ts",
         "packages/actions/src/use-set-active-editor-tool.ts",
@@ -659,8 +662,20 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
+              "file": "packages/actions/src/mutations/camera-aim/use-delete-aim-timeline.ts",
+              "line": 8,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
               "file": "packages/actions/src/mutations/camera-orientation/use-add-camera-orientation-keyframe.ts",
               "line": 13,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/camera-orientation/use-delete-orientation-timeline.ts",
+              "line": 8,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             },
@@ -709,6 +724,12 @@
             {
               "file": "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
               "line": 20,
+              "column": 21,
+              "expression": "useProjectId(explicitProjectId)"
+            },
+            {
+              "file": "packages/actions/src/mutations/speed-track/use-delete-speed-timeline.ts",
+              "line": 8,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             }
@@ -809,7 +830,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2813,
+            "line": 2927,
             "column": 1
           },
           "usages": [
@@ -833,7 +854,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8123,
+            "line": 8465,
             "column": 1
           },
           "usages": [
@@ -857,7 +878,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3177,
+            "line": 3291,
             "column": 1
           },
           "usages": [
@@ -899,7 +920,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4278,
+            "line": 4392,
             "column": 1
           },
           "usages": [
@@ -923,7 +944,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4528,
+            "line": 4756,
             "column": 1
           },
           "usages": [
@@ -965,7 +986,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6258,
+            "line": 6600,
             "column": 1
           },
           "usages": [
@@ -989,7 +1010,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7992,
+            "line": 8334,
             "column": 1
           },
           "usages": [
@@ -1037,7 +1058,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5268,
+            "line": 5496,
             "column": 1
           },
           "usages": [
@@ -1079,7 +1100,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5761,
+            "line": 5989,
             "column": 1
           },
           "usages": [
@@ -1121,7 +1142,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6998,
+            "line": 7340,
             "column": 1
           },
           "usages": [
@@ -1467,7 +1488,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
-              "line": 11,
+              "line": 12,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             },
@@ -1479,7 +1500,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/use-anchor-placement.ts",
-              "line": 21,
+              "line": 23,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             }
@@ -1565,9 +1586,21 @@
           "statePaths": ["camera"],
           "usages": [
             {
+              "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
+              "line": 10,
+              "column": 26,
+              "expression": "useCameraState()"
+            },
+            {
               "file": "packages/features/anchors/src/scene/scene.tsx",
               "line": 28,
               "column": 16,
+              "expression": "useCameraState()"
+            },
+            {
+              "file": "packages/features/anchors/src/scene/use-anchor-placement.ts",
+              "line": 21,
+              "column": 26,
               "expression": "useCameraState()"
             },
             {
@@ -1591,7 +1624,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
-              "line": 10,
+              "line": 11,
               "column": 26,
               "expression": "useEditorTool()"
             },
@@ -1660,12 +1693,23 @@
       "root": "packages/features/camera-aim",
       "entrypoint": "packages/features/camera-aim/src/index.ts",
       "files": [
+        "packages/features/camera-aim/src/commands/remove-aim-command.tsx",
         "packages/features/camera-aim/src/index.ts",
         "packages/features/camera-aim/src/timeline/aim-keyframe-marker.tsx",
         "packages/features/camera-aim/src/timeline/create-aim-track.tsx",
         "packages/features/camera-aim/src/timeline/timeline.tsx"
       ],
       "slots": {
+        "project": {
+          "commands": [
+            {
+              "name": "RemoveAimCommand",
+              "file": "packages/features/camera-aim/src/commands/remove-aim-command.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ]
+        },
         "timeline": {
           "tracks": [
             {
@@ -1678,6 +1722,24 @@
         }
       },
       "actions": [
+        {
+          "name": "useDeleteAimTimelineMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/camera-aim/use-delete-aim-timeline.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-aim/src/commands/remove-aim-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useDeleteAimTimelineMutation"
+            }
+          ]
+        },
         {
           "name": "useDeleteCameraKeyframeMutation",
           "kind": "hook",
@@ -1699,6 +1761,24 @@
       ],
       "selectors": [
         {
+          "name": "useAimTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-aim-timeline.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-aim/src/commands/remove-aim-command.tsx",
+              "line": 8,
+              "column": 20,
+              "expression": "useAimTimeline()"
+            }
+          ]
+        },
+        {
           "name": "useAuth",
           "kind": "api-hook",
           "package": "@camera-path/api",
@@ -1708,6 +1788,12 @@
             "column": 1
           },
           "usages": [
+            {
+              "file": "packages/features/camera-aim/src/commands/remove-aim-command.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            },
             {
               "file": "packages/features/camera-aim/src/timeline/timeline.tsx",
               "line": 13,
@@ -1760,11 +1846,22 @@
       "root": "packages/features/camera-orientation",
       "entrypoint": "packages/features/camera-orientation/src/index.ts",
       "files": [
+        "packages/features/camera-orientation/src/commands/remove-orientation-command.tsx",
         "packages/features/camera-orientation/src/index.ts",
         "packages/features/camera-orientation/src/timeline/create-orientation-track.tsx",
         "packages/features/camera-orientation/src/timeline/timeline.tsx"
       ],
       "slots": {
+        "project": {
+          "commands": [
+            {
+              "name": "RemoveOrientationCommand",
+              "file": "packages/features/camera-orientation/src/commands/remove-orientation-command.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ]
+        },
         "timeline": {
           "tracks": [
             {
@@ -1794,6 +1891,24 @@
               "expression": "useDeleteCameraOrientationKeyframeMutation"
             }
           ]
+        },
+        {
+          "name": "useDeleteOrientationTimelineMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/camera-orientation/use-delete-orientation-timeline.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-orientation/src/commands/remove-orientation-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useDeleteOrientationTimelineMutation"
+            }
+          ]
         }
       ],
       "selectors": [
@@ -1807,6 +1922,12 @@
             "column": 1
           },
           "usages": [
+            {
+              "file": "packages/features/camera-orientation/src/commands/remove-orientation-command.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            },
             {
               "file": "packages/features/camera-orientation/src/timeline/timeline.tsx",
               "line": 10,
@@ -1830,6 +1951,24 @@
               "line": 9,
               "column": 22,
               "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useOrientationTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-orientation-timeline.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/camera-orientation/src/commands/remove-orientation-command.tsx",
+              "line": 8,
+              "column": 20,
+              "expression": "useOrientationTimeline()"
             }
           ]
         }
@@ -3847,12 +3986,23 @@
       "root": "packages/features/speed-track",
       "entrypoint": "packages/features/speed-track/src/index.ts",
       "files": [
+        "packages/features/speed-track/src/commands/remove-speed-command.tsx",
         "packages/features/speed-track/src/index.ts",
         "packages/features/speed-track/src/ports/editor-only.tsx",
         "packages/features/speed-track/src/timeline/timeline.tsx",
         "packages/features/speed-track/src/ui/speed-graph.tsx"
       ],
       "slots": {
+        "project": {
+          "commands": [
+            {
+              "name": "RemoveSpeedCommand",
+              "file": "packages/features/speed-track/src/commands/remove-speed-command.tsx",
+              "line": 7,
+              "column": 1
+            }
+          ]
+        },
         "timeline": {
           "tracks": [
             {
@@ -3882,6 +4032,24 @@
               "expression": "useDeleteSpeedKeyframeMutation"
             }
           ]
+        },
+        {
+          "name": "useDeleteSpeedTimelineMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/speed-track/use-delete-speed-timeline.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/speed-track/src/commands/remove-speed-command.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useDeleteSpeedTimelineMutation"
+            }
+          ]
         }
       ],
       "selectors": [
@@ -3895,6 +4063,12 @@
             "column": 1
           },
           "usages": [
+            {
+              "file": "packages/features/speed-track/src/commands/remove-speed-command.tsx",
+              "line": 9,
+              "column": 19,
+              "expression": "useAuth()"
+            },
             {
               "file": "packages/features/speed-track/src/ports/editor-only.tsx",
               "line": 12,
@@ -3924,6 +4098,24 @@
               "line": 9,
               "column": 22,
               "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useSpeedTimeline",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-speed-timeline.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/speed-track/src/commands/remove-speed-command.tsx",
+              "line": 8,
+              "column": 20,
+              "expression": "useSpeedTimeline()"
             }
           ]
         },
