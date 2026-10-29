@@ -36,7 +36,15 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     this.renderer = renderer;
     this.previousColor = renderer.getClearColor(new Color()).clone();
     this.previousAlpha = renderer.getClearAlpha();
-    this.container = new SparkRenderer({ renderer });
+    this.container = new SparkRenderer({
+      renderer,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+    });
+    // Stay after the grid (-3/-2), before ordinary transparent helpers (0+).
+    // Keep opaque geometry in Three's normal depth-writing queue before splats.
+    this.container.renderOrder = -1;
   }
 
   setBackground(background: SceneSurfaceBackground): void {
