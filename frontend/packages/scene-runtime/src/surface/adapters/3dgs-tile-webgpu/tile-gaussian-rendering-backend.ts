@@ -6,6 +6,7 @@ import {
   gaussianPass,
   rasterScreenUV,
 } from "3dgs-tile-webgpu";
+import { WorkerSparkGaussianBackend } from "3dgs-tile-webgpu/spark";
 import { PerspectiveCamera } from "three/webgpu";
 
 import type { GaussianDprMode } from "@camera-path/scene-runtime/surface/model/gaussian-dpr-mode";
@@ -47,9 +48,20 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private readonly debugEnabled =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("gaussianBackendDebug");
-  private readonly store = this.debugEnabled
+  private readonly upstreamSpark =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("gaussianBackend") ===
+      "spark";
+  private readonly backend = this.upstreamSpark
+    ? new WorkerSparkGaussianBackend({})
+    : this.debugEnabled
+      ? new WorkerWasmGaussianBackend({})
+      : undefined;
+  private readonly store = this.backend
     ? new GaussianStore(
-        new LoggingGaussianBackend(new WorkerWasmGaussianBackend({})),
+        this.debugEnabled
+          ? new LoggingGaussianBackend(this.backend)
+          : this.backend,
       )
     : new GaussianStore();
   private unregisterPass: (() => void) | null = null;

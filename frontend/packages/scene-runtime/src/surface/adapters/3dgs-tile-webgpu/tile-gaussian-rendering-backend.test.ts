@@ -1,13 +1,24 @@
 import type { GaussianPass } from "3dgs-tile-webgpu";
 import { PerspectiveCamera, type WebGPURenderer } from "three/webgpu";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { SceneRenderPipeline } from "@camera-path/render-pipeline";
 
 import { TileGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend";
 
-const { gaussianPassMock } = vi.hoisted(() => ({
+const { gaussianPassMock, sparkBackendMock } = vi.hoisted(() => ({
   gaussianPassMock: vi.fn(),
+  sparkBackendMock: vi.fn(),
+}));
+
+afterEach(() => vi.unstubAllGlobals());
+vi.mock("3dgs-tile-webgpu/spark", () => ({
+  WorkerSparkGaussianBackend: class {
+    constructor() {
+      sparkBackendMock();
+    }
+    dispose() {}
+  },
 }));
 
 vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
@@ -33,6 +44,20 @@ vi.mock(
 );
 
 describe("TileGaussianRenderingBackend pass", () => {
+  it("selects the upstream Spark worker only with the explicit experimental flag", () => {
+    sparkBackendMock.mockClear();
+    const pipeline = {
+      camera: new PerspectiveCamera(),
+      renderer: {},
+    } as unknown as SceneRenderPipeline;
+    const baseline = new TileGaussianRenderingBackend(pipeline);
+    expect(sparkBackendMock).not.toHaveBeenCalled();
+    baseline.dispose();
+    vi.stubGlobal("window", { location: { search: "?gaussianBackend=spark" } });
+    const experimental = new TileGaussianRenderingBackend(pipeline);
+    expect(sparkBackendMock).toHaveBeenCalledOnce();
+    experimental.dispose();
+  });
   it("prepares concurrent models without invoking or waiting for explicit warmup", async () => {
     gaussianPassMock.mockReset();
     const pass = {

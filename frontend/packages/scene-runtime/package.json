@@ -7,7 +7,7 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#49267c4ba10c71539525bb2d1215045a4dedd01c",
+    "@camera-path/render-pipeline": "*",
     "@camera-path/store": "*",
     "@camera-path/trajectory-math": "*",
     "@camera-path/types": "*",
@@ -15,8 +15,8 @@
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@sparkjsdev/spark": "^2.1.0",
+    "3dgs-tile-webgpu": "github:vinneyto/3dgs_tile_webgpu#9f32f4ad9a4f297100360b005a994a50986731ff",
     "react": "^19.2.8",
-    "three": "^0.185.1",
-    "@camera-path/render-pipeline": "*"
+    "three": "^0.185.1"
   }
 }
