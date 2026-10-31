@@ -8,8 +8,8 @@ implementation into line with the changed requirements.
 Initial baseline: October 31, 2026, `main` at commit
 [`32d1940`](https://github.com/vinneyto/camera_path/commit/32d194088acd79b8f03c8298d94baf85800a416b).
 This is the document's starting point, not a requirement to retain that implementation
-forever. Sections 1–13 describe the current Python backend. Section 14 records known
-limitations; section 15 covers future changes outside the current `main` contract.
+forever. This specification describes the current Python backend and its known
+limitations. Roadmaps and proposed features belong in task documents, not here.
 
 ## Contents
 
@@ -27,8 +27,7 @@ limitations; section 15 covers future changes outside the current `main` contrac
 - [12. HTTP operation inventory](#12-http-operation-inventory)
 - [13. Conformance checks](#13-conformance-checks)
 - [14. Limitations and open questions](#14-limitations-and-open-questions)
-- [15. Planned changes](#15-planned-changes)
-- [16. Sources and implementation map](#16-sources-and-implementation-map)
+- [15. Sources and implementation map](#15-sources-and-implementation-map)
 
 ## 1. Working with this specification
 
@@ -47,7 +46,8 @@ implementation request itself clarifies a requirement, update the specification
 in the same PR. Explain any contradiction before choosing incompatible behavior.
 
 **SPEC-03. Task scope.** Editing this document alone does not trigger implementation.
-A task covers the requested requirements, not the entire backlog in section 15.
+A task covers the requested requirements. Backlog and proposed features remain in
+external task documents and are not part of this specification.
 This document is not an automatically executable code generator.
 
 **SPEC-04. Stable references.** Keep identifiers such as `API-01` and `LIB-02` when
@@ -82,23 +82,6 @@ and cloud ordering is preserved. A JSON `Vec3` is `[x, y, z]`. Coordinates and l
 use scene units; they represent meters and meters per second when the scene scale
 is metric.
 
-| Entity | Data and rules |
-| --- | --- |
-| ProjectMetadata | `id`, `name`, `revision`, `anchor_count`, `segment_count`; no nested project |
-| Project | Internal aggregate: anchors, scene points, ordered segments, camera track, motion profile, chat history; clouds are read separately |
-| Anchor | `id`, `label` (1–64 characters), `surface_position`, nonzero `surface_normal`, `lift`, `lift_axis` |
-| ScenePoint | `id`, `label` (1–64 characters), `position`; independent aim/DOF target |
-| SplineSegment | `id`, `kind="spline"`, ordered `anchor_ids` (at least 2), `tension` in `[0,1]` |
-| SpiralSegment | `id`, `kind="spiral"`, start/center/end anchor IDs, `turns` in `(0,100]`, direction, radial/axial law |
-| SpeedKeyframe | `id`, `path_position`, positive `speed`, `interpolation_to_next` |
-| CameraKeyframe | `id`, `path_position`, `aim`, `interpolation_to_next` |
-| CameraOrientationKeyframe | `id`, `path_position`, `orientation`, `interpolation_to_next` |
-| DepthOfFieldKeyframe | `id`, `path_position`, `focus`, `focus_range_scale > 0`, `bokeh_scale >= 0` |
-| LidarKeyframe | One optional presence keyframe at `path_position=0`, with static angular settings |
-| ChatHistoryMessage | `id`, `role=user\|assistant`, `content`; messages are ordered |
-| LibraryAsset | Server `id`, `name`, `format=ply\|sog`, `size_bytes`, `status=pending\|ready`, `created_at`, default transform, computed `download_url` |
-| ProjectCloud | Own `id`, `project_id`, `library_asset_id`, order, visibility, translation/rotation/scale/offset; name, format and URL resolve from the asset |
-
 **DATA-02.** A new project has name `Untitled camera path` (1–128 characters allowed),
 revision `0` and empty collections. Initial values:
 
@@ -121,6 +104,714 @@ arc length over the **entire** path: traveled distance / total length. It is nei
 time nor a local Bézier parameter. Positions must be unique within each speed, aim,
 orientation or DOF timeline; equal positions across different timelines are allowed.
 An empty aim timeline is valid: a keyframe at position `0` is not required.
+
+**DATA-04. Field catalogue.** Each model below lists every field, including
+inherited fields. Public resources, internal aggregates and request DTOs are
+identified separately. These tables describe the current models, not database
+column layouts or permission to edit response-only fields.
+
+- [Projects and scene entities](#32-projects-and-scene-entities)
+- [Camera controls and timelines](#33-camera-controls-and-timelines)
+- [Compiled trajectory models](#34-compiled-trajectory-models)
+- [Library, cloud and profile resources](#35-library-cloud-and-profile-resources)
+- [Chat, authentication responses and errors](#36-chat-authentication-responses-and-errors)
+- [Creation and update requests](#37-creation-and-update-requests)
+
+### 3.1. Type notation
+
+| Type | Meaning |
+| --- | --- |
+| `string`, `number`, `integer`, `boolean` | JSON string, floating-point number, whole number and boolean |
+| `FiniteNumber` | A number excluding NaN and infinities |
+| `Vec3` | Exactly three numbers: `[number, number, number]`, serialized as a JSON array |
+| `FiniteVec3` | A Vec3 with three finite components |
+| `DateTime` | ISO 8601 date-time string in JSON; Python datetime internally |
+| `Array<T>` | Ordered array of values of type T |
+| `Record<string, T>` | JSON object mapping string IDs to values of type T |
+| `T \| null` | The field accepts null; this is separate from omitting the field |
+| `Interpolation` | `"smoothstep" \| "linear" \| "hold"` |
+| `AssetFormat` | `"ply" \| "sog"` |
+| `TrajectorySegment` | `SplineSegment \| SpiralSegment`, discriminated by kind |
+| `CameraAim` | `FollowPathAim \| LookAtPointAim`, discriminated by kind |
+| `DepthOfFieldFocus` | `CenterWeightedDepthOfFieldFocus \| ScenePointDepthOfFieldFocus`, discriminated by kind |
+| `ResolvedCameraAim` | `FollowPathAim \| ResolvedLookAtPointAim`, discriminated by kind |
+| `ResolvedDepthOfFieldFocus` | `CenterWeightedDepthOfFieldFocus \| ResolvedScenePointDepthOfFieldFocus`, discriminated by kind |
+
+**Required** describes whether model validation requires a supplied field. **Default**
+is the model initializer when omitted, including factories; service/database defaults
+are labeled separately. Response fields are serialized according to the endpoint;
+an optional model field is not necessarily omitted from a response. For PATCH,
+omission preserves existing state. Nullable fields in the current resource update
+DTOs are ignored when null; null does not delete a resource or reset its value.
+Constraints in the tables supplement the domain rules in later sections.
+
+### 3.2. Projects and scene entities
+
+#### ProjectMetadata
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | — |
+| `name` | `string` | Yes | — | — |
+| `revision` | `integer` | Yes | — | — |
+| `anchor_count` | `integer` | Yes | — | Computed from current anchors |
+| `segment_count` | `integer` | Yes | — | Computed from current segments |
+
+#### Project
+
+Internal authoring aggregate; canonical project reads return ProjectMetadata. Cloud instances are separate resources.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | No | Generated UUID | — |
+| `name` | `string` | No | `"Untitled camera path"` | Min length: 1; Max length: 128 |
+| `revision` | `integer` | No | `0` | Shared project revision |
+| `anchors` | `Record<string, Anchor>` | No | `{}` | — |
+| `scene_points` | `Record<string, ScenePoint>` | No | `{}` | — |
+| `segments` | `Array<TrajectorySegment>` | No | `[]` | — |
+| `camera_track` | `CameraTrack` | No | CameraTrack defaults | — |
+| `motion_profile` | `MotionProfile` | No | MotionProfile defaults | — |
+| `chat_history` | `Array<ChatHistoryMessage>` | No | `[]` | — |
+
+#### Anchor
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string` | Yes | — | Min length: 1; Max length: 64 |
+| `surface_position` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `surface_normal` | `Vec3` | No | `[0.0,1.0,0.0]` | Min items: 3; Max items: 3; Nonzero when supplied |
+| `lift` | `number` | No | `0.0` | — |
+| `lift_axis` | `"world_up" \| "surface_normal"` | No | `"world_up"` | — |
+| `id` | `string` | No | Generated UUID | — |
+
+#### ScenePoint
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string` | Yes | — | Min length: 1; Max length: 64 |
+| `position` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `id` | `string` | No | Generated UUID | — |
+
+#### SplineSegment
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `anchor_ids` | `Array<string>` | Yes | — | Min items: 2 |
+| `tension` | `number` | No | `0.0` | >= 0.0; <= 1.0 |
+| `id` | `string` | No | Generated UUID | — |
+| `kind` | `"spline"` | No | `"spline"` | — |
+
+#### SpiralSegment
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `start_anchor_id` | `string` | Yes | — | — |
+| `center_anchor_id` | `string` | Yes | — | — |
+| `end_anchor_id` | `string` | Yes | — | — |
+| `turns` | `number` | No | `1.0` | > 0.0; <= 100.0 |
+| `direction` | `"cw" \| "ccw"` | No | `"ccw"` | — |
+| `radial_law` | `"linear" \| "smoothstep"` | No | `"smoothstep"` | — |
+| `axial_law` | `"linear" \| "smoothstep"` | No | `"smoothstep"` | — |
+| `id` | `string` | No | Generated UUID | — |
+| `kind` | `"spiral"` | No | `"spiral"` | — |
+
+#### Trajectory
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `segments` | `Array<TrajectorySegment>` | No | `[]` | — |
+
+### 3.3. Camera controls and timelines
+
+#### FollowPathAim
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `kind` | `"follow_path"` | No | `"follow_path"` | — |
+| `direction` | `"forward" \| "backward"` | No | `"forward"` | — |
+
+#### LookAtPointAim
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `kind` | `"look_at_point"` | No | `"look_at_point"` | — |
+| `scene_point_id` | `string` | Yes | — | — |
+
+#### CameraOrientation
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `yaw_deg` | `FiniteNumber` | No | `0.0` | — |
+| `pitch_deg` | `FiniteNumber` | No | `0.0` | — |
+| `roll_deg` | `FiniteNumber` | No | `0.0` | — |
+
+#### SpeedKeyframe
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `speed` | `number` | Yes | — | > 0.0 |
+| `interpolation_to_next` | `Interpolation` | No | `"smoothstep"` | — |
+| `id` | `string` | No | Generated UUID | — |
+
+#### CameraKeyframe
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `aim` | `CameraAim` | Yes | — | Discriminator: kind |
+| `interpolation_to_next` | `Interpolation` | No | `"smoothstep"` | — |
+| `id` | `string` | No | Generated UUID | — |
+
+#### CameraOrientationKeyframe
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `orientation` | `CameraOrientation` | Yes | — | — |
+| `interpolation_to_next` | `Interpolation` | No | `"smoothstep"` | — |
+| `id` | `string` | No | Generated UUID | — |
+
+#### CenterWeightedDepthOfFieldFocus
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `kind` | `"center_weighted_9"` | No | `"center_weighted_9"` | — |
+
+#### ScenePointDepthOfFieldFocus
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `kind` | `"scene_point"` | No | `"scene_point"` | — |
+| `scene_point_id` | `string` | Yes | — | — |
+
+#### DepthOfFieldKeyframe
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `focus` | `DepthOfFieldFocus` | No | CenterWeightedDepthOfFieldFocus defaults | Discriminator: kind |
+| `focus_range_scale` | `number` | No | `0.25` | > 0.0 |
+| `bokeh_scale` | `number` | No | `6.0` | >= 0.0 |
+| `id` | `string` | No | Generated UUID | — |
+
+#### LidarSettings
+
+Only supplied fields replace existing singleton settings; an empty object creates defaults when absent. Unknown fields are rejected.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `vertical_fov_deg` | `FiniteNumber` | No | `60.0` | > 0.0; < 180.0 |
+| `horizontal_resolution` | `integer` | No | `512` | >= 1.0; <= 4096.0; Strict integer |
+| `vertical_resolution` | `integer` | No | `32` | >= 1.0; <= 256.0; Strict integer |
+
+#### LidarKeyframe
+
+Unknown fields are rejected.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `vertical_fov_deg` | `FiniteNumber` | No | `60.0` | > 0.0; < 180.0 |
+| `horizontal_resolution` | `integer` | No | `512` | >= 1.0; <= 4096.0; Strict integer |
+| `vertical_resolution` | `integer` | No | `32` | >= 1.0; <= 256.0; Strict integer |
+| `id` | `string` | No | Generated UUID | — |
+| `path_position` | `0.0` | No | `0.0` | — |
+
+#### MotionProfile
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_speed` | `number` | No | `1.0` | > 0.0 |
+| `keyframes` | `Record<string, SpeedKeyframe>` | No | `{}` | — |
+
+#### CameraTrack
+
+Internal aggregate assembled from the separate camera timeline resources.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_aim` | `CameraAim` | No | FollowPathAim defaults | Discriminator: kind |
+| `keyframes` | `Record<string, CameraKeyframe>` | No | `{}` | — |
+| `default_orientation` | `CameraOrientation` | No | CameraOrientation defaults | — |
+| `orientation_keyframes` | `Record<string, CameraOrientationKeyframe>` | No | `{}` | — |
+| `depth_of_field_keyframes` | `Record<string, DepthOfFieldKeyframe>` | No | `{}` | — |
+| `lidar_keyframe` | `LidarKeyframe \| null` | No | `null` | — |
+| `world_up` | `Vec3` | No | `[0.0,1.0,0.0]` | Min items: 3; Max items: 3; Nonzero; checked by project validation |
+
+#### AimTimeline
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_aim` | `CameraAim` | No | FollowPathAim defaults | Discriminator: kind |
+| `keyframes` | `Record<string, CameraKeyframe>` | No | `{}` | — |
+| `world_up` | `Vec3` | No | `[0.0,1.0,0.0]` | Min items: 3; Max items: 3; Nonzero; checked by project validation |
+
+#### OrientationTimeline
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_orientation` | `CameraOrientation` | No | CameraOrientation defaults | — |
+| `keyframes` | `Record<string, CameraOrientationKeyframe>` | No | `{}` | — |
+
+#### DepthOfFieldTimeline
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `keyframes` | `Record<string, DepthOfFieldKeyframe>` | No | `{}` | — |
+
+#### LidarTimeline
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `lidar_keyframe` | `LidarKeyframe \| null` | No | `null` | — |
+
+### 3.4. Compiled trajectory models
+
+#### CubicBezier3D
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `source_segment_id` | `string` | Yes | — | Authoring segment ID |
+| `p0` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `p1` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `p2` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `p3` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `length` | `number` | Yes | — | — |
+
+#### ArcLengthSample
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `segment_index` | `integer` | Yes | — | — |
+| `t` | `number` | Yes | — | Local curve parameter in [0,1] |
+| `distance` | `number` | Yes | — | Cumulative distance over the whole path |
+
+#### ResolvedLookAtPointAim
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `kind` | `"look_at_point"` | No | `"look_at_point"` | — |
+| `scene_point_id` | `string` | Yes | — | — |
+| `position` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+
+#### ResolvedScenePointDepthOfFieldFocus
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `kind` | `"scene_point"` | No | `"scene_point"` | — |
+| `scene_point_id` | `string` | Yes | — | — |
+| `position` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+
+#### CompiledCameraKeyframe
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | — |
+| `path_position` | `number` | Yes | — | — |
+| `aim` | `ResolvedCameraAim` | Yes | — | Discriminator: kind |
+| `interpolation_to_next` | `Interpolation` | Yes | — | — |
+
+#### CompiledDepthOfFieldKeyframe
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | — |
+| `path_position` | `number` | Yes | — | — |
+| `focus` | `ResolvedDepthOfFieldFocus` | Yes | — | Discriminator: kind |
+| `focus_range_scale` | `number` | Yes | — | — |
+| `bokeh_scale` | `number` | Yes | — | — |
+
+#### CompiledMotionProfile
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_speed` | `number` | Yes | — | — |
+| `keyframes` | `Array<SpeedKeyframe>` | Yes | — | — |
+
+#### CompiledCameraTrack
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_aim` | `ResolvedCameraAim` | Yes | — | Discriminator: kind |
+| `keyframes` | `Array<CompiledCameraKeyframe>` | Yes | — | — |
+| `default_orientation` | `CameraOrientation` | Yes | — | — |
+| `orientation_keyframes` | `Array<CameraOrientationKeyframe>` | Yes | — | — |
+| `depth_of_field_keyframes` | `Array<CompiledDepthOfFieldKeyframe>` | Yes | — | — |
+| `world_up` | `Vec3` | Yes | — | Min items: 3; Max items: 3; Nonzero; checked by project validation |
+
+#### CompiledTrajectory
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `project_id` | `string` | Yes | — | — |
+| `revision` | `integer` | Yes | — | — |
+| `position_segments` | `Array<CubicBezier3D>` | Yes | — | — |
+| `arc_length_table` | `Array<ArcLengthSample>` | Yes | — | — |
+| `total_length` | `number` | Yes | — | — |
+| `duration_seconds` | `number` | Yes | — | — |
+| `motion_profile` | `CompiledMotionProfile` | Yes | — | — |
+| `camera_track` | `CompiledCameraTrack` | Yes | — | — |
+| `warnings` | `Array<string>` | No | `[]` | — |
+
+### 3.5. Library, cloud and profile resources
+
+#### LibraryAsset
+
+Public asset model. Its storage object key is internal persistence metadata, not a public URL field.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | — |
+| `name` | `string` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | — |
+| `size_bytes` | `integer` | Yes | — | — |
+| `status` | `"pending" \| "ready"` | Yes | — | — |
+| `created_at` | `DateTime` | Yes | — | — |
+| `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
+| `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
+| `default_scale` | `FiniteNumber` | Yes | — | > 0.0; New asset value: 1 |
+| `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
+
+#### LibraryUpload
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | — |
+| `name` | `string` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | — |
+| `size_bytes` | `integer` | Yes | — | — |
+| `status` | `"pending" \| "ready"` | Yes | — | — |
+| `created_at` | `DateTime` | Yes | — | — |
+| `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
+| `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
+| `default_scale` | `FiniteNumber` | Yes | — | > 0.0 |
+| `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
+| `upload_url` | `string` | Yes | — | PUT destination supplied by storage adapter |
+
+#### ProjectCloud
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | — |
+| `project_id` | `string` | Yes | — | — |
+| `library_asset_id` | `string` | Yes | — | — |
+| `name` | `string` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | — |
+| `position` | `integer` | Yes | — | Ordered instance index |
+| `visible` | `boolean` | Yes | — | — |
+| `download_url` | `string` | Yes | — | Resolved by storage adapter |
+| `translation` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `rotation_deg` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `scale` | `number` | Yes | — | — |
+| `offset` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+
+#### UserSettings
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `webgpu_tile_renderer` | `boolean` | Yes | — | Service fallback: false |
+| `show_grid` | `boolean` | Yes | — | Service fallback: true |
+| `gaussian_dpr` | `"1x" \| "system"` | No | `"1x"` | — |
+
+### 3.6. Chat, authentication responses and errors
+
+#### ChatHistoryMessage
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | No | Generated UUID | — |
+| `role` | `"user" \| "assistant"` | Yes | — | — |
+| `content` | `string` | Yes | — | — |
+
+#### ChatHistory
+
+Internal/legacy history wrapper; canonical message listing returns an array.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `messages` | `Array<ChatHistoryMessage>` | No | `[]` | — |
+
+#### ChatMessage
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | No | Generated UUID | — |
+| `message` | `string` | Yes | — | Min length: 1; Max length: 10000 |
+
+#### ChatResponse
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `answer` | `string` | Yes | — | — |
+| `compiled` | `CompiledTrajectory` | Yes | — | — |
+
+#### ChatResult
+
+Internal/legacy agent result; canonical chat uses ChatResponse.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `answer` | `string` | Yes | — | — |
+| `project` | `Project` | Yes | — | — |
+| `compiled` | `CompiledTrajectory` | Yes | — | — |
+
+#### TokenResponse
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `access_token` | `string` | Yes | — | — |
+| `token_type` | `string` | No | `"bearer"` | — |
+| `expires_in` | `integer` | Yes | — | — |
+
+#### ChallengeResponse
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `challenge_id` | `string` | Yes | — | — |
+| `expires_in` | `integer` | Yes | — | — |
+| `resend_after` | `integer` | Yes | — | — |
+
+#### SessionResponse
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `username` | `string` | Yes | — | — |
+
+#### FieldError
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `location` | `Array<string \| integer>` | Yes | — | — |
+| `message` | `string` | Yes | — | — |
+| `type` | `string` | Yes | — | — |
+
+#### ErrorResponse
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `code` | `string` | Yes | — | — |
+| `detail` | `string` | Yes | — | — |
+| `field_errors` | `Array<FieldError> \| null` | No | `null` | — |
+
+### 3.7. Creation and update requests
+
+#### ProjectCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `name` | `string` | No | `"Untitled camera path"` | Min length: 1; Max length: 128 |
+
+#### ProjectUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `name` | `string` | Yes | — | Min length: 1; Max length: 128 |
+
+#### AnchorCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string` | Yes | — | Min length: 1; Max length: 64 |
+| `surface_position` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+| `surface_normal` | `Vec3` | No | `[0.0,1.0,0.0]` | Min items: 3; Max items: 3; Nonzero when supplied |
+| `lift` | `number` | No | `0.0` | — |
+| `lift_axis` | `"world_up" \| "surface_normal"` | No | `"world_up"` | — |
+
+#### AnchorUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string \| null` | No | `null` | Min length: 1; Max length: 64 |
+| `surface_position` | `Vec3 \| null` | No | `null` | Min items: 3; Max items: 3 |
+| `surface_normal` | `Vec3 \| null` | No | `null` | Min items: 3; Max items: 3; Nonzero when supplied |
+| `lift` | `number \| null` | No | `null` | — |
+| `lift_axis` | `"world_up" \| "surface_normal" \| null` | No | `null` | — |
+
+#### ScenePointCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string` | Yes | — | Min length: 1; Max length: 64 |
+| `position` | `Vec3` | Yes | — | Min items: 3; Max items: 3 |
+
+#### ScenePointUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string \| null` | No | `null` | Min length: 1; Max length: 64 |
+| `position` | `Vec3 \| null` | No | `null` | Min items: 3; Max items: 3 |
+
+#### SplineSegmentCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `anchor_ids` | `Array<string>` | Yes | — | Min items: 2 |
+| `tension` | `number` | No | `0.0` | >= 0.0; <= 1.0 |
+
+#### SpiralSegmentCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `start_anchor_id` | `string` | Yes | — | — |
+| `center_anchor_id` | `string` | Yes | — | — |
+| `end_anchor_id` | `string` | Yes | — | — |
+| `turns` | `number` | No | `1.0` | > 0.0; <= 100.0 |
+| `direction` | `"cw" \| "ccw"` | No | `"ccw"` | — |
+| `radial_law` | `"linear" \| "smoothstep"` | No | `"smoothstep"` | — |
+| `axial_law` | `"linear" \| "smoothstep"` | No | `"smoothstep"` | — |
+
+#### MotionProfileUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_speed` | `number` | Yes | — | > 0.0 |
+
+#### SpeedKeyframeCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `speed` | `number` | Yes | — | > 0.0 |
+| `interpolation_to_next` | `Interpolation` | No | `"smoothstep"` | — |
+
+#### SpeedKeyframeUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number \| null` | No | `null` | >= 0.0; <= 1.0 |
+| `speed` | `number \| null` | No | `null` | > 0.0 |
+| `interpolation_to_next` | `Interpolation \| null` | No | `null` | — |
+
+#### CameraTrackUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_aim` | `CameraAim \| null` | No | `null` | Discriminator: kind |
+| `world_up` | `Vec3 \| null` | No | `null` | Min items: 3; Max items: 3; Nonzero; checked by project validation |
+
+#### CameraKeyframeCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `aim` | `CameraAim` | Yes | — | Discriminator: kind |
+| `interpolation_to_next` | `Interpolation` | No | `"smoothstep"` | — |
+
+#### CameraKeyframeUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number \| null` | No | `null` | >= 0.0; <= 1.0 |
+| `aim` | `CameraAim \| null` | No | `null` | Discriminator: kind |
+| `interpolation_to_next` | `Interpolation \| null` | No | `null` | — |
+
+#### CameraOrientationKeyframeCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `orientation` | `CameraOrientation` | Yes | — | — |
+| `interpolation_to_next` | `Interpolation` | No | `"smoothstep"` | — |
+
+#### CameraOrientationKeyframeUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number \| null` | No | `null` | >= 0.0; <= 1.0 |
+| `orientation` | `CameraOrientation \| null` | No | `null` | — |
+| `interpolation_to_next` | `Interpolation \| null` | No | `null` | — |
+
+#### DepthOfFieldKeyframeCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number` | Yes | — | >= 0.0; <= 1.0 |
+| `focus` | `DepthOfFieldFocus` | No | CenterWeightedDepthOfFieldFocus defaults | Discriminator: kind |
+| `focus_range_scale` | `number` | No | `0.25` | > 0.0 |
+| `bokeh_scale` | `number` | No | `6.0` | >= 0.0 |
+
+#### DepthOfFieldKeyframeUpdate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `path_position` | `number \| null` | No | `null` | >= 0.0; <= 1.0 |
+| `focus` | `DepthOfFieldFocus \| null` | No | `null` | Discriminator: kind |
+| `focus_range_scale` | `number \| null` | No | `null` | > 0.0 |
+| `bokeh_scale` | `number \| null` | No | `null` | >= 0.0 |
+
+#### LibraryUploadCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `name` | `string` | Yes | — | Min length: 1; Max length: 200 |
+| `size_bytes` | `integer` | Yes | — | > 0.0; <= 2147483648.0 |
+| `format` | `AssetFormat` | No | `"ply"` | — |
+
+#### LibraryAssetDefaultsUpdate
+
+Rotation and scale are required. An omitted/null offset preserves the stored offset.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
+| `default_scale` | `FiniteNumber` | Yes | — | > 0.0 |
+| `default_offset` | `FiniteVec3 \| null` | No | `null` | Min items: 3; Max items: 3 |
+
+#### LibraryAssetsDelete
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `asset_ids` | `Array<string>` | Yes | — | Min items: 1 |
+
+#### ProjectCloudCreate
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `library_asset_id` | `string` | Yes | — | — |
+| `translation` | `FiniteVec3` | No | `[0,0,0]` | Min items: 3; Max items: 3 |
+
+#### ProjectCloudUpdate
+
+At least one of position or visible must be non-null.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `position` | `integer \| null` | No | `null` | >= 0.0 |
+| `visible` | `boolean \| null` | No | `null` | — |
+
+#### UserSettingsUpdate
+
+Only supplied fields are saved; omitted fields preserve existing settings despite model defaults. Unknown fields are rejected.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `webgpu_tile_renderer` | `boolean` | No | `false` | Strict boolean |
+| `show_grid` | `boolean` | No | `true` | Strict boolean |
+| `gaussian_dpr` | `"1x" \| "system"` | No | `"1x"` | — |
+
+#### LoginRequest
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `username` | `string` | Yes | — | Min length: 1; Max length: 128 |
+| `password` | `string` | Yes | — | Min length: 1; Max length: 1024; Secret; write-only |
+
+#### ChallengeRequest
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `challenge_id` | `string` | Yes | — | Min length: 32; Max length: 64; Pattern: `^[A-Za-z0-9_-]+$` |
+
+#### VerifyRequest
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `challenge_id` | `string` | Yes | — | Min length: 32; Max length: 64; Pattern: `^[A-Za-z0-9_-]+$` |
+| `code` | `string` | Yes | — | Min length: 6; Max length: 6; Secret; write-only |
+
+FastAPI's emitted HTTPValidationError/ValidationError schema components are not
+application entities. Canonical validation responses use ErrorResponse and FieldError
+as specified in API-05.
 
 ## 4. HTTP, revisions and errors
 
@@ -307,7 +998,7 @@ on every read.
 references/invariants; full numerical compilation is not required for every edit.
 Currently, adding a spiral and completing an agent turn compile the draft before
 commit. A spline can be saved before a numerical error is discovered by a compiled
-read. Requiring compilation for all mutations needs a separate decision.
+read.
 
 ## 8. Library and project clouds
 
@@ -364,7 +1055,7 @@ Project reset/delete removes instances while retaining the shared library.
 rejected. Position is an index in `0..count−1`; reordering preserves a unique,
 contiguous order. Persisted rotation/scale/offset are returned but cannot be edited
 through the current cloud PATCH. Applying transforms in the renderer is outside
-the backend boundary; extending the transform API is planned work.
+the backend boundary.
 
 ## 9. Authentication and profile
 
@@ -469,9 +1160,8 @@ blank-line separator:
 
 Tool outputs return to the model rather than appearing as separate public SSE
 events. Saving the user message before stream start is idempotent when called again
-internally. The current chat stream has no event IDs/replay and is separate from
-the planned library/generation event stream. A client disconnect alone guarantees
-neither rollback of persisted data nor cancellation of the provider request.
+internally. The current chat stream has no event IDs/replay. A client disconnect
+alone guarantees neither rollback of persisted data nor cancellation of the provider request.
 
 ## 11. Persistence, configuration and operations
 
@@ -640,7 +1330,7 @@ tests (paths relative to `backend/tests/`):
 
 | Requirements | What to verify | Existing tests |
 | --- | --- | --- |
-| API-01–07, HTTP-01 | Resource shapes, ETag/If-Match, stale/missing/malformed revision, legacy compatibility, schema | `test_openapi.py`, `test_api.py` |
+| DATA-01–04, API-01–07, HTTP-01 | Fields/types/defaults, resource shapes, ETag/If-Match, stale/missing/malformed revision, legacy compatibility, schema | `test_openapi.py`, `test_api.py` |
 | PROJECT-01–02, SCENE-01–04, STORE-01–02 | CRUD, reset/clear distinctions, FK/cascade, unrelated data, restart | `test_api.py`, `test_resource_integrity.py`, `test_repository.py`, `test_migration.py`, `test_enum_columns.py` |
 | TIME-01–05 | Defaults, duplicate positions, delete/recreate, static LiDAR singleton | `test_delete_timelines.py`, `test_depth_of_field_timeline.py`, `test_lidar_timeline.py` |
 | GEOM-01–06 | Endpoints, C² spline, tangent constraints, unchanged spirals, adaptive approximation, distance/time | `test_geometry.py`, `test_trajectory_planner.py` |
@@ -669,8 +1359,7 @@ the full runtime suite alone does not establish prose accuracy.
 **CHECK-03.** Any replacement backend preserves the external contract, permissions,
 persisted data and revision semantics, or includes an explicitly agreed specification
 change. Numerical comparisons use documented tolerances; byte-for-byte JSON float
-equality is unnecessary. The independent CP-118 HTTP acceptance suite is currently
-in a separate PR and will add verification once accepted (section 15).
+equality is unnecessary.
 
 ## 14. Limitations and open questions
 
@@ -695,9 +1384,8 @@ connection is lost.
 
 **GAP-04.** There is no complete server-side 3DGS parser/sha256 validation, global
 file-count quota or finished lifecycle for expired pending uploads. The current
-2 GiB validation limit differs from the planned 1 GB limit. A signed S3 PUT currently
-does not prevent oversized bytes from being accepted before complete. New quotas
-are covered by `PLAN-03`.
+declared-size validation limit is 2 GiB. A signed S3 PUT currently does not prevent
+oversized bytes from being accepted before complete.
 
 **GAP-05.** Older documents/README text may lag behind the contract. In particular,
 descriptions of snapshot undo/redo, a mandatory aim key at zero, a Catmull–Rom planner
@@ -706,85 +1394,7 @@ implementation. Internal Project excludes clouds. Complete project export,
 revisioned library/profile, cloud transform editing, compilation caching and
 multi-user access are not yet specified.
 
-## 15. Planned changes
-
-Only this section has **planned / outside the current `main` contract** status.
-PR status is recorded at the initial baseline date. After merge, update status
-and move accepted requirements into the relevant main sections. Links lead to
-detailed source tasks; they do not instruct the agent to implement the entire plan.
-
-**PLAN-01. CP-118 — independent HTTP acceptance.**
-[Task](https://docs.google.com/document/d/1CqaWyve6LW1tY7ra4lRSYRnQ8I9SzgVkSo-IgYPUaZM/edit),
-[draft PR #111](https://github.com/vinneyto/camera_path/pull/111).
-A real backend process, isolated SQLite/files and external SMTP/OpenAI fixtures;
-the same suite applies to Python and Rust. Cover the operation matrix, concurrency,
-authentication, SSE, restart persistence and numerical tolerances. Internal
-application mocks do not replace acceptance. Known bugs do not become expected behavior.
-
-**PLAN-02. CP-119 — Rust modular monolith.**
-[Task](https://docs.google.com/document/d/1mUXqDCmQ0eoH06N66HiyUO1dvWkLKOgvz0Fnub7tEiY/edit),
-[draft PR #112](https://github.com/vinneyto/camera_path/pull/112), based on #111.
-Chosen direction: Axum/Tokio/Serde, SeaORM and migrations, Utoipa, retaining SQLite,
-API and data. Core **includes ORM, repositories and business logic**, but not
-provider SDKs. Separate crates: core, app, storage-local, storage-s3, email-smtp,
-email-ses, queue-rabbitmq, queue-sqs and an OpenAI adapter. App composes the environment;
-adapters depend on core. HTTP and queue ingress invoke application operations in
-one monolith. Use RabbitMQ for development and SQS for AWS, with acknowledgments
-after commit, durable deduplication, retries/DLQ. Alembic → SeaORM migration validates
-the source schema, preserves IDs/files/auth and is tested on a database copy.
-CPU-heavy work runs off the async runtime. Code releases do not recreate infrastructure.
-The Go migration in the older CP-81 task is not a parallel plan.
-
-**PLAN-03. CP-116 — library quotas.**
-[Task](https://docs.google.com/document/d/1HRMzxC3fAD1d0cDFy-Oz6KrjU583ajUQaWtc7QVJ0B8/edit).
-A finite configurable count limit and per-file limit no greater than
-**1,000,000,000 bytes**. Check declared/actual sizes for local and direct S3 uploads.
-Active reservations count toward the quota; concurrency must not bypass it;
-failed/expired uploads release reservations. Reducing limits does not automatically
-delete existing assets. The default count, S3 enforcement mechanism and error codes
-are implementation decisions still to be made.
-
-**PLAN-04. CP-95 — library metadata and correlation.**
-[Task](https://docs.google.com/document/d/1nj0kNZH98IlHocQ5TTRTtXX8YyVk7mykJw71JBFJCPI/edit).
-Retain the server primary key; add an immutable `client_id` UUID unique throughout
-the environment, nullable `thumbnail_key` and `tags` with finite limits/normalization.
-The client can choose an ID in advance or have the backend generate it. Backfill
-existing records. Repeating the ID with identical content is idempotent; incompatible
-payloads conflict. Provide client_id lookup and thumbnail URLs through the storage
-adapter. This is a resource correlation ID, not a credential, job ID or event ID.
-
-**PLAN-05. CP-96/97/99/100 — external generation and result application.**
-Built after CP-118/119.
-[Import](https://docs.google.com/document/d/1OGkAa-Njnym7wa0hK1-0PEkN1rKosziBrVypiX1OMXk/edit),
-[jobs](https://docs.google.com/document/d/1sI5dwmDcSkOu-uuVOuf8KnV08Fl-KGjq7nCIgdKouAo/edit),
-[attachment](https://docs.google.com/document/d/1cNRdEdnIj6JTDXkl_5iJ_yeh2Vst2ByfANiRpmFkC8k/edit),
-[events](https://docs.google.com/document/d/1mhv3MM9jq8V3ZGt83zR840v-mE6q6enAnOyg6Ek31t0/edit).
-
-- A producer first saves model/thumbnail bytes, then an immutable versioned ready
-  manifest with client_id, model key, format, size/hash, title/tags and optional
-  job_id/attempt_token. Import validates namespace, bytes, limits and idempotency.
-- Generation jobs are durable: queued → running → awaiting_import → succeeded,
-  with terminal failed/cancelled states. Lease/heartbeat/fencing reject stale
-  attempts. The Trellis worker remains external; inference does not run inside
-  a browser HTTP request.
-- Match library results by client_id/current attempt. The backend atomically
-  attaches one cloud per job using the marker's current transform. Deleted
-  projects/markers are not resurrected: retain the library item and use
-  attachment_status=target_missing. A referenced anchor is not deleted along
-  with its references.
-- Persist the change and durable event/outbox in one transaction. A separate
-  contract from chat SSE includes event IDs, revisions/cursors, reconnect/replay
-  and resync for stale cursors. Delivery may repeat; consumers deduplicate.
-  Backend succeeded and readiness in the browser renderer are separate states.
-
-Older CP-96/97 tasks include separate importer/HTTP-hop and database long-poll worker
-options. The newer CP-119 decision places queue ingress and application processing
-inside the monolith. Reconcile those options and concrete schemas/routes when
-implementing; this specification does not require both transports simultaneously.
-Separate services, gRPC and Redis are not added automatically. Jobs, the manifest
-endpoint and the event stream are not yet in the current backend HTTP inventory.
-
-## 16. Sources and implementation map
+## 15. Sources and implementation map
 
 This specification was reconstructed from current `main` routes, DTOs, services,
 repositories, compiler, migrations and tests, with relevant Drive tasks checked.
