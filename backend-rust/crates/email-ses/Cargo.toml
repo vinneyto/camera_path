@@ -1,0 +1,12 @@
+[package]
+name = "camera-path-email-ses"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-trait.workspace = true
+aws-config = "1"
+aws-sdk-sesv2 = "1"
+camera-path-core = { path = "../core" }

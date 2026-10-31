@@ -1,12 +1,16 @@
 """Run as root via SSM. Fetch an exact Git revision and restore DB/code on failure."""
 import fcntl
+import hashlib
 import json
 import os
+import platform
 import pwd
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
+import tarfile
 import time
 import urllib.request
 import uuid
@@ -21,6 +25,7 @@ ETC = Path("/etc/camera-path")
 DATABASE = DATA / "backend/camera_path.sqlite3"
 CURRENT = ROOT / "current"
 UV = "/opt/camera-path-tools/bin/uv"
+RUNTIME_OVERRIDE = Path("/etc/systemd/system/camera-path-backend.service.d/10-runtime.conf")
 
 
 def run(*args, **kwargs):
@@ -184,7 +189,76 @@ def environment(config):
     return values
 
 
-def prepare_release(revision):
+def runtime(config):
+    selected = config.get("backend_runtime", "python")
+    if selected not in {"python", "rust"}:
+        raise ValueError("Unsupported backend runtime")
+    return selected
+
+
+def runtime_override(content):
+    previous = RUNTIME_OVERRIDE.read_text() if RUNTIME_OVERRIDE.exists() else None
+    if previous == content:
+        return
+    if content is None:
+        RUNTIME_OVERRIDE.unlink(missing_ok=True)
+    else:
+        RUNTIME_OVERRIDE.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(RUNTIME_OVERRIDE, content, 0o644)
+    run("systemctl", "daemon-reload")
+
+
+def select_runtime(selected):
+    runtime_override(None if selected == "python" else (
+        "[Service]\nWorkingDirectory=/opt/camera-path/current/backend-rust\n"
+        "ExecStart=\nExecStart=/opt/camera-path/current/backend-rust/bin/camera-path "
+        "serve --host 127.0.0.1 --port 8000\nTimeoutStopSec=90\n"
+    ))
+
+
+def install_rust_artifact(release, revision, config):
+    key, checksum = config.get("rust_artifact_key", ""), config.get("rust_artifact_sha256", "")
+    if (not key.startswith(f"releases/{revision}/") or not re.fullmatch(r"[a-f0-9]{64}", checksum)):
+        raise ValueError("Rust release requires an exact revision artifact key and SHA-256")
+    archive = release / "rust-release.tar.gz"
+    boto3.client("s3", region_name=config["region"]).download_file(config["backups_bucket"], key, str(archive))
+    with archive.open("rb") as stream:
+        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    if digest != checksum:
+        raise ValueError("Rust artifact SHA-256 mismatch")
+    destination = release / "backend-rust/bin"
+    destination.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(archive, "r:gz") as package:
+        members = package.getmembers()
+        if (len(members) != 2 or {m.name for m in members} != {"camera-path", "manifest.json"}
+                or any(not m.isfile() for m in members)):
+            raise ValueError("Rust artifact must contain exactly two regular files")
+        manifest_file = package.extractfile("manifest.json")
+        if package.getmember("manifest.json").size > 65536:
+            raise ValueError("Oversized artifact manifest")
+        manifest = json.load(manifest_file)
+        expected = {"x86_64": ("x86_64-unknown-linux-gnu", 62), "aarch64": ("aarch64-unknown-linux-gnu", 183)}
+        target, machine = expected.get(platform.machine(), (None, None))
+        if manifest.get("revision") != revision or manifest.get("target") != target or target is None:
+            raise ValueError("Rust artifact revision/target mismatch")
+        executable = destination / "camera-path"
+        if package.getmember("camera-path").size > 512 * 1024 * 1024:
+            raise ValueError("Oversized Rust executable")
+        with package.extractfile("camera-path") as source, executable.open("wb") as output:
+            shutil.copyfileobj(source, output)
+        with executable.open("rb") as stream:
+            header = stream.read(20)
+        if (len(header) < 20 or header[:4] != b"\x7fELF" or header[4:6] != b"\x02\x01"
+                or int.from_bytes(header[18:20], "little") != machine):
+            raise ValueError("Rust artifact is not a compatible Linux ELF executable")
+        executable.chmod(0o750)
+        own(destination)
+        own(executable)
+    archive.unlink()
+    atomic_write(release / ".artifact-sha256", checksum + "\n")
+
+
+def prepare_release(revision, config=None):
     repository = ROOT / "repository.git"
     if not repository.exists():
         as_user("git", "init", "--bare", str(repository), cwd=ROOT)
@@ -204,22 +278,32 @@ def prepare_release(revision):
     if archive.wait(timeout=30) != 0:
         raise RuntimeError("Git archive failed")
     run("chown", "-R", "camera-path:camera-path", str(release))
-    as_user(UV, "sync", "--frozen", "--no-dev", "--extra", "aws", cwd=release / "backend")
+    config = config or {}
+    if runtime(config) == "rust":
+        install_rust_artifact(release, revision, config)
+    else:
+        as_user(UV, "sync", "--frozen", "--no-dev", "--extra", "aws", cwd=release / "backend")
+    atomic_write(release / ".runtime", runtime(config) + "\n")
     return release
 
 
 def deploy(revision, config):
     previous = CURRENT.resolve() if CURRENT.is_symlink() else None
+    selected = runtime(config)
+    old_runtime_override = RUNTIME_OVERRIDE.read_text() if RUNTIME_OVERRIDE.exists() else None
     env = environment(config)
     env_text = "".join(f'{key}="{value}"\n' for key, value in env.items())
     old_env = (ETC / "backend.env").read_text() if (ETC / "backend.env").exists() else None
     if (previous and (previous / ".revision").read_text().strip() == revision
-            and env_text == old_env):
+            and env_text == old_env
+            and ((previous / ".runtime").read_text().strip() if (previous / ".runtime").exists() else "python") == selected
+            and (selected != "rust" or ((previous / ".artifact-sha256").exists()
+                 and (previous / ".artifact-sha256").read_text().strip() == config.get("rust_artifact_sha256")) )):
         wait_healthy()
         wait_https_healthy(config)
         print("Requested revision is already healthy")
         return
-    release = prepare_release(revision)
+    release = prepare_release(revision, config)
     backup_directory = DATA / "backups" / uuid.uuid4().hex
     backup_directory.mkdir(parents=True, mode=0o700)
     service("stop")
@@ -238,10 +322,13 @@ def deploy(revision, config):
     try:
         atomic_write(ETC / "backend.env", env_text, 0o600)
         own(ETC / "backend.env")
-        as_user(str(release / "backend/.venv/bin/alembic"), "upgrade", "head",
-                cwd=release / "backend", env=env)
+        if selected == "rust":
+            as_user(str(release / "backend-rust/bin/camera-path"), "migrate", cwd=release / "backend-rust", env=env)
+        else:
+            as_user(str(release / "backend/.venv/bin/alembic"), "upgrade", "head", cwd=release / "backend", env=env)
         atomic_write(release / ".revision", revision + "\n")
         switch_release(release)
+        select_runtime(selected)
         service("start")
         wait_healthy()
         wait_https_healthy(config)
@@ -255,6 +342,7 @@ def deploy(revision, config):
                 own(ETC / "backend.env")
             else:
                 (ETC / "backend.env").unlink(missing_ok=True)
+            runtime_override(old_runtime_override)
             if previous:
                 switch_release(previous)
                 service("start")

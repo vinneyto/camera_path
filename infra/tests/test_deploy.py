@@ -16,7 +16,7 @@ def load(name, filename):
 d = load("deploy", "scripts/deploy.py")
 
 
-class DeploymentTests(unittest.TestCase):
+class DeploymentFixture(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         root = Path(self.temp.name)
@@ -40,6 +40,7 @@ class DeploymentTests(unittest.TestCase):
             patch.object(d, "ROOT", root), patch.object(d, "DATA", data),
             patch.object(d, "ETC", etc), patch.object(d, "DATABASE", database),
             patch.object(d, "CURRENT", current), patch.object(d, "own"),
+            patch.object(d, "RUNTIME_OVERRIDE", etc / "runtime.conf"),
             patch.object(d, "prepare_release", return_value=self.new),
             patch.object(d, "environment", return_value={"KEY": "new"}),
             patch.object(d.boto3, "client", return_value=Mock()),
@@ -57,6 +58,7 @@ class DeploymentTests(unittest.TestCase):
         with sqlite3.connect(d.DATABASE) as db:
             return db.execute("SELECT value FROM example").fetchone()[0]
 
+class DeploymentTests(DeploymentFixture):
     def test_migration_failure_restores_database_code_and_env_but_fails_deploy(self):
         def migrate(*args, **kwargs):
             self.mutate_database()
@@ -157,3 +159,81 @@ class AuthenticationEnvironmentTests(unittest.TestCase):
         self.assertEqual(env["CAMERA_PATH_AUTH_EMAIL_DELIVERY"], "ses")
         self.assertEqual(env["CAMERA_PATH_AUTH_EMAIL_FROM"], "noreply@example.com")
         self.assertEqual(env["FORWARDED_ALLOW_IPS"], "")
+
+
+class RustRuntimeTests(DeploymentFixture):
+    def test_rust_failure_restores_runtime_override_and_database(self):
+        original = "[Service]\nExecStart=/previous/python\n"
+        d.RUNTIME_OVERRIDE.write_text(original)
+        config = {"region": "us-east-1", "backups_bucket": "backup", "backend_runtime": "rust"}
+        with patch.object(d, "as_user", side_effect=lambda *a, **kw: self.mutate_database()), \
+                patch.object(d, "service"), patch.object(d, "run"), \
+                patch.object(d, "wait_healthy", side_effect=[RuntimeError("bad native health"), None]):
+            with self.assertRaisesRegex(RuntimeError, "previous database and release restored"):
+                d.deploy("b" * 40, config)
+        self.assertEqual(self.value(), "original")
+        self.assertEqual(d.RUNTIME_OVERRIDE.read_text(), original)
+        self.assertEqual(d.CURRENT.resolve(), self.old)
+
+    def test_rust_success_uses_native_migration_and_service_override(self):
+        with patch.object(d, "as_user") as execute, patch.object(d, "service"), \
+                patch.object(d, "run"), patch.object(d, "wait_healthy"):
+            d.deploy("b" * 40, {"region": "us-east-1", "backups_bucket": "backup", "backend_runtime": "rust"})
+        self.assertEqual(execute.call_args.args, (str(self.new / "backend-rust/bin/camera-path"), "migrate"))
+        self.assertIn("backend-rust/bin/camera-path serve", d.RUNTIME_OVERRIDE.read_text())
+
+    def test_bad_rust_checksum_is_rejected_before_extracting_or_running_code(self):
+        config = {"region": "us-east-1", "backups_bucket": "backup", "rust_artifact_key": "releases/" + "b" * 40 + "/backend.tar.gz", "rust_artifact_sha256": "0" * 64}
+        def download(_bucket, _key, target):
+            Path(target).write_bytes(b"untrusted artifact")
+        d.boto3.client.return_value.download_file.side_effect = download
+        with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+            d.install_rust_artifact(self.new, "b" * 40, config)
+        self.assertFalse((self.new / "backend-rust/bin/camera-path").exists())
+
+
+class RustArtifactTests(DeploymentFixture):
+    def package(self, revision, target="x86_64-unknown-linux-gnu", unsafe=False):
+        import hashlib
+        import io
+        import json
+        import shutil
+        import tarfile
+        archive = self.new / "fixture.tar.gz"
+        header = bytearray(32)
+        header[:6] = b"\x7fELF\x02\x01"
+        header[18:20] = (62).to_bytes(2, "little")
+        with tarfile.open(archive, "w:gz") as package:
+            entry = tarfile.TarInfo("camera-path")
+            if unsafe:
+                entry.type = tarfile.SYMTYPE
+                entry.linkname = "/etc/passwd"
+                package.addfile(entry)
+            else:
+                entry.size = len(header)
+                package.addfile(entry, io.BytesIO(header))
+            manifest = json.dumps({"revision": revision, "target": target}).encode()
+            entry = tarfile.TarInfo("manifest.json")
+            entry.size = len(manifest)
+            package.addfile(entry, io.BytesIO(manifest))
+        checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
+        d.boto3.client.return_value.download_file.side_effect = lambda _b, _k, dest: shutil.copyfile(archive, dest)
+        return {"region": "us-east-1", "backups_bucket": "backup", "rust_artifact_key": "releases/" + "b" * 40 + "/backend.tar.gz", "rust_artifact_sha256": checksum}
+
+    def test_verified_native_artifact_is_installed_with_exact_revision_and_architecture(self):
+        config = self.package("b" * 40)
+        with patch.object(d.platform, "machine", return_value="x86_64"):
+            d.install_rust_artifact(self.new, "b" * 40, config)
+        self.assertTrue((self.new / "backend-rust/bin/camera-path").read_bytes().startswith(b"\x7fELF"))
+        self.assertEqual((self.new / ".artifact-sha256").read_text().strip(), config["rust_artifact_sha256"])
+
+    def test_artifact_manifest_for_another_revision_is_rejected(self):
+        config = self.package("c" * 40)
+        with patch.object(d.platform, "machine", return_value="x86_64"):
+            with self.assertRaisesRegex(ValueError, "revision/target mismatch"):
+                d.install_rust_artifact(self.new, "b" * 40, config)
+
+    def test_symlink_artifact_is_rejected_without_extracting_it(self):
+        config = self.package("b" * 40, unsafe=True)
+        with self.assertRaisesRegex(ValueError, "regular files"):
+            d.install_rust_artifact(self.new, "b" * 40, config)

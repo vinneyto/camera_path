@@ -1,0 +1,25 @@
+[package]
+name = "camera-path-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+sea-orm.workspace = true
+sea-orm-migration.workspace = true
+argon2 = "0.5"
+rand = "0.8"
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+jsonwebtoken = "9"
+nalgebra = "0.34"
+indexmap = { version = "2", features = ["serde"] }

@@ -1,4 +1,4 @@
-import { Stack, StackProps, CfnOutput, Tags } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput, Tags, aws_iam as iam } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { createVpc } from './createVpc';
 import { createLibrary, grantLibraryAccess } from './createLibrary';
@@ -21,6 +21,9 @@ export interface BackendStackProps extends StackProps {
   frontendOrigins: string[];
   localAccess?: boolean;
   releaseToken?: string;
+  backendRuntime?: 'python' | 'rust';
+  rustArtifactKey?: string;
+  rustArtifactSha256?: string;
 }
 
 export class BackendStack extends Stack {
@@ -50,6 +53,15 @@ export class BackendStack extends Stack {
       volume_id: volume.ref, repository: 'https://github.com/vinneyto/camera_path.git',
       api_domain: api.apiDomain, public_ip: api.address.ref, tls_email: props.domain.tlsEmail,
     };
+    if (props.backendRuntime === 'rust') {
+      if (!props.rustArtifactKey?.startsWith(`releases/${props.revision}/`) || !/^[a-f0-9]{64}$/.test(props.rustArtifactSha256 ?? '')) {
+        throw new Error('Rust release requires an exact revision artifact key and SHA-256');
+      }
+      config.backend_runtime = 'rust';
+      config.rust_artifact_key = props.rustArtifactKey;
+      config.rust_artifact_sha256 = props.rustArtifactSha256;
+      role.addToPolicy(new iam.PolicyStatement({ actions: ['s3:GetObject'], resources: [backups.arnForObjects('releases/*')] }));
+    }
     configureBackend(instance, config);
     const release = createRelease(this, {
       instance, config, revision: props.revision, releaseToken: props.releaseToken,
