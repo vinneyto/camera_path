@@ -8,15 +8,28 @@ No Docker, AWS account, email account, OpenAI key, browser or running developmen
 ## Run from the repository root
 
 ```sh
-uv sync --frozen --project backend --extra aws
+uv sync --frozen --project backend
 uv sync --frozen --project integration
 integration/.venv/bin/python -m pytest -c integration/pyproject.toml integration/tests \
   --require-api-coverage --api-report=integration/api-coverage.json
 ```
 
-`--extra aws` is needed for the existing backend unit suite's mocked SES test, not for this
-HTTP suite. The autonomous suite runs against local filesystem storage and SMTP.
+These paths assume the repository root, not the `integration/` directory. If your terminal
+is already in `integration/`, use this equivalent sequence:
+
+```sh
+uv sync --frozen --project ../backend
+uv sync --frozen
+.venv/bin/python -m pytest tests --require-api-coverage --api-report=api-coverage.json
+```
+
+The autonomous suite runs against local filesystem storage and SMTP. Install the optional
+backend `--extra aws` only when also running the existing unit suite's mocked SES tests.
 Dependencies must be installed once; the actual test run requires only loopback networking.
+No environment activation is needed: use the explicit Python path shown above. The fast suite
+usually takes about two minutes locally. Verbose output names each running test; the first
+one prepares the database/editor and exercises email login and two real server restarts.
+CI also runs this suite under a pseudo-terminal to cover interactive-terminal startup.
 
 For a focused run, omit `--require-api-coverage` and select a test or module normally.
 The full run creates a JSON operation/status inventory; it deliberately never records request
@@ -35,7 +48,10 @@ from that temporary directory. The checkout's `.env` is never read.
 
 The default administrative bootstrap is **Alembic upgrade + the existing `editor-create` CLI**.
 The CLI receives a generated password over stdin, never a command-line argument. That is the
-only application-specific setup. Test assertions never query SQLite or read backend internals.
+only application-specific setup. The bootstrap CLI runs in a separate session so Python's
+`getpass` cannot read from your terminal instead of the supplied stdin. You should never be
+prompted to enter the test editor's password. Test assertions never query SQLite or read
+backend internals.
 
 The production auth implementation is unchanged: password → persisted challenge → SMTP email
 → HTTP code verification → server-issued token. Codes are read from a test-owned SMTP socket,
@@ -102,5 +118,7 @@ coverage changes. Auth/session tests reuse the same client across genuine backen
 
 Failures leave pytest's temporary `backend.log` for local diagnosis. Services are stopped and
 sockets closed in fixture teardown even after test failures; no application data is modified.
+An interrupted or failed run still writes its partial API report, but does not raise a second
+coverage error about tests that never ran. The full successful run still enforces coverage.
 
 Task: https://docs.google.com/document/d/1CqaWyve6LW1tY7ra4lRSYRnQ8I9SzgVkSo-IgYPUaZM

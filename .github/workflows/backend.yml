@@ -32,10 +32,11 @@ jobs:
       - name: Existing backend unit and in-process integration tests
         working-directory: backend
         run: .venv/bin/python -m pytest -q
-      - name: Autonomous HTTP contract tests
+      - name: Autonomous HTTP contract tests in a real terminal
         env:
           CP_TEST_SLOW_AUTH: ${{ inputs.slow_auth && '1' || '' }}
         run: >-
+          python3 -c 'import os, pty, sys; sys.exit(os.waitstatus_to_exitcode(pty.spawn(sys.argv[1:])))'
           integration/.venv/bin/python -m pytest -c integration/pyproject.toml
           integration/tests --require-api-coverage --api-report=integration/api-coverage.json
       - uses: actions/upload-artifact@v4

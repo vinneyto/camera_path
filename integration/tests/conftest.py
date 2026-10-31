@@ -31,16 +31,17 @@ def pytest_addoption(parser):
     parser.addoption("--require-api-coverage", action="store_true")
 
 
-@pytest.fixture(scope="session", autouse=True)
-def coverage_report(request):
-    COVERAGE.clear()
-    yield
+def pytest_sessionfinish(session, exitstatus):
     report = {
         op: {"method": method, "path": path, "statuses": sorted(COVERAGE.get(op, set()))}
         for method, path, op in OPERATIONS
     }
-    Path(request.config.getoption("--api-report")).write_text(json.dumps(report, indent=2) + "\n")
-    if request.config.getoption("--require-api-coverage"):
+    Path(session.config.getoption("--api-report")).write_text(json.dumps(report, indent=2) + "\n")
+    # A failed/interrupted run has only partial coverage. Preserve the original failure
+    # instead of raising a second exception about scenarios which could not run.
+    if exitstatus != pytest.ExitCode.OK:
+        return
+    if session.config.getoption("--require-api-coverage"):
         # Resend success has a real 60s cooldown; the slow test is opt-in.
         allowed = {"resendEditorCode"}
         missing = [
@@ -48,7 +49,11 @@ def coverage_report(request):
             for op, v in report.items()
             if op not in allowed and not any(200 <= code < 300 for code in v["statuses"])
         ]
-        assert not missing, f"No successful HTTP scenario for: {missing}"
+        if missing:
+            reporter = session.config.pluginmanager.getplugin("terminalreporter")
+            if reporter is not None:
+                reporter.write_line(f"No successful HTTP scenario for: {missing}", red=True)
+            session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
 def record(response):
@@ -152,6 +157,9 @@ class Backend:
             stdout=self.log,
             stderr=self.log,
             timeout=30,
+            # getpass opens /dev/tty even with piped stdin. Detach from the parent's
+            # terminal so the real CLI reads the generated password from stdin.
+            start_new_session=True,
         )
         self.start()
 
