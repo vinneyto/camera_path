@@ -209,7 +209,7 @@ an `ETag` containing its revision, for example `"4"`. Send that value in `If-Mat
 the canonical API; a stale value returns `409`, and an omitted value returns `428`. Legacy aliases
 do not require `If-Match`.
 
-[SPECS.md](../SPECS.md) is the implementation contract for backend behavior. FastAPI routes
+[SPECS.md](SPECS.md) is the implementation contract for backend behavior. FastAPI routes
 and Pydantic models implement its HTTP contract and generate OpenAPI. Keep them aligned with
 the specification and regenerate the checked-in schema artifact after changing the API contract:
 
