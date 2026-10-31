@@ -1,0 +1,254 @@
+[
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/anchors",
+    "operation": "createAnchor",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/anchors/{anchor_id}",
+    "operation": "updateAnchor",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/anchors/{anchor_id}",
+    "operation": "deleteAnchor",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/chat",
+    "operation": "clearProjectChat",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/chat/messages",
+    "operation": "createChatMessage",
+    "status": 200,
+    "response": "<class 'camera_path.models.ChatResult'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/chat/user-messages",
+    "operation": "saveUserChatMessage",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/chat/messages/stream",
+    "operation": "streamChatMessage",
+    "status": 200,
+    "response": "None"
+  },
+  {
+    "method": "POST",
+    "path": "/projects",
+    "operation": "createProject",
+    "status": 201,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "GET",
+    "path": "/projects",
+    "operation": "listProjects",
+    "status": 200,
+    "response": "list[camera_path.models.Project]"
+  },
+  {
+    "method": "GET",
+    "path": "/projects/{project_id}",
+    "operation": "getProject",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}",
+    "operation": "updateProject",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}",
+    "operation": "deleteProject",
+    "status": 204,
+    "response": "None"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/reset",
+    "operation": "resetProject",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/scene-points",
+    "operation": "createScenePoint",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/scene-points/{point_id}",
+    "operation": "updateScenePoint",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/scene-points/{point_id}",
+    "operation": "deleteScenePoint",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/motion",
+    "operation": "updateMotionProfile",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/motion/keyframes",
+    "operation": "createSpeedKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/motion/keyframes/{keyframe_id}",
+    "operation": "updateSpeedKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/motion/keyframes/{keyframe_id}",
+    "operation": "deleteSpeedKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/camera",
+    "operation": "updateCameraTrack",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/camera/keyframes",
+    "operation": "createCameraAimKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/camera/keyframes/{keyframe_id}",
+    "operation": "updateCameraAimKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/camera/keyframes/{keyframe_id}",
+    "operation": "deleteCameraAimKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/camera/orientation",
+    "operation": "updateCameraOrientation",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/camera/orientation/keyframes",
+    "operation": "createCameraOrientationKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
+    "operation": "updateCameraOrientationKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/camera/orientation/keyframes/{keyframe_id}",
+    "operation": "deleteCameraOrientationKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/camera/depth-of-field/keyframes",
+    "operation": "createDepthOfFieldKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "PATCH",
+    "path": "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
+    "operation": "updateDepthOfFieldKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/camera/depth-of-field/keyframes/{keyframe_id}",
+    "operation": "deleteDepthOfFieldKeyframe",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/trajectory",
+    "operation": "clearTrajectory",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/segments/spline",
+    "operation": "createSplineSegment",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "POST",
+    "path": "/projects/{project_id}/segments/spiral",
+    "operation": "createSpiralSegment",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "DELETE",
+    "path": "/projects/{project_id}/segments/{segment_id}",
+    "operation": "deleteTrajectorySegment",
+    "status": 200,
+    "response": "<class 'camera_path.models.Project'>"
+  },
+  {
+    "method": "GET",
+    "path": "/projects/{project_id}/trajectory/compiled",
+    "operation": "getCompiledTrajectory",
+    "status": 200,
+    "response": "<class 'camera_path.models.CompiledTrajectory'>"
+  }
+]

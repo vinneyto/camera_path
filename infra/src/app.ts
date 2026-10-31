@@ -4,6 +4,8 @@ import { getRevision } from './getRevision';
 import { getDomainConfig } from './getDomainConfig';
 import { BackendStack } from './stack';
 
+const selectedRuntime = process.env.CP_BACKEND_RUNTIME ?? 'python';
+if (!['python', 'rust'].includes(selectedRuntime)) throw new Error('Invalid CP_BACKEND_RUNTIME');
 const app = new App();
 const deploymentId = getDeploymentId();
 const revision = getRevision();
@@ -17,4 +19,7 @@ new BackendStack(app, stackName, {
   frontendOrigins: (process.env.CP_FRONTEND_ORIGINS ?? 'http://localhost:3000,http://127.0.0.1:3000').split(','),
   localAccess: process.env.CP_LOCAL_ACCESS === 'true',
   releaseToken: process.env.CP_RELEASE_TOKEN,
+  backendRuntime: selectedRuntime as 'python' | 'rust',
+  rustArtifactKey: process.env.CP_RUST_ARTIFACT_KEY,
+  rustArtifactSha256: process.env.CP_RUST_ARTIFACT_SHA256,
 });

@@ -1,0 +1,182 @@
+{
+  "auth_challenges": [],
+  "auth_rate_limits": [],
+  "editor_sessions": [],
+  "editors": [],
+  "library_assets": [],
+  "projects": [],
+  "user_settings": [],
+  "anchors": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "chat_messages": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "lidar_keyframes": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "motion_profiles": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "orientation_keyframes": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "project_clouds": [
+    [
+      "library_assets",
+      "library_asset_id",
+      "id",
+      "RESTRICT",
+      "NO ACTION"
+    ],
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "scene_points": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "speed_keyframes": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "trajectory_segments": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ],
+  "aim_keyframes": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ],
+    [
+      "scene_points",
+      "aim_scene_point_id",
+      "id",
+      "NO ACTION",
+      "NO ACTION"
+    ],
+    [
+      "scene_points",
+      "project_id",
+      "project_id",
+      "NO ACTION",
+      "NO ACTION"
+    ]
+  ],
+  "camera_tracks": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ],
+    [
+      "scene_points",
+      "default_aim_scene_point_id",
+      "id",
+      "NO ACTION",
+      "NO ACTION"
+    ],
+    [
+      "scene_points",
+      "project_id",
+      "project_id",
+      "NO ACTION",
+      "NO ACTION"
+    ]
+  ],
+  "depth_of_field_keyframes": [
+    [
+      "projects",
+      "project_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ],
+    [
+      "scene_points",
+      "focus_scene_point_id",
+      "id",
+      "NO ACTION",
+      "NO ACTION"
+    ],
+    [
+      "scene_points",
+      "project_id",
+      "project_id",
+      "NO ACTION",
+      "NO ACTION"
+    ]
+  ],
+  "segment_anchors": [
+    [
+      "anchors",
+      "anchor_id",
+      "id",
+      "RESTRICT",
+      "NO ACTION"
+    ],
+    [
+      "trajectory_segments",
+      "segment_id",
+      "id",
+      "CASCADE",
+      "NO ACTION"
+    ]
+  ]
+}

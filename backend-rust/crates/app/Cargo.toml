@@ -1,0 +1,39 @@
+[package]
+name = "camera-path-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+jsonschema = { version = "0.37", default-features = false }
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures-util.workspace = true
+tracing.workspace = true
+axum = "=0.8.9"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+utoipa = { version = "5", features = ["axum_extras"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive", "env"] }
+rpassword = "7"
+dotenvy = "0.15"
+camera-path-core = { path = "../core" }
+camera-path-storage-local = { path = "../storage-local" }
+camera-path-email-smtp = { path = "../email-smtp" }
+camera-path-openai = { path = "../openai" }
+camera-path-storage-s3 = { path = "../storage-s3", optional = true }
+camera-path-queue-rabbitmq = { path = "../queue-rabbitmq", optional = true }
+camera-path-queue-sqs = { path = "../queue-sqs", optional = true }
+camera-path-email-ses = { path = "../email-ses", optional = true }
+
+[features]
+default = ["dev"]
+dev = ["dep:camera-path-queue-rabbitmq"]
+aws = ["dep:camera-path-storage-s3", "dep:camera-path-queue-sqs", "dep:camera-path-email-ses"]
+
+[[bin]]
+name = "camera-path"
+path = "src/main.rs"
