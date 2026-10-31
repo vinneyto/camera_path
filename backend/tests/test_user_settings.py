@@ -10,7 +10,7 @@ from sqlalchemy.schema import CreateTable
 
 from alembic import command
 from camera_path.config import Settings, settings
-from camera_path.persistence.models import UserSettingsRecord
+from camera_path.persistence.records import UserSettingsRecord
 from camera_path.repositories import ProjectRepository
 from camera_path.routers.profile import get_current_user_id
 

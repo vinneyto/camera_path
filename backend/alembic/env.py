@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from camera_path.config import settings
-from camera_path.persistence.models import Base
+from camera_path.persistence.records import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

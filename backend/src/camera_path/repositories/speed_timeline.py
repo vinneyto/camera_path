@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import MotionProfile, SpeedKeyframe
 from camera_path.persistence.enums import Interpolation
-from camera_path.persistence.models import MotionProfileRecord, SpeedKeyframeRecord
+from camera_path.persistence.records import MotionProfileRecord, SpeedKeyframeRecord
 from camera_path.repositories.sync import sync_rows
 
 

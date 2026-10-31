@@ -1,7 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from camera_path.persistence.models import ProjectRecord
+from camera_path.persistence.records import ProjectRecord
 from camera_path.repositories.exceptions import ProjectNotFoundError, RevisionConflictError
 
 

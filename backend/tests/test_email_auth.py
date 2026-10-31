@@ -11,7 +11,7 @@ from test_auth import PASSWORD, SECRET
 
 from camera_path.api import create_app
 from camera_path.config import Settings
-from camera_path.persistence.models import AuthChallengeRecord, EditorSessionRecord
+from camera_path.persistence.records import AuthChallengeRecord, EditorSessionRecord
 from camera_path.repositories import ProjectRepository
 from camera_path.repositories.auth import AuthRepository
 from camera_path.services.auth import AuthService

@@ -4,7 +4,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 
 from camera_path.config import Settings
-from camera_path.persistence.models import LidarKeyframeRecord
+from camera_path.persistence.records import LidarKeyframeRecord
 from camera_path.repositories import ProjectRepository
 
 

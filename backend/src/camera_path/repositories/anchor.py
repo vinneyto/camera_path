@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import Anchor
 from camera_path.persistence.enums import LiftAxis
-from camera_path.persistence.models import AnchorRecord, Vector3
+from camera_path.persistence.records import AnchorRecord, Vector3
 from camera_path.repositories.sync import sync_rows
 
 

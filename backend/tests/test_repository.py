@@ -9,7 +9,7 @@ from camera_path.models import (
     Project,
     ScenePoint,
 )
-from camera_path.persistence.models import AnchorRecord, CameraTrackRecord, Vector3
+from camera_path.persistence.records import AnchorRecord, CameraTrackRecord, Vector3
 from camera_path.repositories import ProjectRepository
 
 

@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from camera_path.persistence.enums import LibraryAssetStatus
-from camera_path.persistence.models import LibraryAssetRecord
+from camera_path.persistence.records import LibraryAssetRecord
 
 
 class LibraryRepository:

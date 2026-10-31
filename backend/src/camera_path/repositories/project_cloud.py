@@ -5,7 +5,7 @@ from uuid import uuid4
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from camera_path.persistence.models import LibraryAssetRecord, ProjectCloudRecord, ProjectRecord
+from camera_path.persistence.records import LibraryAssetRecord, ProjectCloudRecord, ProjectRecord
 from camera_path.repositories.exceptions import ProjectNotFoundError
 
 

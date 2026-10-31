@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import ChatHistoryMessage
 from camera_path.persistence.enums import ChatRole
-from camera_path.persistence.models import ChatMessageRecord
+from camera_path.persistence.records import ChatMessageRecord
 from camera_path.repositories.sync import sync_rows
 
 

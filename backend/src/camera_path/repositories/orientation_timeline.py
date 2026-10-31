@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import CameraOrientationKeyframe, OrientationTimeline
 from camera_path.persistence.enums import Interpolation
-from camera_path.persistence.models import OrientationKeyframeRecord
+from camera_path.persistence.records import OrientationKeyframeRecord
 from camera_path.repositories.camera_track import CameraTrackRepository
 from camera_path.repositories.sync import sync_rows
 

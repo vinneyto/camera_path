@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from alembic import command
 from camera_path.config import settings
 from camera_path.persistence.enums import ChatRole, SegmentKind
-from camera_path.persistence.models import Base, ChatMessageRecord, TrajectorySegmentRecord
+from camera_path.persistence.records import Base, ChatMessageRecord, TrajectorySegmentRecord
 
 
 def test_enum_migration_preserves_old_values_and_constraints(tmp_path, monkeypatch) -> None:

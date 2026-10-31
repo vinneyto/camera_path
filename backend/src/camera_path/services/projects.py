@@ -11,7 +11,7 @@ from camera_path.models import (
     ProjectUpdate,
     new_id,
 )
-from camera_path.persistence.models import ProjectCloudRecord, ProjectRecord
+from camera_path.persistence.records import ProjectCloudRecord, ProjectRecord
 from camera_path.repositories.aim_timeline import AimTimelineRepository
 from camera_path.repositories.anchor import AnchorRepository
 from camera_path.repositories.camera_track import CameraTrackRepository

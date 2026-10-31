@@ -11,7 +11,7 @@ from pwdlib import PasswordHash
 from sqlalchemy import delete
 
 from camera_path.config import Settings
-from camera_path.persistence.models import AuthChallengeRecord
+from camera_path.persistence.records import AuthChallengeRecord
 from camera_path.repositories.auth import EDITOR_ID, AuthRepository
 from camera_path.services.auth_email import AuthEmailError, AuthEmailSender, normalize_email
 
