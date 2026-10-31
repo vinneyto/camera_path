@@ -1,0 +1,46 @@
+name: Backend API integration
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "integration/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+    inputs:
+      slow_auth:
+        description: "Also exercise real email resend cooldown and five-minute expiry"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.3"
+      - run: uv sync --frozen --project backend --extra aws
+      - run: uv sync --frozen --project integration
+      - run: backend/.venv/bin/ruff check integration
+      - run: backend/.venv/bin/ruff format --check integration
+      - name: Existing backend unit and in-process integration tests
+        working-directory: backend
+        run: .venv/bin/python -m pytest -q
+      - name: Autonomous HTTP contract tests
+        env:
+          CP_TEST_SLOW_AUTH: ${{ inputs.slow_auth && '1' || '' }}
+        run: >-
+          integration/.venv/bin/python -m pytest -c integration/pyproject.toml
+          integration/tests --require-api-coverage --api-report=integration/api-coverage.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-api-coverage
+          path: integration/api-coverage.json
+          if-no-files-found: ignore
