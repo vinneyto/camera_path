@@ -2,6 +2,10 @@
 
 Monorepo for an AI-assisted 3D camera-path editor.
 
+The backend implementation contract is [backend/SPECS.md](backend/SPECS.md).
+Update the specification first, then implement the requested requirements in code and verify them with tests.
+The specification describes the current backend contract; roadmaps remain in task documents.
+
 ```text
 camera_path/
 ├── backend/     # FastAPI application, geometry compiler, agent and tests

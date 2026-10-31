@@ -209,8 +209,9 @@ an `ETag` containing its revision, for example `"4"`. Send that value in `If-Mat
 the canonical API; a stale value returns `409`, and an omitted value returns `428`. Legacy aliases
 do not require `If-Match`.
 
-FastAPI route declarations and Pydantic models are the source of truth. Regenerate the checked-in
-schema artifact after changing the API contract:
+[SPECS.md](SPECS.md) is the implementation contract for backend behavior. FastAPI routes
+and Pydantic models implement its HTTP contract and generate OpenAPI. Keep them aligned with
+the specification and regenerate the checked-in schema artifact after changing the API contract:
 
 ```bash
 cd backend
@@ -269,12 +270,11 @@ compiled trajectory and `1` is its end. This keeps keyframes stable if the path 
 The compiled arc-length table adaptively samples every cubic Bézier according to
 `CAMERA_PATH_COMPILE_TOLERANCE`, allowing the client to map distance to each curve's parameter.
 
-Spline and spiral primitives remain separate authoring objects, but compilation performs a global
-smoothing pass over their connected boundaries. Each shared junction keeps its exact anchor while
-the incoming and outgoing Bézier handles receive one common world-space tangent and magnitude.
-Only a small subdivided neighborhood is deformed, with its displacement bounded by
-`CAMERA_PATH_COMPILE_TOLERANCE`; the untouched interior retains the semantic spline or spiral
-shape. Bézier lengths and the adaptive arc-length table are computed after this final smoothing.
+Spline and spiral primitives remain separate authoring objects. Connected spline runs use a
+global C² minimum-jerk quintic planner, then adaptive cubic Bézier approximation controlled by
+`CAMERA_PATH_COMPILE_TOLERANCE`. At a shared boundary with a spiral, the spline planner uses
+the spiral's analytic tangent direction. Analytic spirals are not deformed at these junctions.
+Bézier lengths and the adaptive arc-length table are computed from the resulting curves.
 
 The motion profile has a positive `default_speed` in metres per second. With no keys the camera
 moves at that constant speed. A speed key stores a speed and one transition to the following key:
@@ -315,9 +315,9 @@ quaternion.
 
    ```json
    {
-     "path_position": 0.5,
-     "orientation": {"yaw_deg": 360, "pitch_deg": -10, "roll_deg": 5},
-     "interpolation_to_next": "smoothstep"
+     "yaw_deg": 360,
+     "pitch_deg": -10,
+     "roll_deg": 5
    }
    ```
 
