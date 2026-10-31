@@ -53,6 +53,7 @@ and pull requests; they are not part of the backend requirements.
     - [CompiledTrajectory](#compiledtrajectory)
   - [3.5. Library, cloud and profile resources](#35-library-cloud-and-profile-resources)
     - [LibraryAsset](#libraryasset)
+    - [LibraryAssetFile](#libraryassetfile)
     - [LibraryUpload](#libraryupload)
     - [ProjectCloud](#projectcloud)
     - [UserSettings](#usersettings)
@@ -95,12 +96,21 @@ and pull requests; they are not part of the backend requirements.
     - [LoginRequest](#loginrequest)
     - [ChallengeRequest](#challengerequest)
     - [VerifyRequest](#verifyrequest)
+  - [3.8. Library import messages and dev queue responses](#38-library-import-messages-and-dev-queue-responses)
+    - [LibraryFileSource](#libraryfilesource)
+    - [LibraryImportFile](#libraryimportfile)
+    - [LibraryImportItem](#libraryimportitem)
+    - [LibraryImportMessage](#libraryimportmessage)
+    - [LibraryImportAccepted](#libraryimportaccepted)
+    - [LibraryImportStatus](#libraryimportstatus)
 - [4. HTTP, revisions and errors](#4-http-revisions-and-errors)
 - [5. Projects and scene editing](#5-projects-and-scene-editing)
 - [6. Timelines](#6-timelines)
 - [7. Trajectory compilation](#7-trajectory-compilation)
 - [8. Library and project clouds](#8-library-and-project-clouds)
   - [8.1. Library identity, tags and thumbnails](#81-library-identity-tags-and-thumbnails)
+  - [8.2. Multiple files and external registration](#82-multiple-files-and-external-registration)
+  - [8.3. Message queue boundary and adapters](#83-message-queue-boundary-and-adapters)
 - [9. Authentication and profile](#9-authentication-and-profile)
 - [10. Chat and agent](#10-chat-and-agent)
 - [11. Persistence, configuration and operations](#11-persistence-configuration-and-operations)
@@ -110,6 +120,7 @@ and pull requests; they are not part of the backend requirements.
     - [UserSettingsRecord](#usersettingsrecord--user_settings)
     - [ProjectRecord](#projectrecord--projects)
     - [LibraryAssetRecord](#libraryassetrecord--library_assets)
+    - [LibraryAssetFileRecord](#libraryassetfilerecord--library_asset_files)
     - [LibraryClientIdRecord](#libraryclientidrecord--library_client_ids)
     - [ProjectCloudRecord](#projectcloudrecord--project_clouds)
     - [AnchorRecord](#anchorrecord--anchors)
@@ -128,6 +139,7 @@ and pull requests; they are not part of the backend requirements.
     - [ChatMessageRecord](#chatmessagerecord--chat_messages)
     - [AuthChallengeRecord](#authchallengerecord--auth_challenges)
     - [AuthRateLimitRecord](#authratelimitrecord--auth_rate_limits)
+    - [DevQueueMessageRecord](#devqueuemessagerecord--dev_queue_messages)
   - [11.4. Database constraints and service mapping](#114-database-constraints-and-service-mapping)
   - [11.5. Schema upgrades and identifier lifecycle](#115-schema-upgrades-and-identifier-lifecycle)
   - [11.6. Configuration and operations](#116-configuration-and-operations)
@@ -239,8 +251,10 @@ service/router modules. Models are not SQLAlchemy table mappings.
 
 A **record** is a SQLAlchemy ORM representation of database state, including
 columns, keys, constraints and relationships. Record classes use the `Record`
-suffix and live in `camera_path/persistence/records.py`. Repositories, services,
-Alembic metadata loading and tests import database records from that module.
+suffix. Domain records live in `camera_path/persistence/records.py`; provider-owned
+queue records live under their adapter folder as specified in section 11.3.
+Repositories, services, Alembic metadata loading and tests import records from
+their owning module; domain services do not import dev queue records.
 The complete record catalogue is in [section 11.3](#113-record-catalogue). Repositories
 and services map records to/from serializable models; database records are not
 the public serialization contract.
@@ -589,23 +603,40 @@ Internal aggregate assembled from the separate camera timeline resources.
 
 #### LibraryAsset
 
-Public asset model. Its storage object key is internal persistence metadata, not a public URL field.
+Public asset model. Object keys and producer source locations are internal metadata,
+not public URL fields. The scalar format/size/download fields describe the primary
+file; `files` describes all alternatives belonging to the same logical item.
 
 | Field | Type | Required | Default | Constraints / meaning |
 | --- | --- | --- | --- | --- |
 | `id` | `string` | Yes | — | Server-assigned primary key |
 | `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
 | `name` | `string` | Yes | — | — |
-| `format` | `AssetFormat` | Yes | — | — |
-| `size_bytes` | `integer` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | Primary file format; LIB-13 |
+| `size_bytes` | `integer` | Yes | — | Primary file byte count, not the total; LIB-13 |
 | `status` | `"pending" \| "ready"` | Yes | — | — |
 | `created_at` | `DateTime` | Yes | — | — |
 | `tags` | `Array<string>` | Yes | `[]` | Normalized, bounded and deduplicated; LIB-08 |
 | `thumbnail_url` | `string \| null` | No | `null` | Computed through storage; LIB-09 |
 | `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
+| `primary_file_id` | `string` | Yes | — | ID of exactly one entry in files |
+| `files` | `Array<LibraryAssetFile>` | Yes | — | Nonempty ordered collection; pending URLs are null |
 | `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
 | `default_scale` | `FiniteNumber` | Yes | — | > 0.0; New asset value: 1 |
 | `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
+
+#### LibraryAssetFile
+
+One downloadable representation of an asset. File IDs are stable within their
+asset, not global UUIDs; destination object names are separate UUIDs.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | Asset-scoped ID, 1–64 ASCII letters/digits/underscores/hyphens |
+| `format` | `AssetFormat` | Yes | — | File representation; currently ply or sog |
+| `size_bytes` | `integer` | Yes | — | Positive, at most 2 GiB per file |
+| `sha256` | `string \| null` | No | `null` | Verified lowercase 64-digit hex; null for unhashed legacy/manual files |
+| `download_url` | `string \| null` | No | `null` | Adapter-generated URL; null while the asset is pending |
 
 #### LibraryUpload
 
@@ -614,13 +645,15 @@ Public asset model. Its storage object key is internal persistence metadata, not
 | `id` | `string` | Yes | — | Server primary key |
 | `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
 | `name` | `string` | Yes | — | — |
-| `format` | `AssetFormat` | Yes | — | — |
-| `size_bytes` | `integer` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | Primary file format; LIB-13 |
+| `size_bytes` | `integer` | Yes | — | Primary file byte count, not the total; LIB-13 |
 | `status` | `"pending" \| "ready"` | Yes | — | — |
 | `created_at` | `DateTime` | Yes | — | — |
 | `tags` | `Array<string>` | Yes | `[]` | LIB-08 |
 | `thumbnail_url` | `string \| null` | No | `null` | Null while pending; LIB-09 |
 | `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
+| `primary_file_id` | `string` | Yes | — | ID of exactly one entry in files |
+| `files` | `Array<LibraryAssetFile>` | Yes | — | Nonempty ordered collection; pending URLs are null |
 | `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
 | `default_scale` | `FiniteNumber` | Yes | — | > 0.0 |
 | `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
@@ -957,6 +990,108 @@ FastAPI's emitted HTTPValidationError/ValidationError schema components are not
 application entities. Canonical validation responses use ErrorResponse and FieldError
 as specified in API-05.
 
+### 3.8. Library import messages and dev queue responses
+
+These Pydantic contracts are shared by all message transports. Reject unknown
+fields, unsupported schema versions, null required values and invalid UUIDs.
+`client_id` follows LIB-06; `message_id` is a distinct nonzero canonical UUID.
+No database ID, ready status, timestamp or download URL is producer-controlled.
+
+#### LibraryFileSource
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `storage` | `string` | Yes | — | Configured source alias; reserved library means the destination library |
+| `path` | `string` | Yes | — | Relative object/file path under that source root; 1–1024 characters |
+
+Source aliases resolve through storage adapters: for example `incoming` maps to a
+local directory in dev or a bucket/prefix in AWS. The message never chooses a
+provider driver or supplies credentials. Paths cannot be absolute, URLs, contain
+backslashes, empty/dot/dot-dot components or control characters; path resolution
+must remain within the configured root, including through local symlinks.
+
+#### LibraryImportFile
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | Asset-scoped file ID as in LibraryAssetFile |
+| `format` | `AssetFormat` | Yes | — | ply or sog; source suffix need not determine the declared format |
+| `size_bytes` | `integer` | Yes | — | Positive, at most 2 GiB |
+| `sha256` | `string` | Yes | — | 64 hex digits, normalized to lowercase; verified against actual bytes |
+| `source` | `LibraryFileSource` | Yes | — | Where to read the completed immutable file |
+
+#### LibraryImportItem
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `client_id` | `string (UUID)` | Yes | — | Required stable producer identity for retries |
+| `name` | `string` | Yes | — | Trimmed, nonblank, 1–200 characters |
+| `tags` | `Array<string>` | No | `[]` | LIB-08 normalization and limits |
+| `thumbnail_key` | `string \| null` | No | `null` | Separate existing-library thumbnail reference, LIB-09 |
+| `primary_file_id` | `string` | Yes | — | Must identify exactly one entry in files |
+| `files` | `Array<LibraryImportFile>` | Yes | — | Nonempty ordered list with unique IDs and distinct resolved objects |
+
+The thumbnail is not a model-file entry. Import does not render it or add an
+external-thumbnail transfer API. Initial transform defaults are the ordinary
+library defaults; later defaults edits are not part of import identity.
+
+#### LibraryImportMessage
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `schema_version` | `1` | Yes | — | Exact integer version |
+| `message_id` | `string (UUID)` | Yes | — | Producer message identity, separate from item client_id |
+| `item` | `LibraryImportItem` | Yes | — | One complete logical library item per message |
+
+Example message accepted unchanged by the dev HTTP adapter and as an SQS body:
+
+```json
+{
+  "schema_version": 1,
+  "message_id": "7f75cf76-c36f-41b6-ac4b-3983b9f35451",
+  "item": {
+    "client_id": "443f452a-cb09-4eb5-9087-9643d99c649a",
+    "name": "Oak",
+    "tags": ["tree"],
+    "thumbnail_key": null,
+    "primary_file_id": "sog",
+    "files": [
+      {
+        "id": "sog", "format": "sog", "size_bytes": 2048,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": {"storage": "library", "path": "oak.sog"}
+      },
+      {
+        "id": "ply", "format": "ply", "size_bytes": 4096,
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "source": {"storage": "incoming", "path": "oak.ply"}
+      }
+    ]
+  }
+}
+```
+
+The example hashes/sizes are placeholders for real verified file contents.
+
+#### LibraryImportAccepted
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `message_id` | `string (UUID)` | Yes | — | Accepted producer message ID |
+
+#### LibraryImportStatus
+
+Editor-only dev transport diagnostic; it is not a library resource or a public
+queue-management API.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `message_id` | `string (UUID)` | Yes | — | Accepted producer message ID |
+| `status` | `"queued" \| "processing" \| "succeeded" \| "failed"` | Yes | — | Durable dev message state |
+| `attempts` | `integer` | Yes | — | Number of started processing attempts, initially zero |
+| `asset_id` | `string \| null` | No | `null` | Result server ID on success; may identify a subsequently deleted asset |
+| `error_code` | `string \| null` | No | `null` | Sanitized terminal failure code; no provider details/credentials |
+
 ## 4. HTTP, revisions and errors
 
 **API-01.** The canonical JSON API is under `/api/v1`. Reads return metadata, one
@@ -992,13 +1127,13 @@ include `location`, `message` and `type` in `field_errors`. Main mappings:
 | --- | --- |
 | 401 | `http_error`: missing, invalid or revoked session; `WWW-Authenticate: Bearer` when authentication is required |
 | 404 | `project_not_found` for a project; `not_found` for other missing resources |
-| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`, `library_client_id_conflict`, `library_client_id_deleted` |
-| 413 | `http_error`: local upload exceeds its declared size |
+| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`, `library_client_id_conflict`, `library_client_id_deleted`; dev submission also uses `queue_message_id_conflict` |
+| 413 | `http_error`: local upload exceeds its declared size; dev JSON submission uses `import_message_too_large` |
 | 422 | `validation_error`, `invalid_geometry`; some explicit resource checks return `http_error` |
 | 428 | `if_match_required` |
 | 429 | `http_error`: authentication rate limit / resend cooldown, with `Retry-After` |
 | 502 | `storage_unavailable` for storage adapter errors; `upstream_error` for HTTP-level upstream failures |
-| 503 | `agent_unavailable` for HTTP 503; also used when authentication configuration or email delivery is unavailable |
+| 503 | `agent_unavailable` for HTTP 503; also used when authentication configuration or email delivery is unavailable; dev submission uses `queue_unavailable` if durable acceptance fails |
 
 Some current error codes have broader uses than their historical names suggest:
 `agent_unavailable`, for example, does not prove that an error concerns the agent.
@@ -1150,7 +1285,8 @@ read.
 → ready. Creation accepts `name` (1–200 characters, nonblank after trimming),
 `size_bytes`, `format` (`ply` by default; `sog` is also supported), and optional
 client ID, thumbnail reference and tags as defined in LibraryUploadCreate. It creates a pending asset with a
-server-generated `<id>.<format>` key. The current declared-size
+server-generated `<id>.<format>` key and a single file entry with ID `main`,
+which is also the primary file. The current declared-size
 limit is `2,147,483,648` bytes (2 GiB); the size must be positive. Pending assets
 are excluded from public ready-asset list/get operations and cannot become project
 instances.
@@ -1164,7 +1300,9 @@ If a thumbnail is referenced, its existence and thumbnail constraints in LIB-09
 are also validated before publication. A failed check leaves the item pending.
 
 **LIB-03. Storage.** Domain operations use a common LibraryStorage contract:
-upload/download URLs, inspection/finalization and staged deletion. The adapter
+upload/download URLs, inspection/finalization, source resolution/streaming import
+and staged deletion. Transfer and URL generation remain behind storage interfaces;
+queue selection does not choose the storage provider. The adapter
 computes URLs on reads; the database stores object keys rather than temporary URLs.
 
 - Local: an editor-only streaming PUT writes a temporary file. Exceeding the
@@ -1178,7 +1316,7 @@ computes URLs on reads; the database stores object keys rather than temporary UR
   recover completion.
 
 **LIB-04. Deletion.** Single/bulk delete validate the full selection before making
-changes; duplicate bulk IDs are deduplicated. They remove asset records, model bytes,
+changes; duplicate bulk IDs are deduplicated. They remove asset/file records, all model bytes,
 owned thumbnail bytes and all associated cloud instances. They retain the minimal
 client-ID tombstone in LIB-07, not a publicly readable asset. Each affected project's
 revision increments once per batch; other project resources remain and cloud order
@@ -1237,11 +1375,13 @@ successful request's display spelling/order in the stored result.
 
 Upload preparation compares the request descriptor, not unknown future bytes.
 It does not prove equal model content merely because names and sizes match.
-Registration of an already-produced result also compares verified model SHA-256,
-format/size and normalized metadata; equal size alone cannot establish idempotence.
+Registration of an already-produced result compares the complete verified file
+collection, primary-file ID and normalized metadata as defined in LIB-16; equal
+size alone cannot establish idempotence.
 A conflicting digest must never replace a ready model. All result-registration
-paths use the same asset record and identity/conflict policy. An importer does
-not write the database directly. File discovery, transport and content verification
+paths use the same asset record and identity/conflict policy. Transport adapters
+call the monolith's import handler through the queue contract; they do not write
+library records directly. File discovery, transport and content verification
 are separate producer/import boundaries, not upload-reservation behavior.
 
 **LIB-08. Tags.** Tags are metadata on the shared asset, not on a project cloud.
@@ -1303,9 +1443,10 @@ LIB-06; invalid values return `422`, unknown/pending/deleted values return
 server-ID route. The list endpoint retains its ordering and ready-only behavior;
 it gains the response fields but no pagination/filter semantic change.
 
-Editor authentication and library file limits apply to manual and external
-registration alike; client IDs and thumbnail keys are not authorization. The
-metadata API does not grant anonymous import access or issue service credentials.
+Editor authentication and library file limits apply to manual registration and the
+dev import endpoint; AWS queue access is governed by IAM and QUEUE-04. Client IDs
+and thumbnail keys are not authorization. The metadata API does not grant anonymous
+import access or issue service credentials.
 Existing clients sending only name/size/format still receive a fresh pending
 item with a non-null model upload URL and can PUT/complete as before. OpenAPI and
 frontend DTO/client code must agree with these fields, operation IDs and routes.
@@ -1350,6 +1491,178 @@ and its `client_id` (as `library_client_id` in the event envelope), persists the
 event with the successful ready transition and delivers it only after commit.
 Idempotent replays must not create a second logical creation event.
 
+### 8.2. Multiple files and external registration
+
+**LIB-13. File collection and primary representation.** One library item has one
+or more independently downloadable model files and exactly one primary file.
+Formats may repeat; file IDs, not formats, identify entries. Preserve message
+order in `files`; `primary_file_id` explicitly selects the primary entry. This
+does not create several library items or several project instances.
+
+LibraryAsset and LibraryUpload retain their existing scalar `format`, `size_bytes`
+and `download_url`, always mirroring the primary file. Pending downloads are null.
+ProjectCloud also resolves its format/download URL from the current asset primary
+file. Existing clients/manual uploads remain usable without selecting file variants.
+Public asset reads expose every ready file via adapter-generated URLs. Local
+`GET /api/v1/library/{asset_id}/files/{file_id}/content` serves that file only for
+a ready asset; absent/deleted/pending resources return `404`. The existing content
+route remains a primary-file alias and its URL shape is preserved for primary
+downloads. S3 URLs target the corresponding private object.
+Source locations never appear in public responses. The ready file collection,
+primary choice and bytes are immutable; adding/replacing files requires a new item.
+No new multi-file browser upload/editor is implied by the message import contract.
+
+**LIB-14. Import sources and destination naming.** An import message contains the
+item metadata and the complete file list, not a pointer to another JSON manifest.
+Producers finish all file/thumbnail writes before enqueueing it. The import handler
+inside the monolith resolves each source through a provider-neutral storage
+interface. `library` means the configured destination root/bucket prefix. Other
+aliases identify explicitly configured read-only source roots; unconfigured aliases
+are invalid. An alias may point to local storage or S3 without changing the JSON
+or handler. A local source is a path on the backend host/shared volume, not a path
+on the HTTP caller's machine. Sending JSON does not upload model bytes.
+
+If resolution identifies an object already under the destination library root,
+inspect and adopt its existing key without copying or renaming the object. This
+also applies when a different alias resolves to the same physical root/key. It
+must be unowned, in the ready model namespace (not `_uploads/`, staging or
+`thumbnails/`) and not referenced by another asset, primary alias or file entry.
+Distinct file entries cannot resolve to the same object. A filename suffix must
+match the declared format for adopted objects so existing serving contracts hold.
+
+Otherwise copy/stream the file into library storage under a new server-generated
+`<UUIDv4>.<format>` key, independent of the original basename and asset/file IDs.
+Do not overwrite a destination or remove/rename the producer's original. Transfers
+are bounded streaming operations, not whole-file reads into memory. Use staging
+and verify the exact byte count, SHA-256 and LIB-02 signature before finalization.
+S3 ETags are not a replacement for SHA-256. Thumbnail checks remain LIB-09.
+Apply the current 2 GiB limit per model file; primary `size_bytes` is not an
+aggregate quota. No global file-count or total-library quota is added here.
+
+**LIB-15. Atomic publication and recovery.** Publish one ready asset, its file
+rows and its client-ID reservation together only after every source/file and any
+thumbnail passes validation. An import does not expose a pending/partially ready
+item, attach it to projects, schedule generation or change project revisions.
+Do not hold a database writer transaction while copying gigabytes. Concurrent
+consumers may stage independently, but a transactional reservation/uniqueness check
+selects at most one winner; losing attempts clean up only their own staged bytes.
+
+Validation/commit failure leaves no visible item and does not delete or rewrite
+adopted objects or external sources. Newly copied objects from the failed attempt
+are removed; interrupted staging is tracked/recognizable and cleaned on recovery
+only after checking no committed file owns it. Never clean up another attempt's
+winning file. Database rollback does not claim to undo a completed storage copy.
+After commit, all registered model objects and the owned thumbnail enter the
+normal library deletion lifecycle, including adopted objects; external originals
+remain producer-owned. Deletion stages the full file set and restores it on SQL
+failure. An enabled creation-event mechanism follows LIB-12 exactly once logically;
+import itself does not add a browser event stream or a generation-job outbox.
+
+**LIB-16. Import identity and failure policy.** The logical descriptor comprises
+normalized name/tags/thumbnail key, ordered file IDs/formats/sizes/verified hashes
+and the primary-file ID. Source aliases/paths, destination UUID keys, transport
+message IDs and later transform defaults are excluded. Persist the accepted
+descriptor on the live client-ID reservation so it survives backend restart;
+deletion clears it while retaining the minimal client-ID tombstone.
+
+An equal ready replay returns the same asset without copying, rehashing missing
+producer sources or emitting another creation event. Another message ID with the
+same descriptor/client ID has the same result. A different descriptor conflicts
+with `library_client_id_conflict`; a tombstoned ID with
+`library_client_id_deleted`. Neither overwrites or resurrects an item. A client ID
+reserved by a pending manual upload conflicts rather than being taken over.
+For a ready legacy/manual asset without an import descriptor, verify all its
+stored hashes when an explicit import requests that client ID; accept only an
+equal collection/metadata, then save the verified descriptor. A mismatch changes
+neither its descriptor nor bytes/defaults.
+
+Malformed messages, invalid namespaces/formats/hashes, conflicting IDs and proven
+missing sources are terminal. Missing objects use `library_import_source_missing`;
+invalid file contents use `library_import_invalid_file`; disallowed/unconfigured
+sources use `library_import_invalid_source`; an object owned by another item uses
+`library_import_object_conflict`. Temporary storage/DB/queue outages
+retry with bounded backoff and use `library_import_unavailable` if exhausted.
+Never interpret inability to inspect a source as evidence that it is absent.
+
+### 8.3. Message queue boundary and adapters
+
+**QUEUE-01. Contract and composition.** Define an asynchronous `MessageQueue`
+contract in `services/message_queue.py`, independent of FastAPI, boto3, SQS,
+RabbitMQ and dev transport classes. The core import handler receives validated
+LibraryImportMessage data and uses the same library/storage operations regardless
+of delivery engine. Opaque receipt handles and attempt counts do not contain SDK
+objects. The contract provides `receive` (bounded wait), `ack`, `retry` (delay),
+`reject` (durably retain a terminal failure) and `extend_lease` for long transfers.
+Each delivery supplies its message, receipt and attempt count. `ack` also accepts
+the successful server asset ID for adapter diagnostics; `reject` accepts a
+sanitized failure code. Adapter parsing
+also retains malformed broker payloads as failures without invoking domain logic.
+
+Implement dev transport in `dev/` and SQS transport in `aws/`. The composition root
+selects/injects the queue and storage adapters from independent configuration;
+domain services do not branch on engine names or import provider SDKs. The
+consumer runs in the monolith's application lifespan, not a separate importer
+calling its HTTP API. Start/stop it cleanly; shutdown leaves unfinished messages
+recoverable. Ordinary library/HTTP use works with message consumption disabled.
+RabbitMQ, gRPC and a public production import endpoint are not required transports.
+
+**QUEUE-02. Delivery semantics.** Assume at-least-once delivery without ordering.
+Ack only after database commit or an equal already-committed replay. If commit
+succeeds but ack fails, a later delivery converges on the same asset. Refresh the
+lease during a long copy; a lost lease may cause concurrent delivery but cannot
+bypass LIB-16. Crash/expired lease makes unfinished work available again.
+Temporary failures use exponential delays starting at 1 second and capped at 60
+seconds, up to the configured attempt limit (default 5); terminal/exhausted
+failures are durably quarantined before the delivery is removed. Retries do not
+block unrelated messages. Log message/client IDs, attempt and sanitized failure
+code, without credentials, receipts or source contents.
+
+**QUEUE-03. Dev HTTP transport.** With `message_queue=dev` in development only,
+mount `POST /api/v1/dev/library-imports` (`enqueueLibraryImport`) and
+`GET /api/v1/dev/library-imports/{message_id}` (`getLibraryImportStatus`). Both
+require the existing editor session, including the normal email-code login when
+enabled. Neither uses a project ETag. JSON files are submitted as their raw
+`application/json` body, for example with `curl --data-binary @item.json`; no
+multipart wrapper or client-side filesystem access is implied.
+
+POST enforces a 256 KiB UTF-8 body limit (`413 import_message_too_large`), parses
+the shared schema (`422 validation_error`) and durably enqueues before returning
+`202 LibraryImportAccepted`. If durable enqueue fails, return `503 queue_unavailable`
+without claiming acceptance. It does not synchronously copy files or promise that
+the item is already ready. Canonicalize UUIDs/name/tags/hex and serialize the
+validated message as sorted-key, compact UTF-8 JSON for body identity. An equal
+`message_id`/body returns the same `202` without resetting status/attempts; a
+different body returns `409 queue_message_id_conflict`. Full item/ownership/content
+checks run asynchronously and surface in status. A source/config rejection is
+not disguised as successful registration.
+
+GET returns `200 LibraryImportStatus` for a known message, `404 not_found` for an
+unknown ID and `422` for an invalid UUID. State flows queued → processing →
+succeeded/failed, with processing → queued on a retry. A terminal failure requires
+a new message ID to resubmit a corrected payload; item client_id stays stable when
+the logical item is unchanged. Persist message bodies, leases, attempts/results
+in the dev queue, recover after restart and retain failed messages for diagnosis.
+This transport uses no external broker; it is not an in-memory background-task
+shortcut. It is absent (`404`) with `none`/`sqs` or outside development. Queue
+persistence details stay in `dev/`; the import handler does not read those tables.
+
+**QUEUE-04. AWS SQS transport.** Poll a configured SQS Standard queue. Each
+MessageBody is exactly the same LibraryImportMessage JSON accepted in dev;
+SQS attributes/receipt are adapter details. S3 ObjectCreated notifications and
+JSON-manifest-pointer envelopes are not accepted as that message schema. Producers
+send the descriptor after all referenced objects are complete. No SNS service or
+S3 notification rule is required by this contract.
+
+Use long polling, explicit DeleteMessage after successful processing, and
+ChangeMessageVisibility for lease refresh/retry. Forward terminal/exhausted
+messages to a configured failure queue with sanitized error attributes before
+deleting the original. A crash between forwarding and deletion may duplicate the
+failure record; it must not lose the payload. AWS authentication uses the standard
+credential chain/EC2 role and IAM permissions scoped to the configured queues and
+source/destination prefixes, not editor JWTs or a new HTTP import endpoint.
+Queue provisioning, IAM changes, live deployment and a real AWS acceptance run
+are operational work; adapter contract tests do not claim those actions occurred.
+
 **CLOUD-01.** A ready asset can be attached multiple times to one or more projects.
 Each operation creates a separate instance ID, copies current asset defaults,
 accepts finite translation, sets visible=true and appends to the ordered list.
@@ -1364,8 +1677,9 @@ the backend boundary.
 
 ## 9. Authentication and profile
 
-**AUTH-01.** Public GET operations read shared data; `GET /auth/session` requires
-Bearer authentication. Business writes, local upload, profile update and logout
+**AUTH-01.** Public GET operations read shared data; `GET /auth/session` and the
+dev import-status operation in QUEUE-03 require Bearer authentication.
+Business writes, local upload, dev import submission, profile update and logout
 require a valid editor session. Login/verify/resend do not require a JWT. The single
 editor is created/replaced using `editor-create` with an email and a 12–1024-character
 password; there is no public registration. Passwords are stored as Argon2 hashes.
@@ -1480,7 +1794,8 @@ history with undo/redo is no longer the active persistence model.
 | --- | --- |
 | Project / scene | `projects`, `anchors`, `scene_points`, `trajectory_segments`, `segment_anchors` |
 | Controls | `motion_profiles`, `speed_keyframes`, `camera_tracks`, `aim_keyframes`, `orientation_keyframes`, `depth_of_field_keyframes`, `lidar_keyframes` |
-| Library | `library_assets`, `library_client_ids`, `project_clouds` |
+| Library | `library_assets`, `library_asset_files`, `library_client_ids`, `project_clouds` |
+| Dev transport | `dev_queue_messages` (dev adapter-owned durable inbox, not a domain queue API) |
 | Chat / profile | `chat_messages`, `user_settings` |
 | Auth | `editors`, `editor_sessions`, `auth_challenges`, `auth_rate_limits` |
 
@@ -1499,8 +1814,10 @@ data; a record describes persisted columns and their database constraints. A mod
 field/default must not be assumed to create a database column/default or CHECK.
 
 - `Base` is the SQLAlchemy `DeclarativeBase` and owns `Base.metadata`; it is not
-  itself a table. All concrete records below are mapped in
-  [persistence/records.py](src/camera_path/persistence/records.py).
+  itself a table. Domain records are mapped in
+  [persistence/records.py](src/camera_path/persistence/records.py). The dev queue
+  record is owned by `dev/records.py`, uses the same migrated metadata/database
+  and is never imported by the core handler. Composition/Alembic register it.
 - `Vector3` is a frozen `(x, y, z)` dataclass used by SQLAlchemy composites. It has
   no table or JSON column. `as_tuple()` returns the coordinates in that order.
 - `ProjectChildRecord` is an unmapped mixin adding non-null `project_id`, its
@@ -1590,8 +1907,11 @@ Project identity, display name and optimistic-concurrency revision; scene data l
 
 #### LibraryAssetRecord — `library_assets`
 
-Shared file metadata and transform defaults, including pending uploads. Binary
-model content lives in storage, not in this row. The immutable client ID associates
+Shared item metadata and transform defaults, including pending uploads. Binary
+model content lives in storage, not in this row. The existing format/object_key/
+size_bytes columns mirror the primary LibraryAssetFileRecord for compatibility;
+services maintain this invariant transactionally, not as independent writable data.
+The immutable client ID associates
 the item with its durable reservation and with externally produced results.
 
 | Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
@@ -1620,6 +1940,31 @@ the item with its durable reservation and with externally produced results.
 - Foreign key `fk_library_assets_client_id`: `(client_id) → library_client_ids(client_id)`; ON DELETE RESTRICT.
 - CHECK `ck_library_assets_status`: `status IN ('pending', 'ready')`.
 
+#### LibraryAssetFileRecord — `library_asset_files`
+
+Ordered representation owned by a library asset. Relative keys refer only to
+library storage, never to external producer sources.
+
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| `asset_id` | `TEXT` | No | — | — | Owning library asset. |
+| `id` | `TEXT` | No | — | — | Asset-scoped file ID; manual/legacy single file uses main. |
+| `position` | `INTEGER` | No | — | — | Zero-based order within the asset. |
+| `is_primary` | `BOOLEAN` | No | `False` | `0` | Exactly one per asset, enforced additionally by service validation. |
+| `format` | `TEXT` | No | — | — | Service-validated ply/sog. |
+| `object_key` | `TEXT` | No | — | — | Owned, unique relative library key. |
+| `size_bytes` | `BIGINT` | No | — | — | Declared/verified size. |
+| `sha256` | `TEXT` | Yes | — | — | Verified lowercase digest; null for unhashed legacy/manual data. |
+
+- Primary key: `(asset_id, id)`.
+- FK `fk_library_asset_files_asset`: asset_id → library_assets(id), ON DELETE CASCADE.
+- UNIQUE `uq_library_asset_files_object_key`: `(object_key)`.
+- UNIQUE `uq_library_asset_files_position`: `(asset_id, position)`.
+- Partial UNIQUE index `uq_library_asset_files_primary`: `(asset_id)` WHERE is_primary = 1.
+- Exactly one primary, contiguous positions, valid IDs/size/hash, primary-column
+  mirroring and non-sharing with thumbnail keys are transactional service invariants.
+  A pending/manual primary may mirror the owner's object_key but not another asset's.
+
 #### LibraryClientIdRecord — `library_client_ids`
 
 Durable reservation for one logical library item. A live reservation is associated
@@ -1630,6 +1975,7 @@ late retry from recreating a deleted item.
 | --- | --- | --- | --- | --- | --- |
 | `client_id` | `TEXT` | No | — | — | Canonical UUID supplied by the registration transaction. |
 | `deleted_at` | `DATETIME` | Yes | — | — | Null while live; deletion timestamp for a retained tombstone. |
+| `import_descriptor` | `JSON` | Yes | — | — | Verified immutable logical descriptor (LIB-16); null until an import is committed/verified. |
 
 - Primary key: `client_id`.
 - There are no foreign keys, enum columns, additional CHECK/UNIQUE constraints or
@@ -1965,6 +2311,36 @@ A durable fixed-window authentication counter; expiry and counter updates are su
 
 - Primary key: `key`.
 
+#### DevQueueMessageRecord — `dev_queue_messages`
+
+Dev adapter-owned persistent HTTP inbox. These transport rows are not library
+items, generation jobs or a production queue engine. They exist in migrated
+metadata but are accessed only by the dev adapter/composition.
+
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| `message_id` | `TEXT` | No | — | — | Canonical producer UUID, primary identity. |
+| `body` | `JSON` | No | — | — | Validated normalized LibraryImportMessage, not raw credentials/SDK data. |
+| `body_sha256` | `TEXT` | No | — | — | SHA-256 of canonical body serialization, QUEUE-03. |
+| `status` | `TEXT` | No | `queued` | `'queued'` | queued / processing / succeeded / failed. |
+| `attempts` | `INTEGER` | No | `0` | `0` | Started processing attempts. |
+| `available_at` | `DATETIME` | No | — | — | Earliest retry/first receive time. |
+| `lease_token` | `TEXT` | Yes | — | — | Opaque current receipt; all acknowledgements/updates require it. |
+| `lease_until` | `DATETIME` | Yes | — | — | Expiry enabling recovery/redelivery. |
+| `asset_id` | `TEXT` | Yes | — | — | Historical success ID; not an FK, so deletion preserves diagnostics. |
+| `error_code` | `TEXT` | Yes | — | — | Sanitized terminal failure code. |
+| `created_at` | `DATETIME` | No | — | — | Acceptance time. |
+| `updated_at` | `DATETIME` | No | — | — | Last durable state transition. |
+
+- Primary key: `message_id`; no library/project foreign keys.
+- CHECK `ck_dev_queue_messages_status`: status IN ('queued', 'processing', 'succeeded', 'failed').
+- CHECK `ck_dev_queue_messages_attempts`: attempts >= 0.
+- Nonunique index `ix_dev_queue_messages_ready`: `(status, available_at)`.
+- Nonunique index `ix_dev_queue_messages_lease`: `(status, lease_until)`.
+- Claim/increment/lease assignment uses an atomic transaction/CAS. A stale receipt
+  cannot acknowledge, reject or reschedule a newer delivery. A succeeded/failed
+  row has no active lease; restarting never resets terminal state.
+
 ### 11.4. Database constraints and service mapping
 
 The catalogue deliberately distinguishes enforced database constraints from
@@ -2005,14 +2381,16 @@ asset with one durable reservation. It supplies lookup uniqueness/indexing; no
 duplicate nonunique client-ID index is needed. Canonical UUID syntax, normalized
 tag contents and thumbnail ownership are service validations.
 
-The asset's immutable `name`, `format`, `size_bytes`, `thumbnail_key` and `tags`
-columns reconstruct the registration descriptor. Transform defaults are excluded
-from identity. The library metadata schema has no model-content checksum column
-or generation-job foreign key.
+The asset's immutable `name`, primary `format`/`size_bytes`, `thumbnail_key` and
+`tags` reconstruct the manual-upload creation descriptor. Import identity uses
+the durable verified `import_descriptor` plus file rows/hashes (LIB-16). Transform
+defaults and producer source locations are excluded from logical identity. There
+is no generation-job foreign key in the library records.
 
 The live ledger row and asset are created together in one transaction. Service
 invariants require exactly one asset for a live reservation, and no asset when
-`deleted_at` is non-null. Asset deletion and setting `deleted_at` commit together;
+`deleted_at` is non-null. Asset deletion, setting `deleted_at` and clearing any
+import_descriptor commit together;
 the ledger row is retained and cannot be reused or removed by normal library
 operations. These cardinality/lifecycle rules are transactional service invariants,
 not a claim that the one-direction FK enforces them by itself.
@@ -2024,6 +2402,21 @@ It preserves model bytes, server IDs, timestamps, defaults, clouds and revisions
 and does not invent tombstones for previously deleted assets. Fresh creation and
 upgrade reach the record schema in section 11.3. The ledger is not an externally
 callable event queue.
+
+**STORE-05. File-collection and queue schema upgrades.** Create a single `main`
+file row for every existing pending/ready asset using its current object key,
+format/size, position 0 and is_primary=true. Set sha256=null without reading/hashing
+legacy bytes. Preserve all keys, URLs, server/client IDs, statuses, timestamps,
+defaults, thumbnails, cloud references/order and project revisions. Backfill
+client IDs/ledger as in STORE-04 when upgrading from the older base schema.
+Existing ledgers gain nullable import_descriptor without invented history.
+
+Create the empty dev inbox without enqueueing historical assets or changing
+normal library operation. Fresh databases and populated Alembic upgrades reach
+the same schema. Migration/repeated upgrade performs no storage copy, rename,
+AWS provisioning or object deletion. Downgrade must not silently discard extra
+file references or an active inbox; refuse a lossy downgrade unless an explicit
+backup/data-conversion procedure has made it safe.
 
 ### 11.6. Configuration and operations
 
@@ -2045,6 +2438,24 @@ are not committed.
 | `CAMERA_PATH_AUTH_EMAIL_FROM`, `CAMERA_PATH_AUTH_SMTP_HOST`, `CAMERA_PATH_AUTH_SMTP_PORT` | Sender / loopback SMTP host / default port 1025 |
 | `OPENAI_API_KEY`, `CAMERA_PATH_OPENAI_MODEL` | Optional chat key / default model `gpt-5.6-luna` |
 | `CAMERA_PATH_DEV_USER_ID` | Shared profile key, default `dev-user` |
+| `CAMERA_PATH_MESSAGE_QUEUE` | none / dev / sqs; default none; dev requires development |
+| `CAMERA_PATH_MESSAGE_QUEUE_MAX_ATTEMPTS` | Positive attempt limit; default 5 |
+| `CAMERA_PATH_MESSAGE_QUEUE_LEASE_SECONDS` | Initial receive lease; default 60, refreshed before expiry |
+| `CAMERA_PATH_LIBRARY_IMPORT_SOURCES` | JSON source-alias map; default {}; library is reserved for the destination |
+| `CAMERA_PATH_AWS_SQS_QUEUE_URL`, `CAMERA_PATH_AWS_SQS_FAILURE_QUEUE_URL` | Required distinct URLs with sqs; not used by dev/none |
+
+Import source configuration is adapter configuration, not a core branch on
+drivers. Example dev map: `{"incoming":{"driver":"local","root":"/data/incoming"}}`;
+AWS map: `{"incoming":{"driver":"s3","bucket":"producer-output","prefix":"ready/"}}`.
+Aliases use 1–64 ASCII letters/digits/underscores/hyphens, excluding reserved
+`library`; an unknown driver, incomplete root/bucket configuration or incompatible
+queue/environment fails configuration validation. Local roots are backend-host
+directories; S3 identities/credentials stay in adapter configuration. Disabled
+queue mode neither requires sources/AWS credentials nor starts a consumer.
+SQS polling waits up to 20 seconds, checks payloads against the same 256 KiB
+application limit and validates lease duration against provider bounds. Queue
+unavailability is reported/retried without hanging unrelated HTTP requests or
+changing `/health` into a readiness guarantee.
 
 The AWS adapter uses the configured region/profile or standard credentials chain;
 specific credentials are not part of the specification. S3/SMTP/SES are selected
@@ -2067,7 +2478,8 @@ a production deployment.
 
 ## 12. HTTP operation inventory
 
-**HTTP-01.** The table defines the 71 canonical HTTP operations.
+**HTTP-01.** The table defines 71 always-mounted canonical HTTP operations plus
+two dev-adapter operations mounted only under QUEUE-03.
 Every path includes `/api/v1`. Request/response DTO names correspond to schemas in
 [openapi.json](openapi.json). The OpenAPI artifact and generated frontend clients
 must agree with this inventory, including field requirements/nullability, exact
@@ -2085,6 +2497,8 @@ successful statuses listed here.
 | `GET` | `/api/v1/library` | — | 200 → LibraryAsset[] |
 | `POST` | `/api/v1/library/bulk-delete` | LibraryAssetsDelete | 204 → — |
 | `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 new / 200 replay → LibraryUpload |
+| `POST` | `/api/v1/dev/library-imports` | LibraryImportMessage (dev adapter only, editor) | 202 → LibraryImportAccepted |
+| `GET` | `/api/v1/dev/library-imports/{message_id}` | — (dev adapter only, editor) | 200 → LibraryImportStatus |
 | `GET` | `/api/v1/library/by-client-id/{client_id}` | — | 200 → LibraryAsset |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
@@ -2157,7 +2571,8 @@ successful statuses listed here.
 | `GET /docs` | Scalar HTML |
 | `GET /api/v1/openapi.json` | Generated OpenAPI |
 | `PUT /api/v1/library/{asset_id}/content` | Local adapter only, editor, raw bytes → `204`; no project If-Match |
-| `GET /api/v1/library/{asset_id}/content` | Local adapter only, public ready bytes |
+| `GET /api/v1/library/{asset_id}/content` | Local adapter only, public ready primary-file bytes |
+| `GET /api/v1/library/{asset_id}/files/{file_id}/content` | Local adapter only, public ready bytes for the selected owned representation; LIB-13 |
 | `GET /api/v1/library/{asset_id}/thumbnail` | Local adapter only, public ready raster image; LIB-09 |
 
 The unversioned project API is mounted from `routers/api.py`. It provides compatible
@@ -2179,6 +2594,9 @@ tests (paths relative to `backend/tests/`):
 | GEOM-01–06 | Endpoints, C² spline, tangent constraints, unchanged spirals, adaptive approximation, distance/time | `test_geometry.py`, `test_trajectory_planner.py` |
 | LIB-01–05, CLOUD-01–02 | Real small PLY/SOG bytes, complete/retry, instances/defaults/order, delete rollback | `test_library.py`, `test_s3_library.py`, `test_project_clouds.py`, `test_library_delete.py`, `test_library_bulk_delete.py` |
 | LIB-06–12, STORE-04 | Client IDs, replay/conflict/concurrency, records/schema upgrade, tags, thumbnail ownership/URLs, lookup and legacy compatibility | Library HTTP scenarios in `integration/tests/test_library.py`, populated-database upgrade checks and storage-adapter checks |
+| LIB-13–16, STORE-05 | Multiple formats/primary aliases; adopted vs copied files; size/hash/signature failures; all-file atomicity; migrated main entry; deletion/rollback; replay/conflict/tombstone/races | Isolated local HTTP/import/storage and populated-upgrade scenarios |
+| QUEUE-01–03 | Authenticated JSON-file submission; disabled routes; durable 202; status/errors; body/UUID normalization; duplicate messages; restart, leases, retry/exhaustion and post-commit ack loss | Autonomous dev HTTP suite plus focused queue-contract/failure-injection scenarios |
+| QUEUE-04 | Same payload and handler; SQS polling/ack/visibility/failure forwarding; provider-independent core | Deterministic adapter contract checks; separately recorded live AWS acceptance |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
 | CHAT-01–05 | Idempotent messages, atomic tool edits, history, SSE delta/result/error, unavailable provider | `test_agent.py`, `test_agent_lidar.py`, `test_api.py` |
 
@@ -2227,10 +2645,11 @@ does not cover every possible exception. Extending error handling must retain
 atomic commit semantics; a missing `result` does not prove rollback when the
 connection is lost.
 
-**GAP-04.** There is no complete server-side 3DGS parser/sha256 validation, global
-file-count quota or finished lifecycle for expired pending uploads. The current
-declared-size validation limit is 2 GiB. A signed S3 PUT currently does not prevent
-oversized bytes from being accepted before complete.
+**GAP-04.** Container-signature checks do not constitute a complete server-side
+3DGS parser. Imports verify SHA-256; legacy/manual files may retain sha256=null.
+A global file-count quota and a finished lifecycle for expired pending manual
+uploads are not specified. The per-file declared-size limit is 2 GiB. A signed
+S3 PUT does not by itself prevent oversized bytes before completion validation.
 
 **GAP-05.** Older documents/README text may lag behind the contract. In particular,
 descriptions of snapshot undo/redo, a mandatory aim key at zero, a Catmull–Rom planner
