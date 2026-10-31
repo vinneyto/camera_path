@@ -436,3 +436,10 @@ In sandbox, verify the editor's recipient email in that **same region** first.
 If no identity is verified yet, local SMTP checks can proceed immediately; real
 SES requires creating/verifying the identity and DNS separately or with CDK.
 See `infra/README.md` for the post-review deployment and delivery checks.
+
+## Autonomous API integration tests
+
+The standalone [HTTP contract suite](../integration/README.md) starts a disposable backend,
+SQLite database, SMTP inbox and OpenAI-compatible HTTP fixture. It exercises the real
+email-code login flow without an external email account, Docker or provider credentials.
+See that guide for setup, API coverage, the optional real-time expiry test and CI.
