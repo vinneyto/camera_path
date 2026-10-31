@@ -2,6 +2,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
+.idea/
 *.py[cod]
 .env
 .env.local
