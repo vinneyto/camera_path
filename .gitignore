@@ -15,3 +15,6 @@ infra/cdk.context.json
 # SIFT native/WASM build outputs
 rust/sift/target/
 frontend/public/sift/
+
+# Autonomous HTTP integration report
+api-coverage.json
