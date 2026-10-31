@@ -8,8 +8,10 @@ implementation into line with the changed requirements.
 Initial baseline: October 31, 2026, `main` at commit
 [`32d1940`](https://github.com/vinneyto/camera_path/commit/32d194088acd79b8f03c8298d94baf85800a416b).
 This is the document's starting point, not a requirement to retain that implementation
-forever. This specification describes the current Python backend and its known
-limitations. Roadmaps and proposed features belong in task documents, not here.
+forever. This specification defines the Python backend contract and its known
+limitations. The CP-95 changes below are the target of the specification-first
+review; their presence does not mean the current code already implements them.
+Other backlog and roadmaps remain in task documents.
 
 ## Contents
 
@@ -39,11 +41,12 @@ the implementation. It must agree with this specification rather than act as an
 independent source of product decisions. READMEs contain run instructions; Drive
 tasks preserve history, plans and acceptance criteria for individual changes.
 
-**SPEC-02. Changes.** The user edits a requirement and asks for its implementation.
-The agent reads the current specification, identifies affected operations, data,
-migrations and clients, then changes code and the necessary checks. If the
-implementation request itself clarifies a requirement, update the specification
-in the same PR. Explain any contradiction before choosing incompatible behavior.
+**SPEC-02. Changes.** First commit the changed specification for review. Wait for
+the user's explicit go-ahead before committing implementation and tests. Both
+stages may use the same PR. Identify affected operations, data, migrations and
+clients; explain contradictions rather than silently choosing incompatible
+behavior. A further requirement change needs its own specification commit and
+go-ahead before implementation.
 
 **SPEC-03. Task scope.** Editing this document alone does not trigger implementation.
 A task covers the requested requirements. Backlog and proposed features remain in
@@ -107,8 +110,8 @@ An empty aim timeline is valid: a keyframe at position `0` is not required.
 
 **DATA-04. Field catalogue.** Each model below lists every field, including
 inherited fields. Public resources, internal aggregates and request DTOs are
-identified separately. These tables describe the current models, not database
-column layouts or permission to edit response-only fields.
+identified separately. These tables define the resource contracts, including the
+CP-95 target, not database column layouts or permission to edit response-only fields.
 
 - [Projects and scene entities](#32-projects-and-scene-entities)
 - [Camera controls and timelines](#33-camera-controls-and-timelines)
@@ -461,12 +464,15 @@ Public asset model. Its storage object key is internal persistence metadata, not
 
 | Field | Type | Required | Default | Constraints / meaning |
 | --- | --- | --- | --- | --- |
-| `id` | `string` | Yes | — | — |
+| `id` | `string` | Yes | — | Existing server primary key; unchanged by CP-95 |
+| `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
 | `name` | `string` | Yes | — | — |
 | `format` | `AssetFormat` | Yes | — | — |
 | `size_bytes` | `integer` | Yes | — | — |
 | `status` | `"pending" \| "ready"` | Yes | — | — |
 | `created_at` | `DateTime` | Yes | — | — |
+| `tags` | `Array<string>` | Yes | `[]` | Normalized, bounded and deduplicated; LIB-08 |
+| `thumbnail_url` | `string \| null` | No | `null` | Computed through storage; LIB-09 |
 | `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
 | `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
 | `default_scale` | `FiniteNumber` | Yes | — | > 0.0; New asset value: 1 |
@@ -476,17 +482,20 @@ Public asset model. Its storage object key is internal persistence metadata, not
 
 | Field | Type | Required | Default | Constraints / meaning |
 | --- | --- | --- | --- | --- |
-| `id` | `string` | Yes | — | — |
+| `id` | `string` | Yes | — | Server primary key |
+| `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
 | `name` | `string` | Yes | — | — |
 | `format` | `AssetFormat` | Yes | — | — |
 | `size_bytes` | `integer` | Yes | — | — |
 | `status` | `"pending" \| "ready"` | Yes | — | — |
 | `created_at` | `DateTime` | Yes | — | — |
+| `tags` | `Array<string>` | Yes | `[]` | LIB-08 |
+| `thumbnail_url` | `string \| null` | No | `null` | Null while pending; LIB-09 |
 | `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
 | `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
 | `default_scale` | `FiniteNumber` | Yes | — | > 0.0 |
 | `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
-| `upload_url` | `string` | Yes | — | PUT destination supplied by storage adapter |
+| `upload_url` | `string \| null` | Yes | — | Pending: current PUT URL; ready replay: null; LIB-07 |
 
 #### ProjectCloud
 
@@ -746,6 +755,12 @@ Internal/legacy agent result; canonical chat uses ChatResponse.
 | `name` | `string` | Yes | — | Min length: 1; Max length: 200 |
 | `size_bytes` | `integer` | Yes | — | > 0.0; <= 2147483648.0 |
 | `format` | `AssetFormat` | No | `"ply"` | — |
+| `client_id` | `string (UUID) \| null` | No | `null` | Omitted/null generates UUIDv4; LIB-06 |
+| `thumbnail_key` | `string \| null` | No | `null` | Existing thumbnail object relative to storage root; LIB-09 |
+| `tags` | `Array<string>` | No | `[]` | Strict strings, at most 20 input entries; LIB-08 |
+
+`thumbnail_key` is an input/persistence field, not a public response field.
+This request reserves an upload, not a claim that model bytes have been verified.
 
 #### LibraryAssetDefaultsUpdate
 
@@ -848,7 +863,7 @@ include `location`, `message` and `type` in `field_errors`. Main mappings:
 | --- | --- |
 | 401 | `http_error`: missing, invalid or revoked session; `WWW-Authenticate: Bearer` when authentication is required |
 | 404 | `project_not_found` for a project; `not_found` for other missing resources |
-| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict` |
+| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`; CP-95: `library_client_id_conflict`, `library_client_id_deleted` |
 | 413 | `http_error`: local upload exceeds its declared size |
 | 422 | `validation_error`, `invalid_geometry`; some explicit resource checks return `http_error` |
 | 428 | `if_match_required` |
@@ -1004,8 +1019,9 @@ read.
 
 **LIB-01. Upload.** Lifecycle: create upload → PUT bytes to `upload_url` → complete
 → ready. Creation accepts `name` (1–200 characters, nonblank after trimming),
-`size_bytes` and `format` (`ply` by default; `sog` is also supported). It creates a
-pending asset with a server-generated `<id>.<format>` key. The current declared-size
+`size_bytes`, `format` (`ply` by default; `sog` is also supported), and the optional
+CP-95 fields in LibraryUploadCreate. It creates a pending asset with a
+server-generated `<id>.<format>` key. The current declared-size
 limit is `2,147,483,648` bytes (2 GiB); the size must be positive. Pending assets
 are excluded from public ready-asset list/get operations and cannot become project
 instances.
@@ -1015,6 +1031,8 @@ signature: the first four bytes of PLY must be `ply\n` or `ply\r`; SOG must star
 with `PK\x03\x04`. This validates the container signature, not the full decoded
 format. An invalid file remains pending and returns `422`. Successful completion
 publishes a ready asset; repeating complete on a ready asset returns the same resource.
+If a thumbnail is referenced, its existence and thumbnail constraints in LIB-09
+are also validated before publication. A failed check leaves the item pending.
 
 **LIB-03. Storage.** Domain operations use a common LibraryStorage contract:
 upload/download URLs, inspection/finalization and staged deletion. The adapter
@@ -1031,9 +1049,11 @@ computes URLs on reads; the database stores object keys rather than temporary UR
   recover completion.
 
 **LIB-04. Deletion.** Single/bulk delete validate the full selection before making
-changes; duplicate bulk IDs are deduplicated. They remove asset records, bytes and
-all associated cloud instances. Each affected project's revision increments once
-per batch; other project resources remain and cloud order is compacted. An unknown
+changes; duplicate bulk IDs are deduplicated. They remove asset records, model bytes,
+owned thumbnail bytes and all associated cloud instances. They retain the minimal
+client-ID tombstone in LIB-07, not a publicly readable asset. Each affected project's
+revision increments once per batch; other project resources remain and cloud order
+is compacted. An unknown
 selected ID returns `404` without partial deletion. Already-missing bytes do not
 prevent record deletion. Storage staging encloses SQL commit: bytes are restored
 on failure; temporary backups are cleaned up after commit. If restoration fails,
@@ -1044,6 +1064,166 @@ survive every possible crash.
 `default_scale` and finite `default_offset`. PATCH requires rotation and scale;
 omitting offset preserves its previous value. Changing defaults affects **new**
 cloud instances only. The file and existing instances remain unchanged.
+
+### 8.1. CP-95 — library identity, tags and thumbnails
+
+The [CP-95 task](https://docs.google.com/document/d/1nj0kNZH98IlHocQ5TTRTtXX8YyVk7mykJw71JBFJCPI/edit)
+extends the existing Python monolith. These are specification-stage requirements;
+the implementation commit, Alembic migration, OpenAPI regeneration, generated
+frontend API and UI changes wait for the user's explicit go-ahead.
+
+**LIB-06. Correlation identity.** Keep the existing server `id`, its foreign keys,
+URLs and model object key. Add a distinct, non-null, immutable `client_id` with
+database-enforced uniqueness across the environment's shared library, including
+pending items. Accept UUID strings, normalize them to lowercase hyphenated form,
+and reject malformed and all-zero UUIDs with `422 validation_error`. Omitted/null
+input generates UUIDv4. This value is neither an Object3D identifier, job ID nor
+message/event ID and grants no write permission. Future jobs may store a chosen
+client ID before an asset exists, without a foreign key to a nonexistent row.
+
+Every LibraryAsset and LibraryUpload response includes `client_id`, `tags` and
+`thumbnail_url`. Existing `id`-based cloud references remain unchanged; no new
+project/cloud field is required for CP-95.
+
+**LIB-07. Idempotent creation and registration.** For
+`POST /api/v1/library/uploads`, a new client ID returns `201 LibraryUpload`.
+With no supplied client ID, each request creates a new item as before. With an
+explicit client ID, normalize/validate the payload before comparing its immutable
+creation descriptor: trimmed case-sensitive name, format, declared byte size,
+thumbnail key and normalized tag identities. Compare tags as a set of casefolded
+values, independent of input order and duplicate spelling; retain the original
+successful request's display spelling/order in the stored result.
+
+- Same client ID and descriptor: `200`, same server ID, creation timestamp and
+  state. Pending retries return a refreshed upload URL for the same model object;
+  ready retries return the existing asset with `upload_url=null` and must not
+  reopen upload or overwrite content. Defaults changed later remain intact.
+- Same client ID and incompatible descriptor: `409 library_client_id_conflict`,
+  with no metadata, file, cloud, timestamp or project revision changes.
+- Concurrent equal requests converge on one row/ID; concurrent different requests
+  have one winner and a conflict for the loser. Handle the database uniqueness
+  race explicitly rather than returning `500`. Retrying after a lost response or
+  backend restart has the same result.
+- Preserve client-ID reservations after asset deletion with a minimal durable
+  tombstone. Reusing that client ID returns `409 library_client_id_deleted`;
+  public reads return `404`. A late retry must not resurrect a deleted item.
+  A deliberately new logical item uses a new client ID.
+
+Upload preparation compares the request descriptor, not unknown future bytes.
+It does not prove equal model content merely because names and sizes match.
+The future ready-result registration contract in CP-96 also compares verified
+model SHA-256 and format/size, plus this normalized metadata; equal size alone
+cannot establish idempotence. A conflicting digest must never replace a ready
+model. Registering a ready external result uses this same identity/conflict
+policy, not a second table or a direct importer database write. CP-95 does not
+introduce the CP-96 transport, manifest consumer or checksum pipeline.
+
+**LIB-08. Tags.** Tags are metadata on the shared asset, not on a project cloud.
+Use an array of strings, default `[]`; null, non-string elements and more than
+20 input entries return `422 validation_error` before deduplication. For each tag,
+reject ASCII control characters U+0000–U+001F and U+007F, normalize Unicode to NFC,
+trim surrounding whitespace and collapse internal runs of Unicode whitespace to
+one ordinary space. The normalized tag must contain 1–64 Unicode code points.
+Reject blank/oversized tags rather than silently dropping or truncating them.
+Deduplicate by Unicode casefold, preserving the first occurrence's spelling and
+order. For example, `[" Tree ", "tree", "Rock"]` becomes `["Tree", "Rock"]`.
+Persist exactly the normalized list; do not serialize it as a comma-separated
+string. CP-95 adds no tag search, taxonomy or post-creation metadata PATCH;
+the existing defaults PATCH continues to change only transforms.
+
+**LIB-09. Thumbnail reference and serving.** Persist nullable `thumbnail_key`,
+never a presigned URL, bucket URL or machine-absolute path. A thumbnail is an
+already-produced raster object; rendering/conversion belongs to CP-98.
+
+- A key is at most 255 characters and belongs to
+  `thumbnails/<canonical-client_id>/<filename>`. The filename starts with an
+  ASCII letter/digit, contains only ASCII letters/digits, `.`, `_`, `-`, and ends
+  in lowercase `.png`, `.jpg`, `.jpeg` or `.webp`. Reject other namespaces, extra
+  path components, traversal, backslashes, percent encoding, URLs and absolute
+  paths with `422`. A non-null thumbnail key requires an explicit client ID so
+  the producer can prepare the object before item creation.
+- The referenced object must exist under the configured storage root, be a
+  regular owned object of at most 5 MiB and have the declared raster signature
+  (PNG, JPEG or RIFF/WEBP). Local path resolution must remain inside the storage
+  root and the item's own thumbnail namespace, including through symlinks.
+  A missing/invalid thumbnail prevents ready
+  publication; its validation error must not publish a partially ready item.
+- Manual creation and future external registration accept the same key/tags
+  metadata and use the same validation. CP-95 only references an existing object;
+  it adds no thumbnail renderer, thumbnail upload workflow or external import
+  service. A manual upload without a thumbnail continues to work unchanged.
+- Once an asset is ready, its referenced thumbnail is immutable like model bytes.
+  A thumbnail is owned by its client-ID namespace, not shared with another asset.
+  Single/bulk deletion stages model and owned thumbnail deletion together and
+  restores both if database commit fails; it must not remove another asset's data.
+- Responses compute `thumbnail_url` through the configured LibraryStorage
+  adapter. Local mode uses `GET /api/v1/library/{asset_id}/thumbnail`; S3 uses an
+  expiring GET URL under the configured prefix with the correct image content
+  type. The backend/domain does not manufacture S3 URLs or expose object keys in
+  place of URLs. Add the thumbnail capability to the adapter contract rather than
+  teaching library business logic about S3 or filesystem paths.
+- Pending items and items without a key return `thumbnail_url=null`. A thumbnail
+  is public only once its asset is ready, under the existing shared-library read
+  policy. Local serving returns `404` for missing/pending/deleted assets or absent
+  thumbnail bytes and sets the matching raster content type. An expired URL is
+  refreshed by rereading the asset; null/unavailable images use the normal UI
+  placeholder, without hiding the model or breaking its download.
+
+**LIB-10. Lookup and client compatibility.** Add public
+`GET /api/v1/library/by-client-id/{client_id}` (`getLibraryAssetByClientId`),
+returning `200 LibraryAsset` for a ready item. Normalize/validate the UUID as in
+LIB-06; invalid values return `422`, unknown/pending/deleted values return
+`404 not_found`. Register this path without being shadowed by the existing
+server-ID route. The list endpoint retains its ordering and ready-only behavior;
+it gains the response fields but no pagination/filter semantic change.
+
+Keep ordinary editor authentication and current library file limits on both
+manual and future external registration; client IDs and thumbnail keys are not
+authorization. CP-95 does not introduce anonymous imports or service credentials.
+Existing clients sending only name/size/format still receive a fresh pending
+item with a non-null model upload URL and can PUT/complete as before. Regenerate
+OpenAPI and frontend DTO/client code only in the implementation stage; preserve
+existing operation IDs and routes. Update library list/details to display tags
+and `thumbnail_url` with the placeholder fallback, and let the manual creation
+request carry optional tags/reference metadata without requiring a thumbnail.
+The ordinary upload form may offer optional tags; it must not require users to
+type correlation UUIDs or storage keys. Reference metadata is supplied through
+the API/producer integration, not a technical configuration form for end users.
+
+**LIB-11. Migration and verification.** Add a versioned Alembic migration after
+baseline head `20261026_0014`. Backfill each existing pending/ready item with a
+distinct UUIDv4, `thumbnail_key=null` and `tags=[]`, then enforce client-ID
+non-null/uniqueness. Preserve server IDs, model object keys/bytes, timestamps,
+status, defaults, cloud references/order and all project revisions. Migration
+does not move/download files or hash every legacy model. Retain immutable
+creation descriptors and deletion tombstones durably, including for migrated
+items; updated transform defaults are not part of registration identity.
+Use an isolated populated database copy to check upgrade, existing downloads and
+idempotent repeated `alembic upgrade head`. Creating a fresh database must reach
+the same schema. A durable `library_client_ids` reservation ledger has a unique
+client-ID key for both live and deleted items; asset creation/reservation and
+deletion/tombstoning are transactional. This makes uniqueness span deletion and
+prevents a race between an old retry and deletion. The migration initializes the
+ledger for existing rows; it does not invent a history of already-deleted assets.
+
+Extend the autonomous HTTP suite for: legacy/manual uploads without new fields;
+caller-supplied and generated UUIDs; invalid/canonicalized IDs; ready lookup and
+pending/missing/deleted `404`; equal/conflicting and concurrent creation retries;
+restart/lost-response retries; tags normalization/limits; thumbnails present,
+absent, invalid and inaccessible; replay not reopening ready bytes; and deletion
+rollback preserving both model and thumbnail. Test adapter URL generation and
+namespace/ownership checks in both local and S3 modes. Verify migrated populated
+data and existing project clouds separately from a fresh HTTP fixture.
+
+**LIB-12. Adjacent task boundaries.** CP-96 supplies external result discovery,
+the ready-manifest/registration transport and verified result checksum. CP-97
+supplies jobs; CP-98 produces models/thumbnails; CP-99 attaches results to projects.
+CP-100 supplies durable outbox/events and browser delivery. This CP-95 stage adds
+no job queue, worker, SSE endpoint or event-delivery guarantee. When CP-100 is
+implemented, `library_item.created` must identify the server asset ID and its
+`client_id` (as `library_client_id` in the event envelope), be persisted with the
+successful ready transition and be delivered only after commit. Idempotent
+replays must not create a second logical creation event.
 
 **CLOUD-01.** A ready asset can be attached multiple times to one or more projects.
 Each operation creates a separate instance ID, copies current asset defaults,
@@ -1166,7 +1346,8 @@ alone guarantees neither rollback of persisted data nor cancellation of the prov
 ## 11. Persistence, configuration and operations
 
 **STORE-01.** The main store is SQLite through async SQLAlchemy; schema migrations
-use Alembic. The current migration head is `20261026_0014`. Current state is
+use Alembic. The baseline migration head is `20261026_0014`; CP-95 adds the next
+migration as specified in LIB-11. Current state is
 normalized into typed columns; numeric vectors are not opaque JSON blobs. Foreign
 keys are enabled. A Project aggregate is assembled for compatibility; full-snapshot
 history with undo/redo is no longer the active persistence model.
@@ -1175,7 +1356,7 @@ history with undo/redo is no longer the active persistence model.
 | --- | --- |
 | Project / scene | `projects`, `anchors`, `scene_points`, `trajectory_segments`, `segment_anchors` |
 | Controls | `motion_profiles`, `speed_keyframes`, `camera_tracks`, `aim_keyframes`, `orientation_keyframes`, `depth_of_field_keyframes`, `lidar_keyframes` |
-| Library | `library_assets`, `project_clouds` |
+| Library | `library_assets`, `project_clouds`; CP-95 adds `library_client_ids` reservations/tombstones |
 | Chat / profile | `chat_messages`, `user_settings` |
 | Auth | `editors`, `editor_sessions`, `auth_challenges`, `auth_rate_limits` |
 
@@ -1226,10 +1407,13 @@ a production deployment.
 
 ## 12. HTTP operation inventory
 
-**HTTP-01.** The table lists all 70 operations in the current checked-in OpenAPI.
-Every path includes `/api/v1`. Request/response DTO names match schemas in
-[openapi.json](openapi.json). Check fields, required/nullability and exact JSON
-shapes against that machine-readable schema together with the rules above. `—`
+**HTTP-01.** The baseline checked-in OpenAPI contains 70 operations. The target
+table adds CP-95 client-ID lookup, bringing the inventory to 71 operations.
+Every path includes `/api/v1`. Request/response DTO names correspond to schemas in
+[openapi.json](openapi.json); regenerate that artifact and frontend clients at
+the authorized implementation stage, including the CP-95 fields/replay status.
+Check fields, required/nullability and exact JSON shapes against the regenerated
+schema together with the rules above. `—`
 means no body. A successful `204` has no JSON content. Authentication and project
 preconditions are defined in `AUTH-01` and `API-02`; errors are additional to the
 successful statuses listed here.
@@ -1243,7 +1427,8 @@ successful statuses listed here.
 | `POST` | `/api/v1/auth/verify` | VerifyRequest | 200 → TokenResponse |
 | `GET` | `/api/v1/library` | — | 200 → LibraryAsset[] |
 | `POST` | `/api/v1/library/bulk-delete` | LibraryAssetsDelete | 204 → — |
-| `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 → LibraryUpload |
+| `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 new / 200 replay → LibraryUpload; CP-95 |
+| `GET` | `/api/v1/library/by-client-id/{client_id}` | — | 200 → LibraryAsset; CP-95 |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
 | `POST` | `/api/v1/library/{asset_id}/complete` | — | 200 → LibraryAsset |
@@ -1316,6 +1501,7 @@ successful statuses listed here.
 | `GET /api/v1/openapi.json` | Generated OpenAPI |
 | `PUT /api/v1/library/{asset_id}/content` | Local adapter only, editor, raw bytes → `204`; no project If-Match |
 | `GET /api/v1/library/{asset_id}/content` | Local adapter only, public ready bytes |
+| `GET /api/v1/library/{asset_id}/thumbnail` | Local adapter only, public ready raster image; CP-95/LIB-09 |
 
 The unversioned project API is mounted from `routers/api.py`. It provides compatible
 project/scene/trajectory/timeline/chat operations with aggregate responses rather
@@ -1335,6 +1521,7 @@ tests (paths relative to `backend/tests/`):
 | TIME-01–05 | Defaults, duplicate positions, delete/recreate, static LiDAR singleton | `test_delete_timelines.py`, `test_depth_of_field_timeline.py`, `test_lidar_timeline.py` |
 | GEOM-01–06 | Endpoints, C² spline, tangent constraints, unchanged spirals, adaptive approximation, distance/time | `test_geometry.py`, `test_trajectory_planner.py` |
 | LIB-01–05, CLOUD-01–02 | Real small PLY/SOG bytes, complete/retry, instances/defaults/order, delete rollback | `test_library.py`, `test_s3_library.py`, `test_project_clouds.py`, `test_library_delete.py`, `test_library_bulk_delete.py` |
+| LIB-06–12 (CP-95 target) | Client IDs, replay/conflict/concurrency, migration, tags, thumbnail ownership/URLs, lookup and legacy compatibility | Extend the above library tests and `integration/tests/test_library.py` at implementation stage; no claim of coverage yet |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
 | CHAT-01–05 | Idempotent messages, atomic tool edits, history, SSE delta/result/error, unavailable provider | `test_agent.py`, `test_agent_lidar.py`, `test_api.py` |
 
