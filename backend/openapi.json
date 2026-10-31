@@ -1373,6 +1373,10 @@
       },
       "LibraryAsset": {
         "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1428,6 +1432,13 @@
             ],
             "title": "Download Url"
           },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAssetFile"
+            },
+            "title": "Files",
+            "type": "array"
+          },
           "format": {
             "enum": [
               "ply",
@@ -1444,6 +1455,10 @@
             "title": "Name",
             "type": "string"
           },
+          "primary_file_id": {
+            "title": "Primary File Id",
+            "type": "string"
+          },
           "size_bytes": {
             "title": "Size Bytes",
             "type": "integer"
@@ -1455,15 +1470,37 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
           }
         },
         "required": [
           "id",
+          "client_id",
           "name",
           "format",
           "size_bytes",
           "status",
           "created_at",
+          "tags",
+          "primary_file_id",
+          "files",
           "default_rotation_deg",
           "default_scale",
           "default_offset"
@@ -1527,6 +1564,55 @@
         "title": "LibraryAssetDefaultsUpdate",
         "type": "object"
       },
+      "LibraryAssetFile": {
+        "properties": {
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "format": {
+            "enum": [
+              "ply",
+              "sog"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "format",
+          "size_bytes"
+        ],
+        "title": "LibraryAssetFile",
+        "type": "object"
+      },
       "LibraryAssetsDelete": {
         "properties": {
           "asset_ids": {
@@ -1546,6 +1632,10 @@
       },
       "LibraryUpload": {
         "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1601,6 +1691,13 @@
             ],
             "title": "Download Url"
           },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAssetFile"
+            },
+            "title": "Files",
+            "type": "array"
+          },
           "format": {
             "enum": [
               "ply",
@@ -1617,6 +1714,10 @@
             "title": "Name",
             "type": "string"
           },
+          "primary_file_id": {
+            "title": "Primary File Id",
+            "type": "string"
+          },
           "size_bytes": {
             "title": "Size Bytes",
             "type": "integer"
@@ -1629,18 +1730,47 @@
             "title": "Status",
             "type": "string"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          },
           "upload_url": {
-            "title": "Upload Url",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upload Url"
           }
         },
         "required": [
           "id",
+          "client_id",
           "name",
           "format",
           "size_bytes",
           "status",
           "created_at",
+          "tags",
+          "primary_file_id",
+          "files",
           "default_rotation_deg",
           "default_scale",
           "default_offset",
@@ -1651,6 +1781,17 @@
       },
       "LibraryUploadCreate": {
         "properties": {
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
           "format": {
             "default": "ply",
             "enum": [
@@ -1671,6 +1812,24 @@
             "maximum": 2147483648.0,
             "title": "Size Bytes",
             "type": "integer"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Key"
           }
         },
         "required": [
@@ -3042,6 +3201,49 @@
         ]
       }
     },
+    "/api/v1/library/by-client-id/{client_id}": {
+      "get": {
+        "description": "Resolve a ready shared library item by its producer correlation UUID.",
+        "operationId": "getLibraryAssetByClientId",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryAsset"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Library Asset By Client Id",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
     "/api/v1/library/uploads": {
       "post": {
         "description": "Create a pending file and obtain an upload URL.",
@@ -3057,6 +3259,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryUpload"
+                }
+              }
+            },
+            "description": "OK"
+          },
           "201": {
             "content": {
               "application/json": {

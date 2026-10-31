@@ -8,6 +8,7 @@
 import type { LibraryUploadCreateFormat } from './libraryUploadCreateFormat';
 
 export interface LibraryUploadCreate {
+  client_id?: string | null;
   format?: LibraryUploadCreateFormat;
   /**
      * @minLength 1
@@ -19,4 +20,6 @@ export interface LibraryUploadCreate {
      * @exclusiveMinimum 0
      */
   size_bytes: number;
+  tags?: string[];
+  thumbnail_key?: string | null;
 }

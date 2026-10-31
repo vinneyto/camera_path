@@ -443,3 +443,16 @@ The standalone [HTTP contract suite](../integration/README.md) starts a disposab
 SQLite database, SMTP inbox and OpenAI-compatible HTTP fixture. It exercises the real
 email-code login flow without an external email account, Docker or provider credentials.
 See that guide for setup, API coverage, the optional real-time expiry test and CI.
+
+## Queued library imports and multiple representations
+
+Library items can contain multiple SOG/PLY representations with one primary file. External
+producers send a versioned JSON descriptor through a queue adapter; the monolith verifies and
+registers the whole item. The development adapter accepts authenticated JSON over HTTP; AWS
+uses SQS. Files already inside library storage are adopted; external files are copied under UUIDs.
+The normal upload API and project clouds continue to use the primary representation.
+
+See [the local verification and AWS configuration guide](docs/library-import.md). Run
+`uv run alembic upgrade head` before starting against an existing database. Queue consumption is
+disabled by default; enable `CAMERA_PATH_MESSAGE_QUEUE=dev` for local verification. AWS resource
+setup and live verification are separate manual work.

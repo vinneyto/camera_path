@@ -45,6 +45,18 @@ async def list_library_assets(request: Request, service: Library) -> list[Librar
 
 
 @router.get(
+    "/by-client-id/{client_id}",
+    response_model=LibraryAsset,
+    operation_id="getLibraryAssetByClientId",
+    description="Resolve a ready shared library item by its producer correlation UUID.",
+)
+async def get_library_asset_by_client_id(
+    client_id: str, request: Request, service: Library
+) -> LibraryAsset:
+    return await service.by_client_id(client_id, request)
+
+
+@router.get(
     "/{asset_id}",
     response_model=LibraryAsset,
     operation_id="getLibraryAsset",
@@ -83,14 +95,17 @@ async def update_library_asset_defaults(
     "/uploads",
     response_model=LibraryUpload,
     status_code=201,
+    responses={200: {"model": LibraryUpload}},
     operation_id="createLibraryUpload",
     description="Create a pending file and obtain an upload URL.",
 )
 @authenticated
 async def create_library_upload(
-    data: LibraryUploadCreate, request: Request, service: Library
+    data: LibraryUploadCreate, request: Request, response: Response, service: Library
 ) -> LibraryUpload:
-    return await service.create(data, request)
+    result, created = await service.create(data, request)
+    response.status_code = 201 if created else 200
+    return result
 
 
 @router.post(

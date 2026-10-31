@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -15,7 +15,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from camera_path.agent import TrajectoryAgent
 from camera_path.config import Settings, settings
+from camera_path.dev import records as dev_records  # noqa: F401
 from camera_path.dev.library_storage import LocalLibraryStorage
+from camera_path.imports import compose_imports
 from camera_path.repositories import (
     ProjectNotFoundError,
     ProjectRepository,
@@ -43,6 +45,7 @@ from camera_path.services import (
 )
 from camera_path.services.auth import AuthService
 from camera_path.services.library import LibraryService
+from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorage, LibraryStorageError
 from camera_path.services.project_clouds import ProjectCloudService
 from camera_path.services.user_settings import UserSettingsService
@@ -139,6 +142,7 @@ def create_app(
     else:
         storage = LocalLibraryStorage(configured.library_directory)
     library_service = LibraryService(LibraryRepository(project_repository.session_factory), storage)
+    message_queue, importer, consumer = compose_imports(configured, library_service)
     project_cloud_service = ProjectCloudService(
         ProjectCloudRepository(project_repository.session_factory),
         library_service.repository,
@@ -163,9 +167,16 @@ def create_app(
         initialize = getattr(project_repository, "initialize", None)
         if initialize is not None:
             await initialize()
-        yield
-        if owns_repository:
-            await project_repository.close()
+        task = asyncio.create_task(consumer.run()) if consumer is not None else None
+        try:
+            yield
+        finally:
+            if task is not None:
+                task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await task
+            if owns_repository:
+                await project_repository.close()
 
     application = FastAPI(
         title="Camera Path API",
@@ -193,6 +204,16 @@ def create_app(
         ],
     )
     application.state.project_service = project_service
+    application.state.message_queue = message_queue
+    application.state.library_import_service = importer
+    application.state.library_import_consumer = consumer
+
+    @application.exception_handler(LibraryError)
+    async def library_error(request: Request, error: LibraryError) -> JSONResponse:
+        return JSONResponse(
+            status_code=error.status,
+            content=_error_content(request, error.code, error.code, error.field_errors),
+        )
 
     @application.exception_handler(LibraryStorageError)
     async def storage_error(request: Request, _: LibraryStorageError) -> JSONResponse:
@@ -321,6 +342,10 @@ def create_app(
     application.include_router(library_router, prefix=API_PREFIX)
     application.include_router(project_cloud_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)
+    if configured.message_queue == "dev":
+        from camera_path.dev.import_routes import router as import_router
+
+        application.include_router(import_router, prefix=API_PREFIX)
     if isinstance(storage, LocalLibraryStorage):
         from camera_path.dev.library_routes import router as local_library_router
 

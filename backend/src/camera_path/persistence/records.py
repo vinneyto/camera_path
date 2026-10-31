@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     CheckConstraint,
@@ -11,10 +12,12 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     Text,
     UniqueConstraint,
     false,
+    text,
     true,
 )
 from sqlalchemy import (
@@ -83,8 +86,20 @@ class ProjectRecord(Base):
 
 class LibraryAssetRecord(Base):
     __tablename__ = "library_assets"
+    __table_args__ = (UniqueConstraint("client_id", name="uq_library_assets_client_id"),)
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
+    client_id: Mapped[str] = mapped_column(
+        ForeignKey(
+            "library_client_ids.client_id", name="fk_library_assets_client_id", ondelete="RESTRICT"
+        ),
+        nullable=False,
+    )
+    thumbnail_key: Mapped[str | None] = mapped_column(Text)
+    tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list, server_default="[]")
+    files: Mapped[list[LibraryAssetFileRecord]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan", order_by="LibraryAssetFileRecord.position"
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     format: Mapped[str] = mapped_column(Text, nullable=False)
     object_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
@@ -100,6 +115,40 @@ class LibraryAssetRecord(Base):
     default_offset_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     default_offset_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     default_offset_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+
+
+class LibraryClientIdRecord(Base):
+    __tablename__ = "library_client_ids"
+
+    client_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    import_descriptor: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+
+
+class LibraryAssetFileRecord(Base):
+    __tablename__ = "library_asset_files"
+    __table_args__ = (
+        UniqueConstraint("object_key", name="uq_library_asset_files_object_key"),
+        UniqueConstraint("asset_id", "position", name="uq_library_asset_files_position"),
+        Index(
+            "uq_library_asset_files_primary",
+            "asset_id",
+            unique=True,
+            sqlite_where=text("is_primary = 1"),
+        ),
+    )
+
+    asset_id: Mapped[str] = mapped_column(
+        ForeignKey("library_assets.id", name="fk_library_asset_files_asset", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    format: Mapped[str] = mapped_column(Text, nullable=False)
+    object_key: Mapped[str] = mapped_column(Text, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    sha256: Mapped[str | None] = mapped_column(Text)
 
 
 class ProjectCloudRecord(Base):

@@ -187,3 +187,15 @@ def test_exported_schema_is_generated_from_the_application(app, tmp_path) -> Non
 
 def test_checked_in_schema_is_current(app) -> None:
     assert json.loads(Path("openapi.json").read_text(encoding="utf-8")) == app.openapi()
+
+
+def test_dev_schema_is_current_and_contains_only_conditional_extra_routes():
+    dev = create_app(Settings(_env_file=None, message_queue="dev")).openapi()
+    default = create_app(Settings(_env_file=None, message_queue="none")).openapi()
+    assert set(dev["paths"]) - set(default["paths"]) == {
+        "/api/v1/dev/library-imports",
+        "/api/v1/dev/library-imports/{message_id}",
+    }
+    assert json.loads(Path("openapi.dev.json").read_text()) == dev
+    for path in ("/api/v1/dev/library-imports", "/api/v1/dev/library-imports/{message_id}"):
+        assert all("401" in operation["responses"] for operation in dev["paths"][path].values())

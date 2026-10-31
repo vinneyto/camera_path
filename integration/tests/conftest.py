@@ -23,6 +23,14 @@ OPERATIONS = [
     for method, op in item.items()
     if method in {"get", "post", "patch", "delete", "put"}
 ]
+DEV_CONTRACT = json.loads((ROOT / "backend/openapi.dev.json").read_text())
+DEV_OPERATIONS = [
+    (method.upper(), path, op["operationId"])
+    for path, item in DEV_CONTRACT["paths"].items()
+    if path.startswith("/api/v1/dev/")
+    for method, op in item.items()
+    if method in {"get", "post"}
+]
 COVERAGE = {}
 
 
@@ -34,7 +42,7 @@ def pytest_addoption(parser):
 def pytest_sessionfinish(session, exitstatus):
     report = {
         op: {"method": method, "path": path, "statuses": sorted(COVERAGE.get(op, set()))}
-        for method, path, op in OPERATIONS
+        for method, path, op in OPERATIONS + DEV_OPERATIONS
     }
     Path(session.config.getoption("--api-report")).write_text(json.dumps(report, indent=2) + "\n")
     # A failed/interrupted run has only partial coverage. Preserve the original failure
@@ -58,7 +66,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 def record(response):
     path = response.request.url.path
-    for method, template, operation in OPERATIONS:
+    for method, template, operation in OPERATIONS + DEV_OPERATIONS:
         pattern = re.sub(r"\{[^}]+\}", "[^/]+", template)
         if response.request.method == method and re.fullmatch(pattern, path):
             COVERAGE.setdefault(operation, set()).add(response.status_code)
@@ -277,6 +285,23 @@ def public_backend(tmp_path_factory):
     backend = Backend(tmp_path_factory.mktemp("public-api"))
     try:
         backend.setup()
+        yield backend
+    finally:
+        backend.close()
+
+
+@pytest.fixture
+def dev_backend(tmp_path):
+    backend = Backend(tmp_path)
+    backend.env["CAMERA_PATH_MESSAGE_QUEUE"] = "dev"
+    backend.env["CAMERA_PATH_LIBRARY_IMPORT_SOURCES"] = json.dumps(
+        {
+            "incoming": {"driver": "local", "root": str(tmp_path / "incoming")},
+        }
+    )
+    try:
+        backend.setup()
+        backend.login()
         yield backend
     finally:
         backend.close()

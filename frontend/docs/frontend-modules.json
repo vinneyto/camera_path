@@ -830,7 +830,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2927,
+            "line": 3053,
             "column": 1
           },
           "usages": [
@@ -854,7 +854,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8465,
+            "line": 8591,
             "column": 1
           },
           "usages": [
@@ -878,7 +878,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3291,
+            "line": 3417,
             "column": 1
           },
           "usages": [
@@ -902,7 +902,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1154,
+            "line": 1280,
             "column": 1
           },
           "usages": [
@@ -920,7 +920,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4392,
+            "line": 4518,
             "column": 1
           },
           "usages": [
@@ -944,7 +944,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4756,
+            "line": 4882,
             "column": 1
           },
           "usages": [
@@ -968,7 +968,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2066,
+            "line": 2192,
             "column": 1
           },
           "usages": [
@@ -986,7 +986,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6600,
+            "line": 6726,
             "column": 1
           },
           "usages": [
@@ -1010,7 +1010,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8334,
+            "line": 8460,
             "column": 1
           },
           "usages": [
@@ -1034,7 +1034,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2316,
+            "line": 2442,
             "column": 1
           },
           "usages": [
@@ -1058,7 +1058,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5496,
+            "line": 5622,
             "column": 1
           },
           "usages": [
@@ -1100,7 +1100,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5989,
+            "line": 6115,
             "column": 1
           },
           "usages": [
@@ -1118,7 +1118,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1708,
+            "line": 1834,
             "column": 1
           },
           "usages": [
@@ -1142,7 +1142,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7340,
+            "line": 7466,
             "column": 1
           },
           "usages": [
@@ -2620,6 +2620,7 @@
         "packages/features/library/src/ui/library-asset-defaults.tsx",
         "packages/features/library/src/ui/library-asset-details.tsx",
         "packages/features/library/src/ui/library-asset-list.tsx",
+        "packages/features/library/src/ui/library-asset-thumbnail.tsx",
         "packages/features/library/src/ui/library-selection-actions.tsx",
         "packages/features/library/src/ui/library-upload-form.tsx"
       ],
@@ -2656,7 +2657,7 @@
           "usages": [
             {
               "file": "packages/features/library/src/ui/library-asset-list.tsx",
-              "line": 15,
+              "line": 16,
               "column": 20,
               "expression": "useDeleteLibraryAssetsMutation"
             }
@@ -2730,7 +2731,7 @@
           "usages": [
             {
               "file": "packages/features/library/src/ui/library-asset-details.tsx",
-              "line": 13,
+              "line": 14,
               "column": 17,
               "expression": "useLibraryAssetResource(assetId)"
             }
@@ -2748,7 +2749,7 @@
           "usages": [
             {
               "file": "packages/features/library/src/ui/library-asset-list.tsx",
-              "line": 13,
+              "line": 14,
               "column": 19,
               "expression": "useLibraryCatalog()"
             }

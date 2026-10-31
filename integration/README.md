@@ -122,3 +122,14 @@ An interrupted or failed run still writes its partial API report, but does not r
 coverage error about tests that never ran. The full successful run still enforces coverage.
 
 Task: https://docs.google.com/document/d/1CqaWyve6LW1tY7ra4lRSYRnQ8I9SzgVkSo-IgYPUaZM
+
+## Queue-driven library imports
+
+The suite also starts a disposable backend with the dev queue adapter. It submits a real JSON
+file after email-code login, imports multiple SOG/PLY representations, adopts existing library
+objects, copies external sources under UUIDs, checks status/permissions/failures, restarts the
+process and retries without duplicate items. The default backend still checks that dev routes
+are absent. The API success gate covers both always-mounted operations and the two conditional
+dev operations from `backend/openapi.dev.json`. All files and messages belong to the test's
+private temporary directories. SQS SDK behavior is checked separately by backend tests; live
+AWS configuration/acceptance is separate.

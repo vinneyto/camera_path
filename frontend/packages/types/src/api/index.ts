@@ -56,6 +56,8 @@ export * from './followPathAimDirection';
 export * from './hTTPValidationError';
 export * from './libraryAsset';
 export * from './libraryAssetDefaultsUpdate';
+export * from './libraryAssetFile';
+export * from './libraryAssetFileFormat';
 export * from './libraryAssetFormat';
 export * from './libraryAssetsDelete';
 export * from './libraryAssetStatus';
