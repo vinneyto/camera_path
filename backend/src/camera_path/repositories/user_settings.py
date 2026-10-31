@@ -1,7 +1,7 @@
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from camera_path.persistence.models import UserSettingsRecord
+from camera_path.persistence.records import UserSettingsRecord
 
 
 class UserSettingsRepository:

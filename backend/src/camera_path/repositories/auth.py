@@ -2,7 +2,7 @@ from sqlalchemy import delete, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from camera_path.persistence.models import (
+from camera_path.persistence.records import (
     AuthChallengeRecord,
     AuthRateLimitRecord,
     EditorRecord,

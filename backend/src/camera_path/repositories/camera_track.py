@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import CameraAim, CameraOrientation, CameraTrack
-from camera_path.persistence.models import CameraTrackRecord, Vector3
+from camera_path.persistence.records import CameraTrackRecord, Vector3
 
 
 class CameraTrackRepository:

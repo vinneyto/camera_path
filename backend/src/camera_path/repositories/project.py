@@ -15,7 +15,7 @@ from camera_path.models import (
     ProjectMetadata,
 )
 from camera_path.persistence.database import create_engine_and_session_factory
-from camera_path.persistence.models import (
+from camera_path.persistence.records import (
     AnchorRecord,
     Base,
     ProjectCloudRecord,

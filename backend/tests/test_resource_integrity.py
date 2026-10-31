@@ -12,7 +12,7 @@ from camera_path.models import (
     Project,
     ScenePoint,
 )
-from camera_path.persistence.models import ProjectRecord
+from camera_path.persistence.records import ProjectRecord
 from camera_path.repositories import ProjectRepository
 from camera_path.repositories.aim_timeline import AimTimelineRepository
 from camera_path.services.anchors import AnchorService
@@ -65,7 +65,7 @@ async def test_scene_point_reference_is_project_scoped_and_project_can_be_delete
         async with repository.session_factory.begin() as session:
             record = await session.get(ProjectRecord, project.id)
             assert record is not None
-            from camera_path.persistence.models import CameraTrackRecord
+            from camera_path.persistence.records import CameraTrackRecord
 
             camera = await session.get(CameraTrackRecord, project.id)
             assert camera is not None

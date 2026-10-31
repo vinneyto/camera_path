@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from camera_path.models import SpiralSegment, SplineSegment, TrajectorySegment
 from camera_path.persistence.enums import CurveLaw, SegmentKind, SpiralDirection
-from camera_path.persistence.models import SegmentAnchorRecord, TrajectorySegmentRecord
+from camera_path.persistence.records import SegmentAnchorRecord, TrajectorySegmentRecord
 from camera_path.repositories.sync import sync_rows
 
 

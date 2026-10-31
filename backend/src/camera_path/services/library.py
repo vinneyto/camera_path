@@ -8,7 +8,7 @@ from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field, FiniteFloat
 
 from camera_path.persistence.enums import LibraryAssetStatus
-from camera_path.persistence.models import LibraryAssetRecord
+from camera_path.persistence.records import LibraryAssetRecord
 from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.project_cloud import ProjectCloudRepository
 from camera_path.services.library_storage import LibraryStorage

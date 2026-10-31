@@ -10,7 +10,7 @@ from camera_path.models import (
     ScenePointDepthOfFieldFocus,
 )
 from camera_path.persistence.enums import FocusKind
-from camera_path.persistence.models import DepthOfFieldKeyframeRecord
+from camera_path.persistence.records import DepthOfFieldKeyframeRecord
 from camera_path.repositories.sync import sync_rows
 
 

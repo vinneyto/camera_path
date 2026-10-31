@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import LidarKeyframe, LidarTimeline
-from camera_path.persistence.models import LidarKeyframeRecord
+from camera_path.persistence.records import LidarKeyframeRecord
 
 
 class LidarTimelineRepository:
