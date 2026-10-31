@@ -5,30 +5,132 @@ The primary document for implementing and changing the backend:
 A human edits the specification; on an explicit request, an agent brings the
 implementation into line with the changed requirements.
 
-Initial baseline: October 31, 2026, `main` at commit
-[`32d1940`](https://github.com/vinneyto/camera_path/commit/32d194088acd79b8f03c8298d94baf85800a416b).
-This is the document's starting point, not a requirement to retain that implementation
-forever. This specification defines the Python backend contract and its known
-limitations. The CP-95 changes below are the target of the specification-first
-review; their presence does not mean the current code already implements them.
-Other backlog and roadmaps remain in task documents.
+This document defines one coherent Python backend contract. Work plans, task
+identifiers, implementation progress and review status belong in task documents
+and pull requests; they are not part of the backend requirements.
 
 ## Contents
 
 - [1. Working with this specification](#1-working-with-this-specification)
 - [2. Purpose and scope](#2-purpose-and-scope)
 - [3. Entities and defaults](#3-entities-and-defaults)
+  - [3.1. Type notation](#31-type-notation)
+  - [3.2. Projects and scene entities](#32-projects-and-scene-entities)
+    - [ProjectMetadata](#projectmetadata)
+    - [Project](#project)
+    - [Anchor](#anchor)
+    - [ScenePoint](#scenepoint)
+    - [SplineSegment](#splinesegment)
+    - [SpiralSegment](#spiralsegment)
+    - [Trajectory](#trajectory)
+  - [3.3. Camera controls and timelines](#33-camera-controls-and-timelines)
+    - [FollowPathAim](#followpathaim)
+    - [LookAtPointAim](#lookatpointaim)
+    - [CameraOrientation](#cameraorientation)
+    - [SpeedKeyframe](#speedkeyframe)
+    - [CameraKeyframe](#camerakeyframe)
+    - [CameraOrientationKeyframe](#cameraorientationkeyframe)
+    - [CenterWeightedDepthOfFieldFocus](#centerweighteddepthoffieldfocus)
+    - [ScenePointDepthOfFieldFocus](#scenepointdepthoffieldfocus)
+    - [DepthOfFieldKeyframe](#depthoffieldkeyframe)
+    - [LidarSettings](#lidarsettings)
+    - [LidarKeyframe](#lidarkeyframe)
+    - [MotionProfile](#motionprofile)
+    - [CameraTrack](#cameratrack)
+    - [AimTimeline](#aimtimeline)
+    - [OrientationTimeline](#orientationtimeline)
+    - [DepthOfFieldTimeline](#depthoffieldtimeline)
+    - [LidarTimeline](#lidartimeline)
+  - [3.4. Compiled trajectory models](#34-compiled-trajectory-models)
+    - [CubicBezier3D](#cubicbezier3d)
+    - [ArcLengthSample](#arclengthsample)
+    - [ResolvedLookAtPointAim](#resolvedlookatpointaim)
+    - [ResolvedScenePointDepthOfFieldFocus](#resolvedscenepointdepthoffieldfocus)
+    - [CompiledCameraKeyframe](#compiledcamerakeyframe)
+    - [CompiledDepthOfFieldKeyframe](#compileddepthoffieldkeyframe)
+    - [CompiledMotionProfile](#compiledmotionprofile)
+    - [CompiledCameraTrack](#compiledcameratrack)
+    - [CompiledTrajectory](#compiledtrajectory)
+  - [3.5. Library, cloud and profile resources](#35-library-cloud-and-profile-resources)
+    - [LibraryAsset](#libraryasset)
+    - [LibraryUpload](#libraryupload)
+    - [ProjectCloud](#projectcloud)
+    - [UserSettings](#usersettings)
+  - [3.6. Chat, authentication responses and errors](#36-chat-authentication-responses-and-errors)
+    - [ChatHistoryMessage](#chathistorymessage)
+    - [ChatHistory](#chathistory)
+    - [ChatMessage](#chatmessage)
+    - [ChatResponse](#chatresponse)
+    - [ChatResult](#chatresult)
+    - [TokenResponse](#tokenresponse)
+    - [ChallengeResponse](#challengeresponse)
+    - [SessionResponse](#sessionresponse)
+    - [FieldError](#fielderror)
+    - [ErrorResponse](#errorresponse)
+  - [3.7. Creation and update requests](#37-creation-and-update-requests)
+    - [ProjectCreate](#projectcreate)
+    - [ProjectUpdate](#projectupdate)
+    - [AnchorCreate](#anchorcreate)
+    - [AnchorUpdate](#anchorupdate)
+    - [ScenePointCreate](#scenepointcreate)
+    - [ScenePointUpdate](#scenepointupdate)
+    - [SplineSegmentCreate](#splinesegmentcreate)
+    - [SpiralSegmentCreate](#spiralsegmentcreate)
+    - [MotionProfileUpdate](#motionprofileupdate)
+    - [SpeedKeyframeCreate](#speedkeyframecreate)
+    - [SpeedKeyframeUpdate](#speedkeyframeupdate)
+    - [CameraTrackUpdate](#cameratrackupdate)
+    - [CameraKeyframeCreate](#camerakeyframecreate)
+    - [CameraKeyframeUpdate](#camerakeyframeupdate)
+    - [CameraOrientationKeyframeCreate](#cameraorientationkeyframecreate)
+    - [CameraOrientationKeyframeUpdate](#cameraorientationkeyframeupdate)
+    - [DepthOfFieldKeyframeCreate](#depthoffieldkeyframecreate)
+    - [DepthOfFieldKeyframeUpdate](#depthoffieldkeyframeupdate)
+    - [LibraryUploadCreate](#libraryuploadcreate)
+    - [LibraryAssetDefaultsUpdate](#libraryassetdefaultsupdate)
+    - [LibraryAssetsDelete](#libraryassetsdelete)
+    - [ProjectCloudCreate](#projectcloudcreate)
+    - [ProjectCloudUpdate](#projectcloudupdate)
+    - [UserSettingsUpdate](#usersettingsupdate)
+    - [LoginRequest](#loginrequest)
+    - [ChallengeRequest](#challengerequest)
+    - [VerifyRequest](#verifyrequest)
 - [4. HTTP, revisions and errors](#4-http-revisions-and-errors)
 - [5. Projects and scene editing](#5-projects-and-scene-editing)
 - [6. Timelines](#6-timelines)
 - [7. Trajectory compilation](#7-trajectory-compilation)
 - [8. Library and project clouds](#8-library-and-project-clouds)
+  - [8.1. Library identity, tags and thumbnails](#81-library-identity-tags-and-thumbnails)
 - [9. Authentication and profile](#9-authentication-and-profile)
 - [10. Chat and agent](#10-chat-and-agent)
 - [11. Persistence, configuration and operations](#11-persistence-configuration-and-operations)
-  - [Record conventions and enums](#111-record-conventions-and-supporting-types)
-  - [Baseline record catalogue](#113-baseline-record-catalogue)
-  - [CP-95 target record changes](#115-cp-95-target-record-changes)
+  - [11.1. Record conventions and supporting types](#111-record-conventions-and-supporting-types)
+  - [11.2. Persisted enums](#112-persisted-enums)
+  - [11.3. Record catalogue](#113-record-catalogue)
+    - [UserSettingsRecord](#usersettingsrecord--user_settings)
+    - [ProjectRecord](#projectrecord--projects)
+    - [LibraryAssetRecord](#libraryassetrecord--library_assets)
+    - [LibraryClientIdRecord](#libraryclientidrecord--library_client_ids)
+    - [ProjectCloudRecord](#projectcloudrecord--project_clouds)
+    - [AnchorRecord](#anchorrecord--anchors)
+    - [ScenePointRecord](#scenepointrecord--scene_points)
+    - [TrajectorySegmentRecord](#trajectorysegmentrecord--trajectory_segments)
+    - [SegmentAnchorRecord](#segmentanchorrecord--segment_anchors)
+    - [MotionProfileRecord](#motionprofilerecord--motion_profiles)
+    - [SpeedKeyframeRecord](#speedkeyframerecord--speed_keyframes)
+    - [CameraTrackRecord](#cameratrackrecord--camera_tracks)
+    - [AimKeyframeRecord](#aimkeyframerecord--aim_keyframes)
+    - [OrientationKeyframeRecord](#orientationkeyframerecord--orientation_keyframes)
+    - [DepthOfFieldKeyframeRecord](#depthoffieldkeyframerecord--depth_of_field_keyframes)
+    - [LidarKeyframeRecord](#lidarkeyframerecord--lidar_keyframes)
+    - [EditorRecord](#editorrecord--editors)
+    - [EditorSessionRecord](#editorsessionrecord--editor_sessions)
+    - [ChatMessageRecord](#chatmessagerecord--chat_messages)
+    - [AuthChallengeRecord](#authchallengerecord--auth_challenges)
+    - [AuthRateLimitRecord](#authratelimitrecord--auth_rate_limits)
+  - [11.4. Database constraints and service mapping](#114-database-constraints-and-service-mapping)
+  - [11.5. Schema upgrades and identifier lifecycle](#115-schema-upgrades-and-identifier-lifecycle)
+  - [11.6. Configuration and operations](#116-configuration-and-operations)
 - [12. HTTP operation inventory](#12-http-operation-inventory)
 - [13. Conformance checks](#13-conformance-checks)
 - [14. Limitations and open questions](#14-limitations-and-open-questions)
@@ -51,9 +153,9 @@ clients; explain contradictions rather than silently choosing incompatible
 behavior. A further requirement change needs its own specification commit and
 go-ahead before implementation.
 
-**SPEC-03. Task scope.** Editing this document alone does not trigger implementation.
-A task covers the requested requirements. Backlog and proposed features remain in
-external task documents and are not part of this specification.
+**SPEC-03. Change scope.** Editing this document alone does not trigger implementation.
+A change covers the requested requirements. Execution plans, backlog priorities
+and implementation progress remain outside this specification.
 This document is not an automatically executable code generator.
 
 **SPEC-04. Stable references.** Keep identifiers such as `API-01` and `LIB-02` when
@@ -61,6 +163,12 @@ moving text; do not reuse retired numbers. Give each new requirement a new numbe
 A PR identifies affected requirements, completed checks and remaining discrepancies.
 A material behavior change includes a specification update, OpenAPI/client changes
 when HTTP changes, and a migration when persisted data changes.
+
+**SPEC-05. Document structure.** State the backend contract directly, without
+task-specific sections, task identifiers or per-change implementation-status notes.
+Integrate changed requirements into the corresponding models, records, API and
+behavior sections. Keep the contents nested by section, with a link to every
+named model and record. Track implementation gaps and review decisions in the PR.
 
 ## 2. Purpose and scope
 
@@ -113,8 +221,8 @@ An empty aim timeline is valid: a keyframe at position `0` is not required.
 
 **DATA-04. Field catalogue.** Each model below lists every field, including
 inherited fields. Public resources, internal aggregates and request DTOs are
-identified separately. These tables define the resource contracts, including the
-CP-95 target, not database column layouts or permission to edit response-only fields.
+identified separately. These tables define resource contracts, not database column
+layouts or permission to edit response-only fields.
 
 - [Projects and scene entities](#32-projects-and-scene-entities)
 - [Camera controls and timelines](#33-camera-controls-and-timelines)
@@ -131,17 +239,15 @@ service/router modules. Models are not SQLAlchemy table mappings.
 
 A **record** is a SQLAlchemy ORM representation of database state, including
 columns, keys, constraints and relationships. Record classes use the `Record`
-suffix and live in `camera_path/persistence/records.py`. Rename the existing
-`camera_path/persistence/models.py` module accordingly and update all imports,
-including repositories, services, Alembic metadata loading and tests. The complete
-record catalogue is in [section 11.3](#113-baseline-record-catalogue). Repositories
+suffix and live in `camera_path/persistence/records.py`. Repositories, services,
+Alembic metadata loading and tests import database records from that module.
+The complete record catalogue is in [section 11.3](#113-record-catalogue). Repositories
 and services map records to/from serializable models; database records are not
 the public serialization contract.
 
-This rename changes only the Python module path. Preserve record class names,
-table/column names, SQLAlchemy metadata, data, migration history and external API
-schemas/behavior. It requires no database migration or rename of
-`camera_path/models.py`.
+Python module paths are separate from database identifiers. Record class names,
+table/column names, SQLAlchemy metadata and migration history define persistence;
+serializable service models define the external data contract.
 
 ### 3.1. Type notation
 
@@ -487,7 +593,7 @@ Public asset model. Its storage object key is internal persistence metadata, not
 
 | Field | Type | Required | Default | Constraints / meaning |
 | --- | --- | --- | --- | --- |
-| `id` | `string` | Yes | — | Existing server primary key; unchanged by CP-95 |
+| `id` | `string` | Yes | — | Server-assigned primary key |
 | `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
 | `name` | `string` | Yes | — | — |
 | `format` | `AssetFormat` | Yes | — | — |
@@ -886,7 +992,7 @@ include `location`, `message` and `type` in `field_errors`. Main mappings:
 | --- | --- |
 | 401 | `http_error`: missing, invalid or revoked session; `WWW-Authenticate: Bearer` when authentication is required |
 | 404 | `project_not_found` for a project; `not_found` for other missing resources |
-| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`; CP-95: `library_client_id_conflict`, `library_client_id_deleted` |
+| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`, `library_client_id_conflict`, `library_client_id_deleted` |
 | 413 | `http_error`: local upload exceeds its declared size |
 | 422 | `validation_error`, `invalid_geometry`; some explicit resource checks return `http_error` |
 | 428 | `if_match_required` |
@@ -1042,8 +1148,8 @@ read.
 
 **LIB-01. Upload.** Lifecycle: create upload → PUT bytes to `upload_url` → complete
 → ready. Creation accepts `name` (1–200 characters, nonblank after trimming),
-`size_bytes`, `format` (`ply` by default; `sog` is also supported), and the optional
-CP-95 fields in LibraryUploadCreate. It creates a pending asset with a
+`size_bytes`, `format` (`ply` by default; `sog` is also supported), and optional
+client ID, thumbnail reference and tags as defined in LibraryUploadCreate. It creates a pending asset with a
 server-generated `<id>.<format>` key. The current declared-size
 limit is `2,147,483,648` bytes (2 GiB); the size must be positive. Pending assets
 are excluded from public ready-asset list/get operations and cannot become project
@@ -1087,12 +1193,10 @@ survive every possible crash.
 omitting offset preserves its previous value. Changing defaults affects **new**
 cloud instances only. The file and existing instances remain unchanged.
 
-### 8.1. CP-95 — library identity, tags and thumbnails
+### 8.1. Library identity, tags and thumbnails
 
-The [CP-95 task](https://docs.google.com/document/d/1nj0kNZH98IlHocQ5TTRTtXX8YyVk7mykJw71JBFJCPI/edit)
-extends the existing Python monolith. These are specification-stage requirements;
-the implementation commit, Alembic migration, OpenAPI regeneration, generated
-frontend API and UI changes wait for the user's explicit go-ahead.
+Library metadata and registration belong to the backend monolith and use the
+same model/record contracts for manual uploads and externally produced results.
 
 **LIB-06. Correlation identity.** Keep the existing server `id`, its foreign keys,
 URLs and model object key. Add a distinct, non-null, immutable `client_id` with
@@ -1100,12 +1204,12 @@ database-enforced uniqueness across the environment's shared library, including
 pending items. Accept UUID strings, normalize them to lowercase hyphenated form,
 and reject malformed and all-zero UUIDs with `422 validation_error`. Omitted/null
 input generates UUIDv4. This value is neither an Object3D identifier, job ID nor
-message/event ID and grants no write permission. Future jobs may store a chosen
+message/event ID and grants no write permission. A producer may retain a chosen
 client ID before an asset exists, without a foreign key to a nonexistent row.
 
 Every LibraryAsset and LibraryUpload response includes `client_id`, `tags` and
-`thumbnail_url`. Existing `id`-based cloud references remain unchanged; no new
-project/cloud field is required for CP-95.
+`thumbnail_url`. Cloud references use the server asset `id`; a correlation ID
+does not replace `library_asset_id` on a project cloud.
 
 **LIB-07. Idempotent creation and registration.** For
 `POST /api/v1/library/uploads`, a new client ID returns `201 LibraryUpload`.
@@ -1133,12 +1237,12 @@ successful request's display spelling/order in the stored result.
 
 Upload preparation compares the request descriptor, not unknown future bytes.
 It does not prove equal model content merely because names and sizes match.
-The future ready-result registration contract in CP-96 also compares verified
-model SHA-256 and format/size, plus this normalized metadata; equal size alone
-cannot establish idempotence. A conflicting digest must never replace a ready
-model. Registering a ready external result uses this same identity/conflict
-policy, not a second table or a direct importer database write. CP-95 does not
-introduce the CP-96 transport, manifest consumer or checksum pipeline.
+Registration of an already-produced result also compares verified model SHA-256,
+format/size and normalized metadata; equal size alone cannot establish idempotence.
+A conflicting digest must never replace a ready model. All result-registration
+paths use the same asset record and identity/conflict policy. An importer does
+not write the database directly. File discovery, transport and content verification
+are separate producer/import boundaries, not upload-reservation behavior.
 
 **LIB-08. Tags.** Tags are metadata on the shared asset, not on a project cloud.
 Use an array of strings, default `[]`; null, non-string elements and more than
@@ -1150,12 +1254,12 @@ Reject blank/oversized tags rather than silently dropping or truncating them.
 Deduplicate by Unicode casefold, preserving the first occurrence's spelling and
 order. For example, `[" Tree ", "tree", "Rock"]` becomes `["Tree", "Rock"]`.
 Persist exactly the normalized list; do not serialize it as a comma-separated
-string. CP-95 adds no tag search, taxonomy or post-creation metadata PATCH;
-the existing defaults PATCH continues to change only transforms.
+string. Tags are assigned at creation; the library API has no tag search, taxonomy
+or post-creation metadata PATCH. The defaults PATCH changes only transforms.
 
 **LIB-09. Thumbnail reference and serving.** Persist nullable `thumbnail_key`,
 never a presigned URL, bucket URL or machine-absolute path. A thumbnail is an
-already-produced raster object; rendering/conversion belongs to CP-98.
+already-produced raster object; rendering/conversion is a producer responsibility.
 
 - A key is at most 255 characters and belongs to
   `thumbnails/<canonical-client_id>/<filename>`. The filename starts with an
@@ -1170,10 +1274,10 @@ already-produced raster object; rendering/conversion belongs to CP-98.
   root and the item's own thumbnail namespace, including through symlinks.
   A missing/invalid thumbnail prevents ready
   publication; its validation error must not publish a partially ready item.
-- Manual creation and future external registration accept the same key/tags
-  metadata and use the same validation. CP-95 only references an existing object;
-  it adds no thumbnail renderer, thumbnail upload workflow or external import
-  service. A manual upload without a thumbnail continues to work unchanged.
+- Manual creation and external result registration accept the same key/tags
+  metadata and use the same validation. These metadata operations reference an
+  existing object; thumbnail rendering/upload and file discovery are producer
+  responsibilities. A manual upload can omit its thumbnail.
 - Once an asset is ready, its referenced thumbnail is immutable like model bytes.
   A thumbnail is owned by its client-ID namespace, not shared with another asset.
   Single/bulk deletion stages model and owned thumbnail deletion together and
@@ -1199,21 +1303,20 @@ LIB-06; invalid values return `422`, unknown/pending/deleted values return
 server-ID route. The list endpoint retains its ordering and ready-only behavior;
 it gains the response fields but no pagination/filter semantic change.
 
-Keep ordinary editor authentication and current library file limits on both
-manual and future external registration; client IDs and thumbnail keys are not
-authorization. CP-95 does not introduce anonymous imports or service credentials.
+Editor authentication and library file limits apply to manual and external
+registration alike; client IDs and thumbnail keys are not authorization. The
+metadata API does not grant anonymous import access or issue service credentials.
 Existing clients sending only name/size/format still receive a fresh pending
-item with a non-null model upload URL and can PUT/complete as before. Regenerate
-OpenAPI and frontend DTO/client code only in the implementation stage; preserve
-existing operation IDs and routes. Update library list/details to display tags
-and `thumbnail_url` with the placeholder fallback, and let the manual creation
-request carry optional tags/reference metadata without requiring a thumbnail.
+item with a non-null model upload URL and can PUT/complete as before. OpenAPI and
+frontend DTO/client code must agree with these fields, operation IDs and routes.
+Library list/details display tags and `thumbnail_url` with the placeholder fallback;
+manual creation accepts optional tags/reference metadata without requiring a thumbnail.
 The ordinary upload form may offer optional tags; it must not require users to
 type correlation UUIDs or storage keys. Reference metadata is supplied through
 the API/producer integration, not a technical configuration form for end users.
 
-**LIB-11. Migration and verification.** Add a versioned Alembic migration after
-baseline head `20261026_0014`. Backfill each existing pending/ready item with a
+**LIB-11. Migration and verification.** Upgrading an existing database at revision
+`20261026_0014` backfills each pending/ready item with a
 distinct UUIDv4, `thumbnail_key=null` and `tags=[]`, then enforce client-ID
 non-null/uniqueness. Preserve server IDs, model object keys/bytes, timestamps,
 status, defaults, cloud references/order and all project revisions. Migration
@@ -1228,7 +1331,7 @@ deletion/tombstoning are transactional. This makes uniqueness span deletion and
 prevents a race between an old retry and deletion. The migration initializes the
 ledger for existing rows; it does not invent a history of already-deleted assets.
 
-Extend the autonomous HTTP suite for: legacy/manual uploads without new fields;
+Conformance scenarios cover legacy/manual uploads without correlation metadata;
 caller-supplied and generated UUIDs; invalid/canonicalized IDs; ready lookup and
 pending/missing/deleted `404`; equal/conflicting and concurrent creation retries;
 restart/lost-response retries; tags normalization/limits; thumbnails present,
@@ -1237,15 +1340,15 @@ rollback preserving both model and thumbnail. Test adapter URL generation and
 namespace/ownership checks in both local and S3 modes. Verify migrated populated
 data and existing project clouds separately from a fresh HTTP fixture.
 
-**LIB-12. Adjacent task boundaries.** CP-96 supplies external result discovery,
-the ready-manifest/registration transport and verified result checksum. CP-97
-supplies jobs; CP-98 produces models/thumbnails; CP-99 attaches results to projects.
-CP-100 supplies durable outbox/events and browser delivery. This CP-95 stage adds
-no job queue, worker, SSE endpoint or event-delivery guarantee. When CP-100 is
-implemented, `library_item.created` must identify the server asset ID and its
-`client_id` (as `library_client_id` in the event envelope), be persisted with the
-successful ready transition and be delivered only after commit. Idempotent
-replays must not create a second logical creation event.
+**LIB-12. Library boundaries and creation events.** Model/thumbnail production,
+file discovery, generation-job scheduling, project attachment and event delivery
+are separate operations from the library metadata API. Ordinary library use does
+not require a generator, worker, queue consumer or browser event stream.
+
+An implementation emitting `library_item.created` identifies the server asset ID
+and its `client_id` (as `library_client_id` in the event envelope), persists the
+event with the successful ready transition and delivers it only after commit.
+Idempotent replays must not create a second logical creation event.
 
 **CLOUD-01.** A ready asset can be attached multiple times to one or more projects.
 Each operation creates a separate instance ID, copies current asset defaults,
@@ -1368,8 +1471,7 @@ alone guarantees neither rollback of persisted data nor cancellation of the prov
 ## 11. Persistence, configuration and operations
 
 **STORE-01.** The main store is SQLite through async SQLAlchemy; schema migrations
-use Alembic. The baseline migration head is `20261026_0014`; CP-95 adds the next
-migration as specified in LIB-11. Current state is
+use Alembic, with upgrade compatibility defined in LIB-11 and STORE-04. State is
 normalized into typed columns; numeric vectors are not opaque JSON blobs. Foreign
 keys are enabled. A Project aggregate is assembled for compatibility; full-snapshot
 history with undo/redo is no longer the active persistence model.
@@ -1378,7 +1480,7 @@ history with undo/redo is no longer the active persistence model.
 | --- | --- |
 | Project / scene | `projects`, `anchors`, `scene_points`, `trajectory_segments`, `segment_anchors` |
 | Controls | `motion_profiles`, `speed_keyframes`, `camera_tracks`, `aim_keyframes`, `orientation_keyframes`, `depth_of_field_keyframes`, `lidar_keyframes` |
-| Library | `library_assets`, `project_clouds`; CP-95 adds `library_client_ids` reservations/tombstones |
+| Library | `library_assets`, `library_client_ids`, `project_clouds` |
 | Chat / profile | `chat_messages`, `user_settings` |
 | Auth | `editors`, `editor_sessions`, `auth_challenges`, `auth_rate_limits` |
 
@@ -1407,14 +1509,15 @@ field/default must not be assumed to create a database column/default or CHECK.
   index, but `project_id` also participates in the concrete record's primary key.
   The catalogue expands these inherited columns instead of omitting them.
 - `ORM insert default` means SQLAlchemy's Python-side `default=` when an ORM
-  insert omits a value. `Migrated SQL default` is the actual SQL `DEFAULT` after
-  Alembic head `20261026_0014`, also applicable to direct SQL inserts. `—` means
+  insert omits a value. `SQL default` is the database `DEFAULT` installed by schema
+  creation/upgrades, also applicable to direct SQL inserts. `—` means
   no explicit default of that kind, not an empty string or zero. An omitted nullable
   column may become NULL; a required column needs a supplied/defaulted value.
 - Historical migrations retain SQL defaults `'0'`/`'1'` for library transform
   defaults and project-cloud translation/rotation/scale/offset. The ORM has Python
   numeric defaults for those columns but does not declare their `server_default`.
-  The only explicit ORM server defaults are the three settings preferences.
+  Explicit ORM server defaults cover the three settings preferences and the
+  empty tags array on library assets.
   Therefore `Base.metadata.create_all()` alone does not reproduce every historical
   SQL default; migrations remain the schema-creation/upgrade contract.
 - For the four project-scoped keyframe tables, ORM primary-key order is
@@ -1423,13 +1526,13 @@ field/default must not be assumed to create a database column/default or CHECK.
   rather than silently changing the existing schema as part of documentation.
 - SQL types below are the declared SQLite types. `DATETIME` corresponds to
   SQLAlchemy `DateTime(timezone=True)`, not a native SQLite timezone type; the
-  writer supplies the creation timestamp. Authentication times are integer Unix
+  writer supplies timestamps. Authentication times are integer Unix
   seconds. IDs are supplied by application code; there are no database UUID or
   auto-increment generators in these records.
 - `alembic_version` is migration bookkeeping, not an application record. It has
   `version_num VARCHAR(32) NOT NULL`, primary key `alembic_version_pkc`, and stores
   the current Alembic revision. Removed snapshot/history tables are not part of
-  the baseline; jobs/outbox tables have not been added by CP-95.
+  this schema. The library reservation ledger is not a generation-job or outbox table.
 
 ### 11.2. Persisted enums
 
@@ -1452,21 +1555,19 @@ These values and spelling must survive recreation/migration unchanged.
 | `ChatRole` | `user`, `assistant` | `VARCHAR(9)` |
 
 
-### 11.3. Baseline record catalogue
+### 11.3. Record catalogue
 
-The following 20 records and 129 columns describe the implemented baseline at
-Alembic head `20261026_0014`. CP-95 target columns/records are in 11.5 and are not
-silently included in these baseline tables. Every inherited/composite column is
-expanded here. SQL defaults are taken from the migrated schema; ORM defaults
-are taken from the mapped records. Constraints below are exhaustive for explicit
-PK/FK/UNIQUE/CHECK/index definitions; implicit indexes created for PK/UNIQUE are
-not listed again.
+The following records define the persistence contract. Every inherited/composite
+column is expanded here. ORM insert defaults and database SQL defaults are listed
+separately. Constraints below enumerate explicit PK/FK/UNIQUE/CHECK/index
+definitions; implicit indexes created for PK/UNIQUE are not listed again.
+Schema upgrade and identifier-lifecycle rules are in section 11.5.
 
 #### UserSettingsRecord — `user_settings`
 
 Shared application profile, independent of projects. The configured user key is not an editor-table foreign key.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `gaussian_dpr` | `TEXT` | No | — | `'1x'` | Stored DPR preference; allowed service values are 1x/system, without a database CHECK. |
 | `user_id` | `TEXT` | No | — | — | Configured shared profile key, not a foreign key. |
@@ -1479,7 +1580,7 @@ Shared application profile, independent of projects. The configured user key is 
 
 Project identity, display name and optimistic-concurrency revision; scene data lives in child tables.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `name` | `TEXT` | No | — | — | Display name. |
@@ -1489,17 +1590,22 @@ Project identity, display name and optimistic-concurrency revision; scene data l
 
 #### LibraryAssetRecord — `library_assets`
 
-Shared file metadata and transform defaults, including pending uploads. Binary model content lives in storage, not in this row. CP-95 additions are specified separately in 11.5.
+Shared file metadata and transform defaults, including pending uploads. Binary
+model content lives in storage, not in this row. The immutable client ID associates
+the item with its durable reservation and with externally produced results.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
+| `client_id` | `TEXT` | No | — | — | Immutable canonical UUID; unique FK to the reservation ledger. |
 | `name` | `TEXT` | No | — | — | Display name. |
 | `format` | `TEXT` | No | — | — | Plain text ply/sog validated by the service; not a database enum. |
 | `object_key` | `TEXT` | No | — | — | Unique relative storage key, never a temporary URL. |
 | `size_bytes` | `BIGINT` | No | — | — | Declared model byte count. |
 | `status` | `VARCHAR(7)` / `LibraryAssetStatus` | No | — | — | Pending or published/ready lifecycle. |
 | `created_at` | `DATETIME` | No | — | — | Application-supplied creation time; no SQL clock default. |
+| `thumbnail_key` | `TEXT` | Yes | — | — | Owned relative thumbnail object key; null when absent, never a URL. |
+| `tags` | `JSON` | No | `list` | `'[]'` | Normalized string array; a fresh list is created for each ORM insert. |
 | `default_rotation_x_deg` | `FLOAT` | No | `0.0` | `'0'` | Default Euler rotation about local x, degrees; copied to new instances. |
 | `default_rotation_y_deg` | `FLOAT` | No | `0.0` | `'0'` | Default Euler rotation about local y, degrees; copied to new instances. |
 | `default_rotation_z_deg` | `FLOAT` | No | `0.0` | `'0'` | Default Euler rotation about local z, degrees; copied to new instances. |
@@ -1510,13 +1616,33 @@ Shared file metadata and transform defaults, including pending uploads. Binary m
 
 - Primary key: `id`.
 - UNIQUE (unnamed): `(object_key)`.
+- UNIQUE `uq_library_assets_client_id`: `(client_id)`.
+- Foreign key `fk_library_assets_client_id`: `(client_id) → library_client_ids(client_id)`; ON DELETE RESTRICT.
 - CHECK `ck_library_assets_status`: `status IN ('pending', 'ready')`.
+
+#### LibraryClientIdRecord — `library_client_ids`
+
+Durable reservation for one logical library item. A live reservation is associated
+with an asset through its unique client-ID foreign key; a tombstone prevents a
+late retry from recreating a deleted item.
+
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| `client_id` | `TEXT` | No | — | — | Canonical UUID supplied by the registration transaction. |
+| `deleted_at` | `DATETIME` | Yes | — | — | Null while live; deletion timestamp for a retained tombstone. |
+
+- Primary key: `client_id`.
+- There are no foreign keys, enum columns, additional CHECK/UNIQUE constraints or
+  secondary indexes. The asset's unique FK supplies the live association without
+  a circular asset-ID back-reference.
+- Registration, live/tombstone cardinality and deletion are transactional service
+  invariants as defined in STORE-04.
 
 #### ProjectCloudRecord — `project_clouds`
 
 One independent instance of a ready library asset in a project; transforms are copied from current asset defaults when the instance is created.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `project_id` | `TEXT` | No | — | — | Owning project. |
@@ -1545,7 +1671,7 @@ One independent instance of a ready library asset in a project; transforms are c
 
 An authoring anchor. The surface vectors are typed scalar columns exposed as Vector3 composites, not JSON payloads.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `label` | `TEXT` | No | — | — | Display label. |
@@ -1570,7 +1696,7 @@ An authoring anchor. The surface vectors are typed scalar columns exposed as Vec
 
 A named project-space target for aim and focus references. The redundant unique (project_id, id) key is the target of scoped composite foreign keys.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `label` | `TEXT` | No | — | — | Display label. |
@@ -1589,7 +1715,7 @@ A named project-space target for aim and focus references. The redundant unique 
 
 An ordered spline or spiral segment. The discriminator selects which scalar fields are present; anchor ordering is stored in segment_anchors.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `position` | `INTEGER` | No | — | — | Zero-based order within the owning collection. |
@@ -1616,7 +1742,7 @@ An ordered spline or spiral segment. The discriminator selects which scalar fiel
 
 Ordered membership of anchors in a trajectory segment. An anchor can be referenced by multiple segments; position belongs to the segment, not the project.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `segment_id` | `TEXT` | No | — | — | Owning trajectory segment. |
 | `position` | `INTEGER` | No | — | — | Zero-based order within the owning collection. |
@@ -1631,7 +1757,7 @@ Ordered membership of anchors in a trajectory segment. An anchor can be referenc
 
 One motion-profile singleton per project. Speed keyframes are separate records.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `project_id` | `TEXT` | No | — | — | Owning project. |
 | `default_speed` | `FLOAT` | No | — | — | Default path speed. |
@@ -1643,7 +1769,7 @@ One motion-profile singleton per project. Speed keyframes are separate records.
 
 A speed control point scoped to its project. The same keyframe ID can exist in another project.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `path_position` | `FLOAT` | No | — | — | Normalized whole-path arc-length position, not time. |
@@ -1661,7 +1787,7 @@ A speed control point scoped to its project. The same keyframe ID can exist in a
 
 One camera-track singleton per project: default aim, world-up vector and default Euler orientation. It does not contain the keyframe rows.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `project_id` | `TEXT` | No | — | — | Owning project. |
 | `default_aim_kind` | `VARCHAR(13)` / `AimKind` | No | — | — | Default aim discriminator. |
@@ -1687,7 +1813,7 @@ One camera-track singleton per project: default aim, world-up vector and default
 
 A project-scoped aim keyframe using normalized discriminator/direction/reference columns rather than serialized aim JSON.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `path_position` | `FLOAT` | No | — | — | Normalized whole-path arc-length position, not time. |
@@ -1712,7 +1838,7 @@ A project-scoped aim keyframe using normalized discriminator/direction/reference
 
 A project-scoped Euler XYZ orientation keyframe, with angles stored in degrees.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `path_position` | `FLOAT` | No | — | — | Normalized whole-path arc-length position, not time. |
@@ -1733,7 +1859,7 @@ A project-scoped Euler XYZ orientation keyframe, with angles stored in degrees.
 
 A project-scoped focus keyframe with typed focus discriminator/reference and optical parameters.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `path_position` | `FLOAT` | No | — | — | Normalized whole-path arc-length position, not time. |
@@ -1755,7 +1881,7 @@ A project-scoped focus keyframe with typed focus discriminator/reference and opt
 
 An optional singleton per project, implicitly at path position zero. project_id is the primary key; id is a required public identifier but is neither a primary nor a unique database key.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `project_id` | `TEXT` | No | — | — | Owning project. |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
@@ -1773,7 +1899,7 @@ An optional singleton per project, implicitly at path position zero. project_id 
 
 Credentials for the single application editor. The repository uses the fixed ID editor; neither a one-row CHECK nor a unique-username constraint enforces that application policy.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `username` | `TEXT` | No | — | — | Normalized editor email. |
@@ -1786,7 +1912,7 @@ Credentials for the single application editor. The repository uses the fixed ID 
 
 A revocable server-side session. The single-editor design has no editor_id foreign key here; JWT credential-version validation and explicit session revocation are application rules.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Opaque server-issued session identifier used for JWT revocation. |
 | `expires_at` | `INTEGER` | No | — | — | Expiry as Unix time in seconds. |
@@ -1797,7 +1923,7 @@ A revocable server-side session. The single-editor design has no editor_id forei
 
 An ordered persisted user or assistant message within a project.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
 | `position` | `INTEGER` | No | — | — | Zero-based order within the owning collection. |
@@ -1815,7 +1941,7 @@ An ordered persisted user or assistant message within a project.
 
 A persisted email-code challenge bound to the current credential version. It stores a code digest, never the plaintext code; it has no editor foreign key.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Opaque challenge identifier. |
 | `credential_version` | `TEXT` | No | — | — | Credential version the challenge belongs to. |
@@ -1831,7 +1957,7 @@ A persisted email-code challenge bound to the current credential version. It sto
 
 A durable fixed-window authentication counter; expiry and counter updates are supplied by the authentication service/repository.
 
-| Column | SQL type | Nullable | ORM insert default | Migrated SQL default | Meaning |
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `key` | `TEXT` | No | — | — | Stable budget/window bucket key. |
 | `count` | `INTEGER` | No | — | — | Consumed requests in the bucket. |
@@ -1857,7 +1983,7 @@ business validation:
   explicit service validation, not an extra composite FK invented by this catalogue.
 - Path-position range and per-timeline position uniqueness, finite vectors,
   positive scales/speeds, resource-name limits, nonzero normals and general
-  cross-resource rules come from the service/model contract. The baseline has no
+  cross-resource rules come from the service/model contract. The schema has no
   hidden SQL CHECK/UNIQUE for these beyond the constraints explicitly listed.
   LiDAR bounds, enum membership and polymorphic field combinations do have the
   listed database CHECKs.
@@ -1871,43 +1997,18 @@ business validation:
   the absence of editor FKs or a database one-row CHECK must not be mistaken for
   permission to change that behavior.
 
-### 11.5. CP-95 target record changes
+### 11.5. Schema upgrades and identifier lifecycle
 
-**STORE-04. CP-95 persistence delta.** This subsection is proposed target schema,
-not a description of columns/tables already present in the baseline catalogue.
-It is implemented only after the specification go-ahead and follows LIB-06–12.
-All baseline records, columns, constraints and defaults remain unless explicitly
-changed here.
+**STORE-04. Client-ID reservations and schema upgrades.** The unique foreign key
+from `library_assets.client_id` to `library_client_ids.client_id` associates each
+asset with one durable reservation. It supplies lookup uniqueness/indexing; no
+duplicate nonunique client-ID index is needed. Canonical UUID syntax, normalized
+tag contents and thumbnail ownership are service validations.
 
-Add these columns to `LibraryAssetRecord` / `library_assets`:
-
-| Column | SQLAlchemy / SQLite type | Nullable | Insert default | Meaning |
-| --- | --- | --- | --- | --- |
-| `client_id` | `Text` / `TEXT` | No | Application-generated or caller-supplied canonical UUID | Immutable FK to the reservation ledger; unique per asset/environment |
-| `thumbnail_key` | `Text` / `TEXT` | Yes | NULL when absent | Owned relative thumbnail key validated by LIB-09; never a URL |
-| `tags` | `JSON` / `JSON` | No | ORM fresh-list factory; SQL `'[]'` | Normalized string array, not comma-separated text; validate through LIB-08 |
-
-Add named unique constraint `uq_library_assets_client_id(client_id)` and foreign
-key `fk_library_assets_client_id(client_id) → library_client_ids(client_id)` with
-`ON DELETE RESTRICT`. The unique constraint supplies lookup uniqueness/indexing;
-no second nonunique client-ID index is needed. Normalized tag contents, canonical
-UUID syntax and thumbnail ownership are service validations. The asset's immutable
-`name`, `format`, `size_bytes`, `thumbnail_key` and `tags` columns reconstruct the
-registration descriptor; defaults for cloud transforms are excluded from identity.
-No model-content checksum column or generation-job FK is introduced by this
-metadata task.
-
-Introduce `LibraryClientIdRecord` / `library_client_ids`:
-
-| Column | SQLAlchemy / SQLite type | Nullable | Default | Meaning |
-| --- | --- | --- | --- | --- |
-| `client_id` | `Text` / `TEXT` | No | Supplied by the registration transaction | Canonical UUID primary key, reserved for one logical library item |
-| `deleted_at` | `DateTime(timezone=True)` / `DATETIME` | Yes | NULL | Null while live; deletion timestamp once the reservation becomes a tombstone |
-
-There are no enum columns, foreign keys, CHECKs or secondary indexes on the
-reservation record. `client_id` is its only primary/unique key. No optional
-asset-ID back-reference is added: the unique FK on the asset provides the live
-association without circular FKs.
+The asset's immutable `name`, `format`, `size_bytes`, `thumbnail_key` and `tags`
+columns reconstruct the registration descriptor. Transform defaults are excluded
+from identity. The library metadata schema has no model-content checksum column
+or generation-job foreign key.
 
 The live ledger row and asset are created together in one transaction. Service
 invariants require exactly one asset for a live reservation, and no asset when
@@ -1916,12 +2017,13 @@ the ledger row is retained and cannot be reused or removed by normal library
 operations. These cardinality/lifecycle rules are transactional service invariants,
 not a claim that the one-direction FK enforces them by itself.
 
-Migration backfills a distinct client ID and live ledger row for each existing
-asset, initializes tags/thumbnail as specified, and applies non-null/unique/FK
-constraints after the backfill. It does not change model bytes, server IDs,
-timestamps, defaults, clouds or revisions, and does not invent tombstones for
-assets deleted before this migration. Fresh creation and upgrade reach this same
-target schema; the client-ID ledger is not an externally callable event queue.
+Upgrading from schema revision `20261026_0014` backfills a distinct client ID and
+live ledger row for each existing asset, initializes `tags=[]` and
+`thumbnail_key=null`, and applies non-null/unique/FK constraints after the backfill.
+It preserves model bytes, server IDs, timestamps, defaults, clouds and revisions,
+and does not invent tombstones for previously deleted assets. Fresh creation and
+upgrade reach the record schema in section 11.3. The ledger is not an externally
+callable event queue.
 
 ### 11.6. Configuration and operations
 
@@ -1965,14 +2067,11 @@ a production deployment.
 
 ## 12. HTTP operation inventory
 
-**HTTP-01.** The baseline checked-in OpenAPI contains 70 operations. The target
-table adds CP-95 client-ID lookup, bringing the inventory to 71 operations.
+**HTTP-01.** The table defines the 71 canonical HTTP operations.
 Every path includes `/api/v1`. Request/response DTO names correspond to schemas in
-[openapi.json](openapi.json); regenerate that artifact and frontend clients at
-the authorized implementation stage, including the CP-95 fields/replay status.
-Check fields, required/nullability and exact JSON shapes against the regenerated
-schema together with the rules above. `—`
-means no body. A successful `204` has no JSON content. Authentication and project
+[openapi.json](openapi.json). The OpenAPI artifact and generated frontend clients
+must agree with this inventory, including field requirements/nullability, exact
+JSON shapes and idempotent replay statuses. `—` means no body. A successful `204` has no JSON content. Authentication and project
 preconditions are defined in `AUTH-01` and `API-02`; errors are additional to the
 successful statuses listed here.
 
@@ -1985,8 +2084,8 @@ successful statuses listed here.
 | `POST` | `/api/v1/auth/verify` | VerifyRequest | 200 → TokenResponse |
 | `GET` | `/api/v1/library` | — | 200 → LibraryAsset[] |
 | `POST` | `/api/v1/library/bulk-delete` | LibraryAssetsDelete | 204 → — |
-| `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 new / 200 replay → LibraryUpload; CP-95 |
-| `GET` | `/api/v1/library/by-client-id/{client_id}` | — | 200 → LibraryAsset; CP-95 |
+| `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 new / 200 replay → LibraryUpload |
+| `GET` | `/api/v1/library/by-client-id/{client_id}` | — | 200 → LibraryAsset |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
 | `POST` | `/api/v1/library/{asset_id}/complete` | — | 200 → LibraryAsset |
@@ -2059,7 +2158,7 @@ successful statuses listed here.
 | `GET /api/v1/openapi.json` | Generated OpenAPI |
 | `PUT /api/v1/library/{asset_id}/content` | Local adapter only, editor, raw bytes → `204`; no project If-Match |
 | `GET /api/v1/library/{asset_id}/content` | Local adapter only, public ready bytes |
-| `GET /api/v1/library/{asset_id}/thumbnail` | Local adapter only, public ready raster image; CP-95/LIB-09 |
+| `GET /api/v1/library/{asset_id}/thumbnail` | Local adapter only, public ready raster image; LIB-09 |
 
 The unversioned project API is mounted from `routers/api.py`. It provides compatible
 project/scene/trajectory/timeline/chat operations with aggregate responses rather
@@ -2079,7 +2178,7 @@ tests (paths relative to `backend/tests/`):
 | TIME-01–05 | Defaults, duplicate positions, delete/recreate, static LiDAR singleton | `test_delete_timelines.py`, `test_depth_of_field_timeline.py`, `test_lidar_timeline.py` |
 | GEOM-01–06 | Endpoints, C² spline, tangent constraints, unchanged spirals, adaptive approximation, distance/time | `test_geometry.py`, `test_trajectory_planner.py` |
 | LIB-01–05, CLOUD-01–02 | Real small PLY/SOG bytes, complete/retry, instances/defaults/order, delete rollback | `test_library.py`, `test_s3_library.py`, `test_project_clouds.py`, `test_library_delete.py`, `test_library_bulk_delete.py` |
-| LIB-06–12, STORE-04 (CP-95 target) | Client IDs, replay/conflict/concurrency, target records/migration, tags, thumbnail ownership/URLs, lookup and legacy compatibility | Extend the above library tests and `integration/tests/test_library.py` at implementation stage; no claim of coverage yet |
+| LIB-06–12, STORE-04 | Client IDs, replay/conflict/concurrency, records/schema upgrade, tags, thumbnail ownership/URLs, lookup and legacy compatibility | Library HTTP scenarios in `integration/tests/test_library.py`, populated-database upgrade checks and storage-adapter checks |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
 | CHAT-01–05 | Idempotent messages, atomic tool edits, history, SSE delta/result/error, unavailable provider | `test_agent.py`, `test_agent_lidar.py`, `test_api.py` |
 
@@ -2111,12 +2210,10 @@ equality is unnecessary.
 
 ## 14. Limitations and open questions
 
-**GAP-01.** This specification captures the baseline contract without declaring
-known bugs desirable behavior.
-[CP-117](https://docs.google.com/document/d/1Ql-Ynh-PZ6QIVf6nqycBb2FExjOriIQZMlYG-2VFZmI/edit)
-reports revision_conflict on anchor deletion and spiral recreation. Its backend/
-frontend cause still needs to be isolated. The requirement remains: a current
-revision permits a valid edit; a stale revision produces a conflict without data loss.
+**GAP-01.** Implementation defects do not define expected behavior. A current
+revision permits a valid edit, including anchor deletion and spiral recreation;
+a stale revision produces a conflict without data loss. Unexpected conflicts
+require diagnosis against that contract, not adoption as a product requirement.
 
 **GAP-02.** The HTTP mutation guard uses an in-process lock; database writes use
 revision CAS. This promises neither a shared lock across every process nor atomic
@@ -2144,10 +2241,9 @@ multi-user access are not yet specified.
 
 ## 15. Sources and implementation map
 
-This specification was reconstructed from current `main` routes, DTOs, services,
-repositories, compiler, migrations and tests, with relevant Drive tasks checked.
-Source links help locate implementation. DATA-05 defines the required model/record
-naming convention; the other links do not freeze the file structure during refactoring.
+Source links locate implementation entrypoints; they do not replace the
+requirements above. DATA-05 defines the required model/record naming convention;
+the other links do not freeze the file structure during refactoring.
 
 | Area | Source |
 | --- | --- |
@@ -2161,10 +2257,3 @@ naming convention; the other links do not freeze the file structure during refac
 | LLM orchestration / tools | [trajectory_agent.py](src/camera_path/agent/trajectory_agent.py) |
 | Local / AWS adapters | [dev/](src/camera_path/dev/), [aws/](src/camera_path/aws/) |
 | Runbooks | [backend/README.md](README.md), [infra/README.md](../infra/README.md) |
-
-The [older backend description on Drive](https://docs.google.com/document/d/1JdP6BxfQYExK8O_8P-zR2Y3KAyCSptPIslNsuulDEdg/edit)
-provides historical context; its snapshot storage, starting aim key and source map
-are outdated. The [task folder](https://drive.google.com/drive/folders/1A5lVOLC88vFn6oN3XXWfNdSckLFRWeYQ)
-remains the work plan. Collect newly accepted requirements here so future
-implementation does not require reconstructing the contract from conversations
-and task documents again.
