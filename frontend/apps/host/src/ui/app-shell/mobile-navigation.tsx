@@ -2,7 +2,8 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Slot } from "@camera-path/slots";
 import { Button } from "@camera-path/ui-kit";
-import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { Camera, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavigationLinks } from "./navigation-links";
 import { ProfileMenu } from "./profile-menu";
@@ -53,9 +54,15 @@ export function MobileNavigation() {
           </div>
         </Dialog.Content>
       </Dialog.Root>
-      <span className="text-xs font-medium tracking-tight text-muted-foreground">
+      <Link
+        href="/"
+        aria-label="Camera Path — Projects"
+        onClick={() => setOpen(false)}
+        className="flex h-9 items-center gap-2 rounded-lg px-2 text-xs font-medium tracking-tight text-muted-foreground outline-none transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+      >
+        <Camera className="size-[18px]" strokeWidth={1.6} aria-hidden="true" />
         Camera Path
-      </span>
+      </Link>
     </header>
   );
 }
