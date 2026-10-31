@@ -120,6 +120,25 @@ CP-95 target, not database column layouts or permission to edit response-only fi
 - [Chat, authentication responses and errors](#36-chat-authentication-responses-and-errors)
 - [Creation and update requests](#37-creation-and-update-requests)
 
+**DATA-05. Models and records.** A **model** is a Pydantic service/domain or
+request/response model: it defines validated application data and supports
+Pydantic serialization to JSON-compatible data. Common service models live in
+`camera_path/models.py`; service-specific DTOs may remain in their existing
+service/router modules. Models are not SQLAlchemy table mappings.
+
+A **record** is a SQLAlchemy ORM representation of database state, including
+columns, keys, constraints and relationships. Record classes use the `Record`
+suffix and live in `camera_path/persistence/records.py`. Rename the existing
+`camera_path/persistence/models.py` module accordingly and update all imports,
+including repositories, services, Alembic metadata loading and tests. Repositories
+and services map records to/from serializable models; database records are not
+the public serialization contract.
+
+This rename changes only the Python module path. Preserve record class names,
+table/column names, SQLAlchemy metadata, data, migration history and external API
+schemas/behavior. It requires no database migration or rename of
+`camera_path/models.py`.
+
 ### 3.1. Type notation
 
 | Type | Meaning |
@@ -130,7 +149,7 @@ CP-95 target, not database column layouts or permission to edit response-only fi
 | `FiniteVec3` | A Vec3 with three finite components |
 | `DateTime` | ISO 8601 date-time string in JSON; Python datetime internally |
 | `Array<T>` | Ordered array of values of type T |
-| `Record<string, T>` | JSON object mapping string IDs to values of type T |
+| `Record<string, T>` | JSON object mapping string IDs to values of type T; unrelated to ORM record classes |
 | `T \| null` | The field accepts null; this is separate from omitting the field |
 | `Interpolation` | `"smoothstep" \| "linear" \| "hold"` |
 | `AssetFormat` | `"ply" \| "sog"` |
@@ -1585,16 +1604,17 @@ multi-user access are not yet specified.
 
 This specification was reconstructed from current `main` routes, DTOs, services,
 repositories, compiler, migrations and tests, with relevant Drive tasks checked.
-Source links help locate implementation; they do not require preserving the same
-file structure during refactoring.
+Source links help locate implementation. DATA-05 defines the required model/record
+naming convention; the other links do not freeze the file structure during refactoring.
 
 | Area | Source |
 | --- | --- |
 | HTTP composition / errors | [api.py](src/camera_path/api.py), [routers/](src/camera_path/routers/) |
 | DTOs and defaults | [models.py](src/camera_path/models.py); DTOs in services/library.py, services/project_clouds.py, services/user_settings.py, routers/auth.py |
+| Database records | [persistence/records.py](src/camera_path/persistence/records.py); SQLAlchemy record classes as defined in DATA-05 |
 | Application operations | [services/](src/camera_path/services/) |
 | Revision CAS | [revisions.py](src/camera_path/services/revisions.py), [dependencies.py](src/camera_path/routers/dependencies.py) |
-| ORM / repositories / migrations | [persistence/](src/camera_path/persistence/), [repositories/](src/camera_path/repositories/), [alembic/](alembic/) |
+| Persistence / repositories / migrations | [persistence/](src/camera_path/persistence/), [repositories/](src/camera_path/repositories/), [alembic/](alembic/) |
 | Geometry | [trajectory/](src/camera_path/trajectory/) |
 | LLM orchestration / tools | [trajectory_agent.py](src/camera_path/agent/trajectory_agent.py) |
 | Local / AWS adapters | [dev/](src/camera_path/dev/), [aws/](src/camera_path/aws/) |
