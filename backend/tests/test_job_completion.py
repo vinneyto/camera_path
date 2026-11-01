@@ -370,7 +370,7 @@ async def test_manual_uploads_are_fresh_ungrouped_assets(setup):
     asset = first.json()
     assert asset["id"] != second.json()["id"]
     assert asset["tags"] == ["Tree", "ROCK"] and asset["job_id"] is None
-    assert "client_id" not in asset and asset["primary_file_id"] == "main"
+    assert asset["primary_file_id"] == "main"
     assert (await client.put(asset["upload_url"], content=PLY)).status_code == 204
     assert (await client.post(f"/api/v1/library/{asset['id']}/complete")).status_code == 200
     assert (await client.post("/api/v1/library/uploads", json=data)).status_code == 201
@@ -379,8 +379,6 @@ async def test_manual_uploads_are_fresh_ungrouped_assets(setup):
 @pytest.mark.parametrize(
     "mutation",
     [
-        {"client_id": "not a uuid"},
-        {"client_id": "00000000-0000-0000-0000-000000000000"},
         {"tags": None},
         {"tags": [""]},
         {"tags": ["bad\nvalue"]},

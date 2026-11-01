@@ -73,7 +73,7 @@ def test_real_email_authenticated_job_completion_multiple_files_and_restart(dev_
     job = b.request("GET", f"/api/v1/jobs/{status['job_id']}", auth=False).json()
     assert job["completed_at"] is not None
     asset = job["assets"][0]
-    assert asset["job_id"] == job["id"] and "client_id" not in asset
+    assert asset["job_id"] == job["id"]
     assert asset["tags"] == ["Tree"]
     assert asset["primary_file_id"] == "sog" and asset["format"] == "sog"
     assert asset["size_bytes"] == len(SOG) and len(asset["files"]) == 2

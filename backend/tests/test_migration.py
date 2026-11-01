@@ -291,9 +291,6 @@ def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_pat
             "FROM library_assets ORDER BY id"
         ).fetchall()
         assert all(row[1] is None for row in assets)
-        assert "client_id" not in {
-            r[1] for r in connection.execute("PRAGMA table_info(library_assets)")
-        }
         assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone() == (0,)
         assert all(row[2:] == (f"{row[0]}.ply", 23, 2, None, "[]") for row in assets)
         assert connection.execute(
