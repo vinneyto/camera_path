@@ -200,7 +200,8 @@ file uploads do not make the backend decode or train 3DGS models.
 **SCOPE-03.** Data is shared and published: guests read it; one authenticated editor
 can change it. There are currently no private user projects, public registration,
 multiple-editor roles or per-user libraries. Core geometry and REST operations work
-without OpenAI credentials.
+without OpenAI credentials. Development-only completion ingress in QUEUE-03 is
+explicit unauthenticated tooling, outside the ordinary editor-write policy.
 
 ## 3. Entities and defaults
 
@@ -1106,7 +1107,7 @@ Queue delivery never implicitly creates an unknown job.
 
 #### JobCompletionStatus
 
-Editor-only dev transport diagnostic. The result is read through the ordinary
+Development-only transport diagnostic; no authentication. The result is read through the ordinary
 job resource; queue status does not carry a second list of asset identities.
 
 | Field | Type | Required | Default | Constraints / meaning |
@@ -1429,7 +1430,8 @@ their ready-only behavior and ordering. Pending/missing/deleted assets return
 which includes the related assets and their file/download metadata. No library
 lookup by producer correlation ID is exposed.
 
-Editor authentication applies to manual writes and dev completion submission;
+Editor authentication applies to manual writes. Dev completion submission/status
+are unauthenticated debugging operations restricted to development (QUEUE-03);
 AWS queue access is governed by IAM and QUEUE-04. Existing manual clients sending
 name/size/format receive a fresh pending asset and can PUT/complete as before.
 OpenAPI and generated clients agree with the fields and operation IDs. Library
@@ -1586,8 +1588,11 @@ code, without credentials, receipts or source contents.
 **QUEUE-03. Dev HTTP transport.** With `message_queue=dev` in development only,
 mount `POST /api/v1/dev/job-completions` (`enqueueJobCompletion`) and
 `GET /api/v1/dev/job-completions/{message_id}` (`getJobCompletionStatus`). Both
-require the existing editor session, including the normal email-code login when
-enabled. Neither uses a project ETag. JSON files are submitted as their raw
+are local debugging operations and require no editor session, JWT or email-code
+login. An absent or invalid Authorization header does not change their behavior.
+Neither uses a project ETag. Creating a job through the ordinary POST /api/v1/jobs
+still requires the editor; this dev transport does not change business API access.
+JSON files are submitted as their raw
 `application/json` body, for example with `curl --data-binary @item.json`; no
 multipart wrapper or client-side filesystem access is implied.
 
@@ -1611,8 +1616,14 @@ idempotence and never supplies a second identifier for assets. Persist message
 bodies, leases, attempts/results in the dev queue, recover after restart and
 retain failed messages for diagnosis.
 This transport uses no external broker; it is not an in-memory background-task
-shortcut. It is absent (`404`) with `none`/`sqs` or outside development. Queue
-persistence details stay in `dev/`; the import handler does not read those tables.
+shortcut. It is absent (`404`) with `none`/`sqs` or outside development. No
+/api/v1/dev operation is mounted or listed in production OpenAPI. Production with
+message_queue=dev fails configuration/application construction, including settings
+objects passed without normal validation. The composition root checks the explicit
+environment as well as the actual adapter before mounting routes. Dev route handlers
+also fail closed with 404 unless the app's explicit environment is development,
+including when the router was mistakenly registered outside that composition path.
+Queue persistence details stay in `dev/`; the import handler does not read those tables.
 
 **QUEUE-04. AWS SQS transport.** Poll a configured SQS Standard queue. Each
 MessageBody is exactly the same JobCompletionMessage JSON accepted in dev;
@@ -1689,10 +1700,12 @@ the backend boundary.
 
 ## 9. Authentication and profile
 
-**AUTH-01.** Public GET operations read shared data; `GET /auth/session` and the
-dev import-status operation in QUEUE-03 require Bearer authentication.
-Business writes, local upload, dev import submission, profile update and logout
-require a valid editor session. Login/verify/resend do not require a JWT. The single
+**AUTH-01.** Public GET operations read shared data; `GET /auth/session` requires
+Bearer authentication. Business writes, local upload, profile update and logout
+require a valid editor session. Login/verify/resend do not require a JWT. The dev-only
+completion submission/status operations in QUEUE-03 also require no JWT and are
+unavailable in production; this exception does not apply to ordinary job creation.
+The single
 editor is created/replaced using `editor-create` with an email and a 12–1024-character
 password; there is no public registration. Passwords are stored as Argon2 hashes.
 Replacing credentials revokes sessions and unfinished sign-ins.
@@ -2493,8 +2506,11 @@ handlers, OpenAPI behavior and the lifespan using injected contracts. It contain
 no dev/AWS imports, provider selection or adapter-specific route registration.
 AuthService receives its email sender rather than selecting/importing SMTP/SES.
 The composition wrapper registers dev-owned SQL metadata and adds local content/
-thumbnail routes only for filesystem storage, and authenticated completion/status
-routes only for the dev queue. S3/SQS expose no corresponding local/dev routes.
+thumbnail routes only for filesystem storage, and unauthenticated completion/status
+routes only for the dev queue in development. Production construction rejects a
+dev queue regardless of whether Settings validation was bypassed; it never mounts
+/api/v1/dev routes. Record the explicit environment for the dev handlers' runtime
+guard. S3/SQS expose no corresponding local/dev routes.
 The finished OpenAPI schema includes exactly the routes actually mounted.
 
 Keep lifecycle ownership explicit: initialize the repository before serving and
@@ -2502,8 +2518,9 @@ start the optional consumer once per lifespan; cancel and await it on shutdown,
 leaving unfinished deliveries recoverable. Close a repository created by the
 wrapper, while leaving an explicitly supplied repository to its caller. Adapter
 composition must not initialize the database, poll queues or send email while
-merely constructing/exporting the app. The HTTP/storage/queue/auth contracts,
-migrations, authentication and request/response shapes remain unchanged.
+merely constructing/exporting the app. Apply the HTTP/storage/queue/auth contracts
+and migrations defined in this specification; the development authentication
+exception and production isolation are defined by QUEUE-03.
 
 **OPS-02.** `/health` returns `{status:"ok"}` and is a liveness endpoint, not a
 complete database/S3/SES/OpenAI check. `/docs` serves Scalar; OpenAPI is available at
@@ -2542,8 +2559,8 @@ successful statuses listed here.
 | `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 → LibraryUpload |
 | `POST` | `/api/v1/jobs` | — (editor) | 201 → Job |
 | `GET` | `/api/v1/jobs/{job_id}` | — | 200 → Job |
-| `POST` | `/api/v1/dev/job-completions` | JobCompletionMessage (dev adapter only, editor) | 202 → JobCompletionAccepted |
-| `GET` | `/api/v1/dev/job-completions/{message_id}` | — (dev adapter only, editor) | 200 → JobCompletionStatus |
+| `POST` | `/api/v1/dev/job-completions` | JobCompletionMessage (development dev adapter only, no auth) | 202 → JobCompletionAccepted |
+| `GET` | `/api/v1/dev/job-completions/{message_id}` | — (development dev adapter only, no auth) | 200 → JobCompletionStatus |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
 | `POST` | `/api/v1/library/{asset_id}/complete` | — | 200 → LibraryAsset |
@@ -2640,7 +2657,7 @@ tests (paths relative to `backend/tests/`):
 | LIB-06–12, STORE-04 | Server asset IDs, manual uploads, tags, unique thumbnail ownership/URLs; existing assets remain ungrouped and retain their files | Library HTTP scenarios, populated-database upgrade and storage-adapter checks |
 | LIB-13–16, STORE-05 | Several assets/files per completion; primary aliases; adopted/copied objects; hash/size/signature checks; all-results atomicity; legacy main entry; deletion/rollback/recovery and ownership races | Isolated local completion/storage and populated-upgrade scenarios |
 | JOB-01–03 | Empty job creation; public reads; unknown job rejection; completed_at and ordered relationship; first-completion wins; concurrent/new-message-ID replays; result deletion never reopens/recreates | Autonomous job/completion HTTP scenarios and transactional failure/restart checks |
-| QUEUE-01–03 | Authenticated JSON-file submission; disabled routes; durable 202; status/errors; body/UUID normalization; duplicate messages; restart, leases, retry/exhaustion and post-commit ack loss | Autonomous dev HTTP suite plus focused queue-contract/failure-injection scenarios |
+| QUEUE-01–03 | Unauthenticated dev JSON-file submission; production/disabled routes absent; durable 202; status/errors; body/UUID normalization; duplicate messages; restart, leases, retry/exhaustion and post-commit ack loss | Autonomous dev HTTP suite plus focused queue-contract/failure-injection scenarios |
 | QUEUE-04 | Same payload and handler; SQS polling/ack/visibility/failure forwarding; provider-independent core | Deterministic adapter contract checks; separately recorded live AWS acceptance |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
 | OPS-04 | Independent local/AWS adapter selection and overrides; conditional routes/OpenAPI; provider-free core; consumer and repository lifecycle | Composition checks and autonomous dev/default HTTP scenarios |
