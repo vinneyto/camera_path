@@ -1114,7 +1114,7 @@ job resource; queue status does not carry a second list of asset identities.
 | `message_id` | `string (UUID)` | Yes | — | Accepted producer message ID |
 | `status` | `"queued" \| "processing" \| "succeeded" \| "failed"` | Yes | — | Durable dev message state |
 | `attempts` | `integer` | Yes | — | Number of started processing attempts, initially zero |
-| `job_id` | `string (UUID) \| null` | No | `null` | Target job from the message; null for retained legacy diagnostics |
+| `job_id` | `string (UUID) \| null` | No | `null` | Target job from the message; nullable when unavailable in diagnostics |
 | `error_code` | `string \| null` | No | `null` | Sanitized terminal failure code; no provider details/credentials |
 
 ## 4. HTTP, revisions and errors
@@ -1422,9 +1422,6 @@ already-produced raster object; rendering/conversion is a producer responsibilit
   404 for missing/pending/deleted assets or missing image bytes and sets the
   raster content type. Expired URLs are refreshed by rereading the asset; absent
   or unavailable images use the normal UI placeholder.
-- Existing stored thumbnail keys from an earlier schema remain readable and
-  owned by their original assets. Migration does not rename/copy them. New input
-  uses the namespace above rather than accepting legacy correlation namespaces.
 
 **LIB-10. Reads and client compatibility.** List/get by server asset ID retain
 their ready-only behavior and ordering. Pending/missing/deleted assets return
@@ -2348,7 +2345,7 @@ metadata but are accessed only by the dev adapter/composition.
 | `available_at` | `DATETIME` | No | — | — | Earliest retry/first receive time. |
 | `lease_token` | `TEXT` | Yes | — | — | Opaque current receipt; all acknowledgements/updates require it. |
 | `lease_until` | `DATETIME` | Yes | — | — | Expiry enabling recovery/redelivery. |
-| `job_id` | `TEXT` | Yes | — | — | Target job for diagnostics; no FK so unknown-job failures/legacy rows can be retained. |
+| `job_id` | `TEXT` | Yes | — | — | Target job for diagnostics; no FK so unknown-job failures can be retained. |
 | `error_code` | `TEXT` | Yes | — | — | Sanitized terminal failure code. |
 | `created_at` | `DATETIME` | No | — | — | Acceptance time. |
 | `updated_at` | `DATETIME` | No | — | — | Last durable state transition. |
@@ -2403,43 +2400,33 @@ check/CAS. Creating all assets/file rows and setting completed_at commit togethe
 The completion timestamp remains after result deletion and is the replay guard;
 no producer-ID reservation ledger or result-fingerprint table is retained.
 
-For databases at revision 20261101_0015, add the jobs table and nullable result
-columns/index/constraints, remove the library_assets.client_id column and its
-FK/uniqueness, then remove library_client_ids. Earlier producer IDs/reservations
-are discarded rather than reinterpreted as jobs. Existing assets remain ungrouped
-with both result-link columns null. Keep server IDs, every file record/key/hash,
-tags/thumbnails, transforms, timestamps, cloud references and project revisions.
+Upgrade from revision 20261026_0014 applies migration 20261101_0015 directly to
+the final jobs/result schema, adding jobs, library result columns/index/constraints,
+tags/thumbnails, file collections and the durable dev inbox. No intermediate
+producer-ID table or column is created. Previously released schema revisions
+remain unchanged.
 
-Preserve legacy thumbnail objects and stored references even when their old path
-used a correlation namespace; serving/deletion still work. Apply the new namespace
-only to new input. Check unique non-null thumbnail ownership before adding its
-constraint; inconsistent existing data requires repair rather than silent deletion.
-
-Keep historical schema revisions immutable. Add a subsequent migration so a dev
-database already upgraded to 20261101_0015 can reach the new contract. Upgrade
-from 20261026_0014 runs the historical migrations then this migration; a fresh
-database reaches the same final schema. Repeated upgrade does not create jobs,
+Existing assets have both result-link columns null; migration does not invent
+producing jobs. Keep server IDs, every object key/format/size/status, transforms,
+timestamps, cloud references/order and project revisions. Fresh databases and
+populated upgrades reach the same schema. Repeated upgrade does not create jobs,
 move/hash/copy model bytes or alter existing completion timestamps.
 
 **STORE-05. File collections and queue schema upgrades.** Databases predating
 file collections gain one main primary file for every pending/ready asset, using
 its existing object key/format/size and sha256=null. Migration does not hash or
-rename legacy files. Existing multi-file assets retain their complete collection.
+rename existing files. New tags default to [], thumbnail_key to null.
 
-Dev inbox rows retain message bodies, attempts, terminal statuses and timestamps.
-The diagnostic target column becomes nullable job_id. Pending/processing legacy
-version-1 standalone-asset messages cannot be converted into successful job
-completions: retain them as failed with obsolete_message_schema, clear their
-leases and preserve the original body for diagnosis. Keep historical terminal
-rows with job_id=null; discard the old single-asset diagnostic result pointer
-rather than reinterpret it as a job ID. This does not remove the corresponding
-library asset. Do not fabricate a job or process old bodies as version 2. Old SQS
-messages go through the malformed/obsolete-message failure path in the adapter.
+Create the dev inbox directly with nullable diagnostic job_id and the version-2
+completion contract. It has no FK to jobs so unknown-job failures can be retained;
+queue delivery never creates the unknown job. Version-1 standalone-asset messages
+are rejected by the dev adapter or forwarded through the SQS malformed-message
+failure path, rather than converted to jobs.
 
 Fresh databases and populated upgrades agree with section 11.3. Normal operation
 does not discard job state or accepted messages. Refuse a downgrade that loses
-completed jobs, result links, multi-file references or active inbox work unless
-an explicit backup/data-conversion procedure makes the downgrade safe.
+jobs, result links, multi-file references or active inbox work unless an explicit
+backup/data-conversion procedure makes the downgrade safe.
 
 ### 11.6. Configuration and operations
 
@@ -2617,7 +2604,7 @@ tests (paths relative to `backend/tests/`):
 | TIME-01–05 | Defaults, duplicate positions, delete/recreate, static LiDAR singleton | `test_delete_timelines.py`, `test_depth_of_field_timeline.py`, `test_lidar_timeline.py` |
 | GEOM-01–06 | Endpoints, C² spline, tangent constraints, unchanged spirals, adaptive approximation, distance/time | `test_geometry.py`, `test_trajectory_planner.py` |
 | LIB-01–05, CLOUD-01–02 | Real small PLY/SOG bytes, complete/retry, instances/defaults/order, delete rollback | `test_library.py`, `test_s3_library.py`, `test_project_clouds.py`, `test_library_delete.py`, `test_library_bulk_delete.py` |
-| LIB-06–12, STORE-04 | Server asset IDs, manual uploads, tags, unique thumbnail ownership/URLs and legacy compatibility; removal of producer-ID metadata without loss of files | Library HTTP scenarios, populated-database upgrade and storage-adapter checks |
+| LIB-06–12, STORE-04 | Server asset IDs, manual uploads, tags, unique thumbnail ownership/URLs; existing assets remain ungrouped and retain their files | Library HTTP scenarios, populated-database upgrade and storage-adapter checks |
 | LIB-13–16, STORE-05 | Several assets/files per completion; primary aliases; adopted/copied objects; hash/size/signature checks; all-results atomicity; legacy main entry; deletion/rollback/recovery and ownership races | Isolated local completion/storage and populated-upgrade scenarios |
 | JOB-01–03 | Empty job creation; public reads; unknown job rejection; completed_at and ordered relationship; first-completion wins; concurrent/new-message-ID replays; result deletion never reopens/recreates | Autonomous job/completion HTTP scenarios and transactional failure/restart checks |
 | QUEUE-01–03 | Authenticated JSON-file submission; disabled routes; durable 202; status/errors; body/UUID normalization; duplicate messages; restart, leases, retry/exhaustion and post-commit ack loss | Autonomous dev HTTP suite plus focused queue-contract/failure-injection scenarios |
