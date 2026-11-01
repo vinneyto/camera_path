@@ -55,6 +55,7 @@ and pull requests; they are not part of the backend requirements.
     - [LibraryAsset](#libraryasset)
     - [LibraryAssetFile](#libraryassetfile)
     - [Job](#job)
+    - [JobSummary](#jobsummary)
     - [LibraryUpload](#libraryupload)
     - [ProjectCloud](#projectcloud)
     - [UserSettings](#usersettings)
@@ -649,6 +650,16 @@ with current download URLs. Completion does not depend on the surviving list siz
 | `id` | `string (UUID)` | Yes | — | Server-generated nonzero UUIDv4 |
 | `completed_at` | `DateTime \| null` | Yes | — | Null until the complete result commits; UTC completion time afterwards |
 | `assets` | `Array<LibraryAsset>` | Yes | — | Empty on creation; surviving results ordered by job_position |
+
+#### JobSummary
+
+Public job catalogue entry. No file URLs or asset bodies are generated for a catalogue read.
+
+| Field | Type | Required | Default | Rules |
+| --- | --- | --- | --- | --- |
+| `id` | `string (UUID)` | Yes | — | Server-assigned job identity |
+| `completed_at` | `string (date-time) \| null` | Yes | — | Null until successful completion; retained after result deletion |
+| `asset_count` | `integer` | Yes | — | Nonnegative count of currently surviving related assets, not file representations |
 
 #### LibraryUpload
 
@@ -1629,7 +1640,7 @@ publish a start event, claim work or establish a scheduler/progress API. Each
 creation call makes a new job. GET /api/v1/jobs/{job_id} (getJob) is public under
 the existing shared-data policy and returns 200 Job; invalid UUIDs return 422
 validation_error, unknown IDs 404 job_not_found. Neither operation uses a project
-ETag/If-Match. There is no job update/delete/list endpoint in this minimal contract.
+ETag/If-Match. There is no job update/delete endpoint in this contract.
 Creation/read remain available with message consumption disabled.
 
 **JOB-02. Completion identity and replay.** A pre-existing job accepts one whole
@@ -1663,6 +1674,19 @@ queue submission itself is not a synchronous result response. Removing library
 assets may leave a completed job with assets=[]. Its completed_at remains set,
 and later completion messages cannot resurrect deleted assets. Reading state and
 registering results does not itself add project clouds or browser event delivery.
+
+**JOB-04. Job catalogue.** Public GET /api/v1/jobs (listJobs), without query
+parameters or a request body, returns 200 Array<JobSummary>. Include both pending
+and completed jobs, ordered deterministically by ascending canonical job ID. UUID
+order does not promise creation order; jobs have no creation timestamp. An empty
+database returns []. Compute asset_count from current related rows so deleting a
+result decreases the count without deleting or reopening its job. Do not read
+model bytes, generate asset download URLs or invoke a generator/broker for a list.
+The list works with consumption disabled and during broker outages, and requires
+neither authentication nor an ETag. No pagination or execution/progress states are
+introduced. Clients can refresh this list and the existing detail resource to
+observe external completion; completed_at=null means pending, not proof that a
+generator is running.
 
 **CLOUD-01.** A ready asset can be attached multiple times to one or more projects.
 Each operation creates a separate instance ID, copies current asset defaults,
@@ -2480,7 +2504,7 @@ a production deployment.
 
 ## 12. HTTP operation inventory
 
-**HTTP-01.** The table defines 72 always-mounted canonical HTTP operations.
+**HTTP-01.** The table defines 73 always-mounted canonical HTTP operations.
 Message producers use the broker directly; there are no dev-only HTTP operations.
 Every path includes `/api/v1`. Request/response DTO names correspond to schemas in
 [openapi.json](openapi.json). The OpenAPI artifact and generated frontend clients
@@ -2500,6 +2524,7 @@ successful statuses listed here.
 | `POST` | `/api/v1/library/bulk-delete` | LibraryAssetsDelete | 204 → — |
 | `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 → LibraryUpload |
 | `POST` | `/api/v1/jobs` | — (editor) | 201 → Job |
+| `GET` | `/api/v1/jobs` | — | 200 → JobSummary[] |
 | `GET` | `/api/v1/jobs/{job_id}` | — | 200 → Job |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
@@ -2597,6 +2622,7 @@ tests (paths relative to `backend/tests/`):
 | LIB-06–12, STORE-04 | Server asset IDs, manual uploads, tags, unique thumbnail ownership/URLs; existing assets remain ungrouped and retain their files | Library HTTP scenarios, populated-database upgrade and storage-adapter checks |
 | LIB-13–16, STORE-05 | Several assets/files per completion; primary aliases; adopted/copied objects; hash/size/signature checks; all-results atomicity; legacy main entry; deletion/rollback/recovery and ownership races | Isolated local completion/storage and populated-upgrade scenarios |
 | JOB-01–03 | Empty job creation; public reads; unknown job rejection; completed_at and ordered relationship; first-completion wins; concurrent/new-message-ID replays; result deletion never reopens/recreates | Autonomous job/completion HTTP scenarios and transactional failure/restart checks |
+| JOB-04 | Public empty/populated catalogue; deterministic ordering; persistence across restart; counts after completion/deletion; independence from queue mode | Autonomous HTTP catalogue and real broker completion scenarios |
 | QUEUE-01–03 | Real RabbitMQ publication; no debug HTTP routes in any mode; body/UUID normalization; durable messages; restart/redelivery; retry/exhaustion and post-commit ack loss | Autonomous HTTP + real broker scenarios and focused queue-contract/failure-injection checks |
 | QUEUE-04 | Same payload and handler; SQS polling/ack/visibility/failure forwarding; provider-independent core | Deterministic adapter contract checks; separately recorded live AWS acceptance |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
