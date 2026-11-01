@@ -1,8 +1,8 @@
-# Queued library imports
+# Queued job completion and library results
 
-The monolith consumes one versioned JSON descriptor per library item. Queue and storage
-providers are selected independently. File production, queue provisioning and generation jobs
-are outside the importer. The canonical contract is [SPECS.md](../SPECS.md), sections 3.8 and 8.2–8.3.
+The monolith reserves minimal jobs and consumes one versioned completion message containing
+all result assets for a job. Queue and storage providers are selected independently. File
+production, queue provisioning and generator execution remain outside this handler. The canonical contract is [SPECS.md](../SPECS.md), sections 3.8 and 8.2–8.3.
 
 ## Local verification
 
@@ -22,13 +22,21 @@ CAMERA_PATH_LIBRARY_IMPORT_SOURCES='{"incoming":{"driver":"local","root":"/absol
 
 Run the backend with the normal `uv run camera-path` command. Sign in through the existing
 password/email-code flow described in the README; use its editor Bearer token below. The dev
-import routes require authentication, including the status GET. They are absent with the default
+completion routes require authentication, including the status GET. They are absent with the default
 `CAMERA_PATH_MESSAGE_QUEUE=none` and in AWS mode. Production configuration rejects the dev adapter.
 
-A descriptor can be generated from already completed, real SOG/PLY files:
+Reserve an empty job with the editor token (this does not start generation):
 
 ```sh
-python3 - /absolute/generated/tree.sog /absolute/generated/tree.ply > item.json <<'PY'
+curl -sS -X POST http://127.0.0.1:8000/api/v1/jobs \
+  -H "Authorization: Bearer $TOKEN"
+# 201: {"id":"JOB_UUID","completed_at":null,"assets":[]}
+```
+
+A completion descriptor can be generated from completed, real SOG/PLY files for that job:
+
+```sh
+python3 - JOB_UUID /absolute/generated/tree.sog /absolute/generated/tree.ply > completion.json <<'PY'
 import hashlib
 import json
 import sys
@@ -36,7 +44,7 @@ from pathlib import Path
 from uuid import uuid4
 
 files = []
-for index, argument in enumerate(sys.argv[1:]):
+for index, argument in enumerate(sys.argv[2:]):
     path = Path(argument)
     with path.open('rb') as source:
         digest = hashlib.file_digest(source, 'sha256').hexdigest()
@@ -46,9 +54,9 @@ for index, argument in enumerate(sys.argv[1:]):
         'source': {'storage': 'incoming', 'path': path.name},
     })
 print(json.dumps({
-    'schema_version': 1, 'message_id': str(uuid4()),
-    'item': {'client_id': str(uuid4()), 'name': 'Tree', 'tags': ['tree'],
-             'thumbnail_key': None, 'primary_file_id': files[0]['id'], 'files': files},
+    'schema_version': 2, 'message_id': str(uuid4()), 'job_id': sys.argv[1],
+    'assets': [{'name': 'Tree', 'tags': ['tree'],
+             'thumbnail_key': None, 'primary_file_id': files[0]['id'], 'files': files}],
 }, indent=2))
 PY
 ```
@@ -62,34 +70,46 @@ the library as `<UUID>.<format>` and their originals remain untouched. Registeri
 the library responsible for deleting that object when the item is later deleted.
 
 ```sh
-curl -sS http://127.0.0.1:8000/api/v1/dev/library-imports \
+curl -sS http://127.0.0.1:8000/api/v1/dev/job-completions \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  --data-binary @item.json
+  --data-binary @completion.json
 # 202: {"message_id":"..."}
 
-curl -sS http://127.0.0.1:8000/api/v1/dev/library-imports/MESSAGE_UUID \
+curl -sS http://127.0.0.1:8000/api/v1/dev/job-completions/MESSAGE_UUID \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-`202` means the message is durably accepted, not that the item is already ready. Status is
-`queued`, `processing`, `succeeded` (with `asset_id`) or `failed` (with `error_code`). Messages,
-leases and results survive restarts. Transient failures retry up to five times by default;
-validation and identity conflicts are retained as terminal failures. Keep the same descriptor
-and client ID for retries. Resubmitting an identical message ID returns its original status
-without resetting attempts. A corrected failed message needs a new message ID; a new logical
-item needs a new client ID. A deleted client's ID remains reserved.
+`202` means the message is durably accepted. Status is `queued`, `processing`, `succeeded`
+(with `job_id`) or `failed` (with `error_code`). Messages, leases and results survive restarts.
+Transient failures retry up to five times by default. Resubmitting the same message ID and body
+returns its original state without resetting attempts; changing its body returns `409`.
+Corrected failed completions use a new message ID for the same reserved job.
 
-The item appears in ordinary library reads only after all files and any thumbnail validate.
-`files` includes all representations; `primary_file_id` selects one. The familiar `format`,
-`size_bytes` and `download_url` describe that primary file, preserving existing cloud rendering.
-A thumbnail is a separate existing library object under
-`thumbnails/<client_id>/<filename>.png|jpg|jpeg|webp`, at most 5 MiB, not an entry in `files`.
+Read `GET /api/v1/jobs/JOB_UUID` to obtain `completed_at` and the ordered `assets` array. Unknown
+jobs are rejected before source reads. For a pending job, all assets, files and thumbnails must
+validate before one transaction creates ready assets and marks the job completed. Nothing is
+published if any result fails. **The first successful completion wins**: later well-formed
+completions are successful no-ops, without reading sources, replacing results or changing the
+timestamp. Deleted result assets disappear from the job, and replay does not recreate them.
 
-Ordinary one-file uploads still work. Existing databases gain one primary `main` file per item
-without renaming/moving bytes. Migration does not hash old files; imports verify SHA-256, byte
-size and container signatures. Signatures are not full 3DGS decoding. Interrupted copies have
-storage recovery markers under `_imports/`; the consumer periodically recovers expired attempts,
-checking committed ownership before deleting orphan copies. Do not edit those internal markers.
+Each asset has nullable `job_id`. `files` includes all representations; `primary_file_id` selects
+one. `format`, `size_bytes` and `download_url` describe that primary file, preserving cloud
+rendering. A thumbnail is a separate existing library object under
+`thumbnails/<UUID>.png|jpg|jpeg|webp`, at most 5 MiB, not an entry in `files`. The filename UUID is
+only an object name. Different assets cannot share a file or thumbnail object.
+
+Ordinary one-file uploads always create a fresh pending asset, with `job_id: null`. The migration
+chain adds one primary `main` file per pre-existing item without moving bytes. Imports verify
+SHA-256, byte size and container signatures; signatures are not full 3DGS decoding. Interrupted
+copies have recovery markers under `_imports/`; expired attempts are cleaned only after checking
+committed ownership. Do not edit these internal markers.
+
+Migration `20261101_0016` upgrades databases that applied the earlier standalone-import contract:
+it removes the obsolete asset correlation field and ledger, preserves existing assets as
+ungrouped, and retains old thumbnail paths for serving/deletion. Legacy version-1 queued or
+processing messages are retained as failed with `obsolete_message_schema`; no jobs are invented.
+Shared thumbnail ownership requires repair before migration. Downgrade refuses to discard jobs
+or active messages. New producers must send version 2; version-1 messages are rejected.
 
 Default OpenAPI is exported to `openapi.json`. The dev profile includes the two conditional
 operations and can be reproduced with:
@@ -111,7 +131,7 @@ CAMERA_PATH_LIBRARY_IMPORT_SOURCES='{"incoming":{"driver":"s3","bucket":"produce
 
 The SQS body is the same complete JSON descriptor, not an S3 notification or a manifest URL.
 A producer sends it after all files are complete. Standard queues may redeliver; the handler
-uses item identity and verified descriptors, and deletes a delivery only after commit/replay.
+uses persisted job completion state and deletes a delivery only after commit/replay.
 Visibility is refreshed during long copies. Terminal/exhausted failures are forwarded durably to
 the configured failure queue before deleting the original; failure forwarding can itself be
 redelivered. The failure queue must not be fed back into the import consumer.
@@ -134,4 +154,4 @@ See [integration/README.md](../../integration/README.md). The full HTTP suite in
 dev backend, temporary source/library directories, a durable SQLite inbox, actual email-code
 login over a local SMTP sink, process restarts and idempotent replay. It needs no AWS services.
 Backend tests additionally exercise SQS SDK requests/failure forwarding, SQL/storage failure
-recovery, concurrent imports and populated-database migration/downgrade guards.
+recovery, concurrent completions, atomic multi-asset publication and populated-database upgrade guards.

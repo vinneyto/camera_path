@@ -3,7 +3,7 @@
 from pydantic import ValidationError
 
 from camera_path.aws.clients import aws_client, run_io
-from camera_path.services.library_import_models import MAX_MESSAGE_BYTES, LibraryImportMessage
+from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES, JobCompletionMessage
 from camera_path.services.message_queue import Delivery, MessageQueue
 
 
@@ -38,7 +38,7 @@ class SQSMessageQueue(MessageQueue):
             try:
                 if len(body.encode()) > MAX_MESSAGE_BYTES:
                     raise ValueError("Oversized message")
-                message = LibraryImportMessage.model_validate_json(body)
+                message = JobCompletionMessage.model_validate_json(body)
             except (ValueError, ValidationError):
                 await self.reject(receipt, "validation_error")
                 return None
@@ -47,7 +47,7 @@ class SQSMessageQueue(MessageQueue):
             )
         return None
 
-    async def ack(self, receipt: str, asset_id: str) -> None:
+    async def ack(self, receipt: str, job_id: str) -> None:
         try:
             await run_io(
                 lambda: self.client.delete_message(QueueUrl=self.queue_url, ReceiptHandle=receipt)

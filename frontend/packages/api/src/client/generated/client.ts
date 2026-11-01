@@ -50,6 +50,7 @@ import type {
   DepthOfFieldTimeline,
   ErrorResponse,
   HTTPValidationError,
+  Job,
   LibraryAsset,
   LibraryAssetDefaultsUpdate,
   LibraryAssetsDelete,
@@ -637,6 +638,221 @@ export const useVerifyEditorCode = <TError = HTTPValidationError,
       return useMutation(getVerifyEditorCodeMutationOptions(options), queryClient);
     }
 
+export type createJobResponse201 = {
+  data: Job
+  status: 201
+}
+
+export type createJobResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createJobResponseSuccess = (createJobResponse201) & {
+  headers: Headers;
+};
+export type createJobResponseError = (createJobResponse401) & {
+  headers: Headers;
+};
+
+export type createJobResponse = (createJobResponseSuccess | createJobResponseError)
+
+export const getCreateJobUrl = () => {
+
+
+
+
+  return `/api/v1/jobs`
+}
+
+/**
+ * Reserve an empty job without starting a generator.
+ * @summary Create Job
+ */
+export const createJob = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<createJobResponse> => {
+
+  return orvalFetch<createJobResponse>(getCreateJobUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateJobMutationKey = () => ['createJob'] as const;
+
+export const getCreateJobMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,void, TContext> => {
+
+const mutationKey = getCreateJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJob>>, void> = () => {
+
+
+          return  createJob(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJobMutationResult = NonNullable<Awaited<ReturnType<typeof createJob>>>
+
+    export type CreateJobMutationError = void
+
+
+    /**
+ * @summary Create Job
+ */
+export const useCreateJob = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createJob>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateJobMutationOptions(options), queryClient);
+    }
+
+export type getJobResponse200 = {
+  data: Job
+  status: 200
+}
+
+export type getJobResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getJobResponseSuccess = (getJobResponse200) & {
+  headers: Headers;
+};
+export type getJobResponseError = (getJobResponse422) & {
+  headers: Headers;
+};
+
+export type getJobResponse = (getJobResponseSuccess | getJobResponseError)
+
+export const getGetJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/jobs/${jobId}`
+}
+
+/**
+ * Read job completion and its surviving library results.
+ * @summary Get Job
+ */
+export const getJob = async (jobId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getJobResponse> => {
+
+  return orvalFetch<getJobResponse>(getGetJobUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetJobQueryKey = (jobId: string,) => {
+    return [
+    `/api/v1/jobs/${jobId}`
+    ] as const;
+    }
+
+
+export const getGetJobQueryOptions = <TData = Awaited<ReturnType<typeof getJob>>, TError = HTTPValidationError>(jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJobQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJob>>> = ({ signal }) => getJob(jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJobQueryResult = NonNullable<Awaited<ReturnType<typeof getJob>>>
+export type GetJobQueryError = HTTPValidationError
+
+
+export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = HTTPValidationError>(
+ jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJob>>,
+          TError,
+          Awaited<ReturnType<typeof getJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJob>>,
+          TError,
+          Awaited<ReturnType<typeof getJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Job
+ */
+
+export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJobQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listLibraryAssetsResponse200 = {
   data: LibraryAsset[]
   status: 200
@@ -864,132 +1080,6 @@ export const useDeleteLibraryAssets = <TError = void | HTTPValidationError,
       return useMutation(getDeleteLibraryAssetsMutationOptions(options), queryClient);
     }
 
-export type getLibraryAssetByClientIdResponse200 = {
-  data: LibraryAsset
-  status: 200
-}
-
-export type getLibraryAssetByClientIdResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getLibraryAssetByClientIdResponseSuccess = (getLibraryAssetByClientIdResponse200) & {
-  headers: Headers;
-};
-export type getLibraryAssetByClientIdResponseError = (getLibraryAssetByClientIdResponse422) & {
-  headers: Headers;
-};
-
-export type getLibraryAssetByClientIdResponse = (getLibraryAssetByClientIdResponseSuccess | getLibraryAssetByClientIdResponseError)
-
-export const getGetLibraryAssetByClientIdUrl = (clientId: string,) => {
-
-
-
-
-  return `/api/v1/library/by-client-id/${clientId}`
-}
-
-/**
- * Resolve a ready shared library item by its producer correlation UUID.
- * @summary Get Library Asset By Client Id
- */
-export const getLibraryAssetByClientId = async (clientId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getLibraryAssetByClientIdResponse> => {
-
-  return orvalFetch<getLibraryAssetByClientIdResponse>(getGetLibraryAssetByClientIdUrl(clientId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetLibraryAssetByClientIdQueryKey = (clientId: string,) => {
-    return [
-    `/api/v1/library/by-client-id/${clientId}`
-    ] as const;
-    }
-
-
-export const getGetLibraryAssetByClientIdQueryOptions = <TData = Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError = HTTPValidationError>(clientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetLibraryAssetByClientIdQueryKey(clientId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLibraryAssetByClientId>>> = ({ signal }) => getLibraryAssetByClientId(clientId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: clientId !== null && clientId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetLibraryAssetByClientIdQueryResult = NonNullable<Awaited<ReturnType<typeof getLibraryAssetByClientId>>>
-export type GetLibraryAssetByClientIdQueryError = HTTPValidationError
-
-
-export function useGetLibraryAssetByClientId<TData = Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError = HTTPValidationError>(
- clientId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getLibraryAssetByClientId>>,
-          TError,
-          Awaited<ReturnType<typeof getLibraryAssetByClientId>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetLibraryAssetByClientId<TData = Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError = HTTPValidationError>(
- clientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getLibraryAssetByClientId>>,
-          TError,
-          Awaited<ReturnType<typeof getLibraryAssetByClientId>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetLibraryAssetByClientId<TData = Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError = HTTPValidationError>(
- clientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Library Asset By Client Id
- */
-
-export function useGetLibraryAssetByClientId<TData = Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError = HTTPValidationError>(
- clientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLibraryAssetByClientId>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetLibraryAssetByClientIdQueryOptions(clientId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type createLibraryUploadResponse200 = {
-  data: LibraryUpload
-  status: 200
-}
-
 export type createLibraryUploadResponse201 = {
   data: LibraryUpload
   status: 201
@@ -1005,7 +1095,7 @@ export type createLibraryUploadResponse422 = {
   status: 422
 }
 
-export type createLibraryUploadResponseSuccess = (createLibraryUploadResponse200 | createLibraryUploadResponse201) & {
+export type createLibraryUploadResponseSuccess = (createLibraryUploadResponse201) & {
   headers: Headers;
 };
 export type createLibraryUploadResponseError = (createLibraryUploadResponse401 | createLibraryUploadResponse422) & {

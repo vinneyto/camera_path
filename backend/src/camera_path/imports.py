@@ -3,8 +3,8 @@
 from pathlib import Path
 
 from camera_path.dev.library_storage import LocalLibraryStorage
-from camera_path.services.library_consumer import LibraryImportConsumer
-from camera_path.services.library_import import LibraryImportService
+from camera_path.services.job_completion import JobCompletionService
+from camera_path.services.job_consumer import JobCompletionConsumer
 
 
 def compose_imports(settings, library):
@@ -29,8 +29,8 @@ def compose_imports(settings, library):
             sources[name] = S3LibraryStorage(
                 aws_client(settings, "s3"), source.bucket, source.prefix
             )
-    importer = LibraryImportService(library, sources)
-    consumer = LibraryImportConsumer(
+    importer = JobCompletionService(library, sources)
+    consumer = JobCompletionConsumer(
         queue, importer, settings.message_queue_max_attempts, settings.message_queue_lease_seconds
     )
     return queue, importer, consumer

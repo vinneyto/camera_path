@@ -10,7 +10,6 @@ import type { LibraryAssetFormat } from './libraryAssetFormat';
 import type { LibraryAssetStatus } from './libraryAssetStatus';
 
 export interface LibraryAsset {
-  client_id: string;
   created_at: string;
   /**
      * @minItems 3
@@ -28,6 +27,7 @@ export interface LibraryAsset {
   files: LibraryAssetFile[];
   format: LibraryAssetFormat;
   id: string;
+  job_id?: string | null;
   name: string;
   primary_file_id: string;
   size_bytes: number;

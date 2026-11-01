@@ -444,13 +444,15 @@ SQLite database, SMTP inbox and OpenAI-compatible HTTP fixture. It exercises the
 email-code login flow without an external email account, Docker or provider credentials.
 See that guide for setup, API coverage, the optional real-time expiry test and CI.
 
-## Queued library imports and multiple representations
+## Queued job completion and multiple representations
 
 Library items can contain multiple SOG/PLY representations with one primary file. External
-producers send a versioned JSON descriptor through a queue adapter; the monolith verifies and
-registers the whole item. The development adapter accepts authenticated JSON over HTTP; AWS
+producers complete a previously reserved job with a version-2 JSON message containing all result
+assets. The monolith verifies every file, registers all assets and completes the job atomically.
+The first successful completion wins, including after assets are deleted. The development adapter accepts authenticated JSON over HTTP; AWS
 uses SQS. Files already inside library storage are adopted; external files are copied under UUIDs.
-The normal upload API and project clouds continue to use the primary representation.
+Read a job and its ordered results through `/api/v1/jobs/{job_id}`; job reservation does not start
+a generator. Manual uploads remain independent, and project clouds use the primary representation.
 
 See [the local verification and AWS configuration guide](docs/library-import.md). Run
 `uv run alembic upgrade head` before starting against an existing database. Queue consumption is

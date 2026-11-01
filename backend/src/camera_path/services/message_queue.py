@@ -3,12 +3,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from camera_path.services.library_import_models import LibraryImportMessage
+from camera_path.services.job_completion_models import JobCompletionMessage
 
 
 @dataclass(frozen=True)
 class Delivery:
-    message: LibraryImportMessage
+    message: JobCompletionMessage
     receipt: str
     attempts: int
 
@@ -18,7 +18,7 @@ class MessageQueue(ABC):
     async def receive(self) -> Delivery | None: ...
 
     @abstractmethod
-    async def ack(self, receipt: str, asset_id: str) -> None: ...
+    async def ack(self, receipt: str, job_id: str) -> None: ...
 
     @abstractmethod
     async def retry(self, receipt: str, delay: int) -> None: ...

@@ -266,8 +266,6 @@ def test_email_auth_migration_preserves_editor_and_revokes_password_only_session
 
 
 def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_path, monkeypatch):
-    from uuid import UUID
-
     database_path = tmp_path / "library-upgrade.sqlite3"
     monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
     config = Config("alembic.ini")
@@ -288,12 +286,15 @@ def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_pat
     command.upgrade(config, "head")
     with sqlite3.connect(database_path) as connection:
         assets = connection.execute(
-            "SELECT id,client_id,object_key,default_rotation_x_deg,default_scale,"
+            "SELECT id,job_id,object_key,default_rotation_x_deg,default_scale,"
             "thumbnail_key,tags "
             "FROM library_assets ORDER BY id"
         ).fetchall()
-        assert len({row[1] for row in assets}) == 2
-        assert all(UUID(row[1]).version == 4 for row in assets)
+        assert all(row[1] is None for row in assets)
+        assert "client_id" not in {
+            r[1] for r in connection.execute("PRAGMA table_info(library_assets)")
+        }
+        assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone() == (0,)
         assert all(row[2:] == (f"{row[0]}.ply", 23, 2, None, "[]") for row in assets)
         assert connection.execute(
             "SELECT asset_id,id,position,is_primary,object_key,sha256 FROM library_asset_files "
@@ -314,3 +315,109 @@ def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_pat
         )
     with pytest.raises(RuntimeError, match="Refusing lossy downgrade"):
         command.downgrade(config, "20261026_0014")
+
+
+def test_job_migration_preserves_legacy_assets_and_quarantines_old_inbox(tmp_path, monkeypatch):
+    import json
+    from uuid import uuid4
+
+    database_path = tmp_path / "job-upgrade.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20261101_0015")
+    legacy_id = str(uuid4())
+    thumbnail = f"thumbnails/{legacy_id}/tree.png"
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO library_client_ids(client_id) VALUES (?)", (legacy_id,))
+        connection.execute(
+            "INSERT INTO library_assets(id,client_id,name,format,object_key,size_bytes,status,"
+            "created_at,tags,thumbnail_key,default_scale) "
+            "VALUES ('a',?,'Tree','ply','tree.ply',4,'ready','2026-11-01','[\"tree\"]',?,2)",
+            (legacy_id, thumbnail),
+        )
+        connection.execute(
+            "INSERT INTO library_asset_files(asset_id,id,position,is_primary,format,object_key,"
+            "size_bytes,sha256) VALUES ('a','main',0,1,'ply','tree.ply',4,?)",
+            ("a" * 64,),
+        )
+        connection.execute("INSERT INTO projects(id,name,revision) VALUES ('p','Keep',9)")
+        connection.execute(
+            "INSERT INTO project_clouds(id,project_id,library_asset_id,position,visible) "
+            "VALUES ('c','p','a',0,1)"
+        )
+        for status in ("queued", "processing", "succeeded", "failed"):
+            connection.execute(
+                "INSERT INTO dev_queue_messages(message_id,body,body_sha256,status,attempts,"
+                "available_at,created_at,updated_at,lease_token,lease_until,asset_id,error_code) "
+                "VALUES (?,?,?, ?,3,'2026-11-01','2026-11-01','2026-11-01',"
+                "'old-lease','2026-11-02','a',?)",
+                (
+                    status,
+                    json.dumps({"schema_version": 1, "item": {"client_id": legacy_id}}),
+                    "a" * 64,
+                    status,
+                    "old_error" if status == "failed" else None,
+                ),
+            )
+    command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        assert "client_id" not in {
+            r[1] for r in connection.execute("PRAGMA table_info(library_assets)")
+        }
+        assert connection.execute(
+            "SELECT name,object_key,tags,thumbnail_key,default_scale,job_id,job_position "
+            "FROM library_assets"
+        ).fetchone() == ("Tree", "tree.ply", '["tree"]', thumbnail, 2, None, None)
+        assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone() == (0,)
+        assert (
+            connection.execute(
+                "SELECT name FROM sqlite_master WHERE name='library_client_ids'"
+            ).fetchall()
+            == []
+        )
+        for name in ("queued", "processing"):
+            row = connection.execute(
+                "SELECT status,error_code,lease_token,lease_until,attempts,body,job_id,updated_at "
+                "FROM dev_queue_messages WHERE message_id=?",
+                (name,),
+            ).fetchone()
+            assert row[:5] == ("failed", "obsolete_message_schema", None, None, 3)
+            assert json.loads(row[5])["schema_version"] == 1 and row[6] is None
+            assert row[7] == "2026-11-01"
+        assert connection.execute(
+            "SELECT status,error_code,job_id FROM dev_queue_messages WHERE message_id='succeeded'"
+        ).fetchone() == ("succeeded", None, None)
+        assert connection.execute("SELECT sha256 FROM library_asset_files").fetchone() == (
+            "a" * 64,
+        )
+        assert connection.execute("SELECT library_asset_id FROM project_clouds").fetchone() == (
+            "a",
+        )
+        assert connection.execute("SELECT revision FROM projects").fetchone() == (9,)
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        connection.execute("INSERT INTO jobs(id,completed_at) VALUES ('job','2026-11-01')")
+    with pytest.raises(RuntimeError, match="Refusing lossy downgrade"):
+        command.downgrade(config, "20261101_0015")
+
+
+def test_job_migration_requires_duplicate_thumbnail_repair(tmp_path, monkeypatch):
+    database_path = tmp_path / "duplicate-thumbnails.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20261101_0015")
+    with sqlite3.connect(database_path) as connection:
+        for identity in ("a", "b"):
+            connection.execute("INSERT INTO library_client_ids(client_id) VALUES (?)", (identity,))
+            connection.execute(
+                "INSERT INTO library_assets(id,client_id,name,format,object_key,size_bytes,status,"
+                "created_at,thumbnail_key) VALUES (?,?,'Tree','ply',?,4,'ready','2026-11-01',"
+                "'thumbnails/shared/image.png')",
+                (identity, identity, f"{identity}.ply"),
+            )
+    with pytest.raises(RuntimeError, match="Repair duplicate thumbnail ownership"):
+        command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM library_assets").fetchone() == (2,)
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            "20261101_0015",
+        )

@@ -123,12 +123,14 @@ coverage error about tests that never ran. The full successful run still enforce
 
 Task: https://docs.google.com/document/d/1CqaWyve6LW1tY7ra4lRSYRnQ8I9SzgVkSo-IgYPUaZM
 
-## Queue-driven library imports
+## Queue-driven job completion
 
 The suite also starts a disposable backend with the dev queue adapter. It submits a real JSON
-file after email-code login, imports multiple SOG/PLY representations, adopts existing library
+completion file after email-code login for a reserved job, imports multiple SOG/PLY representations,
+adopts existing library
 objects, copies external sources under UUIDs, checks status/permissions/failures, restarts the
-process and retries without duplicate items. The default backend still checks that dev routes
+process and retries without duplicate assets. Deleted results stay deleted after replay; unknown
+jobs fail before source reads. The default backend still checks that dev routes
 are absent. The API success gate covers both always-mounted operations and the two conditional
 dev operations from `backend/openapi.dev.json`. All files and messages belong to the test's
 private temporary directories. SQS SDK behavior is checked separately by backend tests; live

@@ -10,7 +10,6 @@ import type { LibraryUploadFormat } from './libraryUploadFormat';
 import type { LibraryUploadStatus } from './libraryUploadStatus';
 
 export interface LibraryUpload {
-  client_id: string;
   created_at: string;
   /**
      * @minItems 3
@@ -28,11 +27,12 @@ export interface LibraryUpload {
   files: LibraryAssetFile[];
   format: LibraryUploadFormat;
   id: string;
+  job_id?: string | null;
   name: string;
   primary_file_id: string;
   size_bytes: number;
   status: LibraryUploadStatus;
   tags: string[];
   thumbnail_url?: string | null;
-  upload_url: string | null;
+  upload_url: string;
 }

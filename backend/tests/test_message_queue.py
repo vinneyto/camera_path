@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import pytest
 
-from camera_path.services.library_import_models import LibraryImportMessage
+from camera_path.services.job_completion_models import JobCompletionMessage
 from camera_path.services.library_storage import LibraryStorageError
 
 boto3 = pytest.importorskip("boto3")
@@ -17,22 +17,24 @@ FAILURE = "https://sqs.us-east-1.amazonaws.com/123456789012/failures"
 
 def payload():
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "job_id": str(uuid4()),
         "message_id": str(uuid4()),
-        "item": {
-            "client_id": str(uuid4()),
-            "name": "Item",
-            "primary_file_id": "main",
-            "files": [
-                {
-                    "id": "main",
-                    "format": "ply",
-                    "size_bytes": 4,
-                    "sha256": "0" * 64,
-                    "source": {"storage": "library", "path": "item.ply"},
-                }
-            ],
-        },
+        "assets": [
+            {
+                "name": "Item",
+                "primary_file_id": "main",
+                "files": [
+                    {
+                        "id": "main",
+                        "format": "ply",
+                        "size_bytes": 4,
+                        "sha256": "0" * 64,
+                        "source": {"storage": "library", "path": "item.ply"},
+                    }
+                ],
+            }
+        ],
     }
 
 
@@ -75,7 +77,7 @@ async def test_sqs_same_json_contract_poll_lease_and_commit_ack(sqs):
     data = payload()
     receive(stub, json.dumps(data))
     delivery = await queue.receive()
-    assert delivery.message == LibraryImportMessage.model_validate(data)
+    assert delivery.message == JobCompletionMessage.model_validate(data)
     assert delivery.attempts == 2
     stub.add_response(
         "change_message_visibility",
@@ -88,7 +90,7 @@ async def test_sqs_same_json_contract_poll_lease_and_commit_ack(sqs):
     )
     await queue.extend_lease(delivery.receipt)
     stub.add_response("delete_message", {}, {"QueueUrl": INPUT, "ReceiptHandle": "receipt"})
-    await queue.ack(delivery.receipt, "asset-id")
+    await queue.ack(delivery.receipt, "job-id")
 
 
 async def test_sqs_retry_changes_visibility_without_deleting(sqs):
@@ -153,9 +155,9 @@ def test_core_queue_and_import_have_no_provider_imports():
     root = Path("src/camera_path/services")
     for name in (
         "message_queue.py",
-        "library_import.py",
-        "library_consumer.py",
-        "library_import_models.py",
+        "job_completion.py",
+        "job_consumer.py",
+        "job_completion_models.py",
     ):
         tree = ast.parse((root / name).read_text())
         for node in ast.walk(tree):

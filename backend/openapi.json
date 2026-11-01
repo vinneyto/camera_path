@@ -1371,12 +1371,42 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "Job": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAsset"
+            },
+            "title": "Assets",
+            "type": "array"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "completed_at",
+          "assets"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
       "LibraryAsset": {
         "properties": {
-          "client_id": {
-            "title": "Client Id",
-            "type": "string"
-          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1451,6 +1481,17 @@
             "title": "Id",
             "type": "string"
           },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -1492,7 +1533,6 @@
         },
         "required": [
           "id",
-          "client_id",
           "name",
           "format",
           "size_bytes",
@@ -1632,10 +1672,6 @@
       },
       "LibraryUpload": {
         "properties": {
-          "client_id": {
-            "title": "Client Id",
-            "type": "string"
-          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1710,6 +1746,17 @@
             "title": "Id",
             "type": "string"
           },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -1749,20 +1796,12 @@
             "title": "Thumbnail Url"
           },
           "upload_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Upload Url"
+            "title": "Upload Url",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "client_id",
           "name",
           "format",
           "size_bytes",
@@ -1780,18 +1819,8 @@
         "type": "object"
       },
       "LibraryUploadCreate": {
+        "additionalProperties": false,
         "properties": {
-          "client_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Client Id"
-          },
           "format": {
             "default": "ply",
             "enum": [
@@ -3132,6 +3161,79 @@
         ]
       }
     },
+    "/api/v1/jobs": {
+      "post": {
+        "description": "Reserve an empty job without starting a generator.",
+        "operationId": "createJob",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Job",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "description": "Read job completion and its surviving library results.",
+        "operationId": "getJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
     "/api/v1/library": {
       "get": {
         "description": "List ready 3DGS files in the reusable library.",
@@ -3201,49 +3303,6 @@
         ]
       }
     },
-    "/api/v1/library/by-client-id/{client_id}": {
-      "get": {
-        "description": "Resolve a ready shared library item by its producer correlation UUID.",
-        "operationId": "getLibraryAssetByClientId",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "client_id",
-            "required": true,
-            "schema": {
-              "title": "Client Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LibraryAsset"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get Library Asset By Client Id",
-        "tags": [
-          "Library"
-        ]
-      }
-    },
     "/api/v1/library/uploads": {
       "post": {
         "description": "Create a pending file and obtain an upload URL.",
@@ -3259,16 +3318,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LibraryUpload"
-                }
-              }
-            },
-            "description": "OK"
-          },
           "201": {
             "content": {
               "application/json": {

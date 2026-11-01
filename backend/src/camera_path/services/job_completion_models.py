@@ -40,15 +40,13 @@ class LibraryImportFile(MessageModel):
         return value.lower()
 
 
-class LibraryImportItem(MessageModel):
-    client_id: str
+class JobCompletionAsset(MessageModel):
     name: str = Field(min_length=1, max_length=200)
     tags: list[str] = Field(default_factory=list)
     thumbnail_key: str | None = None
     primary_file_id: FileId
     files: list[LibraryImportFile] = Field(min_length=1)
 
-    _client_id = field_validator("client_id")(canonical_uuid)
     _tags = field_validator("tags")(normalize_tags)
 
     @field_validator("name", mode="before")
@@ -58,7 +56,7 @@ class LibraryImportItem(MessageModel):
 
     @model_validator(mode="after")
     def validate_item(self):
-        validate_thumbnail(self.thumbnail_key, self.client_id)
+        validate_thumbnail(self.thumbnail_key)
         ids = [f.id for f in self.files]
         sources = [(f.source.storage, f.source.path) for f in self.files]
         if len(set(ids)) != len(ids) or self.primary_file_id not in ids:
@@ -67,22 +65,23 @@ class LibraryImportItem(MessageModel):
             raise ValueError("Each file must have a distinct source")
         return self
 
-    def descriptor(self) -> dict:
-        return {
-            "name": self.name,
-            "tags": sorted(tag.casefold() for tag in self.tags),
-            "thumbnail_key": self.thumbnail_key,
-            "primary_file_id": self.primary_file_id,
-            "files": [file.model_dump(exclude={"source"}) for file in self.files],
-        }
 
-
-class LibraryImportMessage(MessageModel):
-    schema_version: Annotated[StrictInt, Field(ge=1, le=1)]
+class JobCompletionMessage(MessageModel):
+    schema_version: Annotated[StrictInt, Field(ge=2, le=2)]
     message_id: str
-    item: LibraryImportItem
+    job_id: str
+    assets: list[JobCompletionAsset] = Field(min_length=1)
 
+    _job_id = field_validator("job_id")(canonical_uuid)
     _message_id = field_validator("message_id")(canonical_uuid)
+
+    @model_validator(mode="after")
+    def distinct_results(self):
+        sources = [(f.source.storage, f.source.path) for a in self.assets for f in a.files]
+        thumbnails = [a.thumbnail_key for a in self.assets if a.thumbnail_key is not None]
+        if len(set(sources)) != len(sources) or len(set(thumbnails)) != len(thumbnails):
+            raise ValueError("Result files and thumbnails must have distinct sources")
+        return self
 
     def canonical_body(self) -> str:
         return json.dumps(
@@ -90,13 +89,13 @@ class LibraryImportMessage(MessageModel):
         )
 
 
-class LibraryImportAccepted(BaseModel):
+class JobCompletionAccepted(BaseModel):
     message_id: str
 
 
-class LibraryImportStatus(BaseModel):
+class JobCompletionStatus(BaseModel):
     message_id: str
     status: Literal["queued", "processing", "succeeded", "failed"]
     attempts: int
-    asset_id: str | None = None
+    job_id: str | None = None
     error_code: str | None = None

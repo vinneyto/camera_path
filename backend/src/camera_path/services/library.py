@@ -5,21 +5,20 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, Field, FiniteFloat, field_validator, model_validator
-from sqlalchemy import select, text
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, field_validator, model_validator
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from camera_path.persistence.enums import LibraryAssetStatus
 from camera_path.persistence.records import (
     LibraryAssetFileRecord,
     LibraryAssetRecord,
-    LibraryClientIdRecord,
 )
 from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.project_cloud import ProjectCloudRepository
 from camera_path.services.io import blocking_io
 from camera_path.services.library_metadata import (
     LibraryError,
-    canonical_uuid,
     normalize_tags,
     validate_thumbnail,
 )
@@ -48,7 +47,7 @@ class LibraryAssetFile(BaseModel):
 
 class LibraryAsset(BaseModel):
     id: str
-    client_id: str
+    job_id: str | None = None
     name: str
     format: Literal["ply", "sog"]
     size_bytes: int
@@ -71,10 +70,10 @@ class LibraryAssetDefaultsUpdate(BaseModel):
 
 
 class LibraryUploadCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=200)
     size_bytes: int = Field(gt=0, le=MAX_LIBRARY_FILE_BYTES)
     format: Literal["ply", "sog"] = "ply"
-    client_id: str | None = None
     thumbnail_key: str | None = None
     tags: list[str] = Field(default_factory=list)
 
@@ -83,26 +82,12 @@ class LibraryUploadCreate(BaseModel):
     def trim_name(cls, value):
         return value.strip() if isinstance(value, str) else value
 
-    @field_validator("client_id")
-    @classmethod
-    def normalize_client_id(cls, value):
-        return canonical_uuid(value) if value is not None else None
-
     _tags = field_validator("tags")(normalize_tags)
 
     @model_validator(mode="after")
     def validate_metadata(self):
-        validate_thumbnail(self.thumbnail_key, self.client_id)
+        validate_thumbnail(self.thumbnail_key)
         return self
-
-    def descriptor(self):
-        return (
-            self.name,
-            self.format,
-            self.size_bytes,
-            self.thumbnail_key,
-            sorted(tag.casefold() for tag in self.tags),
-        )
 
 
 class LibraryAssetsDelete(BaseModel):
@@ -110,7 +95,7 @@ class LibraryAssetsDelete(BaseModel):
 
 
 class LibraryUpload(LibraryAsset):
-    upload_url: str | None
+    upload_url: str
 
 
 class LibraryService:
@@ -143,7 +128,7 @@ class LibraryService:
         primary = next(f for f in record.files if f.is_primary)
         return LibraryAsset(
             id=record.id,
-            client_id=record.client_id,
+            job_id=record.job_id,
             name=record.name,
             format=record.format,
             size_bytes=record.size_bytes,
@@ -184,32 +169,6 @@ class LibraryService:
             raise HTTPException(404, "Library file not found")
         return await self._model(record, request)
 
-    async def by_client_id(self, client_id: str, request: Request) -> LibraryAsset:
-        try:
-            client_id = canonical_uuid(client_id)
-        except ValueError as error:
-            raise LibraryError(
-                "validation_error",
-                422,
-                [
-                    {
-                        "location": ["path", "client_id"],
-                        "message": "Invalid UUID",
-                        "type": "value_error",
-                    }
-                ],
-            ) from error
-        async with self.repository.sessions() as session:
-            record = await session.scalar(
-                select(LibraryAssetRecord).where(
-                    LibraryAssetRecord.client_id == client_id,
-                    LibraryAssetRecord.status == LibraryAssetStatus.READY,
-                )
-            )
-        if record is None:
-            raise LibraryError("not_found", 404)
-        return await self._model(record, request)
-
     async def delete(self, asset_id: str) -> None:
         await self.delete_many([asset_id])
 
@@ -228,9 +187,6 @@ class LibraryService:
                 async with self.storage.stage_delete(keys):
                     await self.clouds.remove_library_assets(session, [r.id for r in records])
                     for record in records:
-                        ledger = await session.get(LibraryClientIdRecord, record.client_id)
-                        ledger.deleted_at = datetime.now(UTC)
-                        ledger.import_descriptor = None
                         await self.repository.delete(session, record)
                     await session.flush()
                     await session.commit()
@@ -245,65 +201,39 @@ class LibraryService:
             raise HTTPException(404, "Library file not found")
         return await self._model(record, request)
 
-    async def create(
-        self, data: LibraryUploadCreate, request: Request
-    ) -> tuple[LibraryUpload, bool]:
-        client_id = data.client_id or str(uuid4())
-        async with self.repository.sessions.begin() as session:
-            await session.execute(text("BEGIN IMMEDIATE"))
-            ledger = await session.get(LibraryClientIdRecord, client_id)
-            created = ledger is None
-            if ledger is not None:
-                if ledger.deleted_at is not None:
-                    raise LibraryError("library_client_id_deleted")
-                record = await session.scalar(
-                    select(LibraryAssetRecord).where(LibraryAssetRecord.client_id == client_id)
-                )
-                descriptor = (
-                    record.name,
-                    record.format,
-                    record.size_bytes,
-                    record.thumbnail_key,
-                    sorted(t.casefold() for t in record.tags),
-                )
-                if descriptor != data.descriptor():
-                    raise LibraryError("library_client_id_conflict")
-            else:
-                session.add(LibraryClientIdRecord(client_id=client_id))
-                await session.flush()
-                asset_id = str(uuid4())
-                key = f"{asset_id}.{data.format}"
-                record = LibraryAssetRecord(
-                    id=asset_id,
-                    client_id=client_id,
-                    name=data.name,
-                    format=data.format,
+    async def create(self, data: LibraryUploadCreate, request: Request) -> LibraryUpload:
+        asset_id = str(uuid4())
+        key = f"{asset_id}.{data.format}"
+        record = LibraryAssetRecord(
+            id=asset_id,
+            name=data.name,
+            format=data.format,
+            object_key=key,
+            size_bytes=data.size_bytes,
+            status=LibraryAssetStatus.PENDING,
+            created_at=datetime.now(UTC),
+            tags=data.tags,
+            thumbnail_key=data.thumbnail_key,
+            files=[
+                LibraryAssetFileRecord(
+                    id="main",
+                    position=0,
+                    is_primary=True,
                     object_key=key,
+                    format=data.format,
                     size_bytes=data.size_bytes,
-                    status=LibraryAssetStatus.PENDING,
-                    created_at=datetime.now(UTC),
-                    tags=data.tags,
-                    thumbnail_key=data.thumbnail_key,
-                    files=[
-                        LibraryAssetFileRecord(
-                            id="main",
-                            position=0,
-                            is_primary=True,
-                            object_key=key,
-                            format=data.format,
-                            size_bytes=data.size_bytes,
-                        )
-                    ],
                 )
+            ],
+        )
+        try:
+            async with self.repository.sessions.begin() as session:
                 session.add(record)
                 await session.flush()
+        except IntegrityError as error:
+            raise LibraryError("library_import_object_conflict") from error
         model = await self._model(record, request)
-        url = (
-            await self.storage.upload_url(record.id, record.object_key, request)
-            if (record.status == LibraryAssetStatus.PENDING)
-            else None
-        )
-        return LibraryUpload(**model.model_dump(), upload_url=url), created
+        url = await self.storage.upload_url(record.id, record.object_key, request)
+        return LibraryUpload(**model.model_dump(), upload_url=url)
 
     async def check_thumbnail(self, key: str | None) -> None:
         if key is None:

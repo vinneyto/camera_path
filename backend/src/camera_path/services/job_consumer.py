@@ -11,7 +11,7 @@ from camera_path.services.message_queue import MessageQueue
 logger = logging.getLogger(__name__)
 
 
-class LibraryImportConsumer:
+class JobCompletionConsumer:
     def __init__(self, queue: MessageQueue, importer, max_attempts=5, lease_seconds=60):
         self.queue, self.importer = queue, importer
         self.max_attempts, self.lease_seconds = max_attempts, lease_seconds
@@ -30,13 +30,13 @@ class LibraryImportConsumer:
                 pulse.result()
                 raise OSError("Queue lease lost")
             try:
-                asset_id = await work
+                job_id = await work
             except LibraryError as error:
                 await self.queue.reject(delivery.receipt, error.code)
                 logger.info(
-                    "Import rejected message=%s client=%s attempt=%s code=%s",
+                    "Import rejected message=%s job=%s attempt=%s code=%s",
                     delivery.message.message_id,
-                    delivery.message.item.client_id,
+                    delivery.message.job_id,
                     delivery.attempts,
                     error.code,
                 )
@@ -48,13 +48,13 @@ class LibraryImportConsumer:
                         delivery.receipt, min(60, 2 ** min(delivery.attempts - 1, 6))
                     )
                 logger.warning(
-                    "Import retry/failure message=%s client=%s attempt=%s",
+                    "Import retry/failure message=%s job=%s attempt=%s",
                     delivery.message.message_id,
-                    delivery.message.item.client_id,
+                    delivery.message.job_id,
                     delivery.attempts,
                 )
             else:
-                await self.queue.ack(delivery.receipt, asset_id)
+                await self.queue.ack(delivery.receipt, job_id)
         finally:
             work.cancel()
             pulse.cancel()

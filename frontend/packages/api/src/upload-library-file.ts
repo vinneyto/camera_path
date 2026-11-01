@@ -12,10 +12,7 @@ export async function uploadLibraryFile(file: File) {
     format: extension,
     size_bytes: file.size,
   });
-  if (created.status !== 201 && created.status !== 200)
-    throw new Error("Could not prepare the upload");
-  if (created.data.status === "ready") return created.data;
-  if (!created.data.upload_url) throw new Error("Upload URL is unavailable");
+  if (created.status !== 201) throw new Error("Could not prepare the upload");
   const upload = await fetch(created.data.upload_url, {
     method: "PUT",
     body: file,

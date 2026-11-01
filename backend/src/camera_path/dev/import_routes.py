@@ -4,11 +4,11 @@ from fastapi import APIRouter, Request
 from sqlalchemy.exc import SQLAlchemyError
 
 from camera_path.routers.auth import AuthenticatedRoute, authenticated
-from camera_path.services.library_import_models import (
+from camera_path.services.job_completion_models import (
     MAX_MESSAGE_BYTES,
-    LibraryImportAccepted,
-    LibraryImportMessage,
-    LibraryImportStatus,
+    JobCompletionAccepted,
+    JobCompletionMessage,
+    JobCompletionStatus,
 )
 from camera_path.services.library_metadata import LibraryError, canonical_uuid
 
@@ -45,16 +45,16 @@ class BoundedImportRoute(AuthenticatedRoute):
 
 
 router = APIRouter(
-    prefix="/dev/library-imports", tags=["Library imports"], route_class=BoundedImportRoute
+    prefix="/dev/job-completions", tags=["Job completions"], route_class=BoundedImportRoute
 )
 
 
 @router.post(
     "",
-    response_model=LibraryImportAccepted,
+    response_model=JobCompletionAccepted,
     status_code=202,
-    operation_id="enqueueLibraryImport",
-    description="Durably enqueue a JSON library descriptor in development mode.",
+    operation_id="enqueueJobCompletion",
+    description="Durably enqueue a JSON job completion in development mode.",
     responses={
         409: {"description": "Message ID reused with different content"},
         413: {"description": "JSON body exceeds 256 KiB"},
@@ -62,22 +62,22 @@ router = APIRouter(
     },
 )
 @authenticated
-async def enqueue_library_import(data: LibraryImportMessage, request: Request):
+async def enqueue_job_completion(data: JobCompletionMessage, request: Request):
     try:
         await request.app.state.message_queue.enqueue(data)
     except SQLAlchemyError as error:
         raise LibraryError("queue_unavailable", 503) from error
-    return LibraryImportAccepted(message_id=data.message_id)
+    return JobCompletionAccepted(message_id=data.message_id)
 
 
 @router.get(
     "/{message_id}",
-    response_model=LibraryImportStatus,
-    operation_id="getLibraryImportStatus",
+    response_model=JobCompletionStatus,
+    operation_id="getJobCompletionStatus",
     description="Read the durable result of a dev import message as an editor.",
 )
 @authenticated
-async def get_library_import_status(message_id: str, request: Request):
+async def get_job_completion_status(message_id: str, request: Request):
     try:
         message_id = canonical_uuid(message_id)
     except ValueError as error:

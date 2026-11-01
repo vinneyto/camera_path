@@ -28,16 +28,12 @@ def normalize_tags(values: list[str]) -> list[str]:
     return result
 
 
-def validate_thumbnail(key: str | None, client_id: str | None) -> str | None:
-    if key is not None and (
-        client_id is None
-        or len(key) > 255
-        or not re.fullmatch(
-            rf"thumbnails/{re.escape(client_id)}/[A-Za-z0-9][A-Za-z0-9._-]*\.(png|jpg|jpeg|webp)",
-            key,
-        )
-    ):
-        raise ValueError("Thumbnail must belong to the explicit client ID namespace")
+def validate_thumbnail(key: str | None) -> str | None:
+    if key is None:
+        return None
+    match = re.fullmatch(r"thumbnails/([a-f0-9-]{36})\.(png|jpg|jpeg|webp)", key)
+    if match is None or canonical_uuid(match[1]) != match[1]:
+        raise ValueError("Expected thumbnails/<canonical-UUID>.<image extension>")
     return key
 
 

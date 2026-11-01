@@ -86,15 +86,23 @@ class ProjectRecord(Base):
 
 class LibraryAssetRecord(Base):
     __tablename__ = "library_assets"
-    __table_args__ = (UniqueConstraint("client_id", name="uq_library_assets_client_id"),)
+    __table_args__ = (
+        UniqueConstraint("job_id", "job_position", name="uq_library_assets_job_position"),
+        UniqueConstraint("thumbnail_key", name="uq_library_assets_thumbnail_key"),
+        CheckConstraint(
+            "(job_id IS NULL AND job_position IS NULL) OR "
+            "(job_id IS NOT NULL AND job_position IS NOT NULL AND job_position >= 0)",
+            name="ck_library_assets_job_position",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
-    client_id: Mapped[str] = mapped_column(
-        ForeignKey(
-            "library_client_ids.client_id", name="fk_library_assets_client_id", ondelete="RESTRICT"
-        ),
-        nullable=False,
+    job_id: Mapped[str | None] = mapped_column(
+        ForeignKey("jobs.id", name="fk_library_assets_job_id", ondelete="RESTRICT"),
+        index=True,
     )
+    job_position: Mapped[int | None] = mapped_column(Integer)
+    job: Mapped[JobRecord | None] = relationship(back_populates="assets", lazy="raise")
     thumbnail_key: Mapped[str | None] = mapped_column(Text)
     tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list, server_default="[]")
     files: Mapped[list[LibraryAssetFileRecord]] = relationship(
@@ -117,12 +125,17 @@ class LibraryAssetRecord(Base):
     default_offset_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
 
-class LibraryClientIdRecord(Base):
-    __tablename__ = "library_client_ids"
+class JobRecord(Base):
+    __tablename__ = "jobs"
 
-    client_id: Mapped[str] = mapped_column(Text, primary_key=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    import_descriptor: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    assets: Mapped[list[LibraryAssetRecord]] = relationship(
+        back_populates="job",
+        lazy="selectin",
+        order_by="LibraryAssetRecord.job_position",
+        passive_deletes="all",
+    )
 
 
 class LibraryAssetFileRecord(Base):

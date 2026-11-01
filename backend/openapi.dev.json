@@ -1371,12 +1371,190 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
-      "LibraryAsset": {
+      "Job": {
         "properties": {
-          "client_id": {
-            "title": "Client Id",
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAsset"
+            },
+            "title": "Assets",
+            "type": "array"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "completed_at",
+          "assets"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
+      "JobCompletionAccepted": {
+        "properties": {
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message_id"
+        ],
+        "title": "JobCompletionAccepted",
+        "type": "object"
+      },
+      "JobCompletionAsset": {
+        "additionalProperties": false,
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryImportFile"
+            },
+            "minItems": 1,
+            "title": "Files",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
             "type": "string"
           },
+          "primary_file_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Primary File Id",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Key"
+          }
+        },
+        "required": [
+          "name",
+          "primary_file_id",
+          "files"
+        ],
+        "title": "JobCompletionAsset",
+        "type": "object"
+      },
+      "JobCompletionMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/JobCompletionAsset"
+            },
+            "minItems": 1,
+            "title": "Assets",
+            "type": "array"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "maximum": 2.0,
+            "minimum": 2.0,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "message_id",
+          "job_id",
+          "assets"
+        ],
+        "title": "JobCompletionMessage",
+        "type": "object"
+      },
+      "JobCompletionStatus": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "processing",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message_id",
+          "status",
+          "attempts"
+        ],
+        "title": "JobCompletionStatus",
+        "type": "object"
+      },
+      "LibraryAsset": {
+        "properties": {
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1451,6 +1629,17 @@
             "title": "Id",
             "type": "string"
           },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -1492,7 +1681,6 @@
         },
         "required": [
           "id",
-          "client_id",
           "name",
           "format",
           "size_bytes",
@@ -1650,19 +1838,6 @@
         "title": "LibraryFileSource",
         "type": "object"
       },
-      "LibraryImportAccepted": {
-        "properties": {
-          "message_id": {
-            "title": "Message Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message_id"
-        ],
-        "title": "LibraryImportAccepted",
-        "type": "object"
-      },
       "LibraryImportFile": {
         "additionalProperties": false,
         "properties": {
@@ -1704,142 +1879,8 @@
         "title": "LibraryImportFile",
         "type": "object"
       },
-      "LibraryImportItem": {
-        "additionalProperties": false,
-        "properties": {
-          "client_id": {
-            "title": "Client Id",
-            "type": "string"
-          },
-          "files": {
-            "items": {
-              "$ref": "#/components/schemas/LibraryImportFile"
-            },
-            "minItems": 1,
-            "title": "Files",
-            "type": "array"
-          },
-          "name": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "primary_file_id": {
-            "pattern": "^[A-Za-z0-9_-]{1,64}$",
-            "title": "Primary File Id",
-            "type": "string"
-          },
-          "tags": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Tags",
-            "type": "array"
-          },
-          "thumbnail_key": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Thumbnail Key"
-          }
-        },
-        "required": [
-          "client_id",
-          "name",
-          "primary_file_id",
-          "files"
-        ],
-        "title": "LibraryImportItem",
-        "type": "object"
-      },
-      "LibraryImportMessage": {
-        "additionalProperties": false,
-        "properties": {
-          "item": {
-            "$ref": "#/components/schemas/LibraryImportItem"
-          },
-          "message_id": {
-            "title": "Message Id",
-            "type": "string"
-          },
-          "schema_version": {
-            "maximum": 1.0,
-            "minimum": 1.0,
-            "title": "Schema Version",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "schema_version",
-          "message_id",
-          "item"
-        ],
-        "title": "LibraryImportMessage",
-        "type": "object"
-      },
-      "LibraryImportStatus": {
-        "properties": {
-          "asset_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Asset Id"
-          },
-          "attempts": {
-            "title": "Attempts",
-            "type": "integer"
-          },
-          "error_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error Code"
-          },
-          "message_id": {
-            "title": "Message Id",
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "queued",
-              "processing",
-              "succeeded",
-              "failed"
-            ],
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message_id",
-          "status",
-          "attempts"
-        ],
-        "title": "LibraryImportStatus",
-        "type": "object"
-      },
       "LibraryUpload": {
         "properties": {
-          "client_id": {
-            "title": "Client Id",
-            "type": "string"
-          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1914,6 +1955,17 @@
             "title": "Id",
             "type": "string"
           },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -1953,20 +2005,12 @@
             "title": "Thumbnail Url"
           },
           "upload_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Upload Url"
+            "title": "Upload Url",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "client_id",
           "name",
           "format",
           "size_bytes",
@@ -1984,18 +2028,8 @@
         "type": "object"
       },
       "LibraryUploadCreate": {
+        "additionalProperties": false,
         "properties": {
-          "client_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Client Id"
-          },
           "format": {
             "default": "ply",
             "enum": [
@@ -3336,15 +3370,15 @@
         ]
       }
     },
-    "/api/v1/dev/library-imports": {
+    "/api/v1/dev/job-completions": {
       "post": {
-        "description": "Durably enqueue a JSON library descriptor in development mode.",
-        "operationId": "enqueueLibraryImport",
+        "description": "Durably enqueue a JSON job completion in development mode.",
+        "operationId": "enqueueJobCompletion",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryImportMessage"
+                "$ref": "#/components/schemas/JobCompletionMessage"
               }
             }
           },
@@ -3355,7 +3389,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LibraryImportAccepted"
+                  "$ref": "#/components/schemas/JobCompletionAccepted"
                 }
               }
             },
@@ -3389,16 +3423,16 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Enqueue Library Import",
+        "summary": "Enqueue Job Completion",
         "tags": [
-          "Library imports"
+          "Job completions"
         ]
       }
     },
-    "/api/v1/dev/library-imports/{message_id}": {
+    "/api/v1/dev/job-completions/{message_id}": {
       "get": {
         "description": "Read the durable result of a dev import message as an editor.",
-        "operationId": "getLibraryImportStatus",
+        "operationId": "getJobCompletionStatus",
         "parameters": [
           {
             "in": "path",
@@ -3415,7 +3449,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LibraryImportStatus"
+                  "$ref": "#/components/schemas/JobCompletionStatus"
                 }
               }
             },
@@ -3440,9 +3474,82 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Get Library Import Status",
+        "summary": "Get Job Completion Status",
         "tags": [
-          "Library imports"
+          "Job completions"
+        ]
+      }
+    },
+    "/api/v1/jobs": {
+      "post": {
+        "description": "Reserve an empty job without starting a generator.",
+        "operationId": "createJob",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Job",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "description": "Read job completion and its surviving library results.",
+        "operationId": "getJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "Jobs"
         ]
       }
     },
@@ -3515,49 +3622,6 @@
         ]
       }
     },
-    "/api/v1/library/by-client-id/{client_id}": {
-      "get": {
-        "description": "Resolve a ready shared library item by its producer correlation UUID.",
-        "operationId": "getLibraryAssetByClientId",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "client_id",
-            "required": true,
-            "schema": {
-              "title": "Client Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LibraryAsset"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get Library Asset By Client Id",
-        "tags": [
-          "Library"
-        ]
-      }
-    },
     "/api/v1/library/uploads": {
       "post": {
         "description": "Create a pending file and obtain an upload URL.",
@@ -3573,16 +3637,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LibraryUpload"
-                }
-              }
-            },
-            "description": "OK"
-          },
           "201": {
             "content": {
               "application/json": {

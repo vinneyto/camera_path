@@ -155,7 +155,7 @@ it.each([
     let setAnchorTool: ReturnType<typeof useSetActiveEditorTool>;
     const asset: LibraryAsset = {
       id: "asset",
-      client_id: "12f19a8d-c7e8-4b14-91dc-774ee5477495",
+      job_id: null,
       tags: [],
       primary_file_id: "main",
       files: [

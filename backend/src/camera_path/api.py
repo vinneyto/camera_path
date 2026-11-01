@@ -30,6 +30,7 @@ from camera_path.repositories.user_settings import UserSettingsRepository
 from camera_path.routers.api import router as business_router
 from camera_path.routers.auth import router as auth_router
 from camera_path.routers.dependencies import PreconditionRequiredError
+from camera_path.routers.jobs import router as jobs_router
 from camera_path.routers.library import router as library_router
 from camera_path.routers.profile import router as profile_router
 from camera_path.routers.project_clouds import router as project_cloud_router
@@ -44,6 +45,7 @@ from camera_path.services import (
     TrajectoryService,
 )
 from camera_path.services.auth import AuthService
+from camera_path.services.jobs import JobService
 from camera_path.services.library import LibraryService
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorage, LibraryStorageError
@@ -205,8 +207,8 @@ def create_app(
     )
     application.state.project_service = project_service
     application.state.message_queue = message_queue
-    application.state.library_import_service = importer
-    application.state.library_import_consumer = consumer
+    application.state.job_completion_service = importer
+    application.state.job_completion_consumer = consumer
 
     @application.exception_handler(LibraryError)
     async def library_error(request: Request, error: LibraryError) -> JSONResponse:
@@ -222,6 +224,7 @@ def create_app(
             content=_error_content(request, "storage_unavailable", "Library storage unavailable"),
         )
 
+    application.state.job_service = JobService(library_service)
     application.state.library_service = library_service
     application.state.project_cloud_service = project_cloud_service
     application.state.project_repository = project_repository
@@ -340,6 +343,7 @@ def create_app(
     application.include_router(resource_router, prefix=API_PREFIX)
     application.include_router(auth_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
+    application.include_router(jobs_router, prefix=API_PREFIX)
     application.include_router(project_cloud_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)
     if configured.message_queue == "dev":

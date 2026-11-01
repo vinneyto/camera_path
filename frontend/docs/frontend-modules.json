@@ -830,7 +830,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3053,
+            "line": 3143,
             "column": 1
           },
           "usages": [
@@ -854,7 +854,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8591,
+            "line": 8681,
             "column": 1
           },
           "usages": [
@@ -878,7 +878,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3417,
+            "line": 3507,
             "column": 1
           },
           "usages": [
@@ -902,7 +902,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1280,
+            "line": 1370,
             "column": 1
           },
           "usages": [
@@ -920,7 +920,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4518,
+            "line": 4608,
             "column": 1
           },
           "usages": [
@@ -944,7 +944,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4882,
+            "line": 4972,
             "column": 1
           },
           "usages": [
@@ -968,7 +968,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2192,
+            "line": 2282,
             "column": 1
           },
           "usages": [
@@ -986,7 +986,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6726,
+            "line": 6816,
             "column": 1
           },
           "usages": [
@@ -1010,7 +1010,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8460,
+            "line": 8550,
             "column": 1
           },
           "usages": [
@@ -1034,7 +1034,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2442,
+            "line": 2532,
             "column": 1
           },
           "usages": [
@@ -1058,7 +1058,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5622,
+            "line": 5712,
             "column": 1
           },
           "usages": [
@@ -1082,7 +1082,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 708,
+            "line": 924,
             "column": 1
           },
           "usages": [
@@ -1100,7 +1100,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6115,
+            "line": 6205,
             "column": 1
           },
           "usages": [
@@ -1118,7 +1118,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1834,
+            "line": 1924,
             "column": 1
           },
           "usages": [
@@ -1142,7 +1142,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7466,
+            "line": 7556,
             "column": 1
           },
           "usages": [

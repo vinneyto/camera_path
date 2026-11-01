@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from camera_path.dev.records import DevQueueMessageRecord
-from camera_path.services.library_import_models import LibraryImportMessage, LibraryImportStatus
+from camera_path.services.job_completion_models import JobCompletionMessage, JobCompletionStatus
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.message_queue import Delivery, MessageQueue
 
@@ -18,7 +18,7 @@ class DevMessageQueue(MessageQueue):
     def __init__(self, sessions, lease_seconds: int = 60):
         self.sessions, self.lease_seconds = sessions, lease_seconds
 
-    async def enqueue(self, message: LibraryImportMessage) -> None:
+    async def enqueue(self, message: JobCompletionMessage) -> None:
         digest = hashlib.sha256(message.canonical_body().encode()).hexdigest()
         try:
             async with self.sessions.begin() as session:
@@ -28,6 +28,7 @@ class DevMessageQueue(MessageQueue):
                         message_id=message.message_id,
                         body=message.model_dump(),
                         body_sha256=digest,
+                        job_id=message.job_id,
                         available_at=now,
                         created_at=now,
                         updated_at=now,
@@ -39,13 +40,13 @@ class DevMessageQueue(MessageQueue):
                 if row is None or row.body_sha256 != digest:
                     raise LibraryError("queue_message_id_conflict") from None
 
-    async def status(self, message_id: str) -> LibraryImportStatus:
+    async def status(self, message_id: str) -> JobCompletionStatus:
         async with self.sessions() as session:
             row = await session.get(DevQueueMessageRecord, message_id)
             if row is None:
                 raise LibraryError("not_found", 404)
-            return LibraryImportStatus.model_validate(
-                {name: getattr(row, name) for name in LibraryImportStatus.model_fields}
+            return JobCompletionStatus.model_validate(
+                {name: getattr(row, name) for name in JobCompletionStatus.model_fields}
             )
 
     async def receive(self) -> Delivery | None:
@@ -82,7 +83,7 @@ class DevMessageQueue(MessageQueue):
                 )
             ).scalar_one_or_none()
             if row is not None:
-                return Delivery(LibraryImportMessage.model_validate(row.body), token, row.attempts)
+                return Delivery(JobCompletionMessage.model_validate(row.body), token, row.attempts)
         await asyncio.sleep(0.1)
         return None
 
@@ -98,11 +99,11 @@ class DevMessageQueue(MessageQueue):
                 .values(updated_at=datetime.now(UTC), **values)
             )
 
-    async def ack(self, receipt: str, asset_id: str) -> None:
+    async def ack(self, receipt: str, job_id: str) -> None:
         await self._update(
             receipt,
             status="succeeded",
-            asset_id=asset_id,
+            job_id=job_id,
             lease_token=None,
             lease_until=None,
             error_code=None,

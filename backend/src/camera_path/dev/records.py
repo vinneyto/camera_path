@@ -28,7 +28,7 @@ class DevQueueMessageRecord(Base):
     available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     lease_token: Mapped[str | None] = mapped_column(Text)
     lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    asset_id: Mapped[str | None] = mapped_column(Text)
+    job_id: Mapped[str | None] = mapped_column(Text)
     error_code: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
