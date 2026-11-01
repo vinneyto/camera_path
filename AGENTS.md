@@ -9,7 +9,8 @@ when planning, implementing or reviewing backend changes.
 data and boundary requirements to recreate the backend, rather than requiring the
 current implementation to fill in undocumented product decisions.
 
-New backend changes follow two separate pull requests: first the specification,
-then implementation and tests against the accepted specification. Editing a spec
-does not authorize implementation. Do not combine new requirements with their
-implementation in the same PR.
+Backend changes have two stages, which may share one pull request. First make a
+separate commit updating `backend/SPECS.md`. Wait for the user's explicit go-ahead
+before adding implementation and tests in subsequent commits. A specification
+edit or review alone does not authorize implementation. Keep specification and
+implementation changes in separate commits even when they are in the same PR.

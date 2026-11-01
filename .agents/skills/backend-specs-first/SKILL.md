@@ -1,6 +1,6 @@
 ---
 name: backend-specs-first
-description: Plan, implement or review Camera Path backend changes through a specification PR followed by a separate implementation PR, using backend/SPECS.md as the primary contract.
+description: Plan, implement or review Camera Path backend changes through a specification commit followed by explicitly authorized implementation, optionally in the same PR, using backend/SPECS.md as the primary contract.
 ---
 
 # Backend specification workflow
@@ -18,25 +18,26 @@ evidence and context, but do not silently override specified behavior. Identify
 missing or contradictory requirements rather than inventing them or treating an
 implementation bug as the contract.
 
-## Two separate pull requests
+## Two stages, optionally in one pull request
 
-1. **Specification PR.** Describe the intended backend change in `backend/SPECS.md`
+1. **Specification commit.** Describe the intended backend change in `backend/SPECS.md`
    first, preserving existing requirement identifiers and assigning new ones where
    needed. Cover affected inputs, results, errors, data, compatibility, migrations
    and observable acceptance criteria. Keep implementation and test-code changes
-   out of this PR. Present the specification for review before implementing it.
-2. **Implementation PR.** After the specification is accepted and implementation
-   is requested, implement the agreed requirements in a separate PR. Link the
-   specification PR and affected requirement identifiers. Update the necessary
-   code, migrations, generated contracts and tests, and report conformance checks
-   and any remaining discrepancies.
+   out of this commit. Present the specification for review and wait for the
+   user's explicit go-ahead before implementing it. The PR may remain open for
+   the next stage.
+2. **Implementation after go-ahead.** Once the user explicitly authorizes
+   implementation, add the agreed code and tests in subsequent commits. These
+   commits may be in the same PR as the specification; a separate implementation
+   PR is also allowed. Reference the accepted specification commit and affected
+   requirement identifiers. Update the necessary code, migrations, generated
+   contracts and tests, and report conformance checks and any remaining discrepancies.
 
-A specification edit alone does not authorize coding, merging or deployment.
-If implementation reveals that a requirement needs to change, return to a separate
-specification PR rather than silently amending the contract alongside the code.
-This two-PR workflow governs new work even if older process text describes
-updating the specification in the implementation PR; do not rewrite specification
-text merely to restate the workflow unless requested.
+A specification edit or review alone does not authorize coding, merging or deployment.
+If implementation reveals that a requirement needs to change, make a separate
+specification commit and obtain the user's go-ahead before implementing that change.
+Do not silently combine new requirements with their implementation in one commit.
 
 ## Verification
 
