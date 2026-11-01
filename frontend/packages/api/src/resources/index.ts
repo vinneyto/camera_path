@@ -5,6 +5,8 @@ export { useCompiledTrajectoryResource } from "./use-compiled-trajectory-resourc
 export { useDepthOfFieldTimeline } from "./use-depth-of-field-timeline";
 export { useLibraryAssetResource } from "./use-library-asset-resource";
 export { useLibraryCatalog } from "./use-library-catalog";
+export { useJobsCatalog } from "./use-jobs-catalog";
+export { useJobResource } from "./use-job-resource";
 export { useLidarTimelineResource } from "./use-lidar-timeline-resource";
 export { useOrientationTimeline } from "./use-orientation-timeline";
 export { useProjectsCatalog } from "./use-projects-catalog";

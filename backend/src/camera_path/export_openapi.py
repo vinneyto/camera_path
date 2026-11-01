@@ -8,8 +8,9 @@ from camera_path.api import create_app
 
 
 def export_schema(destination: Path) -> None:
+    application = create_app()
     destination.write_text(
-        json.dumps(create_app().openapi(), indent=2, sort_keys=True) + "\n",
+        json.dumps(application.openapi(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 

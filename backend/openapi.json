@@ -1371,6 +1371,72 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "Job": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAsset"
+            },
+            "title": "Assets",
+            "type": "array"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "completed_at",
+          "assets"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
+      "JobSummary": {
+        "properties": {
+          "asset_count": {
+            "minimum": 0.0,
+            "title": "Asset Count",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "completed_at",
+          "asset_count"
+        ],
+        "title": "JobSummary",
+        "type": "object"
+      },
       "LibraryAsset": {
         "properties": {
           "created_at": {
@@ -1428,6 +1494,13 @@
             ],
             "title": "Download Url"
           },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAssetFile"
+            },
+            "title": "Files",
+            "type": "array"
+          },
           "format": {
             "enum": [
               "ply",
@@ -1440,8 +1513,23 @@
             "title": "Id",
             "type": "string"
           },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
           "name": {
             "title": "Name",
+            "type": "string"
+          },
+          "primary_file_id": {
+            "title": "Primary File Id",
             "type": "string"
           },
           "size_bytes": {
@@ -1455,6 +1543,24 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
           }
         },
         "required": [
@@ -1464,6 +1570,9 @@
           "size_bytes",
           "status",
           "created_at",
+          "tags",
+          "primary_file_id",
+          "files",
           "default_rotation_deg",
           "default_scale",
           "default_offset"
@@ -1525,6 +1634,55 @@
           "default_scale"
         ],
         "title": "LibraryAssetDefaultsUpdate",
+        "type": "object"
+      },
+      "LibraryAssetFile": {
+        "properties": {
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "format": {
+            "enum": [
+              "ply",
+              "sog"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "format",
+          "size_bytes"
+        ],
+        "title": "LibraryAssetFile",
         "type": "object"
       },
       "LibraryAssetsDelete": {
@@ -1601,6 +1759,13 @@
             ],
             "title": "Download Url"
           },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryAssetFile"
+            },
+            "title": "Files",
+            "type": "array"
+          },
           "format": {
             "enum": [
               "ply",
@@ -1613,8 +1778,23 @@
             "title": "Id",
             "type": "string"
           },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
           "name": {
             "title": "Name",
+            "type": "string"
+          },
+          "primary_file_id": {
+            "title": "Primary File Id",
             "type": "string"
           },
           "size_bytes": {
@@ -1629,6 +1809,24 @@
             "title": "Status",
             "type": "string"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          },
           "upload_url": {
             "title": "Upload Url",
             "type": "string"
@@ -1641,6 +1839,9 @@
           "size_bytes",
           "status",
           "created_at",
+          "tags",
+          "primary_file_id",
+          "files",
           "default_rotation_deg",
           "default_scale",
           "default_offset",
@@ -1650,6 +1851,7 @@
         "type": "object"
       },
       "LibraryUploadCreate": {
+        "additionalProperties": false,
         "properties": {
           "format": {
             "default": "ply",
@@ -1671,6 +1873,24 @@
             "maximum": 2147483648.0,
             "title": "Size Bytes",
             "type": "integer"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "thumbnail_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Key"
           }
         },
         "required": [
@@ -2970,6 +3190,103 @@
         "summary": "Confirm the one-time email code",
         "tags": [
           "Auth"
+        ]
+      }
+    },
+    "/api/v1/jobs": {
+      "get": {
+        "description": "List pending and completed jobs with surviving result counts, ordered by ID.",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobSummary"
+                  },
+                  "title": "Response Listjobs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "post": {
+        "description": "Reserve an empty job without starting a generator.",
+        "operationId": "createJob",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Job",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "description": "Read job completion and its surviving library results.",
+        "operationId": "getJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "Jobs"
         ]
       }
     },

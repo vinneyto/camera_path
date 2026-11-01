@@ -1,10 +1,34 @@
+import re
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import AliasChoices, Field, SecretStr, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DATABASE_URL = f"sqlite+aiosqlite:///{Path.home() / '.camera-path' / 'camera_path.sqlite3'}"
+
+
+class ImportSourceSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    driver: Literal["local", "s3"]
+    root: str | None = None
+    bucket: str | None = None
+    prefix: str = ""
+
+    @model_validator(mode="after")
+    def validate_source(self):
+        from camera_path.services.library_metadata import relative_key
+
+        if self.driver == "local" and (not self.root or self.bucket or self.prefix):
+            raise ValueError("Local import sources require only a root directory")
+        if self.driver == "s3" and (not self.bucket or self.root):
+            raise ValueError("S3 import sources require a bucket and optional prefix")
+        if self.prefix:
+            if not self.prefix.endswith("/"):
+                raise ValueError("Source prefix must end in /")
+            relative_key(self.prefix[:-1])
+        return self
 
 
 class Settings(BaseSettings):
@@ -50,6 +74,39 @@ class Settings(BaseSettings):
     auth_smtp_host: Literal["localhost", "127.0.0.1", "::1"] = "127.0.0.1"
     auth_smtp_port: int = Field(default=1025, ge=1, le=65535)
     jwt_ttl_seconds: int = Field(default=28800, ge=60, le=86400)
+    message_queue: Literal["none", "rabbitmq", "sqs"] = "none"
+    rabbitmq_url: SecretStr = SecretStr("amqp://guest:guest@127.0.0.1:5672/")
+    rabbitmq_queue: str = Field(
+        default="camera-path.job-completions", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    )
+    message_queue_max_attempts: int = Field(default=5, ge=1)
+    message_queue_lease_seconds: int = Field(default=60, ge=1, le=43200)
+    library_import_sources: dict[str, ImportSourceSettings] = Field(default_factory=dict)
+    sqs_queue_url: str | None = Field(
+        default=None, validation_alias="CAMERA_PATH_AWS_SQS_QUEUE_URL"
+    )
+    sqs_failure_queue_url: str | None = Field(
+        default=None, validation_alias="CAMERA_PATH_AWS_SQS_FAILURE_QUEUE_URL"
+    )
+
+    @model_validator(mode="after")
+    def validate_queue(self):
+        if self.message_queue == "rabbitmq":
+            url = urlsplit(self.rabbitmq_url.get_secret_value())
+            if url.scheme not in {"amqp", "amqps"} or not url.hostname:
+                raise ValueError("RabbitMQ requires an amqp/amqps URL")
+        if self.message_queue == "sqs" and (
+            not self.sqs_queue_url
+            or not self.sqs_failure_queue_url
+            or self.sqs_queue_url == self.sqs_failure_queue_url
+        ):
+            raise ValueError("SQS requires distinct input and failure queue URLs")
+        if any(
+            name == "library" or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", name)
+            for name in self.library_import_sources
+        ):
+            raise ValueError("Invalid/reserved import source alias")
+        return self
 
     @model_validator(mode="after")
     def validate_s3(self) -> "Settings":

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useDeleteLibraryAssetsMutation } from "@camera-path/actions";
 import { useLibraryCatalog } from "@camera-path/api/resources";
 import { LibrarySelectionActions } from "@camera-path/feature-library/ui/library-selection-actions";
+import { LibraryAssetThumbnail } from "./library-asset-thumbnail";
 import { Card, Checkbox } from "@camera-path/ui-kit";
 
 export function LibraryAssetList() {
@@ -80,6 +81,10 @@ export function LibraryAssetList() {
                     />
                   </label>
                 </EditorOnly>
+                <LibraryAssetThumbnail
+                  url={asset.thumbnail_url}
+                  name={asset.name}
+                />
                 <div className="min-w-0">
                   <Link
                     className="block truncate text-xs font-medium after:absolute after:inset-0 after:z-10 after:rounded-lg after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-offset-2 focus-visible:after:ring-offset-background"
@@ -98,6 +103,16 @@ export function LibraryAssetList() {
                     {asset.default_offset.some((value) => value !== 0) &&
                       ` · Offset XYZ: ${asset.default_offset.join(", ")}`}
                   </p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {asset.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded bg-muted px-1.5 text-[10px]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </Card>

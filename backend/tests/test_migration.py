@@ -263,3 +263,113 @@ def test_email_auth_migration_preserves_editor_and_revokes_password_only_session
     command.downgrade(config, "20261011_0012")
     with sqlite3.connect(database_path) as connection:
         assert connection.execute("SELECT username FROM editors").fetchone() == ("legacy",)
+
+
+def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_path, monkeypatch):
+    database_path = tmp_path / "library-upgrade.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20261026_0014")
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO projects(id,name,revision) VALUES ('p','Scene',7)")
+        for asset_id, status in [("ready", "ready"), ("pending", "pending")]:
+            connection.execute(
+                "INSERT INTO library_assets(id,name,format,object_key,size_bytes,status,created_at,"
+                "default_rotation_x_deg,default_scale) VALUES (?,?,?,?,?,?,?,23,2)",
+                (asset_id, asset_id, "ply", f"{asset_id}.ply", 4, status, "2026-10-26"),
+            )
+        connection.execute(
+            "INSERT INTO project_clouds(id,project_id,library_asset_id,position,visible) "
+            "VALUES ('c','p','ready',0,1)"
+        )
+    command.upgrade(config, "head")
+    command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        assets = connection.execute(
+            "SELECT id,job_id,object_key,default_rotation_x_deg,default_scale,"
+            "thumbnail_key,tags "
+            "FROM library_assets ORDER BY id"
+        ).fetchall()
+        assert all(row[1] is None for row in assets)
+        assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone() == (0,)
+        assert all(row[2:] == (f"{row[0]}.ply", 23, 2, None, "[]") for row in assets)
+        assert connection.execute(
+            "SELECT asset_id,id,position,is_primary,object_key,sha256 FROM library_asset_files "
+            "ORDER BY asset_id"
+        ).fetchall() == [
+            ("pending", "main", 0, 1, "pending.ply", None),
+            ("ready", "main", 0, 1, "ready.ply", None),
+        ]
+        assert connection.execute("SELECT revision FROM projects").fetchone() == (7,)
+        assert connection.execute("SELECT library_asset_id FROM project_clouds").fetchone() == (
+            "ready",
+        )
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        connection.execute(
+            "INSERT INTO library_asset_files(asset_id,id,position,is_primary,format,object_key,"
+            "size_bytes) VALUES ('ready','extra',1,0,'sog','other.sog',8)"
+        )
+    with pytest.raises(RuntimeError, match="Refusing lossy downgrade"):
+        command.downgrade(config, "20261026_0014")
+
+
+@pytest.mark.parametrize("completed_at", [None, "2026-11-01"])
+def test_job_migration_downgrade_preserves_jobs(tmp_path, monkeypatch, completed_at):
+    database_path = tmp_path / "job-downgrade.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO jobs(id,completed_at) VALUES ('job',?)", (completed_at,))
+    with pytest.raises(RuntimeError, match="Refusing lossy downgrade"):
+        command.downgrade(config, "20261026_0014")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT id,completed_at FROM jobs").fetchone() == (
+            "job",
+            completed_at,
+        )
+
+
+def test_job_migration_round_trip_preserves_original_schema_and_assets(tmp_path, monkeypatch):
+    database_path = tmp_path / "job-round-trip.sqlite3"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
+    config = Config("alembic.ini")
+    command.upgrade(config, "20261026_0014")
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("INSERT INTO projects(id,name,revision) VALUES ('p','Scene',9)")
+        connection.execute(
+            "INSERT INTO library_assets(id,name,format,object_key,size_bytes,status,created_at,"
+            "default_rotation_x_deg,default_scale) "
+            "VALUES ('a','Tree','ply','tree.ply',4,'ready','2026-10-26',23,2)"
+        )
+        connection.execute(
+            "INSERT INTO project_clouds(id,project_id,library_asset_id,position,visible) "
+            "VALUES ('c','p','a',0,1)"
+        )
+        before = connection.execute("SELECT * FROM library_assets").fetchall()
+        schema = connection.execute("PRAGMA table_info(library_assets)").fetchall()
+    command.upgrade(config, "head")
+    command.downgrade(config, "20261026_0014")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT * FROM library_assets").fetchall() == before
+        assert connection.execute("PRAGMA table_info(library_assets)").fetchall() == schema
+        tables = {
+            r[0] for r in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        }
+        assert not {"jobs", "library_asset_files"} & tables
+        assert connection.execute("SELECT library_asset_id FROM project_clouds").fetchone() == (
+            "a",
+        )
+        assert connection.execute("SELECT revision FROM projects").fetchone() == (9,)
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+    command.upgrade(config, "head")
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone() == (0,)
+        assert connection.execute(
+            "SELECT asset_id,id,object_key,sha256 FROM library_asset_files"
+        ).fetchone() == ("a", "main", "tree.ply", None)
+        assert connection.execute("SELECT job_id,job_position FROM library_assets").fetchone() == (
+            None,
+            None,
+        )
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []

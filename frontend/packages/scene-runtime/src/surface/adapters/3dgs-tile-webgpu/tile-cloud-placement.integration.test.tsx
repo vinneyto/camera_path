@@ -155,6 +155,17 @@ it.each([
     let setAnchorTool: ReturnType<typeof useSetActiveEditorTool>;
     const asset: LibraryAsset = {
       id: "asset",
+      job_id: null,
+      tags: [],
+      primary_file_id: "main",
+      files: [
+        {
+          id: "main",
+          format: format as "ply" | "sog",
+          size_bytes: bytes.byteLength,
+          download_url: downloadUrl,
+        },
+      ],
       created_at: "",
       format: format as "ply" | "sog",
       size_bytes: bytes.byteLength,

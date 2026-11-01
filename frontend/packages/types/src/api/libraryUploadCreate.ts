@@ -19,4 +19,6 @@ export interface LibraryUploadCreate {
      * @exclusiveMinimum 0
      */
   size_bytes: number;
+  tags?: string[];
+  thumbnail_key?: string | null;
 }
