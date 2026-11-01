@@ -2472,6 +2472,39 @@ specific credentials are not part of the specification. S3/SMTP/SES are selected
 in the composition root. Project operations do not depend on the bytes/email
 delivery mechanism.
 
+**OPS-04. Application composition.** Wrap the core create_app factory with a
+configuration decorator in [composition.py](src/camera_path/composition.py). The
+wrapper resolves Settings, accepts existing repository/storage overrides, selects
+concrete adapters and injects a provider-independent AppDependencies value into
+the factory. Preserve the public create_app(app_settings=None, repository=None,
+library_storage=None) calling convention. Overrides take precedence over configured
+storage; route capabilities follow the actual injected adapter.
+
+Select filesystem/S3 library storage, SMTP/SES code delivery, optional dev/SQS
+message transport and each configured local/S3 import source in the wrapper.
+These choices remain independent; do not infer storage or email provider from
+the queue mode. Disabled message consumption builds no queue/source clients or
+consumer. With second factor off, construct no email sender. Import AWS SDKs only
+when their adapters are selected; ordinary local startup needs no AWS dependency,
+credentials or provider connection.
+
+The core factory creates common domain services, HTTP routes, middleware, error
+handlers, OpenAPI behavior and the lifespan using injected contracts. It contains
+no dev/AWS imports, provider selection or adapter-specific route registration.
+AuthService receives its email sender rather than selecting/importing SMTP/SES.
+The composition wrapper registers dev-owned SQL metadata and adds local content/
+thumbnail routes only for filesystem storage, and authenticated completion/status
+routes only for the dev queue. S3/SQS expose no corresponding local/dev routes.
+The finished OpenAPI schema includes exactly the routes actually mounted.
+
+Keep lifecycle ownership explicit: initialize the repository before serving and
+start the optional consumer once per lifespan; cancel and await it on shutdown,
+leaving unfinished deliveries recoverable. Close a repository created by the
+wrapper, while leaving an explicitly supplied repository to its caller. Adapter
+composition must not initialize the database, poll queues or send email while
+merely constructing/exporting the app. The HTTP/storage/queue/auth contracts,
+migrations, authentication and request/response shapes remain unchanged.
+
 **OPS-02.** `/health` returns `{status:"ok"}` and is a liveness endpoint, not a
 complete database/S3/SES/OpenAI check. `/docs` serves Scalar; OpenAPI is available at
 `/api/v1/openapi.json`. Current infrastructure in `infra/` uses EC2 with Nginx/HTTPS
@@ -2610,6 +2643,7 @@ tests (paths relative to `backend/tests/`):
 | QUEUE-01–03 | Authenticated JSON-file submission; disabled routes; durable 202; status/errors; body/UUID normalization; duplicate messages; restart, leases, retry/exhaustion and post-commit ack loss | Autonomous dev HTTP suite plus focused queue-contract/failure-injection scenarios |
 | QUEUE-04 | Same payload and handler; SQS polling/ack/visibility/failure forwarding; provider-independent core | Deterministic adapter contract checks; separately recorded live AWS acceptance |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
+| OPS-04 | Independent local/AWS adapter selection and overrides; conditional routes/OpenAPI; provider-free core; consumer and repository lifecycle | Composition checks and autonomous dev/default HTTP scenarios |
 | CHAT-01–05 | Idempotent messages, atomic tool edits, history, SSE delta/result/error, unavailable provider | `test_agent.py`, `test_agent_lidar.py`, `test_api.py` |
 
 This is a verification map, not a claim that existing tests prove every edge case.
@@ -2678,7 +2712,7 @@ the other links do not freeze the file structure during refactoring.
 
 | Area | Source |
 | --- | --- |
-| HTTP composition / errors | [api.py](src/camera_path/api.py), [routers/](src/camera_path/routers/) |
+| HTTP composition / errors | [api.py](src/camera_path/api.py), [composition.py](src/camera_path/composition.py), [routers/](src/camera_path/routers/) |
 | DTOs and defaults | [models.py](src/camera_path/models.py); DTOs in services/library.py, services/project_clouds.py, services/user_settings.py, routers/auth.py |
 | Database records | [persistence/records.py](src/camera_path/persistence/records.py); SQLAlchemy record classes as defined in DATA-05 |
 | Application operations | [services/](src/camera_path/services/) |
