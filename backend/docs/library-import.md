@@ -104,12 +104,12 @@ SHA-256, byte size and container signatures; signatures are not full 3DGS decodi
 copies have recovery markers under `_imports/`; expired attempts are cleaned only after checking
 committed ownership. Do not edit these internal markers.
 
-Migration `20261101_0016` upgrades databases that applied the earlier standalone-import contract:
-it removes the obsolete asset correlation field and ledger, preserves existing assets as
-ungrouped, and retains old thumbnail paths for serving/deletion. Legacy version-1 queued or
-processing messages are retained as failed with `obsolete_message_schema`; no jobs are invented.
-Shared thumbnail ownership requires repair before migration. Downgrade refuses to discard jobs
-or active messages. New producers must send version 2; version-1 messages are rejected.
+Migration `20261101_0015` upgrades the previous single-file library directly to jobs, result
+links, tags/thumbnails, file collections and the dev inbox. Existing assets keep their IDs,
+object keys, transforms and project references; they remain ungrouped, with one primary `main`
+file and no computed hash. Fresh databases reach the same schema. Downgrade refuses to discard
+jobs, multiple representations or active messages. New producers send version 2; version-1
+messages are rejected.
 
 Default OpenAPI is exported to `openapi.json`. The dev profile includes the two conditional
 operations and can be reproduced with:

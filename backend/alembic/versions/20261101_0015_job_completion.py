@@ -1,6 +1,4 @@
-"""Library identity, representations and durable dev inbox."""
-
-from uuid import uuid4
+"""Jobs, library result representations and durable dev inbox."""
 
 import sqlalchemy as sa
 
@@ -14,35 +12,27 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_table(
-        "library_client_ids",
-        sa.Column("client_id", sa.Text(), primary_key=True),
-        sa.Column("deleted_at", sa.DateTime(timezone=True)),
-        sa.Column("import_descriptor", sa.JSON(none_as_null=True)),
+        "jobs",
+        sa.Column("id", sa.Text(), primary_key=True),
+        sa.Column("completed_at", sa.DateTime(timezone=True)),
     )
-    op.add_column("library_assets", sa.Column("client_id", sa.Text(), nullable=True))
-    op.add_column("library_assets", sa.Column("thumbnail_key", sa.Text()))
-    op.add_column(
-        "library_assets", sa.Column("tags", sa.JSON(), nullable=False, server_default="[]")
-    )
-    connection = op.get_bind()
-    assets = sa.table("library_assets", sa.column("id"), sa.column("client_id"))
-    ledger = sa.table("library_client_ids", sa.column("client_id"))
-    for asset_id in connection.scalars(sa.select(assets.c.id)).all():
-        client_id = str(uuid4())
-        connection.execute(ledger.insert().values(client_id=client_id))
-        connection.execute(
-            assets.update().where(assets.c.id == asset_id).values(client_id=client_id)
-        )
     with op.batch_alter_table("library_assets") as batch:
-        batch.alter_column("client_id", existing_type=sa.Text(), nullable=False)
-        batch.create_unique_constraint("uq_library_assets_client_id", ["client_id"])
+        batch.add_column(sa.Column("thumbnail_key", sa.Text()))
+        batch.add_column(sa.Column("tags", sa.JSON(), nullable=False, server_default="[]"))
+        batch.add_column(sa.Column("job_id", sa.Text(), nullable=True))
+        batch.add_column(sa.Column("job_position", sa.Integer(), nullable=True))
         batch.create_foreign_key(
-            "fk_library_assets_client_id",
-            "library_client_ids",
-            ["client_id"],
-            ["client_id"],
-            ondelete="RESTRICT",
+            "fk_library_assets_job_id", "jobs", ["job_id"], ["id"], ondelete="RESTRICT"
         )
+        batch.create_unique_constraint("uq_library_assets_job_position", ["job_id", "job_position"])
+        batch.create_unique_constraint("uq_library_assets_thumbnail_key", ["thumbnail_key"])
+        batch.create_check_constraint(
+            "ck_library_assets_job_position",
+            "(job_id IS NULL AND job_position IS NULL) OR "
+            "(job_id IS NOT NULL AND job_position IS NOT NULL AND job_position >= 0)",
+        )
+        batch.create_index("ix_library_assets_job_id", ["job_id"])
+    connection = op.get_bind()
     op.create_table(
         "library_asset_files",
         sa.Column("asset_id", sa.Text(), nullable=False),
@@ -87,7 +77,7 @@ def upgrade() -> None:
         sa.Column("available_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("lease_token", sa.Text()),
         sa.Column("lease_until", sa.DateTime(timezone=True)),
-        sa.Column("asset_id", sa.Text()),
+        sa.Column("job_id", sa.Text()),
         sa.Column("error_code", sa.Text()),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -103,23 +93,34 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     connection = op.get_bind()
-    if connection.scalar(
-        sa.text(
-            "SELECT COUNT(*) FROM (SELECT asset_id FROM library_asset_files GROUP BY asset_id "
-            "HAVING COUNT(*) > 1)"
+    if (
+        connection.scalar(sa.text("SELECT COUNT(*) FROM jobs"))
+        or connection.scalar(
+            sa.text(
+                "SELECT COUNT(*) FROM (SELECT asset_id FROM library_asset_files GROUP BY asset_id "
+                "HAVING COUNT(*) > 1)"
+            )
         )
-    ) or connection.scalar(
-        sa.text("SELECT COUNT(*) FROM dev_queue_messages WHERE status IN ('queued','processing')")
+        or connection.scalar(
+            sa.text(
+                "SELECT COUNT(*) FROM dev_queue_messages WHERE status IN ('queued','processing')"
+            )
+        )
     ):
         raise RuntimeError(
-            "Refusing lossy downgrade: back up/convert multiple files and drain inbox"
+            "Refusing lossy downgrade: preserve jobs/results, "
+            "convert multiple files and drain inbox"
         )
     op.drop_table("dev_queue_messages")
     op.drop_table("library_asset_files")
     with op.batch_alter_table("library_assets") as batch:
-        batch.drop_constraint("fk_library_assets_client_id", type_="foreignkey")
-        batch.drop_constraint("uq_library_assets_client_id", type_="unique")
-        batch.drop_column("client_id")
+        batch.drop_constraint("fk_library_assets_job_id", type_="foreignkey")
+        batch.drop_constraint("uq_library_assets_job_position", type_="unique")
+        batch.drop_constraint("uq_library_assets_thumbnail_key", type_="unique")
+        batch.drop_constraint("ck_library_assets_job_position", type_="check")
+        batch.drop_index("ix_library_assets_job_id")
+        batch.drop_column("job_id")
+        batch.drop_column("job_position")
         batch.drop_column("thumbnail_key")
         batch.drop_column("tags")
-    op.drop_table("library_client_ids")
+    op.drop_table("jobs")
