@@ -296,7 +296,7 @@ async def test_mistakenly_mounted_dev_router_is_inaccessible_outside_development
 
     from httpx import ASGITransport, AsyncClient
 
-    from camera_path.dev.import_routes import router
+    from camera_path.dev.job_routes import router
 
     app = create_app(configuration(tmp_path))
     app.state.environment = environment

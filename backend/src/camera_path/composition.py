@@ -75,9 +75,9 @@ def _include_adapter_routes(
     if isinstance(dependencies.message_queue, DevMessageQueue):
         if environment != "development":
             raise ValueError("The dev API requires development mode")
-        from camera_path.dev.import_routes import router as import_router
+        from camera_path.dev.job_routes import router as dev_job_router
 
-        application.include_router(import_router, prefix=API_PREFIX)
+        application.include_router(dev_job_router, prefix=API_PREFIX)
     if isinstance(dependencies.library_storage, LocalLibraryStorage):
         from camera_path.dev.library_routes import router as local_library_router
 

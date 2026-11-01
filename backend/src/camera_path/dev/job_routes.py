@@ -1,4 +1,4 @@
-"""Dev-only HTTP producer for the durable local queue."""
+"""Dev-only job completion endpoints backed by the durable local queue."""
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.routing import APIRoute
@@ -13,7 +13,7 @@ from camera_path.services.job_completion_models import (
 from camera_path.services.library_metadata import LibraryError, canonical_uuid
 
 
-class BoundedImportRoute(APIRoute):
+class BoundedJobRoute(APIRoute):
     def get_route_handler(self):
         handler = super().get_route_handler()
 
@@ -47,7 +47,7 @@ class BoundedImportRoute(APIRoute):
 
 
 router = APIRouter(
-    prefix="/dev/job-completions", tags=["Job completions"], route_class=BoundedImportRoute
+    prefix="/dev/job-completions", tags=["Job completions"], route_class=BoundedJobRoute
 )
 
 
