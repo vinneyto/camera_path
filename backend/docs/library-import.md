@@ -16,6 +16,8 @@ uv run alembic upgrade head
 Add to your untracked `.env` (choose an actual absolute source directory):
 
 ```dotenv
+CAMERA_PATH_ENVIRONMENT=development
+CAMERA_PATH_AWS_LIBRARY_STORAGE=local
 CAMERA_PATH_MESSAGE_QUEUE=dev
 CAMERA_PATH_LIBRARY_IMPORT_SOURCES='{"incoming":{"driver":"local","root":"/absolute/generated"}}'
 ```
@@ -25,41 +27,39 @@ password/email-code flow described in the README; use its editor Bearer token be
 completion routes require authentication, including the status GET. They are absent with the default
 `CAMERA_PATH_MESSAGE_QUEUE=none` and in AWS mode. Production configuration rejects the dev adapter.
 
-Reserve an empty job with the editor token (this does not start generation):
+Use an editor token from the ordinary sign-in flow as `TOKEN`. Keep email-code authentication
+enabled; both dev operations require the same Bearer session as other writes.
+
+Reserve an empty job (this does not start generation), from a second terminal:
 
 ```sh
-curl -sS -X POST http://127.0.0.1:8000/api/v1/jobs \
-  -H "Authorization: Bearer $TOKEN"
-# 201: {"id":"JOB_UUID","completed_at":null,"assets":[]}
+export TOKEN='YOUR_EDITOR_ACCESS_TOKEN'
+JOB_ID=$(curl -fsS -X POST http://127.0.0.1:8000/api/v1/jobs \
+  -H "Authorization: Bearer $TOKEN" | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+echo "$JOB_ID"
 ```
 
-A completion descriptor can be generated from completed, real SOG/PLY files for that job:
+Put your completed files under the configured source root. For two PLY representations of the
+same asset, for example `/absolute/generated/cloud-full.ply` and
+`/absolute/generated/cloud-preview.ply`, generate an actual request using their sizes and hashes:
 
 ```sh
-python3 - JOB_UUID /absolute/generated/tree.sog /absolute/generated/tree.ply > completion.json <<'PY'
-import hashlib
-import json
-import sys
-from pathlib import Path
-from uuid import uuid4
-
-files = []
-for index, argument in enumerate(sys.argv[2:]):
-    path = Path(argument)
-    with path.open('rb') as source:
-        digest = hashlib.file_digest(source, 'sha256').hexdigest()
-    files.append({
-        'id': f'file-{index}', 'format': path.suffix[1:].lower(),
-        'size_bytes': path.stat().st_size, 'sha256': digest,
-        'source': {'storage': 'incoming', 'path': path.name},
-    })
-print(json.dumps({
-    'schema_version': 2, 'message_id': str(uuid4()), 'job_id': sys.argv[1],
-    'assets': [{'name': 'Tree', 'tags': ['tree'],
-             'thumbnail_key': None, 'primary_file_id': files[0]['id'], 'files': files}],
-}, indent=2))
-PY
+# Run from backend/, using Python 3.11+.
+python3 examples/make_job_completion.py \
+  --job-id "$JOB_ID" --source-root /absolute/generated --name "My cloud" \
+  /absolute/generated/cloud-full.ply /absolute/generated/cloud-preview.ply > completion.json
+cat completion.json
 ```
+
+The [JSON example](../examples/job-completion.multiple-ply.json) shows the full shape with two
+PLY files. Its job UUID, byte sizes and hashes are illustrative: generate your own JSON with the
+command above. The helper reads files locally, streams SHA-256, generates a new message UUID and
+writes JSON to stdout; it neither submits anything nor starts a job. Paths must lie below the
+source root. A relative subdirectory is preserved in `source.path`.
+
+This creates **one asset with two file representations**, with `file-1` as primary. To publish
+two independent library items, use two entries in `assets`, each containing its own `files` and
+`primary_file_id`. Every source object may be used only once within the completion.
 
 `source.storage` is a configured alias, and `path` is relative to its root. A path refers to a
 file accessible to the **backend host**, not a file on a remote HTTP caller's machine. Sending
@@ -75,8 +75,10 @@ curl -sS http://127.0.0.1:8000/api/v1/dev/job-completions \
   --data-binary @completion.json
 # 202: {"message_id":"..."}
 
-curl -sS http://127.0.0.1:8000/api/v1/dev/job-completions/MESSAGE_UUID \
-  -H "Authorization: Bearer $TOKEN"
+MESSAGE_ID=$(python3 -c 'import json; print(json.load(open("completion.json"))["message_id"])')
+curl -fsS "http://127.0.0.1:8000/api/v1/dev/job-completions/$MESSAGE_ID" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+curl -fsS "http://127.0.0.1:8000/api/v1/jobs/$JOB_ID" | python3 -m json.tool
 ```
 
 `202` means the message is durably accepted. Status is `queued`, `processing`, `succeeded`
@@ -85,8 +87,13 @@ Transient failures retry up to five times by default. Resubmitting the same mess
 returns its original state without resetting attempts; changing its body returns `409`.
 Corrected failed completions use a new message ID for the same reserved job.
 
-Read `GET /api/v1/jobs/JOB_UUID` to obtain `completed_at` and the ordered `assets` array. Unknown
-jobs are rejected before source reads. For a pending job, all assets, files and thumbnails must
+Read `GET /api/v1/jobs/JOB_UUID` to obtain `completed_at` and the ordered `assets` array.
+Repeat the status/read requests while the message is queued or processing; success means
+`status=succeeded`, a non-null job `completed_at` and both files in the result asset. Their
+returned `download_url` values can be opened or fetched. A new experiment after a successful
+completion needs a new job ID; resubmitting to the completed job will not replace its results.
+
+Unknown jobs are rejected before source reads. For a pending job, all assets, files and thumbnails must
 validate before one transaction creates ready assets and marks the job completed. Nothing is
 published if any result fails. **The first successful completion wins**: later well-formed
 completions are successful no-ops, without reading sources, replacing results or changing the

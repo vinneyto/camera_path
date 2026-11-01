@@ -437,6 +437,15 @@ If no identity is verified yet, local SMTP checks can proceed immediately; real
 SES requires creating/verifying the identity and DNS separately or with CDK.
 See `infra/README.md` for the post-review deployment and delivery checks.
 
+## Application composition
+
+`api.create_app` builds the common application from `AppDependencies`. Its
+`@with_infrastructure` decorator in `composition.py` selects and injects local/AWS storage,
+queue/source adapters and SMTP/SES delivery, then adds the routes supplied by those adapters.
+Storage overrides control the available content routes; queue selection is independent.
+The core factory and auth service do not select or import dev/AWS providers. Repository and
+consumer ownership are managed through the ordinary application lifespan.
+
 ## Autonomous API integration tests
 
 The standalone [HTTP contract suite](../integration/README.md) starts a disposable backend,

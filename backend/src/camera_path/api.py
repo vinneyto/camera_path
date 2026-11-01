@@ -14,13 +14,10 @@ from scalar_fastapi import get_scalar_api_reference
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from camera_path.agent import TrajectoryAgent
-from camera_path.config import Settings, settings
-from camera_path.dev import records as dev_records  # noqa: F401
-from camera_path.dev.library_storage import LocalLibraryStorage
-from camera_path.imports import compose_imports
+from camera_path.composition import API_PREFIX, with_infrastructure
+from camera_path.config import Settings
 from camera_path.repositories import (
     ProjectNotFoundError,
-    ProjectRepository,
     RevisionConflictError,
 )
 from camera_path.repositories.auth import AuthRepository
@@ -44,16 +41,18 @@ from camera_path.services import (
     TimelineService,
     TrajectoryService,
 )
+from camera_path.services.app_dependencies import AppDependencies
 from camera_path.services.auth import AuthService
+from camera_path.services.job_completion import JobCompletionService
+from camera_path.services.job_consumer import JobCompletionConsumer
 from camera_path.services.jobs import JobService
 from camera_path.services.library import LibraryService
 from camera_path.services.library_metadata import LibraryError
-from camera_path.services.library_storage import LibraryStorage, LibraryStorageError
+from camera_path.services.library_storage import LibraryStorageError
 from camera_path.services.project_clouds import ProjectCloudService
 from camera_path.services.user_settings import UserSettingsService
 from camera_path.trajectory import GeometryError
 
-API_PREFIX = "/api/v1"
 OPENAPI_URL = f"{API_PREFIX}/openapi.json"
 ETAG_OPERATION_IDS = {
     "createProject",
@@ -127,24 +126,21 @@ def _error_content(
     return content
 
 
-def create_app(
-    app_settings: Settings | None = None,
-    repository: ProjectRepository | None = None,
-    library_storage: LibraryStorage | None = None,
-) -> FastAPI:
-    configured = app_settings or settings
-    owns_repository = repository is None
-    project_repository = repository or ProjectRepository(configured.database_url)
-    if library_storage is not None:
-        storage = library_storage
-    elif configured.library_storage == "s3":
-        from camera_path.aws.library_storage import S3LibraryStorage
-
-        storage = S3LibraryStorage.from_settings(configured)
-    else:
-        storage = LocalLibraryStorage(configured.library_directory)
+@with_infrastructure
+def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
+    project_repository = dependencies.repository
+    storage = dependencies.library_storage
     library_service = LibraryService(LibraryRepository(project_repository.session_factory), storage)
-    message_queue, importer, consumer = compose_imports(configured, library_service)
+    message_queue = dependencies.message_queue
+    importer = consumer = None
+    if message_queue is not None:
+        importer = JobCompletionService(library_service, dependencies.import_sources)
+        consumer = JobCompletionConsumer(
+            message_queue,
+            importer,
+            configured.message_queue_max_attempts,
+            configured.message_queue_lease_seconds,
+        )
     project_cloud_service = ProjectCloudService(
         ProjectCloudRepository(project_repository.session_factory),
         library_service.repository,
@@ -166,19 +162,22 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        initialize = getattr(project_repository, "initialize", None)
-        if initialize is not None:
-            await initialize()
-        task = asyncio.create_task(consumer.run()) if consumer is not None else None
+        task = None
         try:
+            initialize = getattr(project_repository, "initialize", None)
+            if initialize is not None:
+                await initialize()
+            task = asyncio.create_task(consumer.run()) if consumer is not None else None
             yield
         finally:
-            if task is not None:
-                task.cancel()
-                with suppress(asyncio.CancelledError):
-                    await task
-            if owns_repository:
-                await project_repository.close()
+            try:
+                if task is not None:
+                    task.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await task
+            finally:
+                if dependencies.owns_repository:
+                    await project_repository.close()
 
     application = FastAPI(
         title="Camera Path API",
@@ -229,7 +228,7 @@ def create_app(
     application.state.project_cloud_service = project_cloud_service
     application.state.project_repository = project_repository
     application.state.auth_service = AuthService(
-        AuthRepository(project_repository.session_factory), configured
+        AuthRepository(project_repository.session_factory), configured, dependencies.email_sender
     )
     application.state.dev_user_id = configured.dev_user_id
     application.state.user_settings_service = UserSettingsService(
@@ -346,14 +345,6 @@ def create_app(
     application.include_router(jobs_router, prefix=API_PREFIX)
     application.include_router(project_cloud_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)
-    if configured.message_queue == "dev":
-        from camera_path.dev.import_routes import router as import_router
-
-        application.include_router(import_router, prefix=API_PREFIX)
-    if isinstance(storage, LocalLibraryStorage):
-        from camera_path.dev.library_routes import router as local_library_router
-
-        application.include_router(local_library_router, prefix=API_PREFIX)
     application.include_router(business_router, include_in_schema=False)
 
     def versioned_openapi() -> dict[str, Any]:

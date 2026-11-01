@@ -165,3 +165,46 @@ def test_jobs_reservation_validation_and_unknown_completion(dev_backend):
     b.request("GET", f"/api/v1/jobs/{payload['job_id']}", 404)
     legacy = {"schema_version": 1, "message_id": str(uuid4()), "item": {}}
     b.request("POST", "/api/v1/dev/job-completions", 422, json=legacy)
+
+
+def test_documented_helper_submits_two_ply_files(dev_backend):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    b = dev_backend
+    source = b.directory / "incoming"
+    source.mkdir(exist_ok=True)
+    contents = [PLY, b"ply\nformat ascii 1.0\ncomment preview\nend_header\n"]
+    files = [source / "full.ply", source / "preview.ply"]
+    for path, data in zip(files, contents, strict=True):
+        path.write_bytes(data)
+    job = b.request("POST", "/api/v1/jobs", 201).json()
+    helper = Path(__file__).resolve().parents[2] / "backend/examples/make_job_completion.py"
+    generated = subprocess.run(
+        [
+            sys.executable,
+            str(helper),
+            "--job-id",
+            job["id"],
+            "--source-root",
+            str(source),
+            "--name",
+            "Two PLY representations",
+            *map(str, files),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=10,
+    )
+    payload = json.loads(generated.stdout)
+    assert enqueue(b, payload)["status"] == "succeeded"
+    completed = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
+    assert completed["completed_at"] is not None and len(completed["assets"]) == 1
+    asset = completed["assets"][0]
+    assert asset["primary_file_id"] == "file-1"
+    assert [file["format"] for file in asset["files"]] == ["ply", "ply"]
+    for file, expected in zip(asset["files"], contents, strict=True):
+        assert b.request("GET", file["download_url"]).content == expected
+    assert [path.read_bytes() for path in files] == contents
