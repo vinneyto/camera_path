@@ -304,7 +304,6 @@ def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_pat
         assert connection.execute("SELECT library_asset_id FROM project_clouds").fetchone() == (
             "ready",
         )
-        assert connection.execute("SELECT COUNT(*) FROM dev_queue_messages").fetchone() == (0,)
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         connection.execute(
             "INSERT INTO library_asset_files(asset_id,id,position,is_primary,format,object_key,"
@@ -314,40 +313,21 @@ def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_pat
         command.downgrade(config, "20261026_0014")
 
 
-@pytest.mark.parametrize("state", ["pending_job", "completed_job", "queued", "processing"])
-def test_job_migration_downgrade_preserves_jobs_and_active_messages(tmp_path, monkeypatch, state):
+@pytest.mark.parametrize("completed_at", [None, "2026-11-01"])
+def test_job_migration_downgrade_preserves_jobs(tmp_path, monkeypatch, completed_at):
     database_path = tmp_path / "job-downgrade.sqlite3"
     monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
     config = Config("alembic.ini")
     command.upgrade(config, "head")
     with sqlite3.connect(database_path) as connection:
-        if state.endswith("job"):
-            connection.execute(
-                "INSERT INTO jobs(id,completed_at) VALUES ('job',?)",
-                ("2026-11-01" if state == "completed_job" else None,),
-            )
-        else:
-            connection.execute(
-                "INSERT INTO dev_queue_messages(message_id,body,body_sha256,status,attempts,"
-                "available_at,created_at,updated_at,job_id) "
-                "VALUES ('message','{}',?, ?,1,'2026-11-01','2026-11-01','2026-11-01','job')",
-                ("a" * 64, state),
-            )
+        connection.execute("INSERT INTO jobs(id,completed_at) VALUES ('job',?)", (completed_at,))
     with pytest.raises(RuntimeError, match="Refusing lossy downgrade"):
         command.downgrade(config, "20261026_0014")
     with sqlite3.connect(database_path) as connection:
-        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
-            "20261101_0015",
+        assert connection.execute("SELECT id,completed_at FROM jobs").fetchone() == (
+            "job",
+            completed_at,
         )
-        if state.endswith("job"):
-            assert connection.execute("SELECT id,completed_at FROM jobs").fetchone() == (
-                "job",
-                "2026-11-01" if state == "completed_job" else None,
-            )
-        else:
-            assert connection.execute(
-                "SELECT status,attempts,job_id FROM dev_queue_messages"
-            ).fetchone() == (state, 1, "job")
 
 
 def test_job_migration_round_trip_preserves_original_schema_and_assets(tmp_path, monkeypatch):
@@ -376,7 +356,7 @@ def test_job_migration_round_trip_preserves_original_schema_and_assets(tmp_path,
         tables = {
             r[0] for r in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
         }
-        assert not {"jobs", "library_asset_files", "dev_queue_messages"} & tables
+        assert not {"jobs", "library_asset_files"} & tables
         assert connection.execute("SELECT library_asset_id FROM project_clouds").fetchone() == (
             "a",
         )

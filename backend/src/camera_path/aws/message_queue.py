@@ -1,5 +1,8 @@
 """SQS adapter: the message body, not an S3 notification, is the domain payload."""
 
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from pydantic import ValidationError
 
 from camera_path.aws.clients import aws_client, run_io
@@ -12,6 +15,7 @@ class SQSMessageQueue(MessageQueue):
         self.client, self.queue_url, self.failure_url = client, queue_url, failure_url
         self.lease_seconds = lease_seconds
         self._bodies: dict[str, str] = {}
+        self._renewals: dict[str, asyncio.Task] = {}
 
     @classmethod
     def from_settings(cls, settings):
@@ -47,7 +51,8 @@ class SQSMessageQueue(MessageQueue):
             )
         return None
 
-    async def ack(self, receipt: str, job_id: str) -> None:
+    async def ack(self, receipt: str) -> None:
+        await self._stop_renewal(receipt)
         try:
             await run_io(
                 lambda: self.client.delete_message(QueueUrl=self.queue_url, ReceiptHandle=receipt)
@@ -56,6 +61,7 @@ class SQSMessageQueue(MessageQueue):
             self._bodies.pop(receipt, None)
 
     async def retry(self, receipt: str, delay: int) -> None:
+        await self._stop_renewal(receipt)
         try:
             await self._visibility(receipt, delay)
         finally:
@@ -76,7 +82,7 @@ class SQSMessageQueue(MessageQueue):
         except Exception:
             self._bodies.pop(receipt, None)
             raise
-        await self.ack(receipt, "")
+        await self.ack(receipt)
 
     async def _visibility(self, receipt: str, seconds: int) -> None:
         await run_io(
@@ -85,5 +91,29 @@ class SQSMessageQueue(MessageQueue):
             )
         )
 
-    async def extend_lease(self, receipt: str) -> None:
-        await self._visibility(receipt, self.lease_seconds)
+    async def _stop_renewal(self, receipt: str) -> None:
+        task = self._renewals.pop(receipt, None)
+        if task is not None:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+
+    @asynccontextmanager
+    async def hold(self, receipt: str):
+        async def renew():
+            while True:
+                await asyncio.sleep(max(0.1, self.lease_seconds / 3))
+                await self._visibility(receipt, self.lease_seconds)
+
+        try:
+            async with asyncio.TaskGroup() as tasks:
+                self._renewals[receipt] = tasks.create_task(renew())
+                try:
+                    yield
+                finally:
+                    await self._stop_renewal(receipt)
+        finally:
+            self._bodies.pop(receipt, None)
+
+    async def aclose(self) -> None:
+        await run_io(self.client.close)

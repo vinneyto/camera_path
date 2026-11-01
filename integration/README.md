@@ -3,12 +3,13 @@
 These tests exercise a **real backend subprocess over loopback HTTP**, including real SMTP
 code delivery. The test client has its own locked Python environment containing only pytest
 and httpx; it does not import `camera_path`, FastAPI, SQLAlchemy, JWT helpers or app fixtures.
-No Docker, AWS account, email account, OpenAI key, browser or running development app is needed.
+Queue scenarios require a running Docker engine for a disposable RabbitMQ broker. No AWS account,
+email account, OpenAI key, browser or running development app is needed.
 
 ## Run from the repository root
 
 ```sh
-uv sync --frozen --project backend
+uv sync --frozen --project backend --extra rabbitmq
 uv sync --frozen --project integration
 integration/.venv/bin/python -m pytest -c integration/pyproject.toml integration/tests \
   --require-api-coverage --api-report=integration/api-coverage.json
@@ -18,14 +19,17 @@ These paths assume the repository root, not the `integration/` directory. If you
 is already in `integration/`, use this equivalent sequence:
 
 ```sh
-uv sync --frozen --project ../backend
+uv sync --frozen --project ../backend --extra rabbitmq
 uv sync --frozen
 .venv/bin/python -m pytest tests --require-api-coverage --api-report=api-coverage.json
 ```
 
 The autonomous suite runs against local filesystem storage and SMTP. Install the optional
 backend `--extra aws` only when also running the existing unit suite's mocked SES tests.
-Dependencies must be installed once; the actual test run requires only loopback networking.
+Dependencies and the `rabbitmq:4.2-management` image must be available (the first run pulls it
+through Docker). Test traffic uses loopback; the suite creates its own container with ephemeral
+ports and credentials, then removes it on teardown. It never uses your Compose broker or data.
+Override `CP_TEST_RABBITMQ_IMAGE` to use a compatible local image.
 No environment activation is needed: use the explicit Python path shown above. The fast suite
 usually takes about two minutes locally. Verbose output names each running test; the first
 one prepares the database/editor and exercises email login and two real server restarts.
@@ -72,8 +76,8 @@ operation allowed without a successful status in the fast run.
 
 ## Coverage and limits
 
-- All ordinary versioned write operations: unauthenticated and invalid-token requests denied.
-  The dev-only completion/status transport is explicitly unauthenticated and unavailable in production.
+- All versioned write operations: unauthenticated and invalid-token requests denied.
+  No debug completion/status HTTP routes are exposed with any queue provider.
 - Public reads, public viewer settings, protected session, OpenAPI operation inventory, CORS and structured errors.
 - Projects and metadata, rename/reset/delete, independent projects, fresh/missing/malformed/stale
   ETags, concurrent writes, validation atomicity and actual process-restart persistence.
@@ -126,12 +130,13 @@ Task: https://docs.google.com/document/d/1CqaWyve6LW1tY7ra4lRSYRnQ8I9SzgVkSo-IgY
 
 ## Queue-driven job completion
 
-The suite also starts a disposable backend with the dev queue adapter. It submits a real JSON
-completion file without authentication for a job reserved through the ordinary email-code login
-flow, imports multiple SOG/PLY representations, adopts existing library objects and copies external
-sources under UUIDs. It checks public dev status/validation/failures, restarts the process and retries without duplicate assets. Deleted results stay deleted after replay; unknown
-jobs fail before source reads. The default backend still checks that dev routes
-are absent. The API success gate covers both always-mounted operations and the two conditional
-dev operations from `backend/openapi.dev.json`. All files and messages belong to the test's
-private temporary directories. SQS SDK behavior is checked separately by backend tests; live
-AWS configuration/acceptance is separate.
+The suite starts disposable backends with the RabbitMQ adapter and a real broker. It publishes
+completion JSON using the broker's management API and test credentials, after reserving a job
+through the ordinary email-code login flow. The backend receives it over AMQP, imports multiple
+SOG/PLY representations, adopts existing library objects and copies external sources under UUIDs.
+It checks public job results, malformed descriptors and quarantined errors, process/broker
+restarts, and replay without duplicate assets. Deleted results stay deleted; unknown jobs fail
+before source reads. Default and RabbitMQ modes both check that debug routes are absent.
+The success gate covers the unchanged public `backend/openapi.json` inventory; broker operations
+are separate scenarios. All files, queues and messages belong to the suite. SQS SDK behavior is
+checked separately by backend tests; live AWS configuration/acceptance is separate.

@@ -87,15 +87,3 @@ class JobCompletionMessage(MessageModel):
         return json.dumps(
             self.model_dump(), sort_keys=True, separators=(",", ":"), ensure_ascii=False
         )
-
-
-class JobCompletionAccepted(BaseModel):
-    message_id: str
-
-
-class JobCompletionStatus(BaseModel):
-    message_id: str
-    status: Literal["queued", "processing", "succeeded", "failed"]
-    attempts: int
-    job_id: str | None = None
-    error_code: str | None = None

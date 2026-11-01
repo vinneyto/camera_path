@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from camera_path.config import settings
-from camera_path.dev import records as dev_records  # noqa: F401
 from camera_path.persistence.records import Base
 
 config = context.config

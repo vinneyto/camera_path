@@ -1,3 +1,4 @@
+import asyncio
 import json
 from uuid import uuid4
 
@@ -72,25 +73,79 @@ def receive(stub, body):
     )
 
 
-async def test_sqs_same_json_contract_poll_lease_and_commit_ack(sqs):
+@pytest.mark.parametrize("settlement", ["ack", "retry"])
+async def test_sqs_holds_delivery_and_stops_renewing_before_settlement(
+    sqs, monkeypatch, settlement
+):
     queue, stub = sqs
     data = payload()
     receive(stub, json.dumps(data))
     delivery = await queue.receive()
     assert delivery.message == JobCompletionMessage.model_validate(data)
     assert delivery.attempts == 2
+    queue.lease_seconds = 1
+    renewed = asyncio.Event()
+    original = queue._visibility
+
+    async def visibility(receipt, seconds):
+        await original(receipt, seconds)
+        renewed.set()
+
+    monkeypatch.setattr(queue, "_visibility", visibility)
     stub.add_response(
         "change_message_visibility",
         {},
         {
             "QueueUrl": INPUT,
             "ReceiptHandle": "receipt",
-            "VisibilityTimeout": 60,
+            "VisibilityTimeout": 1,
         },
     )
-    await queue.extend_lease(delivery.receipt)
-    stub.add_response("delete_message", {}, {"QueueUrl": INPUT, "ReceiptHandle": "receipt"})
-    await queue.ack(delivery.receipt, "job-id")
+    if settlement == "ack":
+        stub.add_response("delete_message", {}, {"QueueUrl": INPUT, "ReceiptHandle": "receipt"})
+    else:
+        stub.add_response(
+            "change_message_visibility",
+            {},
+            {
+                "QueueUrl": INPUT,
+                "ReceiptHandle": "receipt",
+                "VisibilityTimeout": 4,
+            },
+        )
+    async with queue.hold(delivery.receipt):
+        await asyncio.wait_for(renewed.wait(), timeout=2)
+        if settlement == "ack":
+            await queue.ack(delivery.receipt)
+        else:
+            await queue.retry(delivery.receipt, 4)
+        # Still inside the ownership context, but renewal must already be stopped.
+        await asyncio.sleep(0.4)
+
+
+async def test_sqs_renewal_failure_cancels_work_without_ack(sqs):
+    queue, stub = sqs
+    receive(stub, json.dumps(payload()))
+    delivery = await queue.receive()
+    queue.lease_seconds = 1
+    stub.add_client_error(
+        "change_message_visibility",
+        service_error_code="ServiceUnavailable",
+        http_status_code=503,
+        expected_params={
+            "QueueUrl": INPUT,
+            "ReceiptHandle": "receipt",
+            "VisibilityTimeout": 1,
+        },
+    )
+    cancelled = asyncio.Event()
+    with pytest.raises(ExceptionGroup):
+        async with queue.hold(delivery.receipt):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+    assert cancelled.is_set()
 
 
 async def test_sqs_retry_changes_visibility_without_deleting(sqs):
@@ -163,9 +218,18 @@ def test_core_queue_and_import_have_no_provider_imports():
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 assert not (node.module or "").startswith(
-                    ("camera_path.aws", "camera_path.dev", "boto3", "botocore", "fastapi")
+                    (
+                        "camera_path.aws",
+                        "camera_path.dev",
+                        "boto3",
+                        "botocore",
+                        "fastapi",
+                        "aio_pika",
+                        "aiormq",
+                    )
                 )
             elif isinstance(node, ast.Import):
                 assert not any(
-                    n.name.startswith(("boto3", "botocore", "fastapi")) for n in node.names
+                    n.name.startswith(("boto3", "botocore", "fastapi", "aio_pika", "aiormq"))
+                    for n in node.names
                 )

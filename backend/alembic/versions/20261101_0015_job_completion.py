@@ -1,4 +1,4 @@
-"""Jobs, library result representations and durable dev inbox."""
+"""Jobs and library result representations."""
 
 import sqlalchemy as sa
 
@@ -67,51 +67,19 @@ def upgrade() -> None:
             "SELECT id,'main',0,1,format,object_key,size_bytes FROM library_assets"
         )
     )
-    op.create_table(
-        "dev_queue_messages",
-        sa.Column("message_id", sa.Text(), primary_key=True),
-        sa.Column("body", sa.JSON(), nullable=False),
-        sa.Column("body_sha256", sa.Text(), nullable=False),
-        sa.Column("status", sa.Text(), nullable=False, server_default="queued"),
-        sa.Column("attempts", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("available_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("lease_token", sa.Text()),
-        sa.Column("lease_until", sa.DateTime(timezone=True)),
-        sa.Column("job_id", sa.Text()),
-        sa.Column("error_code", sa.Text()),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.CheckConstraint(
-            "status IN ('queued', 'processing', 'succeeded', 'failed')",
-            name="ck_dev_queue_messages_status",
-        ),
-        sa.CheckConstraint("attempts >= 0", name="ck_dev_queue_messages_attempts"),
-    )
-    op.create_index("ix_dev_queue_messages_ready", "dev_queue_messages", ["status", "available_at"])
-    op.create_index("ix_dev_queue_messages_lease", "dev_queue_messages", ["status", "lease_until"])
 
 
 def downgrade() -> None:
     connection = op.get_bind()
-    if (
-        connection.scalar(sa.text("SELECT COUNT(*) FROM jobs"))
-        or connection.scalar(
-            sa.text(
-                "SELECT COUNT(*) FROM (SELECT asset_id FROM library_asset_files GROUP BY asset_id "
-                "HAVING COUNT(*) > 1)"
-            )
-        )
-        or connection.scalar(
-            sa.text(
-                "SELECT COUNT(*) FROM dev_queue_messages WHERE status IN ('queued','processing')"
-            )
+    if connection.scalar(sa.text("SELECT COUNT(*) FROM jobs")) or connection.scalar(
+        sa.text(
+            "SELECT COUNT(*) FROM (SELECT asset_id FROM library_asset_files GROUP BY asset_id "
+            "HAVING COUNT(*) > 1)"
         )
     ):
         raise RuntimeError(
-            "Refusing lossy downgrade: preserve jobs/results, "
-            "convert multiple files and drain inbox"
+            "Refusing lossy downgrade: preserve jobs/results, convert multiple files"
         )
-    op.drop_table("dev_queue_messages")
     op.drop_table("library_asset_files")
     with op.batch_alter_table("library_assets") as batch:
         batch.drop_constraint("fk_library_assets_job_id", type_="foreignkey")

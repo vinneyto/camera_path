@@ -9,8 +9,9 @@ production, queue provisioning and generator execution remain outside this handl
 From `backend/`, install dependencies and upgrade your development database **before** starting:
 
 ```sh
-uv sync --frozen
-uv run alembic upgrade head
+uv sync --frozen --extra rabbitmq
+docker compose up -d --wait
+uv run --extra rabbitmq alembic upgrade head
 ```
 
 Add to your untracked `.env` (choose an actual absolute source directory):
@@ -18,16 +19,20 @@ Add to your untracked `.env` (choose an actual absolute source directory):
 ```dotenv
 CAMERA_PATH_ENVIRONMENT=development
 CAMERA_PATH_AWS_LIBRARY_STORAGE=local
-CAMERA_PATH_MESSAGE_QUEUE=dev
+CAMERA_PATH_MESSAGE_QUEUE=rabbitmq
+CAMERA_PATH_RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672/
+CAMERA_PATH_RABBITMQ_QUEUE=camera-path.job-completions
 CAMERA_PATH_LIBRARY_IMPORT_SOURCES='{"incoming":{"driver":"local","root":"/absolute/generated"}}'
 ```
 
-Run the backend with the normal `uv run camera-path` command. Dev completion submission and
-status require no token or sign-in. They are available only when both
-`CAMERA_PATH_ENVIRONMENT=development` and `CAMERA_PATH_MESSAGE_QUEUE=dev` are selected.
-They are absent with `none`/`sqs`; production rejects the dev queue configuration and never
-mounts `/api/v1/dev` routes. Dev handlers also return 404 outside an explicit development app
-if their router is mistakenly mounted elsewhere.
+Run the backend with `uv run --extra rabbitmq camera-path`. The adapter lazily connects over
+AMQP, declares durable input, retry and failure queues, and subscribes with manual acknowledgements.
+The broker's management UI is at <http://127.0.0.1:15672> (`guest` / `guest`). Both broker ports
+are bound to loopback. Compose preserves messages in its `rabbitmq-data` volume across restarts.
+Stop the broker with `docker compose down`; this keeps that volume.
+
+There are no `/api/v1/dev` routes in any mode. Producers use broker credentials rather than an
+editor JWT. An unavailable broker does not stop the ordinary HTTP API; the consumer reconnects.
 
 Ordinary job creation is still an editor operation. Use an editor token from the normal
 password/email-code sign-in flow as `TOKEN` for that request only.
@@ -72,26 +77,41 @@ the library as `<UUID>.<format>` and their originals remain untouched. Registeri
 the library responsible for deleting that object when the item is later deleted.
 
 ```sh
-curl -sS http://127.0.0.1:8000/api/v1/dev/job-completions \
-  -H 'Content-Type: application/json' \
-  --data-binary @completion.json
-# 202: {"message_id":"..."}
+# Wrap the file in RabbitMQ's management-API publication envelope.
+python3 -c 'import base64,json,sys; json.dump({"properties":{"delivery_mode":2,"content_type":"application/json"},"routing_key":"camera-path.job-completions","payload_encoding":"base64","payload":base64.b64encode(sys.stdin.buffer.read()).decode()},sys.stdout)' \
+  < completion.json > /tmp/rabbitmq-publish.json
 
-MESSAGE_ID=$(python3 -c 'import json; print(json.load(open("completion.json"))["message_id"])')
-curl -fsS "http://127.0.0.1:8000/api/v1/dev/job-completions/$MESSAGE_ID" | python3 -m json.tool
+curl -fsS -u guest:guest \
+  http://127.0.0.1:15672/api/exchanges/%2F/amq.default/publish \
+  -H 'Content-Type: application/json' --data-binary @/tmp/rabbitmq-publish.json
+# {"routed":true} — accepted by the broker, not yet a completed job.
+
 curl -fsS "http://127.0.0.1:8000/api/v1/jobs/$JOB_ID" | python3 -m json.tool
 ```
 
-`202` means the message is durably accepted. Status is `queued`, `processing`, `succeeded`
-(with `job_id`) or `failed` (with `error_code`). Messages, leases and results survive restarts.
-Transient failures retry up to five times by default. Resubmitting the same message ID and body
-returns its original state without resetting attempts; changing its body returns `409`.
-Corrected failed completions use a new message ID for the same reserved job.
+If you change `CAMERA_PATH_RABBITMQ_QUEUE`, use that name as `routing_key` too. Wait until the
+backend has declared its queue (visible in the management UI); `routed:false` means no queue
+received the message. Only the broker receives this HTTP request; the backend consumes via AMQP.
+
+Transient failures retry up to five times by default, using separate TTL retry queues so they do
+not block unrelated jobs. Terminal/exhausted messages are forwarded to
+`camera-path.job-completions.failed` with an `error_code` header before the input is acknowledged.
+Inspect them in the management UI, or peek without removing a message:
+
+```sh
+curl -fsS -u guest:guest \
+  http://127.0.0.1:15672/api/queues/%2F/camera-path.job-completions.failed/get \
+  -H 'Content-Type: application/json' \
+  -d '{"count":1,"ackmode":"ack_requeue_true","encoding":"auto"}' | python3 -m json.tool
+```
+
+There is no per-message application status resource. Correct a failed descriptor and publish
+with a new message ID for the same pending job. Message IDs are diagnostics, not a body registry.
 
 Read `GET /api/v1/jobs/JOB_UUID` to obtain `completed_at` and the ordered `assets` array.
-Repeat the status/read requests while the message is queued or processing; success means
-`status=succeeded`, a non-null job `completed_at` and both files in the result asset. Their
-returned `download_url` values can be opened or fetched. A new experiment after a successful
+Repeat that read while processing; success means a non-null job `completed_at` and both files
+in the result asset. Their returned `download_url` values can be opened or fetched.
+A new experiment after a successful
 completion needs a new job ID; resubmitting to the completed job will not replace its results.
 
 Unknown jobs are rejected before source reads. For a pending job, all assets, files and thumbnails must
@@ -113,17 +133,16 @@ copies have recovery markers under `_imports/`; expired attempts are cleaned onl
 committed ownership. Do not edit these internal markers.
 
 Migration `20261101_0015` upgrades the previous single-file library directly to jobs, result
-links, tags/thumbnails, file collections and the dev inbox. Existing assets keep their IDs,
+links, tags/thumbnails and file collections, without a SQL queue table. Existing assets keep their IDs,
 object keys, transforms and project references; they remain ungrouped, with one primary `main`
 file and no computed hash. Fresh databases reach the same schema. Downgrade refuses to discard
-jobs, multiple representations or active messages. New producers send version 2; version-1
+jobs or multiple representations. Queue state stays in the broker. New producers send version 2; version-1
 messages are rejected.
 
-Default OpenAPI is exported to `openapi.json`. The dev profile includes the two conditional
-operations and can be reproduced with:
+The same public OpenAPI is exported to `openapi.json` for every queue provider:
 
 ```sh
-uv run openapi-export --dev openapi.dev.json
+uv run --extra rabbitmq openapi-export openapi.json
 ```
 
 ## AWS profile
@@ -159,7 +178,8 @@ failure forwarding and restart recovery with real resources.
 ## Autonomous checks
 
 See [integration/README.md](../../integration/README.md). The full HTTP suite includes an isolated
-dev backend, temporary source/library directories, a durable SQLite inbox, actual email-code
-login over a local SMTP sink, process restarts and idempotent replay. It needs no AWS services.
+backend, temporary source/library directories, a disposable real RabbitMQ broker, actual email-code
+login over a local SMTP sink, process/broker restarts and idempotent replay. Docker must be running;
+the suite creates and removes its own container and needs no AWS services or credentials.
 Backend tests additionally exercise SQS SDK requests/failure forwarding, SQL/storage failure
 recovery, concurrent completions, atomic multi-asset publication and populated-database upgrade guards.

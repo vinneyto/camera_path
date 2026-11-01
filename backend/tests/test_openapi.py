@@ -189,15 +189,11 @@ def test_checked_in_schema_is_current(app) -> None:
     assert json.loads(Path("openapi.json").read_text(encoding="utf-8")) == app.openapi()
 
 
-def test_dev_schema_is_current_and_contains_only_conditional_extra_routes():
-    dev = create_app(Settings(_env_file=None, message_queue="dev")).openapi()
-    default = create_app(Settings(_env_file=None, message_queue="none")).openapi()
-    assert set(dev["paths"]) - set(default["paths"]) == {
-        "/api/v1/dev/job-completions",
-        "/api/v1/dev/job-completions/{message_id}",
-    }
-    assert json.loads(Path("openapi.dev.json").read_text()) == dev
-    for path in ("/api/v1/dev/job-completions", "/api/v1/dev/job-completions/{message_id}"):
-        for operation in dev["paths"][path].values():
-            assert "401" not in operation["responses"]
-            assert not operation.get("security")
+@pytest.mark.parametrize("provider", ["none", "rabbitmq"])
+def test_queue_provider_does_not_add_http_routes(provider):
+    if provider == "rabbitmq":
+        pytest.importorskip("aio_pika")
+    app = create_app(Settings(_env_file=None, message_queue=provider))
+    schema = app.openapi()
+    assert schema == json.loads(Path("openapi.json").read_text())
+    assert not any(path.startswith("/api/v1/dev") for path in schema["paths"])

@@ -139,7 +139,6 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             message_queue,
             importer,
             configured.message_queue_max_attempts,
-            configured.message_queue_lease_seconds,
         )
     project_cloud_service = ProjectCloudService(
         ProjectCloudRepository(project_repository.session_factory),
@@ -176,8 +175,12 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
                     with suppress(asyncio.CancelledError):
                         await task
             finally:
-                if dependencies.owns_repository:
-                    await project_repository.close()
+                try:
+                    if message_queue is not None:
+                        await message_queue.aclose()
+                finally:
+                    if dependencies.owns_repository:
+                        await project_repository.close()
 
     application = FastAPI(
         title="Camera Path API",

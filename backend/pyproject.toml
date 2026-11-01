@@ -37,6 +37,9 @@ editor-create = "camera_path.auth_cli:run"
 aws = [
     "boto3>=1.40,<2",
 ]
+rabbitmq = [
+    "aio-pika>=10.1,<11",
+]
 
 [build-system]
 requires = ["hatchling"]

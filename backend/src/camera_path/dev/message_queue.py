@@ -1,129 +1,136 @@
-"""A SQLite-backed dev queue, fed by the dev HTTP adapter."""
+"""RabbitMQ delivery, retries and quarantine. No domain persistence or HTTP routes."""
 
 import asyncio
-import hashlib
-from datetime import UTC, datetime, timedelta
+from contextlib import asynccontextmanager, suppress
 from uuid import uuid4
 
-from sqlalchemy import and_, or_, select, update
-from sqlalchemy.exc import IntegrityError
+import aio_pika
+from aio_pika.abc import AbstractIncomingMessage
+from aio_pika.connection import make_url
 
-from camera_path.dev.records import DevQueueMessageRecord
-from camera_path.services.job_completion_models import JobCompletionMessage, JobCompletionStatus
-from camera_path.services.library_metadata import LibraryError
+from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES, JobCompletionMessage
 from camera_path.services.message_queue import Delivery, MessageQueue
 
+RETRY_DELAYS = (1, 2, 4, 8, 16, 32, 60)
 
-class DevMessageQueue(MessageQueue):
-    def __init__(self, sessions, lease_seconds: int = 60):
-        self.sessions, self.lease_seconds = sessions, lease_seconds
 
-    async def enqueue(self, message: JobCompletionMessage) -> None:
-        digest = hashlib.sha256(message.canonical_body().encode()).hexdigest()
+class RabbitMQMessageQueue(MessageQueue):
+    def __init__(self, url: str, queue_name: str):
+        self.url, self.queue_name = url, queue_name
+        self._connection = self._channel = None
+        self._inbox: asyncio.Queue[AbstractIncomingMessage] = asyncio.Queue(maxsize=1)
+        self._pending: dict[str, AbstractIncomingMessage] = {}
+
+    async def _connect(self):
+        if self._connection is not None:
+            await self._channel.ready()
+            return
+        connection = aio_pika.RobustConnection(make_url(self.url), reconnect_interval=1)
         try:
-            async with self.sessions.begin() as session:
-                now = datetime.now(UTC)
-                session.add(
-                    DevQueueMessageRecord(
-                        message_id=message.message_id,
-                        body=message.model_dump(),
-                        body_sha256=digest,
-                        job_id=message.job_id,
-                        available_at=now,
-                        created_at=now,
-                        updated_at=now,
-                    )
-                )
-        except IntegrityError:
-            async with self.sessions() as session:
-                row = await session.get(DevQueueMessageRecord, message.message_id)
-                if row is None or row.body_sha256 != digest:
-                    raise LibraryError("queue_message_id_conflict") from None
-
-    async def status(self, message_id: str) -> JobCompletionStatus:
-        async with self.sessions() as session:
-            row = await session.get(DevQueueMessageRecord, message_id)
-            if row is None:
-                raise LibraryError("not_found", 404)
-            return JobCompletionStatus.model_validate(
-                {name: getattr(row, name) for name in JobCompletionStatus.model_fields}
+            await connection.connect(timeout=5)
+            channel = await connection.channel(publisher_confirms=True, on_return_raises=True)
+            await channel.set_qos(prefetch_count=1)
+            arguments = {"x-queue-type": "quorum", "x-delivery-limit": -1}
+            queue = await channel.declare_queue(self.queue_name, durable=True, arguments=arguments)
+            await channel.declare_queue(
+                self.queue_name + ".failed", durable=True, arguments=arguments
             )
+            for delay in RETRY_DELAYS:
+                await channel.declare_queue(
+                    f"{self.queue_name}.retry.{delay}",
+                    durable=True,
+                    arguments={
+                        **arguments,
+                        "x-message-ttl": delay * 1000,
+                        "x-dead-letter-exchange": "",
+                        "x-dead-letter-routing-key": self.queue_name,
+                        "x-dead-letter-strategy": "at-least-once",
+                        "x-overflow": "reject-publish",
+                    },
+                )
+            await queue.consume(self._inbox.put, no_ack=False)
+        except BaseException:
+            await connection.close()
+            raise
+        self._connection, self._channel = connection, channel
+
+    @staticmethod
+    def _attempts(message):
+        headers = message.headers or {}
+        return max(1, int(headers.get("camera-path-attempt", 1))) + max(
+            0, int(headers.get("x-delivery-count", 0))
+        )
 
     async def receive(self) -> Delivery | None:
-        now, token = datetime.now(UTC), str(uuid4())
-        eligible = or_(
-            and_(
-                DevQueueMessageRecord.status == "queued", DevQueueMessageRecord.available_at <= now
-            ),
-            and_(
-                DevQueueMessageRecord.status == "processing",
-                DevQueueMessageRecord.lease_until <= now,
-            ),
-        )
-        candidate = (
-            select(DevQueueMessageRecord.message_id)
-            .where(eligible)
-            .order_by(DevQueueMessageRecord.created_at)
-            .limit(1)
-            .scalar_subquery()
-        )
-        async with self.sessions.begin() as session:
-            row = (
-                await session.execute(
-                    update(DevQueueMessageRecord)
-                    .where(DevQueueMessageRecord.message_id == candidate, eligible)
-                    .values(
-                        status="processing",
-                        attempts=DevQueueMessageRecord.attempts + 1,
-                        lease_token=token,
-                        lease_until=now + timedelta(seconds=self.lease_seconds),
-                        updated_at=now,
-                    )
-                    .returning(DevQueueMessageRecord)
-                )
-            ).scalar_one_or_none()
-            if row is not None:
-                return Delivery(JobCompletionMessage.model_validate(row.body), token, row.attempts)
-        await asyncio.sleep(0.1)
-        return None
+        await self._connect()
+        try:
+            message = await asyncio.wait_for(self._inbox.get(), timeout=1)
+        except TimeoutError:
+            return None
+        receipt = str(uuid4())
+        self._pending[receipt] = message
+        try:
+            # An old delivery cannot be settled on a reconnected channel.
+            _ = message.channel
+            if len(message.body) > MAX_MESSAGE_BYTES:
+                raise ValueError("Oversized message")
+            payload = JobCompletionMessage.model_validate_json(message.body)
+            attempts = self._attempts(message)
+        except (ValueError, TypeError, OverflowError):
+            async with self.hold(receipt):
+                await self.reject(receipt, "validation_error")
+            return None
+        except BaseException:
+            self._pending.pop(receipt, None)
+            raise
+        return Delivery(payload, receipt, attempts)
 
-    async def _update(self, receipt: str, **values) -> None:
-        async with self.sessions.begin() as session:
-            await session.execute(
-                update(DevQueueMessageRecord)
-                .where(
-                    DevQueueMessageRecord.lease_token == receipt,
-                    DevQueueMessageRecord.status == "processing",
-                    DevQueueMessageRecord.lease_until > datetime.now(UTC),
-                )
-                .values(updated_at=datetime.now(UTC), **values)
-            )
+    @asynccontextmanager
+    async def hold(self, receipt: str):
+        try:
+            yield
+        finally:
+            message = self._pending.pop(receipt)
+            if not message.processed:
+                # A failed ack/publish or cancellation must never discard the original.
+                with suppress(aio_pika.exceptions.ChannelInvalidStateError):
+                    await message.reject(requeue=True)
 
-    async def ack(self, receipt: str, job_id: str) -> None:
-        await self._update(
-            receipt,
-            status="succeeded",
-            job_id=job_id,
-            lease_token=None,
-            lease_until=None,
-            error_code=None,
+    async def ack(self, receipt: str) -> None:
+        await self._pending[receipt].ack()
+
+    async def _forward(self, receipt, queue_name, headers):
+        message = self._pending[receipt]
+        await self._channel.default_exchange.publish(
+            aio_pika.Message(
+                body=message.body,
+                content_type="application/json",
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                message_id=message.message_id,
+                headers=headers,
+            ),
+            routing_key=queue_name,
+            mandatory=True,
+            timeout=10,
         )
+        await self.ack(receipt)
 
     async def retry(self, receipt: str, delay: int) -> None:
-        await self._update(
+        if delay not in RETRY_DELAYS:
+            raise ValueError("Unsupported retry delay")
+        await self._forward(
             receipt,
-            status="queued",
-            available_at=datetime.now(UTC) + timedelta(seconds=delay),
-            lease_token=None,
-            lease_until=None,
+            f"{self.queue_name}.retry.{delay}",
+            {"camera-path-attempt": self._attempts(self._pending[receipt]) + 1},
         )
 
     async def reject(self, receipt: str, error_code: str) -> None:
-        await self._update(
-            receipt, status="failed", error_code=error_code, lease_token=None, lease_until=None
-        )
+        await self._forward(receipt, self.queue_name + ".failed", {"error_code": error_code})
 
-    async def extend_lease(self, receipt: str) -> None:
-        await self._update(
-            receipt, lease_until=datetime.now(UTC) + timedelta(seconds=self.lease_seconds)
-        )
+    async def aclose(self) -> None:
+        if self._connection is not None:
+            await self._connection.close()
+        self._connection = self._channel = None
+        self._pending.clear()
+        while not self._inbox.empty():
+            self._inbox.get_nowait()

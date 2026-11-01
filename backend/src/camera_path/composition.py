@@ -7,7 +7,6 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from camera_path.config import Settings, settings
-from camera_path.dev import records as dev_records  # noqa: F401
 from camera_path.dev.library_storage import LocalLibraryStorage
 from camera_path.repositories import ProjectRepository
 from camera_path.services.app_dependencies import AppDependencies
@@ -40,13 +39,15 @@ def _email_sender(configured: Settings) -> AuthEmailSender | None:
     )
 
 
-def _message_queue(configured: Settings, repository: ProjectRepository) -> MessageQueue | None:
+def _message_queue(configured: Settings) -> MessageQueue | None:
     if configured.message_queue == "none":
         return None
-    if configured.message_queue == "dev":
-        from camera_path.dev.message_queue import DevMessageQueue
+    if configured.message_queue == "rabbitmq":
+        from camera_path.dev.message_queue import RabbitMQMessageQueue
 
-        return DevMessageQueue(repository.session_factory, configured.message_queue_lease_seconds)
+        return RabbitMQMessageQueue(
+            configured.rabbitmq_url.get_secret_value(), configured.rabbitmq_queue
+        )
     from camera_path.aws.message_queue import SQSMessageQueue
 
     return SQSMessageQueue.from_settings(configured)
@@ -67,24 +68,6 @@ def _import_sources(configured: Settings) -> dict[str, LibraryStorage]:
     return sources
 
 
-def _include_adapter_routes(
-    application: FastAPI, dependencies: AppDependencies, *, environment: str
-) -> None:
-    from camera_path.dev.message_queue import DevMessageQueue
-
-    if isinstance(dependencies.message_queue, DevMessageQueue):
-        if environment != "development":
-            raise ValueError("The dev API requires development mode")
-        from camera_path.dev.job_routes import router as dev_job_router
-
-        application.include_router(dev_job_router, prefix=API_PREFIX)
-    if isinstance(dependencies.library_storage, LocalLibraryStorage):
-        from camera_path.dev.library_routes import router as local_library_router
-
-        application.include_router(local_library_router, prefix=API_PREFIX)
-    application.openapi_schema = None
-
-
 def with_infrastructure(
     factory: Callable[[Settings, AppDependencies], FastAPI],
 ) -> Callable[..., FastAPI]:
@@ -95,12 +78,10 @@ def with_infrastructure(
         library_storage: LibraryStorage | None = None,
     ) -> FastAPI:
         configured = app_settings or settings
-        if configured.environment != "development" and configured.message_queue == "dev":
-            raise ValueError("The dev message queue requires development mode")
         project_repository = (
             repository if repository is not None else ProjectRepository(configured.database_url)
         )
-        queue = _message_queue(configured, project_repository)
+        queue = _message_queue(configured)
         dependencies = AppDependencies(
             repository=project_repository,
             owns_repository=repository is None,
@@ -112,8 +93,11 @@ def with_infrastructure(
             import_sources=_import_sources(configured) if queue is not None else {},
         )
         application = factory(configured, dependencies)
-        application.state.environment = configured.environment
-        _include_adapter_routes(application, dependencies, environment=configured.environment)
+        if isinstance(dependencies.library_storage, LocalLibraryStorage):
+            from camera_path.dev.library_routes import router as local_library_router
+
+            application.include_router(local_library_router, prefix=API_PREFIX)
+            application.openapi_schema = None
         return application
 
     return configured_app

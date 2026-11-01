@@ -1,5 +1,7 @@
+import re
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -72,7 +74,11 @@ class Settings(BaseSettings):
     auth_smtp_host: Literal["localhost", "127.0.0.1", "::1"] = "127.0.0.1"
     auth_smtp_port: int = Field(default=1025, ge=1, le=65535)
     jwt_ttl_seconds: int = Field(default=28800, ge=60, le=86400)
-    message_queue: Literal["none", "dev", "sqs"] = "none"
+    message_queue: Literal["none", "rabbitmq", "sqs"] = "none"
+    rabbitmq_url: SecretStr = SecretStr("amqp://guest:guest@127.0.0.1:5672/")
+    rabbitmq_queue: str = Field(
+        default="camera-path.job-completions", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    )
     message_queue_max_attempts: int = Field(default=5, ge=1)
     message_queue_lease_seconds: int = Field(default=60, ge=1, le=43200)
     library_import_sources: dict[str, ImportSourceSettings] = Field(default_factory=dict)
@@ -85,10 +91,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_queue(self):
-        import re
-
-        if self.message_queue == "dev" and self.environment != "development":
-            raise ValueError("The dev message queue requires development mode")
+        if self.message_queue == "rabbitmq":
+            url = urlsplit(self.rabbitmq_url.get_secret_value())
+            if url.scheme not in {"amqp", "amqps"} or not url.hostname:
+                raise ValueError("RabbitMQ requires an amqp/amqps URL")
         if self.message_queue == "sqs" and (
             not self.sqs_queue_url
             or not self.sqs_failure_queue_url

@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import time
-from contextlib import suppress
 
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.message_queue import MessageQueue
@@ -12,25 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 class JobCompletionConsumer:
-    def __init__(self, queue: MessageQueue, importer, max_attempts=5, lease_seconds=60):
+    def __init__(self, queue: MessageQueue, importer, max_attempts=5):
         self.queue, self.importer = queue, importer
-        self.max_attempts, self.lease_seconds = max_attempts, lease_seconds
+        self.max_attempts = max_attempts
 
     async def process(self, delivery):
-        async def heartbeat():
-            while True:
-                await asyncio.sleep(max(0.1, self.lease_seconds / 3))
-                await self.queue.extend_lease(delivery.receipt)
-
-        pulse = asyncio.create_task(heartbeat())
-        work = asyncio.create_task(self.importer.register(delivery.message))
-        try:
-            finished, _ = await asyncio.wait({work, pulse}, return_when=asyncio.FIRST_COMPLETED)
-            if pulse in finished:
-                pulse.result()
-                raise OSError("Queue lease lost")
+        async with self.queue.hold(delivery.receipt):
             try:
-                job_id = await work
+                await self.importer.register(delivery.message)
             except LibraryError as error:
                 await self.queue.reject(delivery.receipt, error.code)
                 logger.info(
@@ -54,13 +42,7 @@ class JobCompletionConsumer:
                     delivery.attempts,
                 )
             else:
-                await self.queue.ack(delivery.receipt, job_id)
-        finally:
-            work.cancel()
-            pulse.cancel()
-            for task in (work, pulse):
-                with suppress(asyncio.CancelledError, Exception):
-                    await task
+                await self.queue.ack(delivery.receipt)
 
     async def run(self):
         recovery_at = 0

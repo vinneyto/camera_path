@@ -1,6 +1,7 @@
-"""Transport-neutral delivery lifecycle, including explicit acknowledgement."""
+"""Transport-neutral delivery and settlement; providers own connection/lease details."""
 
 from abc import ABC, abstractmethod
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 
 from camera_path.services.job_completion_models import JobCompletionMessage
@@ -18,7 +19,10 @@ class MessageQueue(ABC):
     async def receive(self) -> Delivery | None: ...
 
     @abstractmethod
-    async def ack(self, receipt: str, job_id: str) -> None: ...
+    def hold(self, receipt: str) -> AbstractAsyncContextManager[None]: ...
+
+    @abstractmethod
+    async def ack(self, receipt: str) -> None: ...
 
     @abstractmethod
     async def retry(self, receipt: str, delay: int) -> None: ...
@@ -27,4 +31,4 @@ class MessageQueue(ABC):
     async def reject(self, receipt: str, error_code: str) -> None: ...
 
     @abstractmethod
-    async def extend_lease(self, receipt: str) -> None: ...
+    async def aclose(self) -> None: ...

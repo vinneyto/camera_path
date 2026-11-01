@@ -2,19 +2,21 @@ import asyncio
 import copy
 import hashlib
 import json
-from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from conftest import create_editor_app
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select, update
+from queue_double import RecordingQueue
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.config import Settings
-from camera_path.dev.records import DevQueueMessageRecord
+from camera_path.dev.library_storage import LocalLibraryStorage
 from camera_path.persistence.records import LibraryAssetFileRecord
+from camera_path.services.job_completion import JobCompletionService
 from camera_path.services.job_completion_models import JobCompletionMessage
+from camera_path.services.job_consumer import JobCompletionConsumer
 
 PLY = b"ply\nformat ascii 1.0\nend_header\n"
 SOG = b"PK\x03\x04fixture"
@@ -27,13 +29,20 @@ async def setup(tmp_path):
             _env_file=None,
             database_url=f"sqlite+aiosqlite:///{tmp_path / 'db.sqlite3'}",
             library_directory=tmp_path / "library",
-            message_queue="dev",
+            message_queue="none",
             library_import_sources={
                 "incoming": {"driver": "local", "root": str(tmp_path / "incoming")}
             },
         )
     )
     await app.state.project_repository.initialize()
+    app.state.message_queue = RecordingQueue()
+    app.state.job_completion_service = JobCompletionService(
+        app.state.library_service, {"incoming": LocalLibraryStorage(tmp_path / "incoming")}
+    )
+    app.state.job_completion_consumer = JobCompletionConsumer(
+        app.state.message_queue, app.state.job_completion_service
+    )
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield app, client, tmp_path
     await app.state.project_repository.close()
@@ -236,47 +245,6 @@ async def test_concurrent_equal_imports_converge_and_delete_rollback_restores_al
         assert (await client.get(file["download_url"])).status_code == 200
 
 
-async def test_dev_http_durability_idempotence_and_lease_cas(setup):
-    app, client, root = setup
-    payload = await message(app, root)
-    accepted = await client.post(
-        "/api/v1/dev/job-completions",
-        content=json.dumps(payload),
-        headers={"Content-Type": "application/json"},
-    )
-    assert accepted.status_code == 202
-    queue = app.state.message_queue
-    assert (await queue.status(payload["message_id"])).status == "queued"
-    assert (await client.post("/api/v1/dev/job-completions", json=payload)).status_code == 202
-    conflict = copy.deepcopy(payload)
-    conflict["assets"][0]["name"] = "Different"
-    assert (await client.post("/api/v1/dev/job-completions", json=conflict)).status_code == 409
-    first = await queue.receive()
-    async with queue.sessions.begin() as session:
-        await session.execute(
-            update(DevQueueMessageRecord).values(
-                lease_until=datetime.now(UTC) - timedelta(seconds=1)
-            )
-        )
-    # Reopening the queue against the same DB must recover an expired delivery.
-    from camera_path.dev.message_queue import DevMessageQueue
-
-    reopened = DevMessageQueue(queue.sessions)
-    second = await reopened.receive()
-    assert second.attempts == 2 and second.receipt != first.receipt
-    await queue.ack(first.receipt, "wrong")
-    assert (await queue.status(payload["message_id"])).status == "processing"
-    await app.state.job_completion_consumer.process(second)
-    assert (await queue.status(payload["message_id"])).status == "succeeded"
-    assert (
-        await client.post("/api/v1/dev/job-completions", content=b" " * (256 * 1024 + 1))
-    ).status_code == 413
-    bad = copy.deepcopy(payload)
-    bad["schema_version"] = True
-    assert (await client.post("/api/v1/dev/job-completions", json=bad)).status_code == 422
-    assert (await client.get("/api/v1/dev/job-completions/not-a-uuid")).status_code == 422
-
-
 async def test_post_commit_ack_loss_redelivers_without_duplicate(setup, monkeypatch):
     app, _, root = setup
     queue = app.state.message_queue
@@ -291,12 +259,6 @@ async def test_post_commit_ack_loss_redelivers_without_duplicate(setup, monkeypa
     monkeypatch.setattr(queue, "ack", fail_ack)
     with pytest.raises(OSError):
         await app.state.job_completion_consumer.process(delivery)
-    async with queue.sessions.begin() as session:
-        await session.execute(
-            update(DevQueueMessageRecord).values(
-                lease_until=datetime.now(UTC) - timedelta(seconds=1)
-            )
-        )
     monkeypatch.setattr(queue, "ack", original)
     await app.state.job_completion_consumer.process(await queue.receive())
     assert (await queue.status(payload.message_id)).status == "succeeded"
@@ -343,8 +305,6 @@ async def test_sql_failure_after_copies_is_retried_without_partial_publication(s
     assert (await client.get("/api/v1/library")).json() == []
     assert not list((root / "library").glob("*.sog"))
     monkeypatch.setattr(AsyncSession, "flush", original)
-    async with queue.sessions.begin() as session:
-        await session.execute(update(DevQueueMessageRecord).values(available_at=datetime.now(UTC)))
     await app.state.job_completion_consumer.process(await queue.receive())
     assert (await queue.status(payload["message_id"])).status == "succeeded"
 
@@ -403,7 +363,9 @@ async def test_manual_metadata_validation_is_atomic(setup, mutation):
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"message_queue": "dev", "environment": "production", "auth_email_delivery": "ses"},
+        {"message_queue": "dev"},
+        {"message_queue": "rabbitmq", "rabbitmq_url": "https://invalid"},
+        {"rabbitmq_queue": "bad/name"},
         {"message_queue": "sqs"},
         {"message_queue_lease_seconds": 0},
         {"library_import_sources": {"library": {"driver": "local", "root": "/tmp"}}},
@@ -484,50 +446,6 @@ async def test_uuid_collision_never_overwrites_or_cleans_up_foreign_bytes(setup,
     assert foreign.read_bytes() == b"producer-owned bytes"
     assert (await client.get("/api/v1/library")).json() == []
     assert not list((root / "library/_imports").glob("*.json"))
-
-
-async def test_dev_validation_errors_use_structured_fields(setup):
-    _, client, _ = setup
-    response = await client.post(
-        "/api/v1/dev/job-completions", content=b"\xff", headers={"Content-Type": "application/json"}
-    )
-    assert response.status_code == 422 and response.json()["field_errors"][0]["location"] == [
-        "body"
-    ]
-    response = await client.get("/api/v1/jobs/invalid")
-    assert response.status_code == 422
-    assert response.json()["field_errors"][0]["location"] == ["path", "job_id"]
-
-
-async def test_long_import_refreshes_dev_delivery_lease(setup, monkeypatch):
-    app, _, root = setup
-    queue = app.state.message_queue
-    queue.lease_seconds = 1
-    consumer = app.state.job_completion_consumer
-    consumer.lease_seconds = 1
-    original = app.state.job_completion_service.register
-    release = asyncio.Event()
-
-    async def paused(message):
-        await release.wait()
-        return await original(message)
-
-    monkeypatch.setattr(app.state.job_completion_service, "register", paused)
-    payload = JobCompletionMessage.model_validate(await message(app, root, ("ply",)))
-    await queue.enqueue(payload)
-    work = asyncio.create_task(consumer.process(await queue.receive()))
-    try:
-        await asyncio.sleep(1.1)
-        assert await queue.receive() is None
-        release.set()
-        await work
-    finally:
-        release.set()
-        if not work.done():
-            work.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await work
-    assert (await queue.status(payload.message_id)).status == "succeeded"
 
 
 def second_result(payload, root):
@@ -623,8 +541,10 @@ async def test_completion_rejects_duplicate_sources_across_assets_and_legacy_sch
     app, client, root = setup
     payload = await message(app, root, ("ply",))
     payload["assets"].append(copy.deepcopy(payload["assets"][0]))
-    assert (await client.post("/api/v1/dev/job-completions", json=payload)).status_code == 422
+    with pytest.raises(ValueError):
+        JobCompletionMessage.model_validate(payload)
     payload["assets"].pop()
     payload["schema_version"] = 1
-    assert (await client.post("/api/v1/dev/job-completions", json=payload)).status_code == 422
+    with pytest.raises(ValueError):
+        JobCompletionMessage.model_validate(payload)
     assert (await client.get("/api/v1/library")).json() == []
