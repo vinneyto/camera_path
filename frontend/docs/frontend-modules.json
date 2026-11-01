@@ -30,6 +30,7 @@
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
         "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
         "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
+        "packages/actions/src/mutations/jobs/use-create-job.ts",
         "packages/actions/src/mutations/library/use-delete-library-assets.ts",
         "packages/actions/src/mutations/library/use-upload-library-file.ts",
         "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
@@ -608,7 +609,7 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 19,
+            "line": 25,
             "column": 1
           },
           "statePaths": [],
@@ -810,6 +811,8 @@
         "packages/api/src/resources/use-chat-history.ts",
         "packages/api/src/resources/use-compiled-trajectory-resource.ts",
         "packages/api/src/resources/use-depth-of-field-timeline.ts",
+        "packages/api/src/resources/use-job-resource.ts",
+        "packages/api/src/resources/use-jobs-catalog.ts",
         "packages/api/src/resources/use-library-asset-resource.ts",
         "packages/api/src/resources/use-library-catalog.ts",
         "packages/api/src/resources/use-lidar-timeline-resource.ts",
@@ -830,7 +833,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3143,
+            "line": 3258,
             "column": 1
           },
           "usages": [
@@ -854,7 +857,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8681,
+            "line": 8796,
             "column": 1
           },
           "usages": [
@@ -878,7 +881,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3507,
+            "line": 3622,
             "column": 1
           },
           "usages": [
@@ -897,12 +900,30 @@
           ]
         },
         {
+          "name": "useGetJob",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 925,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-job-resource.ts",
+              "line": 8,
+              "column": 17,
+              "expression": "useGetJob(useJobId(id), {\n    query: {\n      refetchInterval: (query) =>\n        query.state.status === \"error\" ||\n        (query.state.data?.status === 200 && query.state.data.data.completed_at)\n          ? false\n          : 2000,\n      retry: (attempt, error) =>\n        !(error instanceof ApiError && [404, 422].includes(error.status)) &&\n        attempt < 2,\n    },\n  })"
+            }
+          ]
+        },
+        {
           "name": "useGetLibraryAsset",
           "kind": "api-hook",
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1370,
+            "line": 1485,
             "column": 1
           },
           "usages": [
@@ -920,7 +941,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4608,
+            "line": 4723,
             "column": 1
           },
           "usages": [
@@ -944,7 +965,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4972,
+            "line": 5087,
             "column": 1
           },
           "usages": [
@@ -968,7 +989,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2282,
+            "line": 2397,
             "column": 1
           },
           "usages": [
@@ -986,7 +1007,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6816,
+            "line": 6931,
             "column": 1
           },
           "usages": [
@@ -1010,7 +1031,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8550,
+            "line": 8665,
             "column": 1
           },
           "usages": [
@@ -1034,7 +1055,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2532,
+            "line": 2647,
             "column": 1
           },
           "usages": [
@@ -1058,7 +1079,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5712,
+            "line": 5827,
             "column": 1
           },
           "usages": [
@@ -1077,12 +1098,30 @@
           ]
         },
         {
+          "name": "useListJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 710,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-jobs-catalog.ts",
+              "line": 6,
+              "column": 10,
+              "expression": "useListJobs({ query: { refetchInterval: 5000 } })"
+            }
+          ]
+        },
+        {
           "name": "useListLibraryAssets",
           "kind": "api-hook",
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 924,
+            "line": 1039,
             "column": 1
           },
           "usages": [
@@ -1100,7 +1139,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6205,
+            "line": 6320,
             "column": 1
           },
           "usages": [
@@ -1118,7 +1157,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1924,
+            "line": 2039,
             "column": 1
           },
           "usages": [
@@ -1142,7 +1181,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7556,
+            "line": 7671,
             "column": 1
           },
           "usages": [
@@ -1166,7 +1205,7 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 27,
+            "line": 33,
             "column": 1
           },
           "statePaths": [],
@@ -1180,12 +1219,31 @@
           ]
         },
         {
+          "name": "useJobId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 41,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-job-resource.ts",
+              "line": 8,
+              "column": 27,
+              "expression": "useJobId(id)"
+            }
+          ]
+        },
+        {
           "name": "useProjectId",
           "kind": "store-hook",
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 19,
+            "line": 25,
             "column": 1
           },
           "statePaths": [],
@@ -2261,7 +2319,7 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 19,
+            "line": 25,
             "column": 1
           },
           "statePaths": [],
@@ -2608,6 +2666,131 @@
       ]
     },
     {
+      "name": "@camera-path/feature-job-details",
+      "kind": "feature",
+      "root": "packages/features/job-details",
+      "entrypoint": "packages/features/job-details/src/index.ts",
+      "files": [
+        "packages/features/job-details/src/index.ts",
+        "packages/features/job-details/src/ui/job-details-page.tsx",
+        "packages/features/job-details/src/ui/job-result-card.tsx"
+      ],
+      "slots": {
+        "jobs": {
+          "details": [
+            {
+              "name": "JobDetailsPage",
+              "file": "packages/features/job-details/src/ui/job-details-page.tsx",
+              "line": 9,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [],
+      "selectors": [
+        {
+          "name": "useJobResource",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-job-resource.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/job-details/src/ui/job-details-page.tsx",
+              "line": 10,
+              "column": 20,
+              "expression": "useJobResource()"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@camera-path/feature-jobs",
+      "kind": "feature",
+      "root": "packages/features/jobs",
+      "entrypoint": "packages/features/jobs/src/index.ts",
+      "files": [
+        "packages/features/jobs/src/index.ts",
+        "packages/features/jobs/src/ui/create-job-button.tsx",
+        "packages/features/jobs/src/ui/jobs-page.tsx"
+      ],
+      "slots": {
+        "jobs": {
+          "list": [
+            {
+              "name": "JobsPage",
+              "file": "packages/features/jobs/src/ui/jobs-page.tsx",
+              "line": 9,
+              "column": 1
+            }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "useCreateJobMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/jobs/use-create-job.ts",
+            "line": 9,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/jobs/src/ui/create-job-button.tsx",
+              "line": 11,
+              "column": 20,
+              "expression": "useCreateJobMutation"
+            }
+          ]
+        }
+      ],
+      "selectors": [
+        {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/jobs/src/ui/create-job-button.tsx",
+              "line": 10,
+              "column": 23,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useJobsCatalog",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-jobs-catalog.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/jobs/src/ui/jobs-page.tsx",
+              "line": 10,
+              "column": 16,
+              "expression": "useJobsCatalog()"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "@camera-path/feature-library",
       "kind": "feature",
       "root": "packages/features/library",
@@ -2761,7 +2944,7 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 27,
+            "line": 33,
             "column": 1
           },
           "statePaths": [],
@@ -3919,7 +4102,7 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 19,
+            "line": 25,
             "column": 1
           },
           "statePaths": [],
@@ -4464,6 +4647,8 @@
         "apps/host/src/ui/app-shell/profile-menu.tsx",
         "apps/host/src/ui/commands/workspace-commands.tsx",
         "apps/host/src/ui/feature-page-route.tsx",
+        "apps/host/src/ui/job-details-page.tsx",
+        "apps/host/src/ui/jobs-page.tsx",
         "apps/host/src/ui/project-list/index.ts",
         "apps/host/src/ui/project-list/ui/project-list-page.tsx",
         "apps/host/src/ui/project-workspace/index.ts",
@@ -4486,6 +4671,8 @@
         "apps/host/src/ui/scene-editor/ui/use-webgpu-availability.ts",
         "src/app/[...featurePath]/page.tsx",
         "src/app/api/v1/[...path]/route.ts",
+        "src/app/jobs/[jobId]/page.tsx",
+        "src/app/jobs/page.tsx",
         "src/app/layout.tsx",
         "src/app/library/[assetId]/page.tsx",
         "src/app/library/page.tsx",
@@ -4844,7 +5031,7 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/resource-scope-provider.tsx",
-            "line": 19,
+            "line": 25,
             "column": 1
           },
           "statePaths": [],

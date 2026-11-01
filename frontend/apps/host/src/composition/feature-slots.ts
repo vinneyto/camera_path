@@ -7,6 +7,8 @@ import { slots as chatAgentSlots } from "@camera-path/feature-chat-agent";
 import { slots as depthOfFieldSlots } from "@camera-path/feature-depth-of-field";
 import { slots as identitySlots } from "@camera-path/feature-identity";
 import { slots as librarySlots } from "@camera-path/feature-library";
+import { slots as jobsSlots } from "@camera-path/feature-jobs";
+import { slots as jobDetailsSlots } from "@camera-path/feature-job-details";
 import { slots as lidarSlots } from "@camera-path/feature-lidar";
 import { slots as playbackSlots } from "@camera-path/feature-playback";
 import { slots as projectsSlots } from "@camera-path/feature-projects";
@@ -37,5 +39,7 @@ export const featureSlots = [
   chatAgentSlots,
   projectsSlots,
   librarySlots,
+  jobsSlots,
+  jobDetailsSlots,
   siftSlots,
 ] as const satisfies readonly FeatureSlots[];

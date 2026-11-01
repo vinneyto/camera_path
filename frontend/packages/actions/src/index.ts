@@ -20,6 +20,7 @@ export { useDeleteLibraryAssets as useDeleteLibraryAssetsMutation } from "./muta
 export { useUploadLibraryFile as useUploadLibraryFileMutation } from "./mutations/library/use-upload-library-file";
 export { useLidarTimeline as useSetLidarTimelineMutation } from "./mutations/lidar/use-lidar-timeline";
 export { useCreateProject as useCreateProjectMutation } from "./mutations/projects/use-create-project";
+export { useCreateJob as useCreateJobMutation } from "./mutations/jobs/use-create-job";
 export { useProjectCloudActions as useProjectCloudActionMutation } from "./mutations/scene-models/use-project-cloud-actions";
 export * from "./use-cloud-placement";
 export * from "./use-seek-playback";

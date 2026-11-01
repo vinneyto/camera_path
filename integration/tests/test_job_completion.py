@@ -70,6 +70,9 @@ def test_rabbitmq_completion_multiple_files_and_restart(dev_backend):
     job = enqueue(b, data)
     assert job["completed_at"] is not None
     asset = job["assets"][0]
+    assert b.request("GET", "/api/v1/jobs", auth=False).json() == [
+        {"id": job["id"], "completed_at": job["completed_at"], "asset_count": 1}
+    ]
     assert asset["job_id"] == job["id"]
     assert asset["tags"] == ["Tree"]
     assert asset["primary_file_id"] == "sog" and asset["format"] == "sog"
@@ -99,6 +102,9 @@ def test_rabbitmq_completion_multiple_files_and_restart(dev_backend):
     enqueue(b, replay)
     deleted = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
     assert deleted["completed_at"] == job["completed_at"] and deleted["assets"] == []
+    assert b.request("GET", "/api/v1/jobs", auth=False).json() == [
+        {"id": job["id"], "completed_at": job["completed_at"], "asset_count": 0}
+    ]
 
 
 def test_rabbitmq_bad_files_are_quarantined_without_partial_results(dev_backend):

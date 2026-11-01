@@ -38,6 +38,8 @@ it.each([
   "/",
   "/library",
   "/library/example",
+  "/jobs",
+  "/jobs/one",
   "/projects",
   "/projects/one/viewer",
   "/api/v1",

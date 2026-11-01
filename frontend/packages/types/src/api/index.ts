@@ -55,6 +55,7 @@ export * from './followPathAim';
 export * from './followPathAimDirection';
 export * from './hTTPValidationError';
 export * from './job';
+export * from './jobSummary';
 export * from './libraryAsset';
 export * from './libraryAssetDefaultsUpdate';
 export * from './libraryAssetFile';

@@ -463,7 +463,9 @@ assets. The monolith verifies every file, registers all assets and completes the
 The first successful completion wins, including after assets are deleted. Development uses
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
-Read a job and its ordered results through `/api/v1/jobs/{job_id}`; job reservation does not start
+The frontend's Jobs page lists jobs and lets the editor reserve one without inputs; its detail
+page follows completion and links to all result assets. `GET /api/v1/jobs` returns summaries
+with surviving asset counts. Read a job and its ordered results through `/api/v1/jobs/{job_id}`; job reservation does not start
 a generator. Manual uploads remain independent, and project clouds use the primary representation.
 
 See [the local verification and AWS configuration guide](docs/library-import.md). Run

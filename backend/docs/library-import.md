@@ -34,8 +34,19 @@ Stop the broker with `docker compose down`; this keeps that volume.
 There are no `/api/v1/dev` routes in any mode. Producers use broker credentials rather than an
 editor JWT. An unavailable broker does not stop the ordinary HTTP API; the consumer reconnects.
 
-Ordinary job creation is still an editor operation. Use an editor token from the normal
-password/email-code sign-in flow as `TOKEN` for that request only.
+Open the frontend's **Jobs** page from the sidebar. Sign in as the editor and choose
+**Create job**. The detail page displays the reserved job ID; copy it into your terminal:
+
+```sh
+export JOB_ID='THE_ID_FROM_THE_JOB_PAGE'
+```
+
+The list and pending details update automatically. After publishing a completion, the detail
+page shows its result assets, each linking to the library page with its downloadable files.
+The UI reserves a job without starting generation or sending a completion message.
+
+Alternatively, reserve through HTTP using an editor token from the normal password/email-code
+sign-in flow as `TOKEN`. Job creation is an editor operation:
 
 Reserve an empty job (this does not start generation), from a second terminal:
 

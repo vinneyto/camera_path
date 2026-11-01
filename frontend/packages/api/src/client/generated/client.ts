@@ -51,6 +51,7 @@ import type {
   ErrorResponse,
   HTTPValidationError,
   Job,
+  JobSummary,
   LibraryAsset,
   LibraryAssetDefaultsUpdate,
   LibraryAssetsDelete,
@@ -637,6 +638,120 @@ export const useVerifyEditorCode = <TError = HTTPValidationError,
       > => {
       return useMutation(getVerifyEditorCodeMutationOptions(options), queryClient);
     }
+
+export type listJobsResponse200 = {
+  data: JobSummary[]
+  status: 200
+}
+
+export type listJobsResponseSuccess = (listJobsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listJobsResponse = (listJobsResponseSuccess)
+
+export const getListJobsUrl = () => {
+
+
+
+
+  return `/api/v1/jobs`
+}
+
+/**
+ * List pending and completed jobs with surviving result counts, ordered by ID.
+ * @summary List Jobs
+ */
+export const listJobs = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<listJobsResponse> => {
+
+  return orvalFetch<listJobsResponse>(getListJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListJobsQueryKey = () => {
+    return [
+    `/api/v1/jobs`
+    ] as const;
+    }
+
+
+export const getListJobsQueryOptions = <TData = Awaited<ReturnType<typeof listJobs>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobs>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJobs>>> = ({ signal }) => listJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listJobs>>>
+export type ListJobsQueryError = unknown
+
+
+export function useListJobs<TData = Awaited<ReturnType<typeof listJobs>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListJobs<TData = Awaited<ReturnType<typeof listJobs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListJobs<TData = Awaited<ReturnType<typeof listJobs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobs>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Jobs
+ */
+
+export function useListJobs<TData = Awaited<ReturnType<typeof listJobs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJobs>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type createJobResponse201 = {
   data: Job

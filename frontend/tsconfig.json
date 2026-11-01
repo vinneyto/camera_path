@@ -130,7 +130,15 @@
       "@camera-path/render-pipeline": [
         "./packages/render-pipeline/src/index.ts"
       ],
-      "@camera-path/feature-sift": ["./packages/features/sift/src/index.ts"]
+      "@camera-path/feature-sift": ["./packages/features/sift/src/index.ts"],
+      "@camera-path/feature-jobs": ["./packages/features/jobs/src/index.ts"],
+      "@camera-path/feature-jobs/*": ["./packages/features/jobs/src/*"],
+      "@camera-path/feature-job-details": [
+        "./packages/features/job-details/src/index.ts"
+      ],
+      "@camera-path/feature-job-details/*": [
+        "./packages/features/job-details/src/*"
+      ]
     }
   },
   "include": [

@@ -1405,6 +1405,38 @@
         "title": "Job",
         "type": "object"
       },
+      "JobSummary": {
+        "properties": {
+          "asset_count": {
+            "minimum": 0.0,
+            "title": "Asset Count",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "completed_at",
+          "asset_count"
+        ],
+        "title": "JobSummary",
+        "type": "object"
+      },
       "LibraryAsset": {
         "properties": {
           "created_at": {
@@ -3162,6 +3194,30 @@
       }
     },
     "/api/v1/jobs": {
+      "get": {
+        "description": "List pending and completed jobs with surviving result counts, ordered by ID.",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobSummary"
+                  },
+                  "title": "Response Listjobs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "Jobs"
+        ]
+      },
       "post": {
         "description": "Reserve an empty job without starting a generator.",
         "operationId": "createJob",
