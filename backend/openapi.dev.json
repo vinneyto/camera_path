@@ -3395,9 +3395,6 @@
             },
             "description": "Successful Response"
           },
-          "401": {
-            "description": "Valid editor JWT required."
-          },
           "409": {
             "description": "Message ID reused with different content"
           },
@@ -3418,11 +3415,6 @@
             "description": "Durable queue acceptance unavailable"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Enqueue Job Completion",
         "tags": [
           "Job completions"
@@ -3431,7 +3423,7 @@
     },
     "/api/v1/dev/job-completions/{message_id}": {
       "get": {
-        "description": "Read the durable result of a dev import message as an editor.",
+        "description": "Read the durable result of a dev completion message without authentication.",
         "operationId": "getJobCompletionStatus",
         "parameters": [
           {
@@ -3455,9 +3447,6 @@
             },
             "description": "Successful Response"
           },
-          "401": {
-            "description": "Valid editor JWT required."
-          },
           "422": {
             "content": {
               "application/json": {
@@ -3469,11 +3458,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Get Job Completion Status",
         "tags": [
           "Job completions"

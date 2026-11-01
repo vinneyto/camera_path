@@ -198,4 +198,6 @@ def test_dev_schema_is_current_and_contains_only_conditional_extra_routes():
     }
     assert json.loads(Path("openapi.dev.json").read_text()) == dev
     for path in ("/api/v1/dev/job-completions", "/api/v1/dev/job-completions/{message_id}"):
-        assert all("401" in operation["responses"] for operation in dev["paths"][path].values())
+        for operation in dev["paths"][path].values():
+            assert "401" not in operation["responses"]
+            assert not operation.get("security")

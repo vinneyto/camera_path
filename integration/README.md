@@ -72,7 +72,8 @@ operation allowed without a successful status in the fast run.
 
 ## Coverage and limits
 
-- All versioned write operations: unauthenticated and invalid-token requests denied.
+- All ordinary versioned write operations: unauthenticated and invalid-token requests denied.
+  The dev-only completion/status transport is explicitly unauthenticated and unavailable in production.
 - Public reads, public viewer settings, protected session, OpenAPI operation inventory, CORS and structured errors.
 - Projects and metadata, rename/reset/delete, independent projects, fresh/missing/malformed/stale
   ETags, concurrent writes, validation atomicity and actual process-restart persistence.
@@ -126,10 +127,9 @@ Task: https://docs.google.com/document/d/1CqaWyve6LW1tY7ra4lRSYRnQ8I9SzgVkSo-IgY
 ## Queue-driven job completion
 
 The suite also starts a disposable backend with the dev queue adapter. It submits a real JSON
-completion file after email-code login for a reserved job, imports multiple SOG/PLY representations,
-adopts existing library
-objects, copies external sources under UUIDs, checks status/permissions/failures, restarts the
-process and retries without duplicate assets. Deleted results stay deleted after replay; unknown
+completion file without authentication for a job reserved through the ordinary email-code login
+flow, imports multiple SOG/PLY representations, adopts existing library objects and copies external
+sources under UUIDs. It checks public dev status/validation/failures, restarts the process and retries without duplicate assets. Deleted results stay deleted after replay; unknown
 jobs fail before source reads. The default backend still checks that dev routes
 are absent. The API success gate covers both always-mounted operations and the two conditional
 dev operations from `backend/openapi.dev.json`. All files and messages belong to the test's

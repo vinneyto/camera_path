@@ -43,7 +43,7 @@ def descriptor(b):
 def wait_result(b, message_id):
     deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
-        response = b.request("GET", f"/api/v1/dev/job-completions/{message_id}").json()
+        response = b.request("GET", f"/api/v1/dev/job-completions/{message_id}", auth=False).json()
         if response["status"] in {"succeeded", "failed"}:
             return response
         time.sleep(0.05)
@@ -60,12 +60,13 @@ def enqueue(b, payload):
         202,
         content=document.read_bytes(),
         headers={"Content-Type": "application/json"},
+        auth=False,
     )
     assert response.json() == {"message_id": payload["message_id"]}
     return wait_result(b, payload["message_id"])
 
 
-def test_real_email_authenticated_job_completion_multiple_files_and_restart(dev_backend):
+def test_unauthenticated_job_completion_multiple_files_and_restart(dev_backend):
     b = dev_backend
     data = descriptor(b)
     status = enqueue(b, data)
@@ -104,24 +105,23 @@ def test_real_email_authenticated_job_completion_multiple_files_and_restart(dev_
     assert deleted["completed_at"] == job["completed_at"] and deleted["assets"] == []
 
 
-def test_dev_completion_rejects_unauthenticated_invalid_and_bad_files(dev_backend):
+def test_dev_completion_validates_without_authentication(dev_backend):
     b = dev_backend
     data = descriptor(b)
-    b.request("POST", "/api/v1/dev/job-completions", 401, json=data, auth=False)
-    b.request("GET", f"/api/v1/dev/job-completions/{data['message_id']}", 401, auth=False)
+    b.request("GET", f"/api/v1/dev/job-completions/{uuid4()}", 404, auth=False)
+    invalid = copy.deepcopy(data)
+    invalid["assets"][0]["files"][0]["source"]["path"] = "../escape.sog"
     b.request(
         "POST",
         "/api/v1/dev/job-completions",
-        401,
-        json=data,
+        422,
+        json=invalid,
         auth=False,
         headers={"Authorization": "Bearer invalid"},
     )
-    b.request("GET", f"/api/v1/dev/job-completions/{uuid4()}", 404)
-    invalid = copy.deepcopy(data)
-    invalid["assets"][0]["files"][0]["source"]["path"] = "../escape.sog"
-    b.request("POST", "/api/v1/dev/job-completions", 422, json=invalid)
-    b.request("POST", "/api/v1/dev/job-completions", 413, content=b" " * (256 * 1024 + 1))
+    b.request(
+        "POST", "/api/v1/dev/job-completions", 413, content=b" " * (256 * 1024 + 1), auth=False
+    )
     data["assets"][0]["files"][1]["sha256"] = "0" * 64
     status = enqueue(b, data)
     assert status["status"] == "failed" and status["error_code"] == "library_import_invalid_file"
@@ -130,18 +130,25 @@ def test_dev_completion_rejects_unauthenticated_invalid_and_bad_files(dev_backen
     assert job["completed_at"] is None and job["assets"] == []
     assert (b.directory / "library/tree.sog").read_bytes() == SOG
     assert not list((b.directory / "library").glob("*.ply"))
-    b.request("POST", "/api/v1/dev/job-completions", 202, json=data)
+    b.request(
+        "POST",
+        "/api/v1/dev/job-completions",
+        202,
+        json=data,
+        auth=False,
+        headers={"Authorization": "Bearer invalid"},
+    )
     assert wait_result(b, data["message_id"])["attempts"] == 1
     data["assets"][0]["name"] = "Changed"
     assert (
-        b.request("POST", "/api/v1/dev/job-completions", 409, json=data).json()["code"]
+        b.request("POST", "/api/v1/dev/job-completions", 409, json=data, auth=False).json()["code"]
         == "queue_message_id_conflict"
     )
 
 
 def test_disabled_dev_routes_are_absent(backend):
-    backend.request("POST", "/api/v1/dev/job-completions", 404, json={})
-    backend.request("GET", f"/api/v1/dev/job-completions/{uuid4()}", 404)
+    backend.request("POST", "/api/v1/dev/job-completions", 404, json={}, auth=False)
+    backend.request("GET", f"/api/v1/dev/job-completions/{uuid4()}", 404, auth=False)
     assert (
         "/api/v1/dev/job-completions"
         not in backend.request("GET", "/api/v1/openapi.json").json()["paths"]
@@ -164,7 +171,7 @@ def test_jobs_reservation_validation_and_unknown_completion(dev_backend):
     assert result["status"] == "failed" and result["error_code"] == "job_not_found"
     b.request("GET", f"/api/v1/jobs/{payload['job_id']}", 404)
     legacy = {"schema_version": 1, "message_id": str(uuid4()), "item": {}}
-    b.request("POST", "/api/v1/dev/job-completions", 422, json=legacy)
+    b.request("POST", "/api/v1/dev/job-completions", 422, json=legacy, auth=False)
 
 
 def test_documented_helper_submits_two_ply_files(dev_backend):

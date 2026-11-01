@@ -140,13 +140,14 @@ Login, logout and session expiry preserve local preferences.
 
 ### Editor authentication
 
-All reads of projects, resources, library files and chat history remain public. Every write route,
-including legacy aliases, local PLY uploads and both agent endpoints, uses the common
+All reads of projects, resources, library files and chat history remain public. Every ordinary
+write route, including legacy aliases, local PLY uploads and both agent endpoints, uses the common
 `@authenticated` decorator below `@router.post/patch/put/delete(...)`. Anonymous or invalid JWT
 writes return
 401 before revision checks or side effects. `AuthenticatedRoute` adds the standard FastAPI dependency
 when registering marked endpoints; the decorator leaves endpoint signatures unchanged. Data remains
-shared between guest and editor.
+shared between guest and editor. The development-only `/api/v1/dev/job-completions` submission
+and status endpoints are unauthenticated debugging tools; they are never mounted in production.
 
 Configure these routers with `APIRouter(route_class=AuthenticatedRoute)`. Decorators execute from
 bottom to top: `@authenticated` marks the function first, then `@router...` registers the protected
@@ -458,12 +459,14 @@ See that guide for setup, API coverage, the optional real-time expiry test and C
 Library items can contain multiple SOG/PLY representations with one primary file. External
 producers complete a previously reserved job with a version-2 JSON message containing all result
 assets. The monolith verifies every file, registers all assets and completes the job atomically.
-The first successful completion wins, including after assets are deleted. The development adapter accepts authenticated JSON over HTTP; AWS
-uses SQS. Files already inside library storage are adopted; external files are copied under UUIDs.
+The first successful completion wins, including after assets are deleted. The development adapter
+accepts JSON over HTTP without authentication; AWS uses SQS. Files already inside library storage are adopted; external files are copied under UUIDs.
 Read a job and its ordered results through `/api/v1/jobs/{job_id}`; job reservation does not start
 a generator. Manual uploads remain independent, and project clouds use the primary representation.
 
 See [the local verification and AWS configuration guide](docs/library-import.md). Run
 `uv run alembic upgrade head` before starting against an existing database. Queue consumption is
 disabled by default; enable `CAMERA_PATH_MESSAGE_QUEUE=dev` for local verification. AWS resource
-setup and live verification are separate manual work.
+setup and live verification are separate manual work. Dev submission/status routes require an
+explicit development environment and are never mounted in production; ordinary job creation
+still requires the editor.

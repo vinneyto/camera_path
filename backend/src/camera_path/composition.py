@@ -67,10 +67,14 @@ def _import_sources(configured: Settings) -> dict[str, LibraryStorage]:
     return sources
 
 
-def _include_adapter_routes(application: FastAPI, dependencies: AppDependencies) -> None:
+def _include_adapter_routes(
+    application: FastAPI, dependencies: AppDependencies, *, environment: str
+) -> None:
     from camera_path.dev.message_queue import DevMessageQueue
 
     if isinstance(dependencies.message_queue, DevMessageQueue):
+        if environment != "development":
+            raise ValueError("The dev API requires development mode")
         from camera_path.dev.import_routes import router as import_router
 
         application.include_router(import_router, prefix=API_PREFIX)
@@ -91,6 +95,8 @@ def with_infrastructure(
         library_storage: LibraryStorage | None = None,
     ) -> FastAPI:
         configured = app_settings or settings
+        if configured.environment != "development" and configured.message_queue == "dev":
+            raise ValueError("The dev message queue requires development mode")
         project_repository = (
             repository if repository is not None else ProjectRepository(configured.database_url)
         )
@@ -106,7 +112,8 @@ def with_infrastructure(
             import_sources=_import_sources(configured) if queue is not None else {},
         )
         application = factory(configured, dependencies)
-        _include_adapter_routes(application, dependencies)
+        application.state.environment = configured.environment
+        _include_adapter_routes(application, dependencies, environment=configured.environment)
         return application
 
     return configured_app

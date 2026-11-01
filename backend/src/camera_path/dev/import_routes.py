@@ -1,9 +1,9 @@
 """Dev-only HTTP producer for the durable local queue."""
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.routing import APIRoute
 from sqlalchemy.exc import SQLAlchemyError
 
-from camera_path.routers.auth import AuthenticatedRoute, authenticated
 from camera_path.services.job_completion_models import (
     MAX_MESSAGE_BYTES,
     JobCompletionAccepted,
@@ -13,11 +13,13 @@ from camera_path.services.job_completion_models import (
 from camera_path.services.library_metadata import LibraryError, canonical_uuid
 
 
-class BoundedImportRoute(AuthenticatedRoute):
+class BoundedImportRoute(APIRoute):
     def get_route_handler(self):
         handler = super().get_route_handler()
 
         async def bounded(request: Request):
+            if getattr(request.app.state, "environment", None) != "development":
+                raise HTTPException(404)
             if request.method == "POST":
                 body = bytearray()
                 async for chunk in request.stream():
@@ -61,7 +63,6 @@ router = APIRouter(
         503: {"description": "Durable queue acceptance unavailable"},
     },
 )
-@authenticated
 async def enqueue_job_completion(data: JobCompletionMessage, request: Request):
     try:
         await request.app.state.message_queue.enqueue(data)
@@ -74,9 +75,8 @@ async def enqueue_job_completion(data: JobCompletionMessage, request: Request):
     "/{message_id}",
     response_model=JobCompletionStatus,
     operation_id="getJobCompletionStatus",
-    description="Read the durable result of a dev import message as an editor.",
+    description="Read the durable result of a dev completion message without authentication.",
 )
-@authenticated
 async def get_job_completion_status(message_id: str, request: Request):
     try:
         message_id = canonical_uuid(message_id)

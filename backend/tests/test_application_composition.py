@@ -264,3 +264,120 @@ async def test_owned_repository_closes_when_startup_or_consumer_fails(
         async with app.router.lifespan_context(app):
             await asyncio.wait_for(started.wait(), timeout=2)
     close.assert_awaited_once()
+
+
+def test_production_rejects_dev_queue_even_when_settings_validation_was_bypassed(tmp_path):
+    configured = configuration(
+        tmp_path, environment="production", auth_email_delivery="ses"
+    ).model_copy(update={"message_queue": "dev"})
+    with pytest.raises(ValueError, match="dev message queue requires development"):
+        create_app(configured)
+    assert not (tmp_path / "db.sqlite3").exists()
+    assert not (tmp_path / "library").exists()
+
+
+def test_production_rejects_a_miswired_dev_queue_adapter(tmp_path, monkeypatch):
+    import camera_path.composition as composition
+
+    configured = configuration(tmp_path, environment="production", auth_email_delivery="ses")
+    monkeypatch.setattr(
+        composition, "_message_queue", lambda settings, repo: DevMessageQueue(repo.session_factory)
+    )
+    monkeypatch.setattr(composition, "_email_sender", lambda settings: Mock())
+    with pytest.raises(ValueError, match="dev API requires development"):
+        create_app(configured)
+
+
+@pytest.mark.parametrize("environment", [None, "production"])
+async def test_mistakenly_mounted_dev_router_is_inaccessible_outside_development(
+    tmp_path, environment
+):
+    from uuid import uuid4
+
+    from httpx import ASGITransport, AsyncClient
+
+    from camera_path.dev.import_routes import router
+
+    app = create_app(configuration(tmp_path))
+    app.state.environment = environment
+    app.include_router(router, prefix="/api/v1")
+    queue = Mock(enqueue=AsyncMock(), status=AsyncMock())
+    app.state.message_queue = queue
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        assert (
+            await client.post("/api/v1/dev/job-completions", content=b"not json")
+        ).status_code == 404
+        assert (await client.get(f"/api/v1/dev/job-completions/{uuid4()}")).status_code == 404
+    queue.enqueue.assert_not_awaited()
+    queue.status.assert_not_awaited()
+
+
+async def test_production_has_no_dev_routes_or_openapi_entries(tmp_path, monkeypatch):
+    from uuid import uuid4
+
+    from httpx import ASGITransport, AsyncClient
+
+    import camera_path.composition as composition
+
+    # HTTP routing needs no actual SES delivery or optional AWS SDK installation.
+    monkeypatch.setattr(composition, "_email_sender", lambda settings: Mock())
+    app = create_app(configuration(tmp_path, environment="production", auth_email_delivery="ses"))
+    assert app.state.environment == "production"
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        for path in (
+            "/api/v1/dev",
+            "/api/v1/dev/",
+            "/api/v1/dev/job-completions",
+            f"/api/v1/dev/job-completions/{uuid4()}",
+            "/api/v1/dev/unknown",
+        ):
+            assert (await client.get(path)).status_code == 404
+            assert (await client.post(path, json={})).status_code == 404
+        assert (await client.post("/api/v1/jobs")).status_code == 401
+        schema = (await client.get("/api/v1/openapi.json")).json()
+        assert not any(
+            path == "/api/v1/dev" or path.startswith("/api/v1/dev/") for path in schema["paths"]
+        )
+
+
+async def test_dev_submission_and_status_need_no_editor_or_signing_secret(tmp_path):
+    from uuid import uuid4
+
+    from httpx import ASGITransport, AsyncClient
+
+    app = create_app(configuration(tmp_path, message_queue="dev"))
+    await app.state.project_repository.initialize()
+    try:
+        job = await app.state.job_service.create()
+        payload = {
+            "schema_version": 2,
+            "message_id": str(uuid4()),
+            "job_id": job.id,
+            "assets": [
+                {
+                    "name": "Cloud",
+                    "primary_file_id": "main",
+                    "files": [
+                        {
+                            "id": "main",
+                            "format": "ply",
+                            "size_bytes": 4,
+                            "sha256": "a" * 64,
+                            "source": {"storage": "library", "path": "cloud.ply"},
+                        }
+                    ],
+                }
+            ],
+        }
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            for headers in ({}, {"Authorization": "Bearer invalid"}):
+                assert (
+                    await client.post("/api/v1/dev/job-completions", json=payload, headers=headers)
+                ).status_code == 202
+                result = await client.get(
+                    f"/api/v1/dev/job-completions/{payload['message_id']}", headers=headers
+                )
+                assert result.status_code == 200 and result.json()["job_id"] == job.id
+            assert (await client.post("/api/v1/jobs")).status_code == 401
+    finally:
+        await app.state.project_repository.close()

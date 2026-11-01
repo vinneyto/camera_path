@@ -22,13 +22,15 @@ CAMERA_PATH_MESSAGE_QUEUE=dev
 CAMERA_PATH_LIBRARY_IMPORT_SOURCES='{"incoming":{"driver":"local","root":"/absolute/generated"}}'
 ```
 
-Run the backend with the normal `uv run camera-path` command. Sign in through the existing
-password/email-code flow described in the README; use its editor Bearer token below. The dev
-completion routes require authentication, including the status GET. They are absent with the default
-`CAMERA_PATH_MESSAGE_QUEUE=none` and in AWS mode. Production configuration rejects the dev adapter.
+Run the backend with the normal `uv run camera-path` command. Dev completion submission and
+status require no token or sign-in. They are available only when both
+`CAMERA_PATH_ENVIRONMENT=development` and `CAMERA_PATH_MESSAGE_QUEUE=dev` are selected.
+They are absent with `none`/`sqs`; production rejects the dev queue configuration and never
+mounts `/api/v1/dev` routes. Dev handlers also return 404 outside an explicit development app
+if their router is mistakenly mounted elsewhere.
 
-Use an editor token from the ordinary sign-in flow as `TOKEN`. Keep email-code authentication
-enabled; both dev operations require the same Bearer session as other writes.
+Ordinary job creation is still an editor operation. Use an editor token from the normal
+password/email-code sign-in flow as `TOKEN` for that request only.
 
 Reserve an empty job (this does not start generation), from a second terminal:
 
@@ -71,13 +73,12 @@ the library responsible for deleting that object when the item is later deleted.
 
 ```sh
 curl -sS http://127.0.0.1:8000/api/v1/dev/job-completions \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -H 'Content-Type: application/json' \
   --data-binary @completion.json
 # 202: {"message_id":"..."}
 
 MESSAGE_ID=$(python3 -c 'import json; print(json.load(open("completion.json"))["message_id"])')
-curl -fsS "http://127.0.0.1:8000/api/v1/dev/job-completions/$MESSAGE_ID" \
-  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+curl -fsS "http://127.0.0.1:8000/api/v1/dev/job-completions/$MESSAGE_ID" | python3 -m json.tool
 curl -fsS "http://127.0.0.1:8000/api/v1/jobs/$JOB_ID" | python3 -m json.tool
 ```
 
