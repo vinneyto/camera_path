@@ -443,3 +443,9 @@ The standalone [HTTP contract suite](../integration/README.md) starts a disposab
 SQLite database, SMTP inbox and OpenAI-compatible HTTP fixture. It exercises the real
 email-code login flow without an external email account, Docker or provider credentials.
 See that guide for setup, API coverage, the optional real-time expiry test and CI.
+
+## Native Rust implementation
+
+The CP-119 implementation is in [backend-rust](../backend-rust/README.md), with separate
+Cargo crates, SQLite adoption/rollback checks and the unchanged HTTP integration suite.
+The existing release flow selects it explicitly through a verified Linux artifact.

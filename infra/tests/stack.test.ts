@@ -170,3 +170,23 @@ test('assembly uses a required image parameter without SSM, a literal default or
   const report = JSON.parse(readFileSync(resolve(assembly.directory, 'validation-report.json'), 'utf8'));
   assert.ok(!JSON.stringify(report).includes('W9010'));
 });
+
+test('Rust is opt-in and changes the release config without changing EC2 UserData or storage', () => {
+  const revision = 'a'.repeat(40);
+  const app = new App({ context: {
+    'availability-zones:account=992382434156:region=us-east-1': ['us-east-1a', 'us-east-1b'],
+  } });
+  const rust = Template.fromStack(new BackendStack(app, 'test', {
+    env: { account: '992382434156', region: 'us-east-1' }, deploymentId: 'test-deployment',
+    domain: { domainName: 'example.com', hostedZoneId: 'ZTEST123', tlsEmail: 'ops@example.com' },
+    revision, frontendOrigins: ['http://localhost:3000'], backendRuntime: 'rust',
+    rustArtifactKey: `releases/${revision}/camera-path.tar.gz`, rustArtifactSha256: 'b'.repeat(64),
+  })).toJSON();
+  const python = template().toJSON();
+  for (const type of ['AWS::EC2::Instance', 'AWS::EC2::Volume', 'AWS::EC2::EIP', 'AWS::S3::Bucket']) {
+    const resources = (t: any) => Object.fromEntries(Object.entries<any>(t.Resources).filter(([, r]) => r.Type === type));
+    assert.deepEqual(resources(rust), resources(python));
+  }
+  const release = Object.values<any>(rust.Resources).find(r => r.Properties?.Config?.backend_runtime === 'rust');
+  assert.equal(release.Properties.Config.rust_artifact_sha256, 'b'.repeat(64));
+});

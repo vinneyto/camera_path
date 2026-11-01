@@ -1,0 +1,816 @@
+{
+  "auth_challenges": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "credential_version",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "code_digest",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "expires_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "resend_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "attempts",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "delivered",
+      "type": "BOOLEAN",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "auth_rate_limits": [
+    {
+      "name": "key",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "count",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "expires_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "editor_sessions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "expires_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "editors": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "username",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "password_hash",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "credential_version",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "library_assets": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "format",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "object_key",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "size_bytes",
+      "type": "BIGINT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "status",
+      "type": "VARCHAR(7)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_rotation_x_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_rotation_y_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_rotation_z_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_scale",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_offset_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_offset_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_offset_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "projects": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "revision",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "user_settings": [
+    {
+      "name": "gaussian_dpr",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "webgpu_tile_renderer",
+      "type": "BOOLEAN",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "show_grid",
+      "type": "BOOLEAN",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "anchors": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "label",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "surface_position_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "surface_position_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "surface_position_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "surface_normal_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "surface_normal_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "surface_normal_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "lift",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "lift_axis",
+      "type": "VARCHAR(14)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "chat_messages": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "position",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "role",
+      "type": "VARCHAR(9)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "lidar_keyframes": [
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "vertical_fov_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "horizontal_resolution",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "vertical_resolution",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "motion_profiles": [
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "default_speed",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "orientation_keyframes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "path_position",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "yaw_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "pitch_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "roll_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "interpolation_to_next",
+      "type": "VARCHAR(10)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    }
+  ],
+  "project_clouds": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "library_asset_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "position",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "visible",
+      "type": "BOOLEAN",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "translation_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "translation_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "translation_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "rotation_x_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "rotation_y_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "rotation_z_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "scale",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "offset_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "offset_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "offset_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "scene_points": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "label",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "position_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "position_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "position_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "speed_keyframes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "path_position",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "speed",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "interpolation_to_next",
+      "type": "VARCHAR(10)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    }
+  ],
+  "trajectory_segments": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "position",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "kind",
+      "type": "VARCHAR(6)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "tension",
+      "type": "FLOAT",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "turns",
+      "type": "FLOAT",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "direction",
+      "type": "VARCHAR(3)",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "radial_law",
+      "type": "VARCHAR(10)",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "axial_law",
+      "type": "VARCHAR(10)",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "aim_keyframes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "path_position",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "aim_kind",
+      "type": "VARCHAR(13)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "aim_direction",
+      "type": "VARCHAR(8)",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "aim_scene_point_id",
+      "type": "TEXT",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "interpolation_to_next",
+      "type": "VARCHAR(10)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    }
+  ],
+  "camera_tracks": [
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "default_aim_kind",
+      "type": "VARCHAR(13)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_aim_direction",
+      "type": "VARCHAR(8)",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "default_aim_scene_point_id",
+      "type": "TEXT",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "world_up_x",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "world_up_y",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "world_up_z",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_orientation_yaw_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_orientation_pitch_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "default_orientation_roll_deg",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    }
+  ],
+  "depth_of_field_keyframes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "path_position",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "focus_kind",
+      "type": "VARCHAR(17)",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "focus_scene_point_id",
+      "type": "TEXT",
+      "nullable": true,
+      "primary": false
+    },
+    {
+      "name": "focus_range_scale",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "bokeh_scale",
+      "type": "FLOAT",
+      "nullable": false,
+      "primary": false
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    }
+  ],
+  "segment_anchors": [
+    {
+      "name": "segment_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "position",
+      "type": "INTEGER",
+      "nullable": false,
+      "primary": true
+    },
+    {
+      "name": "anchor_id",
+      "type": "TEXT",
+      "nullable": false,
+      "primary": false
+    }
+  ]
+}

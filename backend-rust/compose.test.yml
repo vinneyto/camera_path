@@ -1,0 +1,16 @@
+# Disposable local provider profile. No production credentials or data.
+services:
+  rabbitmq:
+    image: rabbitmq@sha256:af6f50d38098d8bd52fef7f3fa85015dd8b2bf6def58e995bf584ae9ba0f6407
+    ports:
+      - "127.0.0.1:35672:5672"
+      - "127.0.0.1:35673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  aws:
+    image: motoserver/moto@sha256:4ec079cbae737fa957efb6b17732bc4e9cdf33942e947ad70e5696694fca3e5e
+    ports:
+      - "127.0.0.1:35000:5000"

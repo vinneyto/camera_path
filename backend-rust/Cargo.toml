@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+default-members = ["crates/app"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2024"
+rust-version = "1.99"
+
+[workspace.dependencies]
+anyhow = "1"
+async-trait = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["rt", "io"] }
+futures-util = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+sea-orm = { version = "=2.0.4", default-features = false, features = ["macros", "sqlx-sqlite", "runtime-tokio", "with-json", "with-chrono"] }
+sea-orm-migration = { version = "=2.0.4", default-features = false, features = ["sqlx-sqlite", "runtime-tokio"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+tracing = "0.1"
+
+# Keep the real password KDF representative in debug/CI too; an unoptimized KDF can
+# straddle the existing HTTP suite's real-minute rate-limit buckets on slow hosts.
+[profile.dev.package.argon2]
+opt-level = 3
+[profile.dev.package.blake2]
+opt-level = 3

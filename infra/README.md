@@ -369,3 +369,22 @@ HttpOnly cookie only after code confirmation. Browser acceptance: login sends a
 real email, password alone cannot edit, correct code enables editing, sign out
 revokes the session, resend invalidates the previous code, and a delivery error
 never grants access. Domain attachment for the frontend is a separate M3-7 task.
+
+## Optional native Rust release (CP-119)
+
+The default remains the Python runtime. After reviewing and testing CP-119, build/package the
+exact committed revision on x86_64 Ubuntu 24.04 as described in [backend-rust](../backend-rust/README.md).
+Upload the package separately to this stack's backup bucket at `releases/<revision>/camera-path.tar.gz`.
+Only a release-artifact prefix is made readable; database backup history keeps its existing policy.
+
+An explicitly authorized future release selects `CP_BACKEND_RUNTIME=rust`,
+`CP_RUST_ARTIFACT_KEY=releases/<revision>/camera-path.tar.gz` and `CP_RUST_ARTIFACT_SHA256=<package-hash>`
+alongside the existing exact revision/domain/deployment settings. The SSM script validates checksum,
+manifest revision, target architecture and regular-file members before stopping the old service.
+It then uses the existing backup/health/rollback flow and a systemd runtime override.
+Migration or health failure restores the old runtime override as well as the DB, code and environment.
+
+The optional runtime fields are excluded from UserData. Stack tests check that selecting Rust leaves
+EC2, EBS, EIP and S3 resource definitions unchanged. No CDK deployment is part of local verification.
+Queue ingress is disabled for the current release; future production SQS configuration needs explicit
+queue/DLQ URLs, redrive policy and IAM Receive/Delete/GetAttributes/Send permissions.

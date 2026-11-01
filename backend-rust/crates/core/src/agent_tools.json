@@ -1,0 +1,769 @@
+[
+  {
+    "type": "function",
+    "name": "get_project_state",
+    "description": "Read anchors, segments, scene points, speed, aim, orientation, depth-of-field keys and the static LiDAR presence key/settings.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "set_default_speed",
+    "description": "Set the constant baseline speed in metres per second.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "speed"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_spline",
+    "description": "Append a centripetal Catmull-Rom spline through path anchors.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "anchor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2
+        },
+        "tension": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "anchor_ids",
+        "tension"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_spiral",
+    "description": "Append a world-up-axis spiral which starts and ends at path anchors.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "start_anchor_id": {
+          "type": "string"
+        },
+        "center_anchor_id": {
+          "type": "string"
+        },
+        "end_anchor_id": {
+          "type": "string"
+        },
+        "turns": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "cw",
+            "ccw"
+          ]
+        },
+        "radial_law": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "smoothstep"
+          ]
+        },
+        "axial_law": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "smoothstep"
+          ]
+        }
+      },
+      "required": [
+        "start_anchor_id",
+        "center_anchor_id",
+        "end_anchor_id",
+        "turns",
+        "direction",
+        "radial_law",
+        "axial_law"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_segment",
+    "description": "Delete one path segment by id.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_scene_point",
+    "description": "Create a named world-space target which camera keys may look at.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "label",
+        "position"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "update_scene_point",
+    "description": "Update the label and/or position of a scene point.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "position"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_scene_point",
+    "description": "Delete a scene point and optionally its camera keys.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "cascade": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "cascade"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_speed_keyframe",
+    "description": "Add a point to the speed-over-path graph.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path_position": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "interpolation_to_next": {
+          "type": "string",
+          "enum": [
+            "smoothstep",
+            "linear",
+            "hold"
+          ]
+        }
+      },
+      "required": [
+        "path_position",
+        "speed",
+        "interpolation_to_next"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "update_speed_keyframe",
+    "description": "Move or change one point on the speed graph.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path_position": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "speed": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "interpolation_to_next": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "smoothstep",
+            "linear",
+            "hold",
+            null
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path_position",
+        "speed",
+        "interpolation_to_next"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_speed_keyframe",
+    "description": "Delete one point from the speed graph.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_camera_keyframe",
+    "description": "Add a follow-path or look-at point to the camera direction graph.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path_position": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aim_kind": {
+          "type": "string",
+          "enum": [
+            "follow_path",
+            "look_at_point"
+          ]
+        },
+        "scene_point_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "direction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "forward",
+            "backward",
+            null
+          ]
+        },
+        "interpolation_to_next": {
+          "type": "string",
+          "enum": [
+            "smoothstep",
+            "linear",
+            "hold"
+          ]
+        }
+      },
+      "required": [
+        "path_position",
+        "aim_kind",
+        "scene_point_id",
+        "direction",
+        "interpolation_to_next"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "update_camera_keyframe",
+    "description": "Move or change one point on the camera direction graph.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path_position": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aim_kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "follow_path",
+            "look_at_point",
+            null
+          ]
+        },
+        "scene_point_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "direction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "forward",
+            "backward",
+            null
+          ]
+        },
+        "interpolation_to_next": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "smoothstep",
+            "linear",
+            "hold",
+            null
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path_position",
+        "aim_kind",
+        "scene_point_id",
+        "direction",
+        "interpolation_to_next"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_camera_keyframe",
+    "description": "Delete one point from the camera direction graph.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_camera_orientation_keyframe",
+    "description": "Add local yaw, pitch and roll offsets to the orientation track.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path_position": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "yaw_deg": {
+          "type": "number"
+        },
+        "pitch_deg": {
+          "type": "number"
+        },
+        "roll_deg": {
+          "type": "number"
+        },
+        "interpolation_to_next": {
+          "type": "string",
+          "enum": [
+            "smoothstep",
+            "linear",
+            "hold"
+          ]
+        }
+      },
+      "required": [
+        "path_position",
+        "yaw_deg",
+        "pitch_deg",
+        "roll_deg",
+        "interpolation_to_next"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "update_camera_orientation_keyframe",
+    "description": "Move or change one local camera orientation keyframe.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path_position": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "yaw_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "pitch_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "roll_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "interpolation_to_next": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "smoothstep",
+            "linear",
+            "hold",
+            null
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "path_position",
+        "yaw_deg",
+        "pitch_deg",
+        "roll_deg",
+        "interpolation_to_next"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_camera_orientation_keyframe",
+    "description": "Delete one local camera orientation keyframe.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "create_depth_of_field_keyframe",
+    "description": "Enable depth of field or add a focus change. Use center_weighted_9 for nine-ray autofocus, or scene_point for a fixed scene target. A smaller focus_range_scale and a larger bokeh_scale produce a stronger effect.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path_position": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "focus_kind": {
+          "type": "string",
+          "enum": [
+            "center_weighted_9",
+            "scene_point"
+          ]
+        },
+        "scene_point_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "focus_range_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Sharp focus range relative to the scene radius; default 0.25."
+        },
+        "bokeh_scale": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Artistic bokeh strength; default 6."
+        }
+      },
+      "required": [
+        "path_position",
+        "focus_kind",
+        "scene_point_id",
+        "focus_range_scale",
+        "bokeh_scale"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "update_depth_of_field_keyframe",
+    "description": "Move or change one depth-of-field focus key.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path_position": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "focus_kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "center_weighted_9",
+            "scene_point",
+            null
+          ]
+        },
+        "scene_point_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "focus_range_scale": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "bokeh_scale": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "path_position",
+        "focus_kind",
+        "scene_point_id",
+        "focus_range_scale",
+        "bokeh_scale"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_depth_of_field_keyframe",
+    "description": "Delete one depth-of-field key. Deleting the last key disables the effect.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "set_lidar_timeline",
+    "description": "Enable LiDAR or update its static angular sampling settings. There is exactly one presence key at position zero, with no animated settings. Null preserves the existing setting or uses its default when enabling.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "vertical_fov_deg": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 180,
+          "description": "Symmetric vertical span in degrees; default 60 (-30..+30)."
+        },
+        "horizontal_resolution": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 4096,
+          "description": "Azimuth samples across 360 degrees; default 512."
+        },
+        "vertical_resolution": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Elevation samples across the vertical span; default 32."
+        }
+      },
+      "required": [
+        "vertical_fov_deg",
+        "horizontal_resolution",
+        "vertical_resolution"
+      ],
+      "additionalProperties": false
+    },
+    "strict": true
+  },
+  {
+    "type": "function",
+    "name": "delete_lidar_timeline",
+    "description": "Disable LiDAR by removing its sole presence key; preserve other tracks.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "strict": true
+  }
+]

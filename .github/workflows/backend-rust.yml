@@ -1,0 +1,64 @@
+name: Rust backend
+on:
+  pull_request:
+    paths:
+      - "backend-rust/**"
+      - "backend/**"
+      - "integration/**"
+      - ".github/workflows/backend-rust.yml"
+  workflow_dispatch:
+    inputs:
+      slow_auth:
+        type: boolean
+        default: false
+        description: Also wait for the real resend cooldown and code expiry
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.99.0"
+          components: rustfmt,clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend-rust
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.3"
+      - run: uv sync --frozen --project backend --extra aws
+      - run: uv sync --frozen --project integration
+      - run: uv sync --frozen --project backend-rust/verification
+      - run: cargo fmt --manifest-path backend-rust/Cargo.toml --all --check
+      - run: cargo clippy --manifest-path backend-rust/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings
+      - run: backend/.venv/bin/ruff check backend-rust/verification backend-rust/tools
+      - run: backend/.venv/bin/ruff format --check backend-rust/verification backend-rust/tools
+      - run: python3 backend-rust/tools/check_core_dependencies.py
+      - run: cargo check --manifest-path backend-rust/Cargo.toml -p camera-path-core --locked
+      - run: cargo test --manifest-path backend-rust/Cargo.toml --workspace --all-features --locked
+      - run: cargo build --manifest-path backend-rust/Cargo.toml --locked --all-features
+      - name: Unchanged HTTP contract and real email authentication
+        env:
+          CP_TEST_SLOW_AUTH: ${{ inputs.slow_auth && '1' || '' }}
+        run: python3 backend-rust/tools/run_api_tests.py integration/tests --require-api-coverage --api-report=integration/api-coverage.json
+      - name: SQLite migration, local streams and compatibility
+        run: backend-rust/verification/.venv/bin/python -m pytest -c backend-rust/verification/pyproject.toml backend-rust/verification --tb=short -q
+      - name: Start disposable providers
+        run: docker compose -p cp119-test -f backend-rust/compose.test.yml up -d --wait
+      - name: RabbitMQ and emulated AWS, including lost acknowledgements
+        env:
+          CP_TEST_PROVIDERS: "1"
+        run: backend-rust/verification/.venv/bin/python -m pytest -c backend-rust/verification/pyproject.toml backend-rust/verification/test_providers.py --tb=short -q
+      - name: Stop disposable providers
+        if: always()
+        run: docker compose -p cp119-test -f backend-rust/compose.test.yml down -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rust-backend-api-coverage
+          path: integration/api-coverage.json
+          if-no-files-found: ignore
