@@ -97,13 +97,11 @@ and pull requests; they are not part of the backend requirements.
     - [LoginRequest](#loginrequest)
     - [ChallengeRequest](#challengerequest)
     - [VerifyRequest](#verifyrequest)
-  - [3.8. Job completion messages and dev queue responses](#38-job-completion-messages-and-dev-queue-responses)
+  - [3.8. Job completion messages](#38-job-completion-messages)
     - [LibraryFileSource](#libraryfilesource)
     - [LibraryImportFile](#libraryimportfile)
     - [JobCompletionAsset](#jobcompletionasset)
     - [JobCompletionMessage](#jobcompletionmessage)
-    - [JobCompletionAccepted](#jobcompletionaccepted)
-    - [JobCompletionStatus](#jobcompletionstatus)
 - [4. HTTP, revisions and errors](#4-http-revisions-and-errors)
 - [5. Projects and scene editing](#5-projects-and-scene-editing)
 - [6. Timelines](#6-timelines)
@@ -141,7 +139,6 @@ and pull requests; they are not part of the backend requirements.
     - [ChatMessageRecord](#chatmessagerecord--chat_messages)
     - [AuthChallengeRecord](#authchallengerecord--auth_challenges)
     - [AuthRateLimitRecord](#authratelimitrecord--auth_rate_limits)
-    - [DevQueueMessageRecord](#devqueuemessagerecord--dev_queue_messages)
   - [11.4. Database constraints and service mapping](#114-database-constraints-and-service-mapping)
   - [11.5. Schema upgrades and identifier lifecycle](#115-schema-upgrades-and-identifier-lifecycle)
   - [11.6. Configuration and operations](#116-configuration-and-operations)
@@ -200,8 +197,8 @@ file uploads do not make the backend decode or train 3DGS models.
 **SCOPE-03.** Data is shared and published: guests read it; one authenticated editor
 can change it. There are currently no private user projects, public registration,
 multiple-editor roles or per-user libraries. Core geometry and REST operations work
-without OpenAI credentials. Development-only completion ingress in QUEUE-03 is
-explicit unauthenticated tooling, outside the ordinary editor-write policy.
+without OpenAI credentials. External job completions arrive through a message
+broker, separately from the ordinary editor HTTP API.
 
 ## 3. Entities and defaults
 
@@ -246,7 +243,7 @@ layouts or permission to edit response-only fields.
 - [Library, cloud and profile resources](#35-library-cloud-and-profile-resources)
 - [Chat, authentication responses and errors](#36-chat-authentication-responses-and-errors)
 - [Creation and update requests](#37-creation-and-update-requests)
-- [Job completion messages and dev queue responses](#38-job-completion-messages-and-dev-queue-responses)
+- [Job completion messages](#38-job-completion-messages)
 
 **DATA-05. Models and records.** A **model** is a Pydantic service/domain or
 request/response model: it defines validated application data and supports
@@ -256,10 +253,9 @@ service/router modules. Models are not SQLAlchemy table mappings.
 
 A **record** is a SQLAlchemy ORM representation of database state, including
 columns, keys, constraints and relationships. Record classes use the `Record`
-suffix. Domain records live in `camera_path/persistence/records.py`; provider-owned
-queue records live under their adapter folder as specified in section 11.3.
+suffix. Domain records live in `camera_path/persistence/records.py`.
 Repositories, services, Alembic metadata loading and tests import records from
-their owning module; domain services do not import dev queue records.
+that module. Queue delivery state belongs to the external broker, not SQL records.
 The complete record catalogue is in [section 11.3](#113-record-catalogue). Repositories
 and services map records to/from serializable models; database records are not
 the public serialization contract.
@@ -1007,7 +1003,7 @@ FastAPI's emitted HTTPValidationError/ValidationError schema components are not
 application entities. Canonical validation responses use ErrorResponse and FieldError
 as specified in API-05.
 
-### 3.8. Job completion messages and dev queue responses
+### 3.8. Job completion messages
 
 These Pydantic contracts are shared by all message transports. Reject unknown
 fields, unsupported schema versions, null required values and invalid UUIDs.
@@ -1065,7 +1061,7 @@ Initial transform defaults are the ordinary library defaults.
 | `job_id` | `string (UUID)` | Yes | — | Canonical nonzero UUID of a pre-existing job |
 | `assets` | `Array<JobCompletionAsset>` | Yes | — | Nonempty complete result set for one successful job |
 
-Example JSON accepted unchanged by the dev HTTP adapter and as an SQS body:
+Example JSON accepted unchanged as a RabbitMQ message body or an SQS body:
 
 ```json
 {
@@ -1098,25 +1094,6 @@ Example JSON accepted unchanged by the dev HTTP adapter and as an SQS body:
 The example hashes/sizes are placeholders for real verified file contents. Version
 1 standalone-asset descriptors are not job-completion messages and are rejected.
 Queue delivery never implicitly creates an unknown job.
-
-#### JobCompletionAccepted
-
-| Field | Type | Required | Default | Constraints / meaning |
-| --- | --- | --- | --- | --- |
-| `message_id` | `string (UUID)` | Yes | — | Accepted producer message ID |
-
-#### JobCompletionStatus
-
-Development-only transport diagnostic; no authentication. The result is read through the ordinary
-job resource; queue status does not carry a second list of asset identities.
-
-| Field | Type | Required | Default | Constraints / meaning |
-| --- | --- | --- | --- | --- |
-| `message_id` | `string (UUID)` | Yes | — | Accepted producer message ID |
-| `status` | `"queued" \| "processing" \| "succeeded" \| "failed"` | Yes | — | Durable dev message state |
-| `attempts` | `integer` | Yes | — | Number of started processing attempts, initially zero |
-| `job_id` | `string (UUID) \| null` | No | `null` | Target job from the message; nullable when unavailable in diagnostics |
-| `error_code` | `string \| null` | No | `null` | Sanitized terminal failure code; no provider details/credentials |
 
 ## 4. HTTP, revisions and errors
 
@@ -1153,13 +1130,13 @@ include `location`, `message` and `type` in `field_errors`. Main mappings:
 | --- | --- |
 | 401 | `http_error`: missing, invalid or revoked session; `WWW-Authenticate: Bearer` when authentication is required |
 | 404 | `project_not_found` for a project; `job_not_found` for a job; `not_found` for other missing resources |
-| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`, `queue_message_id_conflict` for dev completion submission |
-| 413 | `http_error`: local upload exceeds its declared size; dev JSON submission uses `import_message_too_large` |
+| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict` |
+| 413 | `http_error`: local upload exceeds its declared size |
 | 422 | `validation_error`, `invalid_geometry`; some explicit resource checks return `http_error` |
 | 428 | `if_match_required` |
 | 429 | `http_error`: authentication rate limit / resend cooldown, with `Retry-After` |
 | 502 | `storage_unavailable` for storage adapter errors; `upstream_error` for HTTP-level upstream failures |
-| 503 | `agent_unavailable` for HTTP 503; also used when authentication configuration or email delivery is unavailable; dev submission uses `queue_unavailable` if durable acceptance fails |
+| 503 | `agent_unavailable` for HTTP 503; also used when authentication configuration or email delivery is unavailable |
 
 Some current error codes have broader uses than their historical names suggest:
 `agent_unavailable`, for example, does not prove that an error concerns the agent.
@@ -1430,9 +1407,8 @@ their ready-only behavior and ordering. Pending/missing/deleted assets return
 which includes the related assets and their file/download metadata. No library
 lookup by producer correlation ID is exposed.
 
-Editor authentication applies to manual writes. Dev completion submission/status
-are unauthenticated debugging operations restricted to development (QUEUE-03);
-AWS queue access is governed by IAM and QUEUE-04. Existing manual clients sending
+Editor authentication applies to manual writes and job creation. Producers use
+broker credentials/permissions: RabbitMQ access in QUEUE-03 or AWS IAM in QUEUE-04. Existing manual clients sending
 name/size/format receive a fresh pending asset and can PUT/complete as before.
 OpenAPI and generated clients agree with the fields and operation IDs. Library
 list/details display tags and the thumbnail placeholder fallback; manual creation
@@ -1554,93 +1530,95 @@ does not mark the minimal job completed; a corrected delivery can target it agai
 
 ### 8.3. Message queue boundary and adapters
 
-**QUEUE-01. Contract and composition.** Define an asynchronous `MessageQueue`
-contract in `services/message_queue.py`, independent of FastAPI, boto3, SQS,
-RabbitMQ and dev transport classes. The core import handler receives validated
-JobCompletionMessage data and uses the same library/storage operations regardless
-of delivery engine. Opaque receipt handles and attempt counts do not contain SDK
-objects. The contract provides `receive` (bounded wait), `ack`, `retry` (delay),
-`reject` (durably retain a terminal failure) and `extend_lease` for long transfers.
-Each delivery supplies its message, receipt and attempt count. `ack` also accepts
-the target job ID for adapter diagnostics; `reject` accepts a
-sanitized failure code. Adapter parsing also retains malformed broker payloads
-as failures without invoking domain logic.
+**QUEUE-01. Contract and composition.** Define an asynchronous MessageQueue
+contract in services/message_queue.py, independent of FastAPI, database transport
+records, boto3, aio-pika, SQS and RabbitMQ. Each delivery contains validated
+JobCompletionMessage, an opaque receipt and a positive attempt count. Provide
+receive (bounded wait), hold (an async context managing delivery ownership), ack,
+retry (delay), reject (durably quarantine a failure) and aclose. Receipt handles
+and message objects never expose provider SDK types to core business services.
+Acknowledgement takes only the receipt; job results are discovered through jobs.
 
-Implement dev transport in `dev/` and SQS transport in `aws/`. The composition root
-selects/injects the queue and storage adapters from independent configuration;
-domain services do not branch on engine names or import provider SDKs. The
-consumer runs in the monolith's application lifespan, not a separate importer
-calling its HTTP API. Start/stop it cleanly; shutdown leaves unfinished messages
-recoverable. Ordinary library/HTTP use works with message consumption disabled.
-RabbitMQ, gRPC and a public production import endpoint are not required transports.
+The consumer enters hold around result processing/settlement. Providers own
+connection state, delivery ownership and all renewal tasks inside that context;
+core has no lease timers, visibility timeout or provider-name branches. SQS renews
+visibility while held and stops renewal before changing delivery/ack state.
+RabbitMQ retains an unacknowledged AMQP delivery. Cancellation/failure leaves an
+unsettled delivery recoverable; a failed ownership renewal cancels processing.
+Malformed/oversized bodies are quarantined before invoking domain logic.
+
+The configuration decorator injects RabbitMQ from dev/ or SQS from aws/ based on
+independent configuration. The common consumer runs inside application lifespan,
+not a separate process calling HTTP. Stop/await it before closing the injected
+queue and repository. Disabled queue mode creates no queue/source clients and
+ordinary HTTP works during broker outages. There is no HTTP producer/status API,
+SQLite queue simulation or /api/v1/dev namespace in any environment.
 
 **QUEUE-02. Delivery semantics.** Assume at-least-once delivery without ordering.
-Ack only after the all-assets/job commit or an already-completed job no-op. If commit
-succeeds but ack fails, a later delivery observes the completed job. Refresh the
-lease during a long copy; a lost lease may cause concurrent delivery but cannot
-bypass LIB-16. Crash/expired lease makes unfinished work available again.
-Temporary failures use exponential delays starting at 1 second and capped at 60
-seconds, up to the configured attempt limit (default 5); terminal/exhausted
-failures are durably quarantined before the delivery is removed. Retries do not
-block unrelated messages. Log message/job IDs, attempt and sanitized failure
-code, without credentials, receipts or source contents.
+Ack only after the all-assets/job commit or a completed-job no-op. A crash or ack
+loss redelivers safely through JOB-02; transport message IDs are diagnostics, not
+asset identities or a separate body-deduplication registry. Reusing a message ID
+does not grant an append/update operation. Correcting an unfinished job can use
+a new message ID; a completed job still keeps its first successful result.
 
-**QUEUE-03. Dev HTTP transport.** With `message_queue=dev` in development only,
-mount `POST /api/v1/dev/job-completions` (`enqueueJobCompletion`) and
-`GET /api/v1/dev/job-completions/{message_id}` (`getJobCompletionStatus`). Both
-are local debugging operations and require no editor session, JWT or email-code
-login. An absent or invalid Authorization header does not change their behavior.
-Neither uses a project ETag. Creating a job through the ordinary POST /api/v1/jobs
-still requires the editor; this dev transport does not change business API access.
-JSON files are submitted as their raw
-`application/json` body, for example with `curl --data-binary @item.json`; no
-multipart wrapper or client-side filesystem access is implied.
+Temporary failures use delays 1, 2, 4, 8, 16, 32, 60 seconds (capped at 60), up
+to the configured attempt limit (default 5). Retry delays do not hold up unrelated
+messages. Terminal/exhausted failures go durably to the failure queue before the
+original is acknowledged. If forwarding or its confirmation fails, retain/requeue
+the original; ambiguous confirms may duplicate deliveries, never justify dropping
+them. Log message/job IDs, attempt and sanitized error code without credentials,
+receipts or file contents. Read success through GET /api/v1/jobs/{job_id}; inspect
+failures through the broker failure queue and logs, not an application debug API.
 
-POST enforces a 256 KiB UTF-8 body limit (`413 import_message_too_large`), parses
-the shared schema (`422 validation_error`) and durably enqueues before returning
-`202 JobCompletionAccepted`. If durable enqueue fails, return `503 queue_unavailable`
-without claiming acceptance. It does not synchronously copy files or promise that
-the job is already completed. Canonicalize job/message UUIDs, names/tags/hex and
-serialize the validated message as sorted-key, compact UTF-8 JSON for body identity. An equal
-`message_id`/body returns the same `202` without resetting status/attempts; a
-different body returns `409 queue_message_id_conflict`. Full job/result/ownership/content
-checks run asynchronously and surface in status. A source/config rejection is
-not disguised as successful registration.
+**QUEUE-03. Development RabbitMQ transport.** Select message_queue=rabbitmq and
+inject RabbitMQMessageQueue from dev/message_queue.py. The adapter uses aio-pika
+and a real AMQP subscription with manual acknowledgements and prefetch_count=1.
+Connect lazily so merely constructing/exporting the application neither needs a
+running broker nor performs broker I/O. Reconnect after outages and close all
+AMQP resources on application shutdown; stale channel deliveries cannot be
+acknowledged on a replacement channel.
 
-GET returns `200 JobCompletionStatus` for a known message, `404 not_found` for an
-unknown ID and `422` for an invalid UUID. State flows queued → processing →
-succeeded/failed, with processing → queued on a retry. A terminal failure requires
-a new message ID to resubmit a corrected payload; job_id stays the same while
-the job remains unfinished. Message deduplication is separate from job completion
-idempotence and never supplies a second identifier for assets. Persist message
-bodies, leases, attempts/results in the dev queue, recover after restart and
-retain failed messages for diagnosis.
-This transport uses no external broker; it is not an in-memory background-task
-shortcut. It is absent (`404`) with `none`/`sqs` or outside development. No
-/api/v1/dev operation is mounted or listed in production OpenAPI. Production with
-message_queue=dev fails configuration/application construction, including settings
-objects passed without normal validation. The composition root checks the explicit
-environment as well as the actual adapter before mounting routes. Dev route handlers
-also fail closed with 404 unless the app's explicit environment is development,
-including when the router was mistakenly registered outside that composition path.
-Queue persistence details stay in `dev/`; the import handler does not read those tables.
+Declare durable quorum input queue (default camera-path.job-completions) and
+failure queue <input>.failed. Disable the input's automatic delivery limit so the
+application controls terminal/exhausted handling. Retry through durable quorum
+queues <input>.retry.<seconds> for the seven delays in QUEUE-02, each with its
+fixed message TTL and dead-letter route back to the input. Configure retry queues
+for at-least-once dead lettering with reject-publish overflow. Publish retries and
+failures as persistent messages with mandatory routing and publisher confirms
+before acking the original. Keep application attempt number in the private
+camera-path-attempt header; combine it with RabbitMQ's redelivery count so process
+crashes do not reset attempts. Failure messages retain original bytes and an
+error_code header. Provider retry/diagnostic headers are not fields of the JSON
+contract and do not leak into jobs/assets.
+
+The body is the full UTF-8 completion JSON, up to 256 KiB. There is no manifest URL
+wrapper and no HTTP authentication/JWT involved in publication. Use the broker's
+credentials. Terminal malformed/version-1 messages go to the failure queue with
+validation_error, without creating jobs/assets. Repeated deliveries use the same
+common completion service and transaction/idempotence rules as SQS.
+
+Supply a local Docker Compose broker with AMQP and management ports bound to
+loopback and a persistent development volume. An operator can publish an existing
+completion.json using rabbitmqadmin (management HTTP API of the broker) or an AMQP
+client. The backend consumes via AMQP; publishing success confirms broker routing,
+not job completion. Autonomous integration tests own a disposable real broker,
+isolated queues/files/database and test credentials, and remove their own resources.
 
 **QUEUE-04. AWS SQS transport.** Poll a configured SQS Standard queue. Each
-MessageBody is exactly the same JobCompletionMessage JSON accepted in dev;
-SQS attributes/receipt are adapter details. S3 ObjectCreated notifications and
-JSON-manifest-pointer envelopes are not accepted as that message schema. Producers
-send the complete job-result descriptor after all referenced objects are complete.
-No SNS service or S3 notification rule is required by this contract.
+MessageBody is exactly the same JobCompletionMessage JSON as RabbitMQ; SQS
+attributes/receipts are adapter details. S3 notifications and manifest-pointer
+envelopes are not accepted. Producers send the complete descriptor after files
+are complete. No SNS topic or S3 notification rule is required.
 
-Use long polling, explicit DeleteMessage after successful processing, and
-ChangeMessageVisibility for lease refresh/retry. Forward terminal/exhausted
-messages to a configured failure queue with sanitized error attributes before
-deleting the original. A crash between forwarding and deletion may duplicate the
-failure record; it must not lose the payload. AWS authentication uses the standard
-credential chain/EC2 role and IAM permissions scoped to the configured queues and
-source/destination prefixes, not editor JWTs or a new HTTP import endpoint.
-Queue provisioning, IAM changes, live deployment and a real AWS acceptance run
-are operational work; adapter contract tests do not claim those actions occurred.
+Use long polling and explicit DeleteMessage after commit/no-op. The SQS adapter
+owns visibility renewal during hold; stop/await renewal before changing visibility
+for retry or deleting the message. On renewal failure, cancel in-flight domain
+processing and leave the delivery unacknowledged. Forward terminal/exhausted
+messages to the configured failure queue with sanitized error attributes before
+deleting the original. Forwarding/ack loss may duplicate messages, not lose them.
+AWS uses the standard credential chain/EC2 role and scoped IAM permissions, not
+editor JWTs or a public import endpoint. Provisioning/deployment and live AWS
+acceptance are separate operational work.
 
 ### 8.4. Jobs and result lifecycle
 
@@ -1700,11 +1678,10 @@ the backend boundary.
 
 ## 9. Authentication and profile
 
-**AUTH-01.** Public GET operations read shared data; `GET /auth/session` requires
-Bearer authentication. Business writes, local upload, profile update and logout
-require a valid editor session. Login/verify/resend do not require a JWT. The dev-only
-completion submission/status operations in QUEUE-03 also require no JWT and are
-unavailable in production; this exception does not apply to ordinary job creation.
+**AUTH-01.** Public GET operations read shared data; GET /auth/session requires
+Bearer authentication. Business writes, job creation, local upload, profile update
+and logout require an editor session. Login/verify/resend require no JWT.
+External job completions use broker credentials rather than HTTP authentication.
 The single
 editor is created/replaced using `editor-create` with an email and a 12–1024-character
 password; there is no public registration. Passwords are stored as Argon2 hashes.
@@ -1820,7 +1797,6 @@ history with undo/redo is no longer the active persistence model.
 | Project / scene | `projects`, `anchors`, `scene_points`, `trajectory_segments`, `segment_anchors` |
 | Controls | `motion_profiles`, `speed_keyframes`, `camera_tracks`, `aim_keyframes`, `orientation_keyframes`, `depth_of_field_keyframes`, `lidar_keyframes` |
 | Library / jobs | `library_assets`, `library_asset_files`, `jobs`, `project_clouds` |
-| Dev transport | `dev_queue_messages` (dev adapter-owned durable inbox, not a domain queue API) |
 | Chat / profile | `chat_messages`, `user_settings` |
 | Auth | `editors`, `editor_sessions`, `auth_challenges`, `auth_rate_limits` |
 
@@ -1840,9 +1816,7 @@ field/default must not be assumed to create a database column/default or CHECK.
 
 - `Base` is the SQLAlchemy `DeclarativeBase` and owns `Base.metadata`; it is not
   itself a table. Domain records are mapped in
-  [persistence/records.py](src/camera_path/persistence/records.py). The dev queue
-  record is owned by `dev/records.py`, uses the same migrated metadata/database
-  and is never imported by the core handler. Composition/Alembic register it.
+  [persistence/records.py](src/camera_path/persistence/records.py). Transport state lives in RabbitMQ/SQS, with no adapter-owned SQL queue records.
 - `Vector3` is a frozen `(x, y, z)` dataclass used by SQLAlchemy composites. It has
   no table or JSON column. `as_tuple()` returns the coordinates in that order.
 - `ProjectChildRecord` is an unmapped mixin adding non-null `project_id`, its
@@ -2342,36 +2316,6 @@ A durable fixed-window authentication counter; expiry and counter updates are su
 
 - Primary key: `key`.
 
-#### DevQueueMessageRecord — `dev_queue_messages`
-
-Dev adapter-owned persistent HTTP inbox. These transport rows are not library
-items, job records or a production queue engine. They exist in migrated
-metadata but are accessed only by the dev adapter/composition.
-
-| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| `message_id` | `TEXT` | No | — | — | Canonical producer UUID, primary identity. |
-| `body` | `JSON` | No | — | — | Validated normalized JobCompletionMessage, not raw credentials/SDK data. |
-| `body_sha256` | `TEXT` | No | — | — | SHA-256 of canonical body serialization, QUEUE-03. |
-| `status` | `TEXT` | No | `queued` | `'queued'` | queued / processing / succeeded / failed. |
-| `attempts` | `INTEGER` | No | `0` | `0` | Started processing attempts. |
-| `available_at` | `DATETIME` | No | — | — | Earliest retry/first receive time. |
-| `lease_token` | `TEXT` | Yes | — | — | Opaque current receipt; all acknowledgements/updates require it. |
-| `lease_until` | `DATETIME` | Yes | — | — | Expiry enabling recovery/redelivery. |
-| `job_id` | `TEXT` | Yes | — | — | Target job for diagnostics; no FK so unknown-job failures can be retained. |
-| `error_code` | `TEXT` | Yes | — | — | Sanitized terminal failure code. |
-| `created_at` | `DATETIME` | No | — | — | Acceptance time. |
-| `updated_at` | `DATETIME` | No | — | — | Last durable state transition. |
-
-- Primary key: `message_id`; no library/project foreign keys.
-- CHECK `ck_dev_queue_messages_status`: status IN ('queued', 'processing', 'succeeded', 'failed').
-- CHECK `ck_dev_queue_messages_attempts`: attempts >= 0.
-- Nonunique index `ix_dev_queue_messages_ready`: `(status, available_at)`.
-- Nonunique index `ix_dev_queue_messages_lease`: `(status, lease_until)`.
-- Claim/increment/lease assignment uses an atomic transaction/CAS. A stale receipt
-  cannot acknowledge, reject or reschedule a newer delivery. A succeeded/failed
-  row has no active lease; restarting never resets terminal state.
-
 ### 11.4. Database constraints and service mapping
 
 The catalogue deliberately distinguishes enforced database constraints from
@@ -2415,7 +2359,7 @@ no producer-ID reservation ledger or result-fingerprint table is retained.
 
 Upgrade from revision 20261026_0014 applies migration 20261101_0015 directly to
 the final jobs/result schema, adding jobs, library result columns/index/constraints,
-tags/thumbnails, file collections and the durable dev inbox. No intermediate
+tags/thumbnails and file collections. No intermediate
 producer-ID table or column is created. Previously released schema revisions
 remain unchanged.
 
@@ -2430,15 +2374,13 @@ file collections gain one main primary file for every pending/ready asset, using
 its existing object key/format/size and sha256=null. Migration does not hash or
 rename existing files. New tags default to [], thumbnail_key to null.
 
-Create the dev inbox directly with nullable diagnostic job_id and the version-2
-completion contract. It has no FK to jobs so unknown-job failures can be retained;
-queue delivery never creates the unknown job. Version-1 standalone-asset messages
-are rejected by the dev adapter or forwarded through the SQS malformed-message
-failure path, rather than converted to jobs.
+Queue transport state is external to SQLite. The migration adds no
+dev inbox table. Version-1 standalone-asset bodies are quarantined by either
+broker adapter, without fabricating jobs or library entries.
 
 Fresh databases and populated upgrades agree with section 11.3. Normal operation
 does not discard job state or accepted messages. Refuse a downgrade that loses
-jobs, result links, multi-file references or active inbox work unless an explicit
+jobs, result links or multi-file references unless an explicit
 backup/data-conversion procedure makes the downgrade safe.
 
 ### 11.6. Configuration and operations
@@ -2461,18 +2403,20 @@ are not committed.
 | `CAMERA_PATH_AUTH_EMAIL_FROM`, `CAMERA_PATH_AUTH_SMTP_HOST`, `CAMERA_PATH_AUTH_SMTP_PORT` | Sender / loopback SMTP host / default port 1025 |
 | `OPENAI_API_KEY`, `CAMERA_PATH_OPENAI_MODEL` | Optional chat key / default model `gpt-5.6-luna` |
 | `CAMERA_PATH_DEV_USER_ID` | Shared profile key, default `dev-user` |
-| `CAMERA_PATH_MESSAGE_QUEUE` | none / dev / sqs; default none; dev requires development |
+| `CAMERA_PATH_MESSAGE_QUEUE` | none / rabbitmq / sqs; default none |
 | `CAMERA_PATH_MESSAGE_QUEUE_MAX_ATTEMPTS` | Positive attempt limit; default 5 |
-| `CAMERA_PATH_MESSAGE_QUEUE_LEASE_SECONDS` | Initial receive lease; default 60, refreshed before expiry |
+| `CAMERA_PATH_MESSAGE_QUEUE_LEASE_SECONDS` | SQS visibility duration only; default 60, renewed inside the SQS adapter |
+| `CAMERA_PATH_RABBITMQ_URL` | Secret AMQP connection URL; default amqp://guest:guest@127.0.0.1:5672/ |
+| `CAMERA_PATH_RABBITMQ_QUEUE` | Input queue name, default camera-path.job-completions; failure/retry names derive from it |
 | `CAMERA_PATH_LIBRARY_IMPORT_SOURCES` | JSON source-alias map; default {}; library is reserved for the destination |
-| `CAMERA_PATH_AWS_SQS_QUEUE_URL`, `CAMERA_PATH_AWS_SQS_FAILURE_QUEUE_URL` | Required distinct URLs with sqs; not used by dev/none |
+| `CAMERA_PATH_AWS_SQS_QUEUE_URL`, `CAMERA_PATH_AWS_SQS_FAILURE_QUEUE_URL` | Required distinct URLs with sqs; not used by rabbitmq/none |
 
 Import source configuration is adapter configuration, not a core branch on
 drivers. Example dev map: `{"incoming":{"driver":"local","root":"/data/incoming"}}`;
 AWS map: `{"incoming":{"driver":"s3","bucket":"producer-output","prefix":"ready/"}}`.
 Aliases use 1–64 ASCII letters/digits/underscores/hyphens, excluding reserved
 `library`; an unknown driver, incomplete root/bucket configuration or incompatible
-queue/environment fails configuration validation. Local roots are backend-host
+queue/connection configuration fails validation. Local roots are backend-host
 directories; S3 identities/credentials stay in adapter configuration. Disabled
 queue mode neither requires sources/AWS credentials nor starts a consumer.
 SQS polling waits up to 20 seconds, checks payloads against the same 256 KiB
@@ -2493,7 +2437,7 @@ the factory. Preserve the public create_app(app_settings=None, repository=None,
 library_storage=None) calling convention. Overrides take precedence over configured
 storage; route capabilities follow the actual injected adapter.
 
-Select filesystem/S3 library storage, SMTP/SES code delivery, optional dev/SQS
+Select filesystem/S3 library storage, SMTP/SES code delivery, optional RabbitMQ/SQS
 message transport and each configured local/S3 import source in the wrapper.
 These choices remain independent; do not infer storage or email provider from
 the queue mode. Disabled message consumption builds no queue/source clients or
@@ -2505,22 +2449,20 @@ The core factory creates common domain services, HTTP routes, middleware, error
 handlers, OpenAPI behavior and the lifespan using injected contracts. It contains
 no dev/AWS imports, provider selection or adapter-specific route registration.
 AuthService receives its email sender rather than selecting/importing SMTP/SES.
-The composition wrapper registers dev-owned SQL metadata and adds local content/
-thumbnail routes only for filesystem storage, and unauthenticated completion/status
-routes only for the dev queue in development. Production construction rejects a
-dev queue regardless of whether Settings validation was bypassed; it never mounts
-/api/v1/dev routes. Record the explicit environment for the dev handlers' runtime
-guard. S3/SQS expose no corresponding local/dev routes.
-The finished OpenAPI schema includes exactly the routes actually mounted.
+The composition wrapper adds only the filesystem content/thumbnail routes when
+filesystem storage is selected. It adds no job producer/status routes in any
+mode; /api/v1/dev returns 404 and never appears in OpenAPI. Broker selection
+changes no HTTP schemas or routes. The finished OpenAPI schema is the same for
+none, rabbitmq and sqs (apart from hidden filesystem byte-serving routes).
 
 Keep lifecycle ownership explicit: initialize the repository before serving and
 start the optional consumer once per lifespan; cancel and await it on shutdown,
 leaving unfinished deliveries recoverable. Close a repository created by the
-wrapper, while leaving an explicitly supplied repository to its caller. Adapter
+wrapper, while leaving an explicitly supplied repository to its caller. Always
+close queue resources, including startup/consumer failures. Adapter
 composition must not initialize the database, poll queues or send email while
 merely constructing/exporting the app. Apply the HTTP/storage/queue/auth contracts
-and migrations defined in this specification; the development authentication
-exception and production isolation are defined by QUEUE-03.
+and migrations defined in this specification. No debug HTTP namespace is created.
 
 **OPS-02.** `/health` returns `{status:"ok"}` and is a liveness endpoint, not a
 complete database/S3/SES/OpenAI check. `/docs` serves Scalar; OpenAPI is available at
@@ -2538,8 +2480,8 @@ a production deployment.
 
 ## 12. HTTP operation inventory
 
-**HTTP-01.** The table defines 72 always-mounted canonical HTTP operations plus
-two dev-adapter operations mounted only under QUEUE-03.
+**HTTP-01.** The table defines 72 always-mounted canonical HTTP operations.
+Message producers use the broker directly; there are no dev-only HTTP operations.
 Every path includes `/api/v1`. Request/response DTO names correspond to schemas in
 [openapi.json](openapi.json). The OpenAPI artifact and generated frontend clients
 must agree with this inventory, including field requirements/nullability, exact
@@ -2559,8 +2501,6 @@ successful statuses listed here.
 | `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 → LibraryUpload |
 | `POST` | `/api/v1/jobs` | — (editor) | 201 → Job |
 | `GET` | `/api/v1/jobs/{job_id}` | — | 200 → Job |
-| `POST` | `/api/v1/dev/job-completions` | JobCompletionMessage (development dev adapter only, no auth) | 202 → JobCompletionAccepted |
-| `GET` | `/api/v1/dev/job-completions/{message_id}` | — (development dev adapter only, no auth) | 200 → JobCompletionStatus |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
 | `POST` | `/api/v1/library/{asset_id}/complete` | — | 200 → LibraryAsset |
@@ -2657,10 +2597,10 @@ tests (paths relative to `backend/tests/`):
 | LIB-06–12, STORE-04 | Server asset IDs, manual uploads, tags, unique thumbnail ownership/URLs; existing assets remain ungrouped and retain their files | Library HTTP scenarios, populated-database upgrade and storage-adapter checks |
 | LIB-13–16, STORE-05 | Several assets/files per completion; primary aliases; adopted/copied objects; hash/size/signature checks; all-results atomicity; legacy main entry; deletion/rollback/recovery and ownership races | Isolated local completion/storage and populated-upgrade scenarios |
 | JOB-01–03 | Empty job creation; public reads; unknown job rejection; completed_at and ordered relationship; first-completion wins; concurrent/new-message-ID replays; result deletion never reopens/recreates | Autonomous job/completion HTTP scenarios and transactional failure/restart checks |
-| QUEUE-01–03 | Unauthenticated dev JSON-file submission; production/disabled routes absent; durable 202; status/errors; body/UUID normalization; duplicate messages; restart, leases, retry/exhaustion and post-commit ack loss | Autonomous dev HTTP suite plus focused queue-contract/failure-injection scenarios |
+| QUEUE-01–03 | Real RabbitMQ publication; no debug HTTP routes in any mode; body/UUID normalization; durable messages; restart/redelivery; retry/exhaustion and post-commit ack loss | Autonomous HTTP + real broker scenarios and focused queue-contract/failure-injection checks |
 | QUEUE-04 | Same payload and handler; SQS polling/ack/visibility/failure forwarding; provider-independent core | Deterministic adapter contract checks; separately recorded live AWS acceptance |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
-| OPS-04 | Independent local/AWS adapter selection and overrides; conditional routes/OpenAPI; provider-free core; consumer and repository lifecycle | Composition checks and autonomous dev/default HTTP scenarios |
+| OPS-04 | Independent RabbitMQ/SQS and storage selection; invariant HTTP/OpenAPI; provider-free core; consumer/queue/repository lifecycle | Composition checks and autonomous dev/default HTTP scenarios |
 | CHAT-01–05 | Idempotent messages, atomic tool edits, history, SSE delta/result/error, unavailable provider | `test_agent.py`, `test_agent_lidar.py`, `test_api.py` |
 
 This is a verification map, not a claim that existing tests prove every edge case.
