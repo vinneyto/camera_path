@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 
 from camera_path.dev.library_storage import LocalLibraryStorage
 from camera_path.routers.auth import AuthenticatedRoute, authenticated
-from camera_path.services.library import LibraryService
+from camera_path.services.library import LibraryService, thumbnail_type
 
 router = APIRouter(route_class=AuthenticatedRoute, prefix="/library", include_in_schema=False)
 
@@ -55,3 +55,29 @@ async def download_local_library_content(asset_id: str, request: Request) -> Fil
     if not path.is_file():
         raise HTTPException(404, "Library file is missing")
     return FileResponse(path, media_type="application/octet-stream")
+
+
+@router.get("/{asset_id}/files/{file_id}/content", name="download_local_library_file")
+async def download_local_library_file(
+    asset_id: str, file_id: str, request: Request
+) -> FileResponse:
+    service, storage = local_service(request)
+    asset = await service.get_record(asset_id)
+    file = next((f for f in asset.files if f.id == file_id), None)
+    if asset.status != "ready" or file is None or not storage.path(file.object_key).is_file():
+        raise HTTPException(404)
+    return FileResponse(storage.path(file.object_key), media_type="application/octet-stream")
+
+
+@router.get("/{asset_id}/thumbnail", name="download_local_library_thumbnail")
+async def download_local_library_thumbnail(asset_id: str, request: Request) -> FileResponse:
+    service, storage = local_service(request)
+    asset = await service.get_record(asset_id)
+    if asset.status != "ready" or not asset.thumbnail_key:
+        raise HTTPException(404)
+    path = storage.path(asset.thumbnail_key)
+    if not path.is_file():
+        raise HTTPException(404)
+    with path.open("rb") as stream:
+        media_type = thumbnail_type(asset.thumbnail_key, stream.read(12))
+    return FileResponse(path, media_type=media_type)

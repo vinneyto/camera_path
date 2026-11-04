@@ -20,6 +20,17 @@ import type { LibraryAsset } from "@camera-path/types/api";
 
 const room: LibraryAsset = {
   id: "asset-1",
+  job_id: null,
+  tags: ["Indoor"],
+  primary_file_id: "main",
+  files: [
+    {
+      id: "main",
+      format: "ply",
+      size_bytes: 1024,
+      download_url: "http://test/room.ply",
+    },
+  ],
   name: "Room",
   format: "ply",
   status: "ready",

@@ -4,6 +4,7 @@ import { EditorOnly } from "../ports/editor-only";
 
 import { useLibraryAssetResource } from "@camera-path/api/resources";
 import { LibraryAssetDefaults } from "@camera-path/feature-library/ui/library-asset-defaults";
+import { LibraryAssetThumbnail } from "./library-asset-thumbnail";
 
 interface LibraryAssetDetailsProps {
   assetId: string;
@@ -30,6 +31,10 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
           </p>
         ) : (
           <>
+            <LibraryAssetThumbnail
+              url={current.thumbnail_url}
+              name={current.name}
+            />
             <h1 className="mt-4 break-words text-xl font-semibold">
               {current.name}
             </h1>
@@ -38,6 +43,16 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
               {(current.size_bytes / 1024 / 1024).toFixed(1)} MB ·{" "}
               {new Date(current.created_at).toLocaleDateString()}
             </p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {current.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded bg-muted px-2 py-0.5 text-xs"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
             {current.download_url && (
               <a
                 className="mt-3 inline-block text-xs underline"
@@ -47,6 +62,21 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
                 Download
               </a>
             )}
+            {current.files
+              .filter(
+                (file) =>
+                  file.id !== current.primary_file_id && file.download_url,
+              )
+              .map((file) => (
+                <a
+                  key={file.id}
+                  className="ml-3 inline-block text-xs underline"
+                  download
+                  href={file.download_url!}
+                >
+                  Download {file.format.toUpperCase()}
+                </a>
+              ))}
           </>
         )}
       </div>

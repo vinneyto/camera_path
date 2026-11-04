@@ -58,6 +58,7 @@ export function inspectSource(
         "useSceneInteraction",
         "useProjectId",
         "useAssetId",
+        "useJobId",
       ]);
       const clause = ts.isImportDeclaration(node) && node.importClause;
       const bindings = clause?.namedBindings;

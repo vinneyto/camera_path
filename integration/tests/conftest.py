@@ -280,3 +280,41 @@ def public_backend(tmp_path_factory):
         yield backend
     finally:
         backend.close()
+
+
+@pytest.fixture
+def dev_backend(tmp_path, rabbitmq):
+    backend = Backend(tmp_path)
+    backend.queue_name = "cp-test-" + secrets.token_hex(8)
+    backend.broker = rabbitmq
+    backend.env.update(
+        {
+            "CAMERA_PATH_MESSAGE_QUEUE": "rabbitmq",
+            "CAMERA_PATH_RABBITMQ_URL": rabbitmq.url,
+            "CAMERA_PATH_RABBITMQ_QUEUE": backend.queue_name,
+        }
+    )
+    backend.env["CAMERA_PATH_LIBRARY_IMPORT_SOURCES"] = json.dumps(
+        {
+            "incoming": {"driver": "local", "root": str(tmp_path / "incoming")},
+        }
+    )
+    try:
+        backend.setup()
+        rabbitmq.wait_queue(backend.queue_name)
+        backend.login()
+        yield backend
+    finally:
+        backend.close()
+
+
+@pytest.fixture(scope="session")
+def rabbitmq():
+    from rabbitmq import RabbitMQ
+
+    broker = RabbitMQ()
+    try:
+        broker.start()
+        yield broker
+    finally:
+        broker.close()

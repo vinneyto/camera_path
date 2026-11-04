@@ -184,6 +184,8 @@ async def test_persistent_limits_and_email_validation(email_app):
             await service.login(EMAIL, "wrong", "peer")
         assert error.value.status_code == 401
     restarted = AuthService(service.repository, settings, mailbox)
+    # Keep the fixture's frozen rate-limit window across service replacement.
+    restarted.now = service.now
     with pytest.raises(HTTPException) as error:
         await restarted.login(EMAIL, PASSWORD, "forged-different-peer")
     assert error.value.status_code == 429

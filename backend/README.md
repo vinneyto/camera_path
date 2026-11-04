@@ -140,13 +140,14 @@ Login, logout and session expiry preserve local preferences.
 
 ### Editor authentication
 
-All reads of projects, resources, library files and chat history remain public. Every write route,
-including legacy aliases, local PLY uploads and both agent endpoints, uses the common
+All reads of projects, resources, library files and chat history remain public. Every ordinary
+write route, including legacy aliases, local PLY uploads and both agent endpoints, uses the common
 `@authenticated` decorator below `@router.post/patch/put/delete(...)`. Anonymous or invalid JWT
 writes return
 401 before revision checks or side effects. `AuthenticatedRoute` adds the standard FastAPI dependency
 when registering marked endpoints; the decorator leaves endpoint signatures unchanged. Data remains
-shared between guest and editor.
+shared between guest and editor. Job-completion producers authenticate to the message broker;
+there are no HTTP submission/status routes or `/api/v1/dev` namespace.
 
 Configure these routers with `APIRouter(route_class=AuthenticatedRoute)`. Decorators execute from
 bottom to top: `@authenticated` marks the function first, then `@router...` registers the protected
@@ -437,9 +438,39 @@ If no identity is verified yet, local SMTP checks can proceed immediately; real
 SES requires creating/verifying the identity and DNS separately or with CDK.
 See `infra/README.md` for the post-review deployment and delivery checks.
 
+## Application composition
+
+`api.create_app` builds the common application from `AppDependencies`. Its
+`@with_infrastructure` decorator in `composition.py` selects and injects local/AWS storage,
+queue/source adapters and SMTP/SES delivery, then adds filesystem byte-serving routes if needed.
+Storage overrides control the available content routes; queue selection is independent.
+The core factory and auth service do not select or import dev/AWS providers. Repository and
+consumer ownership are managed through the ordinary application lifespan.
+
 ## Autonomous API integration tests
 
 The standalone [HTTP contract suite](../integration/README.md) starts a disposable backend,
 SQLite database, SMTP inbox and OpenAI-compatible HTTP fixture. It exercises the real
-email-code login flow without an external email account, Docker or provider credentials.
+email-code login flow without an external email account or provider credentials. Queue scenarios
+require Docker and manage their own temporary RabbitMQ broker.
 See that guide for setup, API coverage, the optional real-time expiry test and CI.
+
+## Queued job completion and multiple representations
+
+Library items can contain multiple SOG/PLY representations with one primary file. External
+producers complete a previously reserved job with a version-2 JSON message containing all result
+assets. The monolith verifies every file, registers all assets and completes the job atomically.
+The first successful completion wins, including after assets are deleted. Development uses
+RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
+inside library storage are adopted; external files are copied under UUIDs.
+The frontend's Jobs page lists jobs and lets the editor reserve one without inputs; its detail
+page follows completion and links to all result assets. `GET /api/v1/jobs` returns summaries
+with surviving asset counts. Read a job and its ordered results through `/api/v1/jobs/{job_id}`; job reservation does not start
+a generator. Manual uploads remain independent, and project clouds use the primary representation.
+
+See [the local verification and AWS configuration guide](docs/library-import.md). Run
+`uv run alembic upgrade head` before starting against an existing database. Queue consumption is
+disabled by default; install `uv sync --frozen --extra rabbitmq`, start `docker compose up -d --wait`
+and enable `CAMERA_PATH_MESSAGE_QUEUE=rabbitmq` for local verification. Publish JSON using the
+broker's management API or an AMQP client, without a backend debug API. Ordinary job creation
+still requires the editor. AWS resource setup and live verification are separate manual work.

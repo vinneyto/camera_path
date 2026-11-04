@@ -34,6 +34,8 @@
     "next": "^16.4.0",
     "react": "^19.2.8",
     "three": "^0.185.1",
-    "@camera-path/feature-sift": "*"
+    "@camera-path/feature-sift": "*",
+    "@camera-path/feature-jobs": "*",
+    "@camera-path/feature-job-details": "*"
   }
 }

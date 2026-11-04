@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from typing import Any, TypeVar
 from uuid import uuid4
 
@@ -13,6 +13,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import Request
 
 from camera_path.config import Settings
+from camera_path.services.library_metadata import relative_key
 from camera_path.services.library_storage import (
     LibraryStorage,
     LibraryStorageError,
@@ -29,6 +30,95 @@ class S3LibraryStorage(LibraryStorage):
         self.bucket = bucket
         self.prefix = prefix
         self.ttl = ttl
+
+    def _ready_key(self, key: str, *, pending: bool = False) -> str:
+        relative_key(key)
+        return f"{self.prefix}{'_uploads/' if pending else ''}{key}"
+
+    def identity(self, key: str) -> str:
+        return f"s3://{self.bucket}/{self._ready_key(key)}"
+
+    def key_for_identity(self, identity: str) -> str | None:
+        prefix = f"s3://{self.bucket}/{self.prefix}"
+        return identity[len(prefix) :] if identity.startswith(prefix) else None
+
+    @contextmanager
+    def open_reader(self, key: str):
+        try:
+            response = self.client.get_object(Bucket=self.bucket, Key=self._ready_key(key))
+        except ClientError as error:
+            if error.response["Error"]["Code"] in {"404", "NoSuchKey", "NotFound"}:
+                raise FileNotFoundError(key) from error
+            raise LibraryStorageError("Source unavailable") from error
+        except BotoCoreError as error:
+            raise LibraryStorageError("Source unavailable") from error
+        try:
+            yield response["Body"]
+        except (BotoCoreError, ClientError) as error:
+            raise LibraryStorageError("Source unavailable") from error
+        finally:
+            response["Body"].close()
+
+    def write_object(self, key: str, stream, *, replace: bool = False) -> None:
+        try:
+            self.client.put_object(
+                Bucket=self.bucket,
+                Key=self._ready_key(key),
+                Body=stream,
+                **({} if replace else {"IfNoneMatch": "*"}),
+            )
+        except (BotoCoreError, ClientError) as error:
+            raise LibraryStorageError("Destination unavailable") from error
+
+    def remove_object(self, key: str) -> None:
+        try:
+            self.client.delete_object(Bucket=self.bucket, Key=self._ready_key(key))
+        except (BotoCoreError, ClientError) as error:
+            raise LibraryStorageError("Destination unavailable") from error
+
+    def write_import_object(self, key: str, stream, owner: str) -> None:
+        try:
+            self.client.put_object(
+                Bucket=self.bucket,
+                Key=self._ready_key(key),
+                Body=stream,
+                IfNoneMatch="*",
+                Metadata={"camera-path-import": owner},
+            )
+        except ClientError as error:
+            if error.response["Error"]["Code"] in {"PreconditionFailed", "412"}:
+                raise FileExistsError(key) from error
+            raise LibraryStorageError("Destination unavailable") from error
+        except BotoCoreError as error:
+            raise LibraryStorageError("Destination unavailable") from error
+
+    def clean_import_object(self, key: str, owner: str, *, committed: bool) -> None:
+        if committed:
+            return
+        try:
+            head = self.client.head_object(Bucket=self.bucket, Key=self._ready_key(key))
+            if head.get("Metadata", {}).get("camera-path-import") == owner:
+                self.remove_object(key)
+        except ClientError as error:
+            if error.response["Error"]["Code"] not in {"404", "NoSuchKey", "NotFound"}:
+                raise LibraryStorageError("Import cleanup unavailable") from error
+        except BotoCoreError as error:
+            raise LibraryStorageError("Import cleanup unavailable") from error
+
+    def import_markers(self) -> list[str]:
+        try:
+            result, prefix = [], f"{self.prefix}_imports/"
+            for page in self.client.get_paginator("list_objects_v2").paginate(
+                Bucket=self.bucket, Prefix=prefix
+            ):
+                result.extend(
+                    item["Key"][len(self.prefix) :]
+                    for item in page.get("Contents", [])
+                    if item["Key"].endswith(".json")
+                )
+            return result
+        except (BotoCoreError, ClientError) as error:
+            raise LibraryStorageError("Import recovery unavailable") from error
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "S3LibraryStorage":
@@ -97,8 +187,28 @@ class S3LibraryStorage(LibraryStorage):
                 "get_object",
                 Params={
                     "Bucket": self.bucket,
-                    "Key": self._key(key),
+                    "Key": self._ready_key(key),
                     "ResponseContentDisposition": f'attachment; filename="{key}"',
+                },
+                ExpiresIn=self.ttl,
+                HttpMethod="GET",
+            )
+        )
+
+    async def thumbnail_url(self, asset_id: str, key: str, request: Request) -> str:
+        content_type = {
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "webp": "image/webp",
+        }[key.rsplit(".", 1)[-1]]
+        return await self._run(
+            lambda: self.client.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": self.bucket,
+                    "Key": self._ready_key(key),
+                    "ResponseContentType": content_type,
                 },
                 ExpiresIn=self.ttl,
                 HttpMethod="GET",
@@ -162,7 +272,7 @@ class S3LibraryStorage(LibraryStorage):
         def stage() -> None:
             for key in dict.fromkeys(keys):
                 for pending in (False, True):
-                    source = self._key(key, pending=pending)
+                    source = self._ready_key(key, pending=pending)
                     try:
                         head = self.client.head_object(Bucket=self.bucket, Key=source)
                     except ClientError as error:

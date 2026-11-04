@@ -25,7 +25,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.10.3"
-      - run: uv sync --frozen --project backend --extra aws
+      - run: uv sync --frozen --project backend --extra aws --extra rabbitmq
       - run: uv sync --frozen --project integration
       - run: backend/.venv/bin/ruff check integration
       - run: backend/.venv/bin/ruff format --check integration

@@ -53,6 +53,9 @@ and pull requests; they are not part of the backend requirements.
     - [CompiledTrajectory](#compiledtrajectory)
   - [3.5. Library, cloud and profile resources](#35-library-cloud-and-profile-resources)
     - [LibraryAsset](#libraryasset)
+    - [LibraryAssetFile](#libraryassetfile)
+    - [Job](#job)
+    - [JobSummary](#jobsummary)
     - [LibraryUpload](#libraryupload)
     - [ProjectCloud](#projectcloud)
     - [UserSettings](#usersettings)
@@ -95,12 +98,20 @@ and pull requests; they are not part of the backend requirements.
     - [LoginRequest](#loginrequest)
     - [ChallengeRequest](#challengerequest)
     - [VerifyRequest](#verifyrequest)
+  - [3.8. Job completion messages](#38-job-completion-messages)
+    - [LibraryFileSource](#libraryfilesource)
+    - [LibraryImportFile](#libraryimportfile)
+    - [JobCompletionAsset](#jobcompletionasset)
+    - [JobCompletionMessage](#jobcompletionmessage)
 - [4. HTTP, revisions and errors](#4-http-revisions-and-errors)
 - [5. Projects and scene editing](#5-projects-and-scene-editing)
 - [6. Timelines](#6-timelines)
 - [7. Trajectory compilation](#7-trajectory-compilation)
 - [8. Library and project clouds](#8-library-and-project-clouds)
   - [8.1. Library identity, tags and thumbnails](#81-library-identity-tags-and-thumbnails)
+  - [8.2. Multiple files and job results](#82-multiple-files-and-job-results)
+  - [8.3. Message queue boundary and adapters](#83-message-queue-boundary-and-adapters)
+  - [8.4. Jobs and result lifecycle](#84-jobs-and-result-lifecycle)
 - [9. Authentication and profile](#9-authentication-and-profile)
 - [10. Chat and agent](#10-chat-and-agent)
 - [11. Persistence, configuration and operations](#11-persistence-configuration-and-operations)
@@ -110,7 +121,8 @@ and pull requests; they are not part of the backend requirements.
     - [UserSettingsRecord](#usersettingsrecord--user_settings)
     - [ProjectRecord](#projectrecord--projects)
     - [LibraryAssetRecord](#libraryassetrecord--library_assets)
-    - [LibraryClientIdRecord](#libraryclientidrecord--library_client_ids)
+    - [LibraryAssetFileRecord](#libraryassetfilerecord--library_asset_files)
+    - [JobRecord](#jobrecord--jobs)
     - [ProjectCloudRecord](#projectcloudrecord--project_clouds)
     - [AnchorRecord](#anchorrecord--anchors)
     - [ScenePointRecord](#scenepointrecord--scene_points)
@@ -174,7 +186,8 @@ named model and record. Track implementation gaps and review decisions in the PR
 
 **SCOPE-01.** The backend serves a 3D camera-path editor. It stores projects and scene
 data, semantic paths, motion and camera controls, a shared 3DGS library and its
-instances in projects. It compiles paths into playback data and provides chat with
+instances in projects, and tracks jobs with their library results.
+It compiles paths into playback data and provides chat with
 an agent that can edit an allowed subset of project resources.
 
 **SCOPE-02.** Authoring data and compiled trajectories are separate. Compilation is
@@ -185,12 +198,13 @@ file uploads do not make the backend decode or train 3DGS models.
 **SCOPE-03.** Data is shared and published: guests read it; one authenticated editor
 can change it. There are currently no private user projects, public registration,
 multiple-editor roles or per-user libraries. Core geometry and REST operations work
-without OpenAI credentials.
+without OpenAI credentials. External job completions arrive through a message
+broker, separately from the ordinary editor HTTP API.
 
 ## 3. Entities and defaults
 
-**DATA-01.** IDs are strings. New projects, scene entities, keyframes, assets and
-cloud instances receive server-generated UUIDs. Authentication challenges use a
+**DATA-01.** IDs are strings. New projects, scene entities, keyframes, assets, jobs
+and cloud instances receive server-generated UUIDs. Authentication challenges use a
 separate opaque ID. Scene references resolve within their project. Segment, message
 and cloud ordering is preserved. A JSON `Vec3` is `[x, y, z]`. Coordinates and lengths
 use scene units; they represent meters and meters per second when the scene scale
@@ -230,6 +244,7 @@ layouts or permission to edit response-only fields.
 - [Library, cloud and profile resources](#35-library-cloud-and-profile-resources)
 - [Chat, authentication responses and errors](#36-chat-authentication-responses-and-errors)
 - [Creation and update requests](#37-creation-and-update-requests)
+- [Job completion messages](#38-job-completion-messages)
 
 **DATA-05. Models and records.** A **model** is a Pydantic service/domain or
 request/response model: it defines validated application data and supports
@@ -239,8 +254,9 @@ service/router modules. Models are not SQLAlchemy table mappings.
 
 A **record** is a SQLAlchemy ORM representation of database state, including
 columns, keys, constraints and relationships. Record classes use the `Record`
-suffix and live in `camera_path/persistence/records.py`. Repositories, services,
-Alembic metadata loading and tests import database records from that module.
+suffix. Domain records live in `camera_path/persistence/records.py`.
+Repositories, services, Alembic metadata loading and tests import records from
+that module. Queue delivery state belongs to the external broker, not SQL records.
 The complete record catalogue is in [section 11.3](#113-record-catalogue). Repositories
 and services map records to/from serializable models; database records are not
 the public serialization contract.
@@ -589,42 +605,82 @@ Internal aggregate assembled from the separate camera timeline resources.
 
 #### LibraryAsset
 
-Public asset model. Its storage object key is internal persistence metadata, not a public URL field.
+Public asset model. Object keys and producer source locations are internal metadata,
+not public URL fields. The scalar format/size/download fields describe the primary
+file; `files` describes all alternatives belonging to the same logical item.
 
 | Field | Type | Required | Default | Constraints / meaning |
 | --- | --- | --- | --- | --- |
 | `id` | `string` | Yes | — | Server-assigned primary key |
-| `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
+| `job_id` | `string (UUID) \| null` | No | `null` | Producing job; null for manual/ungrouped assets |
 | `name` | `string` | Yes | — | — |
-| `format` | `AssetFormat` | Yes | — | — |
-| `size_bytes` | `integer` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | Primary file format; LIB-13 |
+| `size_bytes` | `integer` | Yes | — | Primary file byte count, not the total; LIB-13 |
 | `status` | `"pending" \| "ready"` | Yes | — | — |
 | `created_at` | `DateTime` | Yes | — | — |
 | `tags` | `Array<string>` | Yes | `[]` | Normalized, bounded and deduplicated; LIB-08 |
 | `thumbnail_url` | `string \| null` | No | `null` | Computed through storage; LIB-09 |
 | `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
+| `primary_file_id` | `string` | Yes | — | ID of exactly one entry in files |
+| `files` | `Array<LibraryAssetFile>` | Yes | — | Nonempty ordered collection; pending URLs are null |
 | `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
 | `default_scale` | `FiniteNumber` | Yes | — | > 0.0; New asset value: 1 |
 | `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3; New asset value: [0,0,0] |
+
+#### LibraryAssetFile
+
+One downloadable representation of an asset. File IDs are stable within their
+asset, not global UUIDs; destination object names are separate UUIDs.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | Asset-scoped ID, 1–64 ASCII letters/digits/underscores/hyphens |
+| `format` | `AssetFormat` | Yes | — | File representation; currently ply or sog |
+| `size_bytes` | `integer` | Yes | — | Positive, at most 2 GiB per file |
+| `sha256` | `string \| null` | No | `null` | Verified lowercase 64-digit hex; null for unhashed legacy/manual files |
+| `download_url` | `string \| null` | No | `null` | Adapter-generated URL; null while the asset is pending |
+
+#### Job
+
+Public minimal job state. Assets are returned in their original result order,
+with current download URLs. Completion does not depend on the surviving list size.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string (UUID)` | Yes | — | Server-generated nonzero UUIDv4 |
+| `completed_at` | `DateTime \| null` | Yes | — | Null until the complete result commits; UTC completion time afterwards |
+| `assets` | `Array<LibraryAsset>` | Yes | — | Empty on creation; surviving results ordered by job_position |
+
+#### JobSummary
+
+Public job catalogue entry. No file URLs or asset bodies are generated for a catalogue read.
+
+| Field | Type | Required | Default | Rules |
+| --- | --- | --- | --- | --- |
+| `id` | `string (UUID)` | Yes | — | Server-assigned job identity |
+| `completed_at` | `string (date-time) \| null` | Yes | — | Null until successful completion; retained after result deletion |
+| `asset_count` | `integer` | Yes | — | Nonnegative count of currently surviving related assets, not file representations |
 
 #### LibraryUpload
 
 | Field | Type | Required | Default | Constraints / meaning |
 | --- | --- | --- | --- | --- |
 | `id` | `string` | Yes | — | Server primary key |
-| `client_id` | `string (UUID)` | Yes | — | Immutable correlation ID; LIB-06 |
+| `job_id` | `string (UUID) \| null` | No | `null` | Producing job; null for manual/ungrouped assets |
 | `name` | `string` | Yes | — | — |
-| `format` | `AssetFormat` | Yes | — | — |
-| `size_bytes` | `integer` | Yes | — | — |
+| `format` | `AssetFormat` | Yes | — | Primary file format; LIB-13 |
+| `size_bytes` | `integer` | Yes | — | Primary file byte count, not the total; LIB-13 |
 | `status` | `"pending" \| "ready"` | Yes | — | — |
 | `created_at` | `DateTime` | Yes | — | — |
 | `tags` | `Array<string>` | Yes | `[]` | LIB-08 |
 | `thumbnail_url` | `string \| null` | No | `null` | Null while pending; LIB-09 |
 | `download_url` | `string \| null` | No | `null` | Computed on read; null when not provided |
+| `primary_file_id` | `string` | Yes | — | ID of exactly one entry in files |
+| `files` | `Array<LibraryAssetFile>` | Yes | — | Nonempty ordered collection; pending URLs are null |
 | `default_rotation_deg` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
 | `default_scale` | `FiniteNumber` | Yes | — | > 0.0 |
 | `default_offset` | `FiniteVec3` | Yes | — | Min items: 3; Max items: 3 |
-| `upload_url` | `string \| null` | Yes | — | Pending: current PUT URL; ready replay: null; LIB-07 |
+| `upload_url` | `string` | Yes | — | PUT URL for this new pending manual upload; LIB-07 |
 
 #### ProjectCloud
 
@@ -884,12 +940,13 @@ Internal/legacy agent result; canonical chat uses ChatResponse.
 | `name` | `string` | Yes | — | Min length: 1; Max length: 200 |
 | `size_bytes` | `integer` | Yes | — | > 0.0; <= 2147483648.0 |
 | `format` | `AssetFormat` | No | `"ply"` | — |
-| `client_id` | `string (UUID) \| null` | No | `null` | Omitted/null generates UUIDv4; LIB-06 |
 | `thumbnail_key` | `string \| null` | No | `null` | Existing thumbnail object relative to storage root; LIB-09 |
 | `tags` | `Array<string>` | No | `[]` | Strict strings, at most 20 input entries; LIB-08 |
 
 `thumbnail_key` is an input/persistence field, not a public response field.
-This request reserves an upload, not a claim that model bytes have been verified.
+This request reserves a fresh manual upload, not a claim that model bytes have
+been verified. It accepts neither a job ID nor producer-assigned asset IDs; reject
+unknown fields. Job results are created only by completion processing.
 
 #### LibraryAssetDefaultsUpdate
 
@@ -957,6 +1014,98 @@ FastAPI's emitted HTTPValidationError/ValidationError schema components are not
 application entities. Canonical validation responses use ErrorResponse and FieldError
 as specified in API-05.
 
+### 3.8. Job completion messages
+
+These Pydantic contracts are shared by all message transports. Reject unknown
+fields, unsupported schema versions, null required values and invalid UUIDs.
+`message_id` and `job_id` are canonical nonzero UUIDs. Asset IDs, ready status,
+completion time and download URLs are assigned by the backend.
+
+#### LibraryFileSource
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `storage` | `string` | Yes | — | Configured source alias; reserved library means the destination library |
+| `path` | `string` | Yes | — | Relative object/file path under that source root; 1–1024 characters |
+
+Source aliases resolve through storage adapters: for example `incoming` maps to a
+local directory in dev or a bucket/prefix in AWS. The message never chooses a
+provider driver or supplies credentials. Paths cannot be absolute, URLs, contain
+backslashes, empty/dot/dot-dot components or control characters; path resolution
+must remain within the configured root, including through local symlinks.
+
+#### LibraryImportFile
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `id` | `string` | Yes | — | Asset-scoped file ID as in LibraryAssetFile |
+| `format` | `AssetFormat` | Yes | — | ply or sog; source suffix need not determine the declared format |
+| `size_bytes` | `integer` | Yes | — | Positive, at most 2 GiB |
+| `sha256` | `string` | Yes | — | 64 hex digits, normalized to lowercase; verified against actual bytes |
+| `source` | `LibraryFileSource` | Yes | — | Where to read the completed immutable file |
+
+#### JobCompletionAsset
+
+One result asset, without a producer-assigned asset/correlation ID. The backend
+allocates its ID when the whole job completion is committed.
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `name` | `string` | Yes | — | Trimmed, nonblank, 1–200 characters |
+| `tags` | `Array<string>` | No | `[]` | LIB-08 normalization and limits |
+| `thumbnail_key` | `string \| null` | No | `null` | Separate existing-library thumbnail reference, LIB-09 |
+| `primary_file_id` | `string` | Yes | — | Must identify exactly one entry in files |
+| `files` | `Array<LibraryImportFile>` | Yes | — | Nonempty ordered list with unique asset-scoped IDs |
+
+Model-file sources must resolve to distinct objects across the complete message;
+thumbnail references must also be distinct and cannot refer to model files.
+The thumbnail is not a model-file entry. The producer prepares it before completion;
+thumbnail rendering and an external-thumbnail transfer API are outside the handler.
+Initial transform defaults are the ordinary library defaults.
+
+#### JobCompletionMessage
+
+| Field | Type | Required | Default | Constraints / meaning |
+| --- | --- | --- | --- | --- |
+| `schema_version` | `2` | Yes | — | Exact integer version |
+| `message_id` | `string (UUID)` | Yes | — | Transport request identity, not an asset or job-result identity |
+| `job_id` | `string (UUID)` | Yes | — | Canonical nonzero UUID of a pre-existing job |
+| `assets` | `Array<JobCompletionAsset>` | Yes | — | Nonempty complete result set for one successful job |
+
+Example JSON accepted unchanged as a RabbitMQ message body or an SQS body:
+
+```json
+{
+  "schema_version": 2,
+  "message_id": "7f75cf76-c36f-41b6-ac4b-3983b9f35451",
+  "job_id": "443f452a-cb09-4eb5-9087-9643d99c649a",
+  "assets": [
+    {
+      "name": "Oak",
+      "tags": ["tree"],
+      "thumbnail_key": null,
+      "primary_file_id": "sog",
+      "files": [
+        {
+          "id": "sog", "format": "sog", "size_bytes": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "source": {"storage": "library", "path": "oak.sog"}
+        },
+        {
+          "id": "ply", "format": "ply", "size_bytes": 4096,
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "source": {"storage": "incoming", "path": "oak.ply"}
+        }
+      ]
+    }
+  ]
+}
+```
+
+The example hashes/sizes are placeholders for real verified file contents. Version
+1 standalone-asset descriptors are not job-completion messages and are rejected.
+Queue delivery never implicitly creates an unknown job.
+
 ## 4. HTTP, revisions and errors
 
 **API-01.** The canonical JSON API is under `/api/v1`. Reads return metadata, one
@@ -991,8 +1140,8 @@ include `location`, `message` and `type` in `field_errors`. Main mappings:
 | HTTP | code / condition |
 | --- | --- |
 | 401 | `http_error`: missing, invalid or revoked session; `WWW-Authenticate: Bearer` when authentication is required |
-| 404 | `project_not_found` for a project; `not_found` for other missing resources |
-| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict`, `library_client_id_conflict`, `library_client_id_deleted` |
+| 404 | `project_not_found` for a project; `job_not_found` for a job; `not_found` for other missing resources |
+| 409 | `revision_conflict`, `chat_message_conflict`, `reference_conflict` |
 | 413 | `http_error`: local upload exceeds its declared size |
 | 422 | `validation_error`, `invalid_geometry`; some explicit resource checks return `http_error` |
 | 428 | `if_match_required` |
@@ -1149,8 +1298,9 @@ read.
 **LIB-01. Upload.** Lifecycle: create upload → PUT bytes to `upload_url` → complete
 → ready. Creation accepts `name` (1–200 characters, nonblank after trimming),
 `size_bytes`, `format` (`ply` by default; `sog` is also supported), and optional
-client ID, thumbnail reference and tags as defined in LibraryUploadCreate. It creates a pending asset with a
-server-generated `<id>.<format>` key. The current declared-size
+thumbnail reference and tags as defined in LibraryUploadCreate. It creates a pending asset with a
+server-generated `<id>.<format>` key and a single file entry with ID `main`,
+which is also the primary file. The current declared-size
 limit is `2,147,483,648` bytes (2 GiB); the size must be positive. Pending assets
 are excluded from public ready-asset list/get operations and cannot become project
 instances.
@@ -1164,7 +1314,9 @@ If a thumbnail is referenced, its existence and thumbnail constraints in LIB-09
 are also validated before publication. A failed check leaves the item pending.
 
 **LIB-03. Storage.** Domain operations use a common LibraryStorage contract:
-upload/download URLs, inspection/finalization and staged deletion. The adapter
+upload/download URLs, inspection/finalization, source resolution/streaming import
+and staged deletion. Transfer and URL generation remain behind storage interfaces;
+queue selection does not choose the storage provider. The adapter
 computes URLs on reads; the database stores object keys rather than temporary URLs.
 
 - Local: an editor-only streaming PUT writes a temporary file. Exceeding the
@@ -1178,9 +1330,9 @@ computes URLs on reads; the database stores object keys rather than temporary UR
   recover completion.
 
 **LIB-04. Deletion.** Single/bulk delete validate the full selection before making
-changes; duplicate bulk IDs are deduplicated. They remove asset records, model bytes,
-owned thumbnail bytes and all associated cloud instances. They retain the minimal
-client-ID tombstone in LIB-07, not a publicly readable asset. Each affected project's
+changes; duplicate bulk IDs are deduplicated. They remove asset/file records, all model bytes,
+owned thumbnail bytes and all associated cloud instances. A producing job and
+its completed_at are retained; the deleted asset is removed from its relationship. Each affected project's
 revision increments once per batch; other project resources remain and cloud order
 is compacted. An unknown selected ID returns `404` without partial deletion. Already-missing bytes do not
 prevent record deletion. Storage staging encloses SQL commit: bytes are restored
@@ -1195,54 +1347,31 @@ cloud instances only. The file and existing instances remain unchanged.
 
 ### 8.1. Library identity, tags and thumbnails
 
-Library metadata and registration belong to the backend monolith and use the
-same model/record contracts for manual uploads and externally produced results.
+Library metadata and job-result registration belong to the backend monolith.
+Manual uploads and job results use the same asset/file model and record contracts.
 
-**LIB-06. Correlation identity.** Keep the existing server `id`, its foreign keys,
-URLs and model object key. Add a distinct, non-null, immutable `client_id` with
-database-enforced uniqueness across the environment's shared library, including
-pending items. Accept UUID strings, normalize them to lowercase hyphenated form,
-and reject malformed and all-zero UUIDs with `422 validation_error`. Omitted/null
-input generates UUIDv4. This value is neither an Object3D identifier, job ID nor
-message/event ID and grants no write permission. A producer may retain a chosen
-client ID before an asset exists, without a foreign key to a nonexistent row.
+**LIB-06. Asset identity and job ownership.** Every library item has one
+server-generated ID used by resource URLs, file records and project-cloud foreign
+keys. A generated result has a nullable job_id referencing its producing job;
+manual uploads and ungrouped legacy data have job_id=null. Message IDs and file
+variant IDs are separate scopes, not alternate library-item identities. External
+producers never assign an asset ID. The job relationship is the authoritative
+mapping from a completed operation to its assets.
 
-Every LibraryAsset and LibraryUpload response includes `client_id`, `tags` and
-`thumbnail_url`. Cloud references use the server asset `id`; a correlation ID
-does not replace `library_asset_id` on a project cloud.
+Every LibraryAsset and LibraryUpload response includes job_id, tags and
+thumbnail_url. The library does not retain a separate producer-ID reservation
+ledger. Replays of generated results are handled at the job boundary (JOB-02).
 
-**LIB-07. Idempotent creation and registration.** For
-`POST /api/v1/library/uploads`, a new client ID returns `201 LibraryUpload`.
-With no supplied client ID, each request creates a new item as before. With an
-explicit client ID, normalize/validate the payload before comparing its immutable
-creation descriptor: trimmed case-sensitive name, format, declared byte size,
-thumbnail key and normalized tag identities. Compare tags as a set of casefolded
-values, independent of input order and duplicate spelling; retain the original
-successful request's display spelling/order in the stored result.
+**LIB-07. Manual upload creation and completion.** Each valid
+POST /api/v1/library/uploads returns 201 LibraryUpload with a fresh pending asset,
+a single primary main file and a non-null upload URL. Repeating the create request
+creates another pending manual upload; it does not replay a job result or discover
+an existing item by producer identity. Repeating complete on the same ready asset
+returns its current resource without reopening or overwriting ready bytes.
 
-- Same client ID and descriptor: `200`, same server ID, creation timestamp and
-  state. Pending retries return a refreshed upload URL for the same model object;
-  ready retries return the existing asset with `upload_url=null` and must not
-  reopen upload or overwrite content. Defaults changed later remain intact.
-- Same client ID and incompatible descriptor: `409 library_client_id_conflict`,
-  with no metadata, file, cloud, timestamp or project revision changes.
-- Concurrent equal requests converge on one row/ID; concurrent different requests
-  have one winner and a conflict for the loser. Handle the database uniqueness
-  race explicitly rather than returning `500`. Retrying after a lost response or
-  backend restart has the same result.
-- Preserve client-ID reservations after asset deletion with a minimal durable
-  tombstone. Reusing that client ID returns `409 library_client_id_deleted`;
-  public reads return `404`. A late retry must not resurrect a deleted item.
-  A deliberately new logical item uses a new client ID.
-
-Upload preparation compares the request descriptor, not unknown future bytes.
-It does not prove equal model content merely because names and sizes match.
-Registration of an already-produced result also compares verified model SHA-256,
-format/size and normalized metadata; equal size alone cannot establish idempotence.
-A conflicting digest must never replace a ready model. All result-registration
-paths use the same asset record and identity/conflict policy. An importer does
-not write the database directly. File discovery, transport and content verification
-are separate producer/import boundaries, not upload-reservation behavior.
+Manual upload operations cannot populate or complete a job. Generated results
+use the all-assets completion transaction in LIB-15 and JOB-02. Neither job IDs,
+asset IDs nor thumbnail keys grant write permission.
 
 **LIB-08. Tags.** Tags are metadata on the shared asset, not on a project cloud.
 Use an array of strings, default `[]`; null, non-string elements and more than
@@ -1257,98 +1386,307 @@ Persist exactly the normalized list; do not serialize it as a comma-separated
 string. Tags are assigned at creation; the library API has no tag search, taxonomy
 or post-creation metadata PATCH. The defaults PATCH changes only transforms.
 
-**LIB-09. Thumbnail reference and serving.** Persist nullable `thumbnail_key`,
+**LIB-09. Thumbnail reference and serving.** Persist nullable thumbnail_key,
 never a presigned URL, bucket URL or machine-absolute path. A thumbnail is an
 already-produced raster object; rendering/conversion is a producer responsibility.
 
-- A key is at most 255 characters and belongs to
-  `thumbnails/<canonical-client_id>/<filename>`. The filename starts with an
-  ASCII letter/digit, contains only ASCII letters/digits, `.`, `_`, `-`, and ends
-  in lowercase `.png`, `.jpg`, `.jpeg` or `.webp`. Reject other namespaces, extra
-  path components, traversal, backslashes, percent encoding, URLs and absolute
-  paths with `422`. A non-null thumbnail key requires an explicit client ID so
-  the producer can prepare the object before item creation.
-- The referenced object must exist under the configured storage root, be a
-  regular owned object of at most 5 MiB and have the declared raster signature
-  (PNG, JPEG or RIFF/WEBP). Local path resolution must remain inside the storage
-  root and the item's own thumbnail namespace, including through symlinks.
-  A missing/invalid thumbnail prevents ready
-  publication; its validation error must not publish a partially ready item.
-- Manual creation and external result registration accept the same key/tags
-  metadata and use the same validation. These metadata operations reference an
-  existing object; thumbnail rendering/upload and file discovery are producer
-  responsibilities. A manual upload can omit its thumbnail.
-- Once an asset is ready, its referenced thumbnail is immutable like model bytes.
-  A thumbnail is owned by its client-ID namespace, not shared with another asset.
-  Single/bulk deletion stages model and owned thumbnail deletion together and
-  restores both if database commit fails; it must not remove another asset's data.
-- Responses compute `thumbnail_url` through the configured LibraryStorage
-  adapter. Local mode uses `GET /api/v1/library/{asset_id}/thumbnail`; S3 uses an
-  expiring GET URL under the configured prefix with the correct image content
-  type. The backend/domain does not manufacture S3 URLs or expose object keys in
-  place of URLs. Add the thumbnail capability to the adapter contract rather than
-  teaching library business logic about S3 or filesystem paths.
-- Pending items and items without a key return `thumbnail_url=null`. A thumbnail
-  is public only once its asset is ready, under the existing shared-library read
-  policy. Local serving returns `404` for missing/pending/deleted assets or absent
-  thumbnail bytes and sets the matching raster content type. An expired URL is
-  refreshed by rereading the asset; null/unavailable images use the normal UI
-  placeholder, without hiding the model or breaking its download.
+- New references use `thumbnails/<canonical-nonzero-UUID>.<extension>` with
+  lowercase png, jpg, jpeg or webp. The UUID names a storage object, not a second
+  asset identifier. Reject extra components, traversal, backslashes, percent
+  encoding, URLs, absolute paths and malformed keys with 422 validation_error.
+- The referenced object must exist inside the configured library storage root,
+  be a regular file/object of at most 5 MiB and have the matching raster signature
+  (PNG, JPEG or RIFF/WEBP). Local resolution remains within that thumbnail path,
+  including through symlinks. Missing/invalid thumbnails prevent publication.
+- Manual creation and job completion accept the same optional reference. A
+  thumbnail belongs to one asset only: enforce unique non-null thumbnail_key
+  and reject use by another asset or by several results in the same completion.
+  Once ready, its bytes/reference are immutable. Deletion stages every model
+  representation and the owned thumbnail, restoring them on database failure.
+- Responses compute thumbnail_url through the configured LibraryStorage adapter.
+  Local mode uses GET /api/v1/library/{asset_id}/thumbnail; S3 uses an expiring
+  image GET URL under the configured prefix. Storage keys are not public URLs.
+- Pending items and items without a thumbnail return thumbnail_url=null. Images
+  follow the ordinary public ready-library read policy. Local serving returns
+  404 for missing/pending/deleted assets or missing image bytes and sets the
+  raster content type. Expired URLs are refreshed by rereading the asset; absent
+  or unavailable images use the normal UI placeholder.
 
-**LIB-10. Lookup and client compatibility.** Add public
-`GET /api/v1/library/by-client-id/{client_id}` (`getLibraryAssetByClientId`),
-returning `200 LibraryAsset` for a ready item. Normalize/validate the UUID as in
-LIB-06; invalid values return `422`, unknown/pending/deleted values return
-`404 not_found`. Register this path without being shadowed by the existing
-server-ID route. The list endpoint retains its ordering and ready-only behavior;
-it gains the response fields but no pagination/filter semantic change.
+**LIB-10. Reads and client compatibility.** List/get by server asset ID retain
+their ready-only behavior and ordering. Pending/missing/deleted assets return
+404 not_found. Job results are discovered through GET /api/v1/jobs/{job_id},
+which includes the related assets and their file/download metadata. No library
+lookup by producer correlation ID is exposed.
 
-Editor authentication and library file limits apply to manual and external
-registration alike; client IDs and thumbnail keys are not authorization. The
-metadata API does not grant anonymous import access or issue service credentials.
-Existing clients sending only name/size/format still receive a fresh pending
-item with a non-null model upload URL and can PUT/complete as before. OpenAPI and
-frontend DTO/client code must agree with these fields, operation IDs and routes.
-Library list/details display tags and `thumbnail_url` with the placeholder fallback;
-manual creation accepts optional tags/reference metadata without requiring a thumbnail.
-The ordinary upload form may offer optional tags; it must not require users to
-type correlation UUIDs or storage keys. Reference metadata is supplied through
-the API/producer integration, not a technical configuration form for end users.
+Editor authentication applies to manual writes and job creation. Producers use
+broker credentials/permissions: RabbitMQ access in QUEUE-03 or AWS IAM in QUEUE-04. Existing manual clients sending
+name/size/format receive a fresh pending asset and can PUT/complete as before.
+OpenAPI and generated clients agree with the fields and operation IDs. Library
+list/details display tags and the thumbnail placeholder fallback; manual creation
+can supply optional tags/reference metadata without requiring a thumbnail or job.
+The UI does not ask users to type storage UUIDs/keys or internal job configuration.
 
-**LIB-11. Migration and verification.** Upgrading an existing database at revision
-`20261026_0014` backfills each pending/ready item with a
-distinct UUIDv4, `thumbnail_key=null` and `tags=[]`, then enforce client-ID
-non-null/uniqueness. Preserve server IDs, model object keys/bytes, timestamps,
-status, defaults, cloud references/order and all project revisions. Migration
-does not move/download files or hash every legacy model. Retain immutable
-creation descriptors and deletion tombstones durably, including for migrated
-items; updated transform defaults are not part of registration identity.
-Use an isolated populated database copy to check upgrade, existing downloads and
-idempotent repeated `alembic upgrade head`. Creating a fresh database must reach
-the same schema. A durable `library_client_ids` reservation ledger has a unique
-client-ID key for both live and deleted items; asset creation/reservation and
-deletion/tombstoning are transactional. This makes uniqueness span deletion and
-prevents a race between an old retry and deletion. The migration initializes the
-ledger for existing rows; it does not invent a history of already-deleted assets.
+**LIB-11. Migration and verification.** Upgrade populated databases and fresh
+databases to the same record contract in STORE-04–05. Preserve asset IDs, object
+keys/bytes, statuses, timestamps, transform defaults, cloud references/order and
+project revisions. Pre-existing assets are ungrouped until explicitly associated
+by a supported operation; migration does not invent producing jobs.
 
-Conformance scenarios cover legacy/manual uploads without correlation metadata;
-caller-supplied and generated UUIDs; invalid/canonicalized IDs; ready lookup and
-pending/missing/deleted `404`; equal/conflicting and concurrent creation retries;
-restart/lost-response retries; tags normalization/limits; thumbnails present,
-absent, invalid and inaccessible; replay not reopening ready bytes; and deletion
-rollback preserving both model and thumbnail. Test adapter URL generation and
-namespace/ownership checks in both local and S3 modes. Verify migrated populated
-data and existing project clouds separately from a fresh HTTP fixture.
+Verify manual upload compatibility, tags normalization/limits, thumbnails present,
+absent/invalid/inaccessible and independently owned, all-file deletion rollback,
+adapter URL generation and namespace/ownership checks. Check a populated Alembic
+upgrade and repeated upgrade separately from fresh HTTP fixtures.
 
-**LIB-12. Library boundaries and creation events.** Model/thumbnail production,
-file discovery, generation-job scheduling, project attachment and event delivery
-are separate operations from the library metadata API. Ordinary library use does
-not require a generator, worker, queue consumer or browser event stream.
+**LIB-12. Library boundaries and creation events.** File production, generation
+scheduling, project attachment and browser event delivery are separate operations.
+The completion handler receives all ready outputs for an existing job and publishes
+the library records together with job completion (LIB-15, JOB-02).
 
-An implementation emitting `library_item.created` identifies the server asset ID
-and its `client_id` (as `library_client_id` in the event envelope), persists the
-event with the successful ready transition and delivers it only after commit.
-Idempotent replays must not create a second logical creation event.
+If a creation-event mechanism is enabled, an asset event identifies the server
+asset ID and producing job_id. Persist it with the successful publication and
+deliver it only after commit. A replay must not emit new logical asset/job events.
+Neither queue acknowledgement nor a ready asset promises client download/rendering.
+
+### 8.2. Multiple files and job results
+
+**LIB-13. File collection and primary representation.** One library item has one
+or more independently downloadable model files and exactly one primary file.
+Formats may repeat; file IDs, not formats, identify entries. Preserve message
+order in `files`; `primary_file_id` explicitly selects the primary entry. This
+does not create several library items or several project instances.
+
+LibraryAsset and LibraryUpload retain their existing scalar `format`, `size_bytes`
+and `download_url`, always mirroring the primary file. Pending downloads are null.
+ProjectCloud also resolves its format/download URL from the current asset primary
+file. Existing clients/manual uploads remain usable without selecting file variants.
+Public asset reads expose every ready file via adapter-generated URLs. Local
+`GET /api/v1/library/{asset_id}/files/{file_id}/content` serves that file only for
+a ready asset; absent/deleted/pending resources return `404`. The existing content
+route remains a primary-file alias and its URL shape is preserved for primary
+downloads. S3 URLs target the corresponding private object.
+Source locations never appear in public responses. The ready file collection,
+primary choice and bytes are immutable; adding/replacing files requires a new item.
+No new multi-file browser upload/editor is implied by the message import contract.
+
+**LIB-14. Import sources and destination naming.** A job-completion message
+contains all result assets, each with its complete file list, rather than a
+pointer to another JSON manifest. Producers finish every file/thumbnail before
+enqueueing the completion. The import handler
+inside the monolith resolves each source through a provider-neutral storage
+interface. `library` means the configured destination root/bucket prefix. Other
+aliases identify explicitly configured read-only source roots; unconfigured aliases
+are invalid. An alias may point to local storage or S3 without changing the JSON
+or handler. A local source is a path on the backend host/shared volume, not a path
+on the HTTP caller's machine. Sending JSON does not upload model bytes.
+
+If resolution identifies an object already under the destination library root,
+inspect and adopt its existing key without copying or renaming the object. This
+also applies when a different alias resolves to the same physical root/key. It
+must be unowned, in the ready model namespace (not `_uploads/`, staging or
+`thumbnails/`) and not referenced by another asset, primary alias or file entry.
+Distinct file entries cannot resolve to the same object. A filename suffix must
+match the declared format for adopted objects so existing serving contracts hold.
+
+Otherwise copy/stream the file into library storage under a new server-generated
+`<UUIDv4>.<format>` key, independent of the original basename and asset/file IDs.
+Do not overwrite a destination or remove/rename the producer's original. Transfers
+are bounded streaming operations, not whole-file reads into memory. Use staging
+and verify the exact byte count, SHA-256 and LIB-02 signature before finalization.
+S3 ETags are not a replacement for SHA-256. Thumbnail checks remain LIB-09.
+Apply the current 2 GiB limit per model file; primary `size_bytes` is not an
+aggregate quota. No global file-count or total-library quota is added here.
+
+**LIB-15. Atomic result publication and recovery.** Resolve the target job before
+reading/copying result files. Unknown jobs fail without creating a job or assets;
+already completed jobs follow the no-op policy in JOB-02. For an unfinished job,
+validate every file/thumbnail of every result before publication.
+
+In one transaction create all ready assets with their file rows, producing job_id
+and original job_position, then set JobRecord.completed_at. No intermediate
+pending assets or partially completed job are publicly visible. Job result
+publication neither attaches clouds to projects nor changes project revisions.
+Do not hold a database writer transaction while copying gigabytes.
+
+Concurrent deliveries may stage independently. A database compare-and-set/locked
+completion check selects one complete result set; other deliveries return the
+committed job and clean only their own unused copies. Different jobs cannot
+adopt an object or thumbnail already owned by another asset.
+
+Validation or commit failure leaves completed_at=null and no new assets/results.
+Keep adopted library objects and external producer sources unchanged. Remove
+only newly copied objects proven to belong to the failed attempt; never remove
+an unrelated file after a destination UUID collision. Track interrupted attempts
+durably in storage, and check committed ownership before recovery cleanup.
+
+After commit, all model files and owned thumbnails enter normal library deletion,
+including adopted objects; external originals remain producer-owned. Deletion
+restores all staged bytes on SQL failure. It removes that asset from the job's
+surviving results without changing job completion or recreating results on replay.
+
+**LIB-16. Completion validation and failure policy.** A completion is an entire
+successful result set, not an append/update command. Model-file hashes are verified
+before the first successful publication. The minimal job has no producer asset
+key, separate result reservation or result-fingerprint ledger. Once completed,
+the job's first committed result remains authoritative as defined in JOB-02.
+
+Malformed/obsolete message schemas, unknown job IDs, invalid namespaces/formats/
+hashes, already-owned objects and proven missing sources are terminal. Unknown
+jobs use job_not_found; missing sources library_import_source_missing; invalid
+file contents library_import_invalid_file; forbidden/unconfigured sources
+library_import_invalid_source; occupied objects/thumbnails
+library_import_object_conflict. Temporary storage/DB/queue outages retry with
+bounded backoff; exhausted attempts use library_import_unavailable. Inability to
+inspect a source is not evidence that it is absent. A failed transport attempt
+does not mark the minimal job completed; a corrected delivery can target it again.
+
+### 8.3. Message queue boundary and adapters
+
+**QUEUE-01. Contract and composition.** Define an asynchronous MessageQueue
+contract in services/message_queue.py, independent of FastAPI, database transport
+records, boto3, aio-pika, SQS and RabbitMQ. Each delivery contains validated
+JobCompletionMessage, an opaque receipt and a positive attempt count. Provide
+receive (bounded wait), hold (an async context managing delivery ownership), ack,
+retry (delay), reject (durably quarantine a failure) and aclose. Receipt handles
+and message objects never expose provider SDK types to core business services.
+Acknowledgement takes only the receipt; job results are discovered through jobs.
+
+The consumer enters hold around result processing/settlement. Providers own
+connection state, delivery ownership and all renewal tasks inside that context;
+core has no lease timers, visibility timeout or provider-name branches. SQS renews
+visibility while held and stops renewal before changing delivery/ack state.
+RabbitMQ retains an unacknowledged AMQP delivery. Cancellation/failure leaves an
+unsettled delivery recoverable; a failed ownership renewal cancels processing.
+Malformed/oversized bodies are quarantined before invoking domain logic.
+
+The configuration decorator injects RabbitMQ from dev/ or SQS from aws/ based on
+independent configuration. The common consumer runs inside application lifespan,
+not a separate process calling HTTP. Stop/await it before closing the injected
+queue and repository. Disabled queue mode creates no queue/source clients and
+ordinary HTTP works during broker outages. There is no HTTP producer/status API,
+SQLite queue simulation or /api/v1/dev namespace in any environment.
+
+**QUEUE-02. Delivery semantics.** Assume at-least-once delivery without ordering.
+Ack only after the all-assets/job commit or a completed-job no-op. A crash or ack
+loss redelivers safely through JOB-02; transport message IDs are diagnostics, not
+asset identities or a separate body-deduplication registry. Reusing a message ID
+does not grant an append/update operation. Correcting an unfinished job can use
+a new message ID; a completed job still keeps its first successful result.
+
+Temporary failures use delays 1, 2, 4, 8, 16, 32, 60 seconds (capped at 60), up
+to the configured attempt limit (default 5). Retry delays do not hold up unrelated
+messages. Terminal/exhausted failures go durably to the failure queue before the
+original is acknowledged. If forwarding or its confirmation fails, retain/requeue
+the original; ambiguous confirms may duplicate deliveries, never justify dropping
+them. Log message/job IDs, attempt and sanitized error code without credentials,
+receipts or file contents. Read success through GET /api/v1/jobs/{job_id}; inspect
+failures through the broker failure queue and logs, not an application debug API.
+
+**QUEUE-03. Development RabbitMQ transport.** Select message_queue=rabbitmq and
+inject RabbitMQMessageQueue from dev/message_queue.py. The adapter uses aio-pika
+and a real AMQP subscription with manual acknowledgements and prefetch_count=1.
+Connect lazily so merely constructing/exporting the application neither needs a
+running broker nor performs broker I/O. Reconnect after outages and close all
+AMQP resources on application shutdown; stale channel deliveries cannot be
+acknowledged on a replacement channel.
+
+Declare durable quorum input queue (default camera-path.job-completions) and
+failure queue <input>.failed. Disable the input's automatic delivery limit so the
+application controls terminal/exhausted handling. Retry through durable quorum
+queues <input>.retry.<seconds> for the seven delays in QUEUE-02, each with its
+fixed message TTL and dead-letter route back to the input. Configure retry queues
+for at-least-once dead lettering with reject-publish overflow. Publish retries and
+failures as persistent messages with mandatory routing and publisher confirms
+before acking the original. Keep application attempt number in the private
+camera-path-attempt header; combine it with RabbitMQ's redelivery count so process
+crashes do not reset attempts. Failure messages retain original bytes and an
+error_code header. Provider retry/diagnostic headers are not fields of the JSON
+contract and do not leak into jobs/assets.
+
+The body is the full UTF-8 completion JSON, up to 256 KiB. There is no manifest URL
+wrapper and no HTTP authentication/JWT involved in publication. Use the broker's
+credentials. Terminal malformed/version-1 messages go to the failure queue with
+validation_error, without creating jobs/assets. Repeated deliveries use the same
+common completion service and transaction/idempotence rules as SQS.
+
+Supply a local Docker Compose broker with AMQP and management ports bound to
+loopback and a persistent development volume. An operator can publish an existing
+completion.json using rabbitmqadmin (management HTTP API of the broker) or an AMQP
+client. The backend consumes via AMQP; publishing success confirms broker routing,
+not job completion. Autonomous integration tests own a disposable real broker,
+isolated queues/files/database and test credentials, and remove their own resources.
+
+**QUEUE-04. AWS SQS transport.** Poll a configured SQS Standard queue. Each
+MessageBody is exactly the same JobCompletionMessage JSON as RabbitMQ; SQS
+attributes/receipts are adapter details. S3 notifications and manifest-pointer
+envelopes are not accepted. Producers send the complete descriptor after files
+are complete. No SNS topic or S3 notification rule is required.
+
+Use long polling and explicit DeleteMessage after commit/no-op. The SQS adapter
+owns visibility renewal during hold; stop/await renewal before changing visibility
+for retry or deleting the message. On renewal failure, cancel in-flight domain
+processing and leave the delivery unacknowledged. Forward terminal/exhausted
+messages to the configured failure queue with sanitized error attributes before
+deleting the original. Forwarding/ack loss may duplicate messages, not lose them.
+AWS uses the standard credential chain/EC2 role and scoped IAM permissions, not
+editor JWTs or a public import endpoint. Provisioning/deployment and live AWS
+acceptance are separate operational work.
+
+### 8.4. Jobs and result lifecycle
+
+**JOB-01. Minimal job resource.** POST /api/v1/jobs (createJob), with no request
+body, requires the editor and returns 201 Job with a generated UUID, completed_at=null
+and assets=[]. This reserves an empty job only; it does not start a generator,
+publish a start event, claim work or establish a scheduler/progress API. Each
+creation call makes a new job. GET /api/v1/jobs/{job_id} (getJob) is public under
+the existing shared-data policy and returns 200 Job; invalid UUIDs return 422
+validation_error, unknown IDs 404 job_not_found. Neither operation uses a project
+ETag/If-Match. There is no job update/delete endpoint in this contract.
+Creation/read remain available with message consumption disabled.
+
+**JOB-02. Completion identity and replay.** A pre-existing job accepts one whole
+successful completion. The first transaction changing completed_at from null
+publishes its entire result set. The server assigns the UTC timestamp and asset
+IDs; producers cannot choose them. The job ID itself supplies durable completion
+identity, regardless of message ID or queue redelivery.
+
+For a well-formed message targeting an already-completed job, acknowledge success
+without accessing producer sources, creating assets, changing metadata/defaults,
+resetting completed_at or appending/replacing results. This applies even when a
+later message ID/payload differs: first successful completion wins. A deliberate
+new computation/result set uses a new job. No result fingerprint or comparison
+against potentially deleted asset rows is needed for this minimal policy.
+
+Concurrent completion attempts select one winner; all others observe its job
+state. A crash after commit before ack is an ordinary successful replay. A failed
+attempt before commit leaves the empty job available for a corrected completion.
+The queue must never create an unknown job from a completion message.
+
+**JOB-03. Relationships and result reads.** JobRecord.assets is
+Mapped[list[LibraryAssetRecord]] through LibraryAssetRecord.job_id, ordered by
+job_position. A job may produce several assets, each with several files. This is
+a persisted foreign-key relationship, not a stored JSON list, a scan of the global
+library or a second correlation-ID namespace. Ordinary manual assets have both
+job_id and job_position null.
+
+GET job exposes current surviving results and refreshes their storage URLs. The
+frontend can poll that resource and use assets as soon as completed_at is non-null;
+queue submission itself is not a synchronous result response. Removing library
+assets may leave a completed job with assets=[]. Its completed_at remains set,
+and later completion messages cannot resurrect deleted assets. Reading state and
+registering results does not itself add project clouds or browser event delivery.
+
+**JOB-04. Job catalogue.** Public GET /api/v1/jobs (listJobs), without query
+parameters or a request body, returns 200 Array<JobSummary>. Include both pending
+and completed jobs, ordered deterministically by ascending canonical job ID. UUID
+order does not promise creation order; jobs have no creation timestamp. An empty
+database returns []. Compute asset_count from current related rows so deleting a
+result decreases the count without deleting or reopening its job. Do not read
+model bytes, generate asset download URLs or invoke a generator/broker for a list.
+The list works with consumption disabled and during broker outages, and requires
+neither authentication nor an ETag. No pagination or execution/progress states are
+introduced. Clients can refresh this list and the existing detail resource to
+observe external completion; completed_at=null means pending, not proof that a
+generator is running.
 
 **CLOUD-01.** A ready asset can be attached multiple times to one or more projects.
 Each operation creates a separate instance ID, copies current asset defaults,
@@ -1364,9 +1702,11 @@ the backend boundary.
 
 ## 9. Authentication and profile
 
-**AUTH-01.** Public GET operations read shared data; `GET /auth/session` requires
-Bearer authentication. Business writes, local upload, profile update and logout
-require a valid editor session. Login/verify/resend do not require a JWT. The single
+**AUTH-01.** Public GET operations read shared data; GET /auth/session requires
+Bearer authentication. Business writes, job creation, local upload, profile update
+and logout require an editor session. Login/verify/resend require no JWT.
+External job completions use broker credentials rather than HTTP authentication.
+The single
 editor is created/replaced using `editor-create` with an email and a 12–1024-character
 password; there is no public registration. Passwords are stored as Argon2 hashes.
 Replacing credentials revokes sessions and unfinished sign-ins.
@@ -1480,7 +1820,7 @@ history with undo/redo is no longer the active persistence model.
 | --- | --- |
 | Project / scene | `projects`, `anchors`, `scene_points`, `trajectory_segments`, `segment_anchors` |
 | Controls | `motion_profiles`, `speed_keyframes`, `camera_tracks`, `aim_keyframes`, `orientation_keyframes`, `depth_of_field_keyframes`, `lidar_keyframes` |
-| Library | `library_assets`, `library_client_ids`, `project_clouds` |
+| Library / jobs | `library_assets`, `library_asset_files`, `jobs`, `project_clouds` |
 | Chat / profile | `chat_messages`, `user_settings` |
 | Auth | `editors`, `editor_sessions`, `auth_challenges`, `auth_rate_limits` |
 
@@ -1499,8 +1839,8 @@ data; a record describes persisted columns and their database constraints. A mod
 field/default must not be assumed to create a database column/default or CHECK.
 
 - `Base` is the SQLAlchemy `DeclarativeBase` and owns `Base.metadata`; it is not
-  itself a table. All concrete records below are mapped in
-  [persistence/records.py](src/camera_path/persistence/records.py).
+  itself a table. Domain records are mapped in
+  [persistence/records.py](src/camera_path/persistence/records.py). Transport state lives in RabbitMQ/SQS, with no adapter-owned SQL queue records.
 - `Vector3` is a frozen `(x, y, z)` dataclass used by SQLAlchemy composites. It has
   no table or JSON column. `as_tuple()` returns the coordinates in that order.
 - `ProjectChildRecord` is an unmapped mixin adding non-null `project_id`, its
@@ -1532,7 +1872,7 @@ field/default must not be assumed to create a database column/default or CHECK.
 - `alembic_version` is migration bookkeeping, not an application record. It has
   `version_num VARCHAR(32) NOT NULL`, primary key `alembic_version_pkc`, and stores
   the current Alembic revision. Removed snapshot/history tables are not part of
-  this schema. The library reservation ledger is not a generation-job or outbox table.
+  this schema. Jobs are minimal completion/resource records, not a worker queue or outbox.
 
 ### 11.2. Persisted enums
 
@@ -1590,14 +1930,18 @@ Project identity, display name and optimistic-concurrency revision; scene data l
 
 #### LibraryAssetRecord — `library_assets`
 
-Shared file metadata and transform defaults, including pending uploads. Binary
-model content lives in storage, not in this row. The immutable client ID associates
-the item with its durable reservation and with externally produced results.
+Shared item metadata and transform defaults, including pending uploads. Binary
+model content lives in storage, not in this row. The existing format/object_key/
+size_bytes columns mirror the primary LibraryAssetFileRecord for compatibility;
+services maintain this invariant transactionally, not as independent writable data.
+The nullable job foreign key associates generated results with their producing
+job; manual and ungrouped legacy assets have no producing job.
 
 | Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | `id` | `TEXT` | No | — | — | Resource identifier supplied by the application. |
-| `client_id` | `TEXT` | No | — | — | Immutable canonical UUID; unique FK to the reservation ledger. |
+| `job_id` | `TEXT` | Yes | — | — | Producing job; null for manual/ungrouped assets. |
+| `job_position` | `INTEGER` | Yes | — | — | Original zero-based result position within that job; null for manual assets. |
 | `name` | `TEXT` | No | — | — | Display name. |
 | `format` | `TEXT` | No | — | — | Plain text ply/sog validated by the service; not a database enum. |
 | `object_key` | `TEXT` | No | — | — | Unique relative storage key, never a temporary URL. |
@@ -1616,27 +1960,58 @@ the item with its durable reservation and with externally produced results.
 
 - Primary key: `id`.
 - UNIQUE (unnamed): `(object_key)`.
-- UNIQUE `uq_library_assets_client_id`: `(client_id)`.
-- Foreign key `fk_library_assets_client_id`: `(client_id) → library_client_ids(client_id)`; ON DELETE RESTRICT.
+- UNIQUE `uq_library_assets_job_position`: `(job_id, job_position)`.
+- UNIQUE `uq_library_assets_thumbnail_key`: `(thumbnail_key)`; multiple nulls allowed.
+- Index `ix_library_assets_job_id`: `(job_id)`.
+- FK `fk_library_assets_job_id`: job_id → jobs(id), ON DELETE RESTRICT.
+- CHECK `ck_library_assets_job_position`: (job_id IS NULL AND job_position IS NULL) OR
+  (job_id IS NOT NULL AND job_position IS NOT NULL AND job_position >= 0).
+- A generated asset is ready and attached to a completed job at publication; this
+  cross-table invariant is enforced by the completion transaction, not a CHECK.
 - CHECK `ck_library_assets_status`: `status IN ('pending', 'ready')`.
 
-#### LibraryClientIdRecord — `library_client_ids`
+#### LibraryAssetFileRecord — `library_asset_files`
 
-Durable reservation for one logical library item. A live reservation is associated
-with an asset through its unique client-ID foreign key; a tombstone prevents a
-late retry from recreating a deleted item.
+Ordered representation owned by a library asset. Relative keys refer only to
+library storage, never to external producer sources.
 
 | Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| `client_id` | `TEXT` | No | — | — | Canonical UUID supplied by the registration transaction. |
-| `deleted_at` | `DATETIME` | Yes | — | — | Null while live; deletion timestamp for a retained tombstone. |
+| `asset_id` | `TEXT` | No | — | — | Owning library asset. |
+| `id` | `TEXT` | No | — | — | Asset-scoped file ID; manual/legacy single file uses main. |
+| `position` | `INTEGER` | No | — | — | Zero-based order within the asset. |
+| `is_primary` | `BOOLEAN` | No | `False` | `0` | Exactly one per asset, enforced additionally by service validation. |
+| `format` | `TEXT` | No | — | — | Service-validated ply/sog. |
+| `object_key` | `TEXT` | No | — | — | Owned, unique relative library key. |
+| `size_bytes` | `BIGINT` | No | — | — | Declared/verified size. |
+| `sha256` | `TEXT` | Yes | — | — | Verified lowercase digest; null for unhashed legacy/manual data. |
 
-- Primary key: `client_id`.
-- There are no foreign keys, enum columns, additional CHECK/UNIQUE constraints or
-  secondary indexes. The asset's unique FK supplies the live association without
-  a circular asset-ID back-reference.
-- Registration, live/tombstone cardinality and deletion are transactional service
-  invariants as defined in STORE-04.
+- Primary key: `(asset_id, id)`.
+- FK `fk_library_asset_files_asset`: asset_id → library_assets(id), ON DELETE CASCADE.
+- UNIQUE `uq_library_asset_files_object_key`: `(object_key)`.
+- UNIQUE `uq_library_asset_files_position`: `(asset_id, position)`.
+- Partial UNIQUE index `uq_library_asset_files_primary`: `(asset_id)` WHERE is_primary = 1.
+- Exactly one primary, contiguous positions, valid IDs/size/hash, primary-column
+  mirroring and non-sharing with thumbnail keys are transactional service invariants.
+  A pending/manual primary may mirror the owner's object_key but not another asset's.
+
+#### JobRecord — `jobs`
+
+Minimal persisted job state, created before results exist. The assets relationship
+is supplied by child foreign keys and is not a column or separate ID ledger.
+
+| Column | SQL type | Nullable | ORM insert default | SQL default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| `id` | `TEXT` | No | — | — | Server-generated job UUID. |
+| `completed_at` | `DATETIME` | Yes | — | — | Null while awaiting results; immutable UTC completion time afterwards. |
+
+- Primary key: id. No additional scalar columns, queue/worker metadata or indexes.
+- Relationship: assets: Mapped[list[LibraryAssetRecord]], back_populates=job,
+  through library_assets.job_id and ordered by job_position. The reverse job
+  relationship is nullable. Neither relationship is a serialized database column.
+- No deletion cascade removes library results when a job is referenced. The
+  minimal API does not delete jobs; their completed state remains after assets
+  are individually deleted from the library.
 
 #### ProjectCloudRecord — `project_clouds`
 
@@ -1999,31 +2374,38 @@ business validation:
 
 ### 11.5. Schema upgrades and identifier lifecycle
 
-**STORE-04. Client-ID reservations and schema upgrades.** The unique foreign key
-from `library_assets.client_id` to `library_client_ids.client_id` associates each
-asset with one durable reservation. It supplies lookup uniqueness/indexing; no
-duplicate nonunique client-ID index is needed. Canonical UUID syntax, normalized
-tag contents and thumbnail ownership are service validations.
+**STORE-04. Job/result schema and upgrades.** Persist minimal jobs in jobs and
+their ordered library results through nullable library_assets.job_id/job_position.
+Exactly one successful completion is enforced by a transactional completed_at
+check/CAS. Creating all assets/file rows and setting completed_at commit together.
+The completion timestamp remains after result deletion and is the replay guard;
+no producer-ID reservation ledger or result-fingerprint table is retained.
 
-The asset's immutable `name`, `format`, `size_bytes`, `thumbnail_key` and `tags`
-columns reconstruct the registration descriptor. Transform defaults are excluded
-from identity. The library metadata schema has no model-content checksum column
-or generation-job foreign key.
+Upgrade from revision 20261026_0014 applies migration 20261101_0015 directly to
+the final jobs/result schema, adding jobs, library result columns/index/constraints,
+tags/thumbnails and file collections. No intermediate
+producer-ID table or column is created. Previously released schema revisions
+remain unchanged.
 
-The live ledger row and asset are created together in one transaction. Service
-invariants require exactly one asset for a live reservation, and no asset when
-`deleted_at` is non-null. Asset deletion and setting `deleted_at` commit together;
-the ledger row is retained and cannot be reused or removed by normal library
-operations. These cardinality/lifecycle rules are transactional service invariants,
-not a claim that the one-direction FK enforces them by itself.
+Existing assets have both result-link columns null; migration does not invent
+producing jobs. Keep server IDs, every object key/format/size/status, transforms,
+timestamps, cloud references/order and project revisions. Fresh databases and
+populated upgrades reach the same schema. Repeated upgrade does not create jobs,
+move/hash/copy model bytes or alter existing completion timestamps.
 
-Upgrading from schema revision `20261026_0014` backfills a distinct client ID and
-live ledger row for each existing asset, initializes `tags=[]` and
-`thumbnail_key=null`, and applies non-null/unique/FK constraints after the backfill.
-It preserves model bytes, server IDs, timestamps, defaults, clouds and revisions,
-and does not invent tombstones for previously deleted assets. Fresh creation and
-upgrade reach the record schema in section 11.3. The ledger is not an externally
-callable event queue.
+**STORE-05. File collections and queue schema upgrades.** Databases predating
+file collections gain one main primary file for every pending/ready asset, using
+its existing object key/format/size and sha256=null. Migration does not hash or
+rename existing files. New tags default to [], thumbnail_key to null.
+
+Queue transport state is external to SQLite. The migration adds no
+dev inbox table. Version-1 standalone-asset bodies are quarantined by either
+broker adapter, without fabricating jobs or library entries.
+
+Fresh databases and populated upgrades agree with section 11.3. Normal operation
+does not discard job state or accepted messages. Refuse a downgrade that loses
+jobs, result links or multi-file references unless an explicit
+backup/data-conversion procedure makes the downgrade safe.
 
 ### 11.6. Configuration and operations
 
@@ -2045,11 +2427,66 @@ are not committed.
 | `CAMERA_PATH_AUTH_EMAIL_FROM`, `CAMERA_PATH_AUTH_SMTP_HOST`, `CAMERA_PATH_AUTH_SMTP_PORT` | Sender / loopback SMTP host / default port 1025 |
 | `OPENAI_API_KEY`, `CAMERA_PATH_OPENAI_MODEL` | Optional chat key / default model `gpt-5.6-luna` |
 | `CAMERA_PATH_DEV_USER_ID` | Shared profile key, default `dev-user` |
+| `CAMERA_PATH_MESSAGE_QUEUE` | none / rabbitmq / sqs; default none |
+| `CAMERA_PATH_MESSAGE_QUEUE_MAX_ATTEMPTS` | Positive attempt limit; default 5 |
+| `CAMERA_PATH_MESSAGE_QUEUE_LEASE_SECONDS` | SQS visibility duration only; default 60, renewed inside the SQS adapter |
+| `CAMERA_PATH_RABBITMQ_URL` | Secret AMQP connection URL; default amqp://guest:guest@127.0.0.1:5672/ |
+| `CAMERA_PATH_RABBITMQ_QUEUE` | Input queue name, default camera-path.job-completions; failure/retry names derive from it |
+| `CAMERA_PATH_LIBRARY_IMPORT_SOURCES` | JSON source-alias map; default {}; library is reserved for the destination |
+| `CAMERA_PATH_AWS_SQS_QUEUE_URL`, `CAMERA_PATH_AWS_SQS_FAILURE_QUEUE_URL` | Required distinct URLs with sqs; not used by rabbitmq/none |
+
+Import source configuration is adapter configuration, not a core branch on
+drivers. Example dev map: `{"incoming":{"driver":"local","root":"/data/incoming"}}`;
+AWS map: `{"incoming":{"driver":"s3","bucket":"producer-output","prefix":"ready/"}}`.
+Aliases use 1–64 ASCII letters/digits/underscores/hyphens, excluding reserved
+`library`; an unknown driver, incomplete root/bucket configuration or incompatible
+queue/connection configuration fails validation. Local roots are backend-host
+directories; S3 identities/credentials stay in adapter configuration. Disabled
+queue mode neither requires sources/AWS credentials nor starts a consumer.
+SQS polling waits up to 20 seconds, checks payloads against the same 256 KiB
+application limit and validates lease duration against provider bounds. Queue
+unavailability is reported/retried without hanging unrelated HTTP requests or
+changing `/health` into a readiness guarantee.
 
 The AWS adapter uses the configured region/profile or standard credentials chain;
 specific credentials are not part of the specification. S3/SMTP/SES are selected
 in the composition root. Project operations do not depend on the bytes/email
 delivery mechanism.
+
+**OPS-04. Application composition.** Wrap the core create_app factory with a
+configuration decorator in [composition.py](src/camera_path/composition.py). The
+wrapper resolves Settings, accepts existing repository/storage overrides, selects
+concrete adapters and injects a provider-independent AppDependencies value into
+the factory. Preserve the public create_app(app_settings=None, repository=None,
+library_storage=None) calling convention. Overrides take precedence over configured
+storage; route capabilities follow the actual injected adapter.
+
+Select filesystem/S3 library storage, SMTP/SES code delivery, optional RabbitMQ/SQS
+message transport and each configured local/S3 import source in the wrapper.
+These choices remain independent; do not infer storage or email provider from
+the queue mode. Disabled message consumption builds no queue/source clients or
+consumer. With second factor off, construct no email sender. Import AWS SDKs only
+when their adapters are selected; ordinary local startup needs no AWS dependency,
+credentials or provider connection.
+
+The core factory creates common domain services, HTTP routes, middleware, error
+handlers, OpenAPI behavior and the lifespan using injected contracts. It contains
+no dev/AWS imports, provider selection or adapter-specific route registration.
+AuthService receives its email sender rather than selecting/importing SMTP/SES.
+The composition wrapper adds only the filesystem content/thumbnail routes when
+filesystem storage is selected. It adds no job producer/status routes in any
+mode; /api/v1/dev returns 404 and never appears in OpenAPI. Broker selection
+changes no HTTP schemas or routes. The finished OpenAPI schema is the same for
+none, rabbitmq and sqs (apart from hidden filesystem byte-serving routes).
+
+Keep lifecycle ownership explicit: initialize the repository before serving and
+start the optional consumer once per lifespan; cancel and await it on shutdown,
+leaving unfinished deliveries recoverable. Close a repository created by the
+wrapper, while leaving an explicitly supplied repository to its caller. Always
+close queue resources, including startup/consumer failures. Adapter
+composition must not initialize the database, poll queues or send email while
+merely constructing/exporting the app. Apply the HTTP/storage/queue/auth contracts
+and migrations defined in this specification. No debug HTTP namespace is created.
 
 **OPS-02.** `/health` returns `{status:"ok"}` and is a liveness endpoint, not a
 complete database/S3/SES/OpenAI check. `/docs` serves Scalar; OpenAPI is available at
@@ -2067,7 +2504,8 @@ a production deployment.
 
 ## 12. HTTP operation inventory
 
-**HTTP-01.** The table defines the 71 canonical HTTP operations.
+**HTTP-01.** The table defines 73 always-mounted canonical HTTP operations.
+Message producers use the broker directly; there are no dev-only HTTP operations.
 Every path includes `/api/v1`. Request/response DTO names correspond to schemas in
 [openapi.json](openapi.json). The OpenAPI artifact and generated frontend clients
 must agree with this inventory, including field requirements/nullability, exact
@@ -2084,8 +2522,10 @@ successful statuses listed here.
 | `POST` | `/api/v1/auth/verify` | VerifyRequest | 200 → TokenResponse |
 | `GET` | `/api/v1/library` | — | 200 → LibraryAsset[] |
 | `POST` | `/api/v1/library/bulk-delete` | LibraryAssetsDelete | 204 → — |
-| `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 new / 200 replay → LibraryUpload |
-| `GET` | `/api/v1/library/by-client-id/{client_id}` | — | 200 → LibraryAsset |
+| `POST` | `/api/v1/library/uploads` | LibraryUploadCreate | 201 → LibraryUpload |
+| `POST` | `/api/v1/jobs` | — (editor) | 201 → Job |
+| `GET` | `/api/v1/jobs` | — | 200 → JobSummary[] |
+| `GET` | `/api/v1/jobs/{job_id}` | — | 200 → Job |
 | `DELETE` | `/api/v1/library/{asset_id}` | — | 204 → — |
 | `GET` | `/api/v1/library/{asset_id}` | — | 200 → LibraryAsset |
 | `POST` | `/api/v1/library/{asset_id}/complete` | — | 200 → LibraryAsset |
@@ -2157,7 +2597,8 @@ successful statuses listed here.
 | `GET /docs` | Scalar HTML |
 | `GET /api/v1/openapi.json` | Generated OpenAPI |
 | `PUT /api/v1/library/{asset_id}/content` | Local adapter only, editor, raw bytes → `204`; no project If-Match |
-| `GET /api/v1/library/{asset_id}/content` | Local adapter only, public ready bytes |
+| `GET /api/v1/library/{asset_id}/content` | Local adapter only, public ready primary-file bytes |
+| `GET /api/v1/library/{asset_id}/files/{file_id}/content` | Local adapter only, public ready bytes for the selected owned representation; LIB-13 |
 | `GET /api/v1/library/{asset_id}/thumbnail` | Local adapter only, public ready raster image; LIB-09 |
 
 The unversioned project API is mounted from `routers/api.py`. It provides compatible
@@ -2178,8 +2619,14 @@ tests (paths relative to `backend/tests/`):
 | TIME-01–05 | Defaults, duplicate positions, delete/recreate, static LiDAR singleton | `test_delete_timelines.py`, `test_depth_of_field_timeline.py`, `test_lidar_timeline.py` |
 | GEOM-01–06 | Endpoints, C² spline, tangent constraints, unchanged spirals, adaptive approximation, distance/time | `test_geometry.py`, `test_trajectory_planner.py` |
 | LIB-01–05, CLOUD-01–02 | Real small PLY/SOG bytes, complete/retry, instances/defaults/order, delete rollback | `test_library.py`, `test_s3_library.py`, `test_project_clouds.py`, `test_library_delete.py`, `test_library_bulk_delete.py` |
-| LIB-06–12, STORE-04 | Client IDs, replay/conflict/concurrency, records/schema upgrade, tags, thumbnail ownership/URLs, lookup and legacy compatibility | Library HTTP scenarios in `integration/tests/test_library.py`, populated-database upgrade checks and storage-adapter checks |
+| LIB-06–12, STORE-04 | Server asset IDs, manual uploads, tags, unique thumbnail ownership/URLs; existing assets remain ungrouped and retain their files | Library HTTP scenarios, populated-database upgrade and storage-adapter checks |
+| LIB-13–16, STORE-05 | Several assets/files per completion; primary aliases; adopted/copied objects; hash/size/signature checks; all-results atomicity; legacy main entry; deletion/rollback/recovery and ownership races | Isolated local completion/storage and populated-upgrade scenarios |
+| JOB-01–03 | Empty job creation; public reads; unknown job rejection; completed_at and ordered relationship; first-completion wins; concurrent/new-message-ID replays; result deletion never reopens/recreates | Autonomous job/completion HTTP scenarios and transactional failure/restart checks |
+| JOB-04 | Public empty/populated catalogue; deterministic ordering; persistence across restart; counts after completion/deletion; independence from queue mode | Autonomous HTTP catalogue and real broker completion scenarios |
+| QUEUE-01–03 | Real RabbitMQ publication; no debug HTTP routes in any mode; body/UUID normalization; durable messages; restart/redelivery; retry/exhaustion and post-commit ack loss | Autonomous HTTP + real broker scenarios and focused queue-contract/failure-injection checks |
+| QUEUE-04 | Same payload and handler; SQS polling/ack/visibility/failure forwarding; provider-independent core | Deterministic adapter contract checks; separately recorded live AWS acceptance |
 | AUTH-01–05, PROFILE-01 | Email flow, invalid/replayed tokens, persistent attempts, concurrent verify, logout, partial settings | `test_auth.py`, `test_email_auth.py`, `test_user_settings.py`, `test_config.py` |
+| OPS-04 | Independent RabbitMQ/SQS and storage selection; invariant HTTP/OpenAPI; provider-free core; consumer/queue/repository lifecycle | Composition checks and autonomous dev/default HTTP scenarios |
 | CHAT-01–05 | Idempotent messages, atomic tool edits, history, SSE delta/result/error, unavailable provider | `test_agent.py`, `test_agent_lidar.py`, `test_api.py` |
 
 This is a verification map, not a claim that existing tests prove every edge case.
@@ -2227,10 +2674,11 @@ does not cover every possible exception. Extending error handling must retain
 atomic commit semantics; a missing `result` does not prove rollback when the
 connection is lost.
 
-**GAP-04.** There is no complete server-side 3DGS parser/sha256 validation, global
-file-count quota or finished lifecycle for expired pending uploads. The current
-declared-size validation limit is 2 GiB. A signed S3 PUT currently does not prevent
-oversized bytes from being accepted before complete.
+**GAP-04.** Container-signature checks do not constitute a complete server-side
+3DGS parser. Imports verify SHA-256; legacy/manual files may retain sha256=null.
+A global file-count quota and a finished lifecycle for expired pending manual
+uploads are not specified. The per-file declared-size limit is 2 GiB. A signed
+S3 PUT does not by itself prevent oversized bytes before completion validation.
 
 **GAP-05.** Older documents/README text may lag behind the contract. In particular,
 descriptions of snapshot undo/redo, a mandatory aim key at zero, a Catmull–Rom planner
@@ -2247,7 +2695,7 @@ the other links do not freeze the file structure during refactoring.
 
 | Area | Source |
 | --- | --- |
-| HTTP composition / errors | [api.py](src/camera_path/api.py), [routers/](src/camera_path/routers/) |
+| HTTP composition / errors | [api.py](src/camera_path/api.py), [composition.py](src/camera_path/composition.py), [routers/](src/camera_path/routers/) |
 | DTOs and defaults | [models.py](src/camera_path/models.py); DTOs in services/library.py, services/project_clouds.py, services/user_settings.py, routers/auth.py |
 | Database records | [persistence/records.py](src/camera_path/persistence/records.py); SQLAlchemy record classes as defined in DATA-05 |
 | Application operations | [services/](src/camera_path/services/) |

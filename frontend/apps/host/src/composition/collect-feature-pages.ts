@@ -1,7 +1,7 @@
 import type { FeaturePage, FeatureSlots } from "@camera-path/slots";
 
 /** These namespaces are owned by native Next routes and cannot be shadowed. */
-const nativeRoots = new Set(["projects", "library", "api", "_next"]);
+const nativeRoots = new Set(["projects", "library", "jobs", "api", "_next"]);
 
 export function collectFeaturePages(
   features: readonly FeatureSlots[],

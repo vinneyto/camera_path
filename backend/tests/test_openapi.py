@@ -187,3 +187,13 @@ def test_exported_schema_is_generated_from_the_application(app, tmp_path) -> Non
 
 def test_checked_in_schema_is_current(app) -> None:
     assert json.loads(Path("openapi.json").read_text(encoding="utf-8")) == app.openapi()
+
+
+@pytest.mark.parametrize("provider", ["none", "rabbitmq"])
+def test_queue_provider_does_not_add_http_routes(provider):
+    if provider == "rabbitmq":
+        pytest.importorskip("aio_pika")
+    app = create_app(Settings(_env_file=None, message_queue=provider))
+    schema = app.openapi()
+    assert schema == json.loads(Path("openapi.json").read_text())
+    assert not any(path.startswith("/api/v1/dev") for path in schema["paths"])

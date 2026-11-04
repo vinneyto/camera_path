@@ -28,17 +28,6 @@ class AuthService:
         self.ttl = settings.jwt_ttl_seconds
         self.second_factor = settings.auth_second_factor
         self.sender = sender
-        if self.second_factor == "email" and self.sender is None:
-            if settings.auth_email_delivery == "ses":
-                from camera_path.aws.auth_email import SesAuthEmailSender
-
-                self.sender = SesAuthEmailSender(settings)
-            else:
-                from camera_path.dev.auth_email import SmtpAuthEmailSender
-
-                self.sender = SmtpAuthEmailSender(
-                    settings.auth_email_from, settings.auth_smtp_host, settings.auth_smtp_port
-                )
 
     def signing_secret(self) -> str:
         if self.secret is None or len(self.secret.encode()) < 32:
@@ -99,7 +88,8 @@ class AuthService:
 
     async def deliver(self, challenge_id: str, recipient: str, code: str, digest: str) -> dict:
         try:
-            assert self.sender is not None
+            if self.sender is None:
+                raise AuthEmailError("Email delivery is not configured")
             await self.sender.send_code(recipient, code)
         except AuthEmailError:
             # Failed delivery leaves an unusable challenge, never a session. Do not log payloads.

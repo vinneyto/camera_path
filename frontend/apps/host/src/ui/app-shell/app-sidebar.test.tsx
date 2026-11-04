@@ -13,6 +13,8 @@ it.each([
   ["/projects/scene", "Projects"],
   ["/library", "Library"],
   ["/library/cloud", "Library"],
+  ["/jobs", "Jobs"],
+  ["/jobs/job-1", "Jobs"],
   ["/sift", "SIFT lab"],
   ["/unknown", null],
 ])("highlights the current section at %s", (pathname, active) => {
@@ -22,15 +24,20 @@ it.each([
       <AppSidebar />
     </SlotProvider>,
   );
-  for (const label of ["Projects", "Library", "SIFT lab"]) {
+  const links = {
+    Projects: "/",
+    Library: "/library",
+    Jobs: "/jobs",
+    "SIFT lab": "/sift",
+  };
+  for (const [label, href] of Object.entries(links)) {
     const link = screen.getByRole("link", { name: label });
     expect(link.getAttribute("aria-current")).toBe(
       label === active ? "page" : null,
     );
-    expect(link.getAttribute("href")).toBe(
-      label === "Projects" ? "/" : label === "Library" ? "/library" : "/sift",
-    );
+    expect(link.getAttribute("href")).toBe(href);
   }
+  expect(screen.getAllByRole("link", { name: "Jobs" })).toHaveLength(1);
 });
 
 it("opens account and settings contributions together from the persistent sidebar", async () => {

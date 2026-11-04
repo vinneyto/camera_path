@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "message_id": "287c2733-1c91-41a4-b74e-9ae375e10dfd",
+  "job_id": "c5b8cfc0-edb9-4af3-8850-3811cbd970fd",
+  "assets": [
+    {
+      "name": "Local cloud",
+      "tags": [
+        "local"
+      ],
+      "thumbnail_key": null,
+      "primary_file_id": "file-1",
+      "files": [
+        {
+          "id": "file-1",
+          "format": "ply",
+          "size_bytes": 49,
+          "sha256": "c5b0cb9c62bccfaf37ebe14555891a7a22e80d926d27f81531224d9c85a15436",
+          "source": {
+            "storage": "incoming",
+            "path": "cloud-full.ply"
+          }
+        },
+        {
+          "id": "file-2",
+          "format": "ply",
+          "size_bytes": 65,
+          "sha256": "17e597478315b7d0ec5e4e3b6eb085f115fda862a76bebbaa9dbbf6c9210a525",
+          "source": {
+            "storage": "incoming",
+            "path": "cloud-preview.ply"
+          }
+        }
+      ]
+    }
+  ]
+}

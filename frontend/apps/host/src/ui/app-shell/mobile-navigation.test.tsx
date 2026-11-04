@@ -66,6 +66,16 @@ it("opens the shared profile from the dropdown and returns to navigation after c
   expect(screen.getByRole("dialog", { name: "Navigation" })).toBeTruthy();
 });
 
+it("offers only the jobs list in mobile navigation and closes on selection", async () => {
+  mount();
+  fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
+  const jobs = await screen.findByRole("link", { name: "Jobs" });
+  expect(jobs.getAttribute("href")).toBe("/jobs");
+  expect(screen.getAllByRole("link", { name: "Jobs" })).toHaveLength(1);
+  fireEvent.click(jobs);
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
 it("closes the mobile dropdown when switching to a desktop width", async () => {
   const { desktop, listeners } = mount();
   fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));

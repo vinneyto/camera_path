@@ -21,6 +21,7 @@ export function useDeleteLibraryAssets() {
             typeof path === "string" &&
             (path === "/api/v1/library" ||
               assetIds.some((id) => path === `/api/v1/library/${id}`) ||
+              /^\/api\/v1\/jobs(?:\/|$)/.test(path) ||
               /^\/api\/v1\/projects(?:\/|$)/.test(path))
           );
         },
