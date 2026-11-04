@@ -27,7 +27,7 @@ async def test_bulk_delete_is_one_revision_and_restores_batch_on_failure(
             removed = [await upload(client, "First"), await upload(client, "Second")]
             kept = await upload(client, "Keep")
             project = (await client.post("/api/v1/projects", json={"name": "Scene"})).json()["id"]
-            url = f"/api/v1/projects/{project}/clouds"
+            url = f"/api/v1/projects/{project}/scene-objects"
             for index, asset in enumerate([removed[0], kept, removed[1], removed[0], kept]):
                 assert (
                     await client.post(
@@ -40,7 +40,7 @@ async def test_bulk_delete_is_one_revision_and_restores_batch_on_failure(
             second_project = (
                 await client.post("/api/v1/projects", json={"name": "Second scene"})
             ).json()["id"]
-            second_url = f"/api/v1/projects/{second_project}/clouds"
+            second_url = f"/api/v1/projects/{second_project}/scene-objects"
             for index, asset in enumerate(removed):
                 assert (
                     await client.post(
@@ -87,7 +87,7 @@ async def test_bulk_delete_is_one_revision_and_restores_batch_on_failure(
                 assert after.headers["etag"] == '"6"'
                 assert second_after.headers["etag"] == '"3"'
                 assert second_after.json() == []
-                assert [cloud["position"] for cloud in after.json()] == [0, 1]
+                assert [cloud["sort_order"] for cloud in after.json()] == [0, 1]
                 assert all(cloud["library_asset_id"] == kept["id"] for cloud in after.json())
                 for asset in removed:
                     assert (await client.get(asset["upload_url"])).status_code == 404

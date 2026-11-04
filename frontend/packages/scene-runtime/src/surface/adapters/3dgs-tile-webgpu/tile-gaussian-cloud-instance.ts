@@ -1,6 +1,6 @@
 import type { GaussianCloud } from "3dgs-tile-webgpu";
 import type { Intersection, Object3D, Ray } from "three";
-import { Box3, Sphere, Vector3 } from "three/webgpu";
+import { Box3, Matrix3, Sphere, Vector3 } from "three/webgpu";
 
 import type { GaussianCloudInstance } from "@camera-path/scene-runtime/surface/model/gaussian-rendering-backend";
 import type {
@@ -44,7 +44,9 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
     const normal =
       intersection.face?.normal
         .clone()
-        .transformDirection(intersection.object.matrixWorld)
+        .applyMatrix3(
+          new Matrix3().getNormalMatrix(intersection.object.matrixWorld),
+        )
         .normalize() ?? ray.direction.clone().negate().normalize();
     return {
       normal: normal.toArray(),

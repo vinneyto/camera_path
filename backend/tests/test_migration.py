@@ -41,7 +41,7 @@ def test_cloud_defaults_migration_preserves_existing_rows(tmp_path, monkeypatch)
             "INSERT INTO project_clouds (id, project_id, library_asset_id, position, visible) "
             "VALUES ('c', 'p', 'a', 0, 1)"
         )
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261101_0015")
     with sqlite3.connect(database_path) as connection:
         assert connection.execute(
             "SELECT default_rotation_x_deg, default_rotation_y_deg, "
@@ -282,8 +282,8 @@ def test_library_file_upgrade_preserves_populated_database_and_ownership(tmp_pat
             "INSERT INTO project_clouds(id,project_id,library_asset_id,position,visible) "
             "VALUES ('c','p','ready',0,1)"
         )
-    command.upgrade(config, "head")
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261101_0015")
+    command.upgrade(config, "20261101_0015")
     with sqlite3.connect(database_path) as connection:
         assets = connection.execute(
             "SELECT id,job_id,object_key,default_rotation_x_deg,default_scale,"
@@ -318,7 +318,7 @@ def test_job_migration_downgrade_preserves_jobs(tmp_path, monkeypatch, completed
     database_path = tmp_path / "job-downgrade.sqlite3"
     monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{database_path}")
     config = Config("alembic.ini")
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261101_0015")
     with sqlite3.connect(database_path) as connection:
         connection.execute("INSERT INTO jobs(id,completed_at) VALUES ('job',?)", (completed_at,))
     with pytest.raises(RuntimeError, match="Refusing lossy downgrade"):
@@ -348,7 +348,7 @@ def test_job_migration_round_trip_preserves_original_schema_and_assets(tmp_path,
         )
         before = connection.execute("SELECT * FROM library_assets").fetchall()
         schema = connection.execute("PRAGMA table_info(library_assets)").fetchall()
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261101_0015")
     command.downgrade(config, "20261026_0014")
     with sqlite3.connect(database_path) as connection:
         assert connection.execute("SELECT * FROM library_assets").fetchall() == before
@@ -362,7 +362,7 @@ def test_job_migration_round_trip_preserves_original_schema_and_assets(tmp_path,
         )
         assert connection.execute("SELECT revision FROM projects").fetchone() == (9,)
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261101_0015")
     with sqlite3.connect(database_path) as connection:
         assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone() == (0,)
         assert connection.execute(

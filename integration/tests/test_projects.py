@@ -21,7 +21,7 @@ def test_metadata_public_reads_revision_guards_and_reset(editor):
         "/camera/orientation",
         "/camera/depth-of-field",
         "/camera/lidar",
-        "/clouds",
+        "/scene-objects",
         "/chat/messages",
     ]:
         assert b.request("GET", p.path + suffix, auth=False).headers["etag"] == '"0"'

@@ -31,3 +31,13 @@
 - Run API generation checks, module map freshness, package boundaries, typecheck, lint, tests, build and formatting checks before delivering architectural changes.
 
 - User preferences live in the application-scoped Zustand settings store. Host creates the store and its actions above project scopes. Features read `useUserSettings` from store and call `useUserSettingsActions` from actions; API provides only HTTP clients for these settings. Loading, local persistence, saving, status changes and renderer reloads belong to actions.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

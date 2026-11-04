@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, inspect, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camera_path.models import (
@@ -18,8 +18,8 @@ from camera_path.persistence.database import create_engine_and_session_factory
 from camera_path.persistence.records import (
     AnchorRecord,
     Base,
-    ProjectCloudRecord,
     ProjectRecord,
+    SceneObjectRecord,
     TrajectorySegmentRecord,
 )
 from camera_path.repositories.aim_timeline import AimTimelineRepository
@@ -54,6 +54,12 @@ class ProjectRepository:
             if self._initialized:
                 return
             async with self.engine.begin() as connection:
+                if await connection.run_sync(
+                    lambda conn: inspect(conn).has_table("project_clouds")
+                ):
+                    raise RuntimeError(
+                        "Legacy scene database: run alembic upgrade head before starting"
+                    )
                 await connection.run_sync(Base.metadata.create_all)
             self._initialized = True
 
@@ -156,7 +162,7 @@ class ProjectRepository:
             previous = await self._load(session, draft.id)
             if clear_clouds:
                 await session.execute(
-                    delete(ProjectCloudRecord).where(ProjectCloudRecord.project_id == draft.id)
+                    delete(SceneObjectRecord).where(SceneObjectRecord.project_id == draft.id)
                 )
             await self._sync_project_changes(session, previous, committed)
         return committed.model_copy(deep=True)

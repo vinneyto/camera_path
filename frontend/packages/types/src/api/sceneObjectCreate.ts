@@ -6,11 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface ProjectCloudCreate {
+export interface SceneObjectCreate {
+  library_asset_file_id?: string | null;
   library_asset_id: string;
-  /**
-     * @minItems 3
-     * @maxItems 3
-     */
-  translation?: [number, number, number];
+  parent_id?: string | null;
+  position?: [number, number, number] | null;
+  quaternion?: [number, number, number, number] | null;
+  scale?: [number, number, number] | null;
 }

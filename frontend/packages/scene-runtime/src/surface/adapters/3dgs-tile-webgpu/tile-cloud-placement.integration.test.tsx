@@ -14,7 +14,7 @@ import {
   configureInteractiveRaycasterLayers,
   createRenderPipelineEvents,
 } from "@camera-path/render-pipeline";
-import type { LibraryAsset, ProjectCloud } from "@camera-path/types/api";
+import type { LibraryAsset, SceneObject } from "@camera-path/types/api";
 import { createRoot, extend } from "@react-three/fiber";
 import { readFileSync } from "node:fs";
 import { act, useEffect } from "react";
@@ -176,7 +176,7 @@ it.each([
       default_scale: 1,
       default_offset: [0, 0, 0],
     };
-    const clouds: ProjectCloud[] = [];
+    const clouds: SceneObject[] = [];
     const keys = new Map<string, string>();
     let preview: PlacementPreview | null = null;
     let placed: PlacementPreview | null = null;
@@ -286,17 +286,19 @@ it.each([
       clouds.push({
         id: "first",
         name: "first",
-        position: 0,
+        sort_order: 0,
+        parent_id: null,
+        library_asset_file_id: "main",
         project_id: "project",
         library_asset_id: asset.id,
         download_url: asset.download_url!,
         format: asset.format,
-        translation: [0, 0, 0],
-        rotation_deg: [0, 0, 0],
-        scale: 1,
-        offset: [0, 0, 0],
+        position: [0, 0, 0],
+        quaternion: [0, 0, 0, 1],
+        scale: [1, 1, 1],
+
         visible: true,
-      } as ProjectCloud);
+      } as SceneObject);
       await renderScene();
       expect(hit(0)).toBeDefined();
       for (const [index, x] of [
@@ -329,10 +331,14 @@ it.each([
         clouds.push({
           ...clouds[0],
           id,
-          translation: [x, 0, 0],
-          rotation_deg: [0, 35, 0],
-          scale: 2,
-          offset: [0.1, 0, 0],
+          position: [x, 0, 0],
+          quaternion: [
+            0,
+            Math.sin((35 * Math.PI) / 360),
+            0,
+            Math.cos((35 * Math.PI) / 360),
+          ],
+          scale: [2, 2, 2],
         });
         await renderScene();
         placed = null;
@@ -353,7 +359,7 @@ it.each([
         ).not.toBeNull();
       }
       // With another cloud behind the last one, the nearest surface owns the tap.
-      clouds[0] = { ...clouds[0], translation: [4, 0, -1] };
+      clouds[0] = { ...clouds[0], position: [4, 0, -1] };
       await renderScene();
       state!.getState().camera.position.x = 4;
       state!.getState().camera.lookAt(4, 0, 0);
@@ -362,8 +368,8 @@ it.each([
       expect(anchorPick.mock.calls[0][0].position[2]).toBeGreaterThan(-0.5);
       showGrid = true;
       // Look down through two clouds and the grid; hover and tap must agree.
-      clouds[0] = { ...clouds[0], translation: [4, 1, 0] };
-      clouds[2] = { ...clouds[2], translation: [4, 2, 0] };
+      clouds[0] = { ...clouds[0], position: [4, 1, 0] };
+      clouds[2] = { ...clouds[2], position: [4, 2, 0] };
       await renderScene();
       state!.getState().camera.position.set(4, 5, 0);
       state!.getState().camera.lookAt(4, 0, 0);
@@ -373,8 +379,8 @@ it.each([
       await pickAnchor(4, "touch");
       expect(onPlaceAnchor.mock.calls[0][0][1]).toBeGreaterThan(1.5);
       // The grid is physically closer but is composited underneath the splats.
-      clouds[0] = { ...clouds[0], translation: [4, -2, 0] };
-      clouds[2] = { ...clouds[2], translation: [4, -1, 0] };
+      clouds[0] = { ...clouds[0], position: [4, -2, 0] };
+      clouds[2] = { ...clouds[2], position: [4, -1, 0] };
       await renderScene();
       scene.updateMatrixWorld(true);
       await pickAnchor(4);
@@ -400,8 +406,8 @@ it.each([
         expect(source).toEqual({ kind: "url", url: downloadUrl, format });
       }
       showGrid = false;
-      clouds[0] = { ...clouds[0], translation: [4, 0, -1], visible: true };
-      clouds[2] = { ...clouds[2], translation: [4, 0, 0], visible: true };
+      clouds[0] = { ...clouds[0], position: [4, 0, -1], visible: true };
+      clouds[2] = { ...clouds[2], position: [4, 0, 0], visible: true };
       clouds.splice(1, 1);
       await renderScene();
       expect(hit(2)).toBeUndefined();
@@ -489,26 +495,27 @@ it.each([
       format: format as "ply" | "sog",
       library_asset_id: "asset",
       project_id: "project",
-      position: 0,
+      sort_order: 0,
+      parent_id: null,
+      library_asset_file_id: "main",
       visible: true,
-      rotation_deg: [0, 0, 0] as [number, number, number],
-      scale: 1,
-      offset: [0, 0, 0] as [number, number, number],
+      quaternion: [0, 0, 0, 1] as [number, number, number, number],
+      scale: [1, 1, 1] as [number, number, number],
     };
-    let clouds: ProjectCloud[] = [
+    let clouds: SceneObject[] = [
       {
         ...base,
         id: "slow",
         name: "slow",
         download_url: "/progressive/slow",
-        translation: [8, 0, 0],
+        position: [8, 0, 0],
       },
       {
         ...base,
         id: "fast",
         name: "fast",
         download_url: "/progressive/fast",
-        translation: [0, 0, 0],
+        position: [0, 0, 0],
       },
     ];
     const renderScene = async () => {
@@ -596,7 +603,7 @@ it.each([
           ...clouds[0],
           id: "cancel",
           download_url: "/progressive/slow-cancel",
-          translation: [16, 0, 0],
+          position: [16, 0, 0],
         },
       ];
       await renderScene();

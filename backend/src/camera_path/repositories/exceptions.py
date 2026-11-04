@@ -4,3 +4,7 @@ class ProjectNotFoundError(KeyError):
 
 class RevisionConflictError(RuntimeError):
     pass
+
+
+class ReferenceConflictError(RuntimeError):
+    pass

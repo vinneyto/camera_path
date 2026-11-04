@@ -2,7 +2,7 @@
 
 The monolith reserves minimal jobs and consumes one versioned completion message containing
 all result assets for a job. Queue and storage providers are selected independently. File
-production, queue provisioning and generator execution remain outside this handler. The canonical contract is [SPECS.md](../SPECS.md), sections 3.8 and 8.2–8.3.
+production, queue provisioning and generator execution remain outside this handler. The message models live in [job_completion_models.py](../src/camera_path/services/job_completion_models.py); executable examples are covered by the backend tests.
 
 ## Local verification
 

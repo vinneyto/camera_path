@@ -5,31 +5,32 @@
  * Create camera-path projects, author scene and trajectory data, edit playback timelines, and run the trajectory agent. Canonical operations use project revision ETags for optimistic concurrency.
  * OpenAPI spec version: 1.0.0
  */
-import type { ProjectCloudFormat } from './projectCloudFormat';
+import type { SceneObjectFormat } from './sceneObjectFormat';
 
-export interface ProjectCloud {
+export interface SceneObject {
   download_url: string;
-  format: ProjectCloudFormat;
+  format: SceneObjectFormat;
   id: string;
+  library_asset_file_id: string;
   library_asset_id: string;
   name: string;
+  parent_id: string | null;
   /**
      * @minItems 3
      * @maxItems 3
      */
-  offset: [number, number, number];
-  position: number;
+  position: [number, number, number];
   project_id: string;
   /**
-     * @minItems 3
-     * @maxItems 3
+     * @minItems 4
+     * @maxItems 4
      */
-  rotation_deg: [number, number, number];
-  scale: number;
+  quaternion: [number, number, number, number];
   /**
      * @minItems 3
      * @maxItems 3
      */
-  translation: [number, number, number];
+  scale: [number, number, number];
+  sort_order: number;
   visible: boolean;
 }

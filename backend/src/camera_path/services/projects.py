@@ -11,7 +11,7 @@ from camera_path.models import (
     ProjectUpdate,
     new_id,
 )
-from camera_path.persistence.records import ProjectCloudRecord, ProjectRecord
+from camera_path.persistence.records import ProjectRecord, SceneObjectRecord
 from camera_path.repositories.aim_timeline import AimTimelineRepository
 from camera_path.repositories.anchor import AnchorRepository
 from camera_path.repositories.camera_track import CameraTrackRepository
@@ -65,7 +65,7 @@ class ProjectService(ServiceBase):
         draft = Project(id=current.id, name=current.name, revision=current.revision)
         async with self._transaction(draft, current.revision) as session:
             await session.execute(
-                delete(ProjectCloudRecord).where(ProjectCloudRecord.project_id == project_id)
+                delete(SceneObjectRecord).where(SceneObjectRecord.project_id == project_id)
             )
             await CameraTrackRepository(session).set_aim(
                 project_id, draft.camera_track.default_aim, draft.camera_track.world_up

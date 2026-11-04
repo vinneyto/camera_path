@@ -2075,181 +2075,6 @@
         "title": "OrientationTimeline",
         "type": "object"
       },
-      "ProjectCloud": {
-        "properties": {
-          "download_url": {
-            "title": "Download Url",
-            "type": "string"
-          },
-          "format": {
-            "enum": [
-              "ply",
-              "sog"
-            ],
-            "title": "Format",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "library_asset_id": {
-            "title": "Library Asset Id",
-            "type": "string"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "offset": {
-            "maxItems": 3,
-            "minItems": 3,
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
-            "title": "Offset",
-            "type": "array"
-          },
-          "position": {
-            "title": "Position",
-            "type": "integer"
-          },
-          "project_id": {
-            "title": "Project Id",
-            "type": "string"
-          },
-          "rotation_deg": {
-            "maxItems": 3,
-            "minItems": 3,
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
-            "title": "Rotation Deg",
-            "type": "array"
-          },
-          "scale": {
-            "title": "Scale",
-            "type": "number"
-          },
-          "translation": {
-            "maxItems": 3,
-            "minItems": 3,
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
-            "title": "Translation",
-            "type": "array"
-          },
-          "visible": {
-            "title": "Visible",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "project_id",
-          "library_asset_id",
-          "name",
-          "format",
-          "position",
-          "visible",
-          "download_url",
-          "translation",
-          "rotation_deg",
-          "scale",
-          "offset"
-        ],
-        "title": "ProjectCloud",
-        "type": "object"
-      },
-      "ProjectCloudCreate": {
-        "properties": {
-          "library_asset_id": {
-            "title": "Library Asset Id",
-            "type": "string"
-          },
-          "translation": {
-            "default": [
-              0,
-              0,
-              0
-            ],
-            "maxItems": 3,
-            "minItems": 3,
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
-            "title": "Translation",
-            "type": "array"
-          }
-        },
-        "required": [
-          "library_asset_id"
-        ],
-        "title": "ProjectCloudCreate",
-        "type": "object"
-      },
-      "ProjectCloudUpdate": {
-        "properties": {
-          "position": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Position"
-          },
-          "visible": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Visible"
-          }
-        },
-        "title": "ProjectCloudUpdate",
-        "type": "object"
-      },
       "ProjectCreate": {
         "properties": {
           "name": {
@@ -2383,6 +2208,368 @@
           "position"
         ],
         "title": "ResolvedScenePointDepthOfFieldFocus",
+        "type": "object"
+      },
+      "SceneObject": {
+        "properties": {
+          "download_url": {
+            "title": "Download Url",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "ply",
+              "sog"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "library_asset_file_id": {
+            "title": "Library Asset File Id",
+            "type": "string"
+          },
+          "library_asset_id": {
+            "title": "Library Asset Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Position",
+            "type": "array"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "quaternion": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Quaternion",
+            "type": "array"
+          },
+          "scale": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              }
+            ],
+            "title": "Scale",
+            "type": "array"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
+          },
+          "visible": {
+            "title": "Visible",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "parent_id",
+          "library_asset_id",
+          "library_asset_file_id",
+          "sort_order",
+          "visible",
+          "position",
+          "quaternion",
+          "scale",
+          "name",
+          "format",
+          "download_url"
+        ],
+        "title": "SceneObject",
+        "type": "object"
+      },
+      "SceneObjectCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "library_asset_file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Asset File Id"
+          },
+          "library_asset_id": {
+            "title": "Library Asset Id",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "quaternion": {
+            "anyOf": [
+              {
+                "maxItems": 4,
+                "minItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quaternion"
+          },
+          "scale": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale"
+          }
+        },
+        "required": [
+          "library_asset_id"
+        ],
+        "title": "SceneObjectCreate",
+        "type": "object"
+      },
+      "SceneObjectUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "quaternion": {
+            "anyOf": [
+              {
+                "maxItems": 4,
+                "minItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quaternion"
+          },
+          "scale": {
+            "anyOf": [
+              {
+                "maxItems": 3,
+                "minItems": 3,
+                "prefixItems": [
+                  {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order"
+          },
+          "visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visible"
+          }
+        },
+        "title": "SceneObjectUpdate",
         "type": "object"
       },
       "ScenePoint": {
@@ -6869,400 +7056,6 @@
         ]
       }
     },
-    "/api/v1/projects/{project_id}/clouds": {
-      "get": {
-        "description": "List instances and resolve library download URLs.",
-        "operationId": "listProjectClouds",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "title": "Project Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ProjectCloud"
-                  },
-                  "title": "Response Listprojectclouds",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "ETag": {
-                "description": "Revision of the returned project snapshot.",
-                "schema": {
-                  "examples": [
-                    "\"4\""
-                  ],
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "List project clouds",
-        "tags": [
-          "Clouds"
-        ]
-      },
-      "post": {
-        "description": "Attach a ready library asset to the project.",
-        "operationId": "createProjectCloud",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "If-Match",
-            "required": true,
-            "schema": {
-              "examples": [
-                "\"4\""
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProjectCloudCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProjectCloud"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "ETag": {
-                "description": "Revision of the returned project snapshot.",
-                "schema": {
-                  "examples": [
-                    "\"4\""
-                  ],
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Valid editor JWT required."
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Revision or reference conflict."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid request or trajectory geometry."
-          },
-          "428": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The If-Match header is required."
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Add a library cloud",
-        "tags": [
-          "Clouds"
-        ]
-      }
-    },
-    "/api/v1/projects/{project_id}/clouds/{cloud_id}": {
-      "delete": {
-        "description": "Detach an instance without deleting its library file.",
-        "operationId": "deleteProjectCloud",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "cloud_id",
-            "required": true,
-            "schema": {
-              "title": "Cloud Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "If-Match",
-            "required": true,
-            "schema": {
-              "examples": [
-                "\"4\""
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "401": {
-            "description": "Valid editor JWT required."
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found.",
-            "headers": {
-              "ETag": {
-                "description": "Revision of the returned project snapshot.",
-                "schema": {
-                  "examples": [
-                    "\"4\""
-                  ],
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Revision or reference conflict."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid request or trajectory geometry."
-          },
-          "428": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The If-Match header is required."
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Remove a project cloud",
-        "tags": [
-          "Clouds"
-        ]
-      },
-      "patch": {
-        "description": "Change visibility or ordering of an instance.",
-        "operationId": "updateProjectCloud",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "project_id",
-            "required": true,
-            "schema": {
-              "title": "Project Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "cloud_id",
-            "required": true,
-            "schema": {
-              "title": "Cloud Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "If-Match",
-            "required": true,
-            "schema": {
-              "examples": [
-                "\"4\""
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProjectCloudUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProjectCloud"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "ETag": {
-                "description": "Revision of the returned project snapshot.",
-                "schema": {
-                  "examples": [
-                    "\"4\""
-                  ],
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Valid editor JWT required."
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The requested resource was not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Revision or reference conflict."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid request or trajectory geometry."
-          },
-          "428": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The If-Match header is required."
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Update a project cloud",
-        "tags": [
-          "Clouds"
-        ]
-      }
-    },
     "/api/v1/projects/{project_id}/motion": {
       "delete": {
         "description": "Remove speed keyframes and restore default speed, preserving other timelines.",
@@ -7949,6 +7742,400 @@
         "summary": "Reset a project",
         "tags": [
           "Projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/scene-objects": {
+      "get": {
+        "description": "List instances and resolve library download URLs.",
+        "operationId": "listSceneObjects",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SceneObject"
+                  },
+                  "title": "Response Listsceneobjects",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List scene objects",
+        "tags": [
+          "Scene objects"
+        ]
+      },
+      "post": {
+        "description": "Attach a ready library asset to the project.",
+        "operationId": "createSceneObject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SceneObjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SceneObject"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add a scene object",
+        "tags": [
+          "Scene objects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/scene-objects/{object_id}": {
+      "delete": {
+        "description": "Detach an instance without deleting its library file.",
+        "operationId": "deleteSceneObject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "object_id",
+            "required": true,
+            "schema": {
+              "title": "Object Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found.",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove a scene object",
+        "tags": [
+          "Scene objects"
+        ]
+      },
+      "patch": {
+        "description": "Change local transform, parent, visibility or ordering of a scene object.",
+        "operationId": "updateSceneObject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "object_id",
+            "required": true,
+            "schema": {
+              "title": "Object Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SceneObjectUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SceneObject"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "Revision of the returned project snapshot.",
+                "schema": {
+                  "examples": [
+                    "\"4\""
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The requested resource was not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Revision or reference conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request or trajectory geometry."
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The If-Match header is required."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update a scene object",
+        "tags": [
+          "Scene objects"
         ]
       }
     },
@@ -8940,8 +9127,8 @@
       "name": "Library"
     },
     {
-      "description": "Library cloud instances in projects.",
-      "name": "Clouds"
+      "description": "Project scene graph and local transforms.",
+      "name": "Scene objects"
     },
     {
       "description": "Settings of the current user.",

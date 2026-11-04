@@ -1,16 +1,16 @@
 // @vitest-environment happy-dom
 
-import { ProjectCloudSurface } from "@camera-path/feature-scene-models/scene/project-cloud-surface";
+import { SceneObjectSurface } from "@camera-path/feature-scene-models/scene/scene-object-surface";
 import { SceneSurfaceProvider } from "@camera-path/scene-runtime/surface";
 import type { GaussianCloudLoadProgress } from "@camera-path/scene-runtime/surface/model/gaussian-cloud-load-progress";
 import type {
   GaussianCloudInstance,
   GaussianRenderingBackend,
 } from "@camera-path/scene-runtime/surface/model/gaussian-rendering-backend";
-import type { ProjectCloud } from "@camera-path/types/api";
+import type { SceneObject } from "@camera-path/types/api";
 import { createRoot, extend } from "@react-three/fiber";
 import { act } from "react";
-import { Group, Object3D, Scene, type WebGLRenderer } from "three";
+import { Group, Matrix4, Object3D, Scene, type WebGLRenderer } from "three";
 import { afterEach, expect, it, vi } from "vitest";
 
 vi.mock("@camera-path/feature-scene-models/scene/cloud-loading-ring", () => ({
@@ -40,19 +40,20 @@ it("loads a cloud through many streamed progress events without nested React upd
     invalidate: vi.fn(),
     dispose: vi.fn(),
   };
-  const cloud: ProjectCloud = {
+  const cloud: SceneObject = {
     id: "cloud",
     name: "Cloud",
     project_id: "project",
     library_asset_id: "asset",
-    position: 0,
+    sort_order: 0,
+    parent_id: null,
+    library_asset_file_id: "main",
     download_url: "/cloud.sog",
     format: "sog",
     visible: true,
-    translation: [0, 0, 0],
-    rotation_deg: [0, 0, 0],
-    scale: 1,
-    offset: [0, 0, 0],
+    position: [0, 0, 0],
+    quaternion: [0, 0, 0, 1],
+    scale: [1, 1, 1],
   };
   const canvas = document.createElement("canvas");
   const root = createRoot(canvas);
@@ -73,8 +74,10 @@ it("loads a cloud through many streamed progress events without nested React upd
     await act(async () => {
       root.render(
         <SceneSurfaceProvider backend={backend}>
-          <ProjectCloudSurface
+          <SceneObjectSurface
             cloud={cloud}
+            worldMatrix={new Matrix4()}
+            effectiveVisible={true}
             onReady={ready}
             onProgress={progress}
           />
@@ -90,7 +93,7 @@ it("loads a cloud through many streamed progress events without nested React upd
           totalBytes: 200,
         });
         // Progress is a subscription event; forwarding it must not wait for a
-        // passive effect that performs another update in ProjectCloudSurface.
+        // passive effect that performs another update in SceneObjectSurface.
         expect(progress.mock.calls.at(-1)?.[0].loadedBytes).toBe(loadedBytes);
       });
     }
@@ -105,6 +108,22 @@ it("loads a cloud through many streamed progress events without nested React upd
     expect(ready).toHaveBeenCalledOnce();
     expect(progress).toHaveBeenCalledTimes(150);
     expect(backend.createCloud).toHaveBeenCalledOnce();
+    await act(async () => {
+      root.render(
+        <SceneSurfaceProvider backend={backend}>
+          <SceneObjectSurface
+            cloud={cloud}
+            worldMatrix={new Matrix4().makeTranslation(5, 0, 0)}
+            effectiveVisible={true}
+            onReady={ready}
+            onProgress={progress}
+          />
+        </SceneSurfaceProvider>,
+      );
+    });
+    expect(ready.mock.calls.at(-1)?.[0].bounds.center).toEqual([5, 0, 0]);
+    expect(backend.createCloud).toHaveBeenCalledOnce();
+
     expect(
       errors.mock.calls.filter(([message]) =>
         String(message).includes("Maximum update depth"),

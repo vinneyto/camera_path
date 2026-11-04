@@ -6,10 +6,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type ProjectCloudFormat = typeof ProjectCloudFormat[keyof typeof ProjectCloudFormat];
+export type SceneObjectFormat = typeof SceneObjectFormat[keyof typeof SceneObjectFormat];
 
 
-export const ProjectCloudFormat = {
+export const SceneObjectFormat = {
   ply: 'ply',
   sog: 'sog',
 } as const;

@@ -164,29 +164,52 @@ class LibraryAssetFileRecord(Base):
     sha256: Mapped[str | None] = mapped_column(Text)
 
 
-class ProjectCloudRecord(Base):
-    __tablename__ = "project_clouds"
-    __table_args__ = (UniqueConstraint("project_id", "position", name="uq_project_cloud_position"),)
+class SceneObjectRecord(Base):
+    __tablename__ = "scene_objects"
+    __table_args__ = (
+        UniqueConstraint("project_id", "id", name="uq_scene_objects_project_id_id"),
+        UniqueConstraint("project_id", "sort_order", name="uq_scene_objects_order"),
+        ForeignKeyConstraint(
+            ["project_id", "parent_id"],
+            ["scene_objects.project_id", "scene_objects.id"],
+            name="fk_scene_objects_parent",
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+        ForeignKeyConstraint(
+            ["library_asset_id", "library_asset_file_id"],
+            ["library_asset_files.asset_id", "library_asset_files.id"],
+            name="fk_scene_objects_file",
+            ondelete="RESTRICT",
+        ),
+        CheckConstraint("parent_id IS NULL OR parent_id != id", name="ck_scene_objects_parent"),
+        CheckConstraint(
+            "scale_x > 0 AND scale_y > 0 AND scale_z > 0", name="ck_scene_objects_scale"
+        ),
+        Index("ix_scene_objects_parent", "project_id", "parent_id"),
+    )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     project_id: Mapped[str] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    parent_id: Mapped[str | None] = mapped_column(Text)
     library_asset_id: Mapped[str] = mapped_column(
         ForeignKey("library_assets.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    library_asset_file_id: Mapped[str] = mapped_column(Text, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
     visible: Mapped[bool] = mapped_column(nullable=False, default=True)
-    translation_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    translation_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    translation_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    rotation_x_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    rotation_y_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    rotation_z_deg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    scale: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    offset_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    offset_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    offset_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    position_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    position_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    position_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    quaternion_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    quaternion_y: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    quaternion_z: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    quaternion_w: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    scale_x: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    scale_y: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    scale_z: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
 
 
 class ProjectChildRecord:

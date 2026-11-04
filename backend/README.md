@@ -187,16 +187,30 @@ adds Bearer authorization for the backend, and validates the Origin of every bro
 The browser receives session metadata rather than the raw token. Cookies and JWTs are not in
 localStorage. The same proxy works locally and on Vercel; only its server-side backend URL changes.
 
-### Project clouds
+### Scene objects
 
-Each project can reference several ready library PLY files through `project_clouds`. The project
-cloud record stores the library asset ID, order and visibility; it never stores a download URL or
-copies the file. `GET /api/v1/projects/{id}/clouds` resolves URLs through `LibraryStorage`.
-`POST` to that path with `{"library_asset_id": "..."}` attaches a file, `PATCH /{cloud_id}` changes
-`position` or `visible`, and `DELETE /{cloud_id}` removes only the project instance. Mutations
-require the current project revision in `If-Match` and return a new project ETag. Resetting a
-project clears its cloud instances but keeps the library files. Projects created before this
-migration remain intact, with an initially empty cloud list.
+`scene_objects` stores project-owned instances of ready library files. Each object has
+`parent_id`, local `position: [x,y,z]`, normalized `quaternion: [x,y,z,w]`, positive
+`scale: [x,y,z]`, `library_asset_id`, `library_asset_file_id`, `sort_order` and `visible`.
+The client composes world matrices and inherited visibility from the hierarchy.
+
+Use `GET/POST /api/v1/projects/{id}/scene-objects` and
+`PATCH/DELETE /api/v1/projects/{id}/scene-objects/{object_id}`. Creation defaults to the
+asset's primary file and converts omitted transforms from its library defaults;
+an explicit position is already the canonical local position, with no extra offset.
+PATCH can change local transforms, parent, visibility and global project sort order.
+Omitting parent preserves it; `parent_id: null` detaches with the local transform retained.
+Parents must belong to the same project and cannot create cycles. Delete a parent's
+children or detach them before deleting it; otherwise deletion returns `409`.
+The same restriction protects surviving children during single/bulk asset deletion.
+Mutations use the project revision in `If-Match`. Reset/delete clears the whole graph.
+
+Run `uv run alembic upgrade head` before starting against an existing database.
+Migration `20261104_0016` preserves object IDs/order/visibility and rendered transforms,
+converts Euler XYZ to quaternions, expands uniform scales and folds model offsets
+into position. Existing objects become roots and reference their actual primary file.
+The `/clouds` interface is replaced by `/scene-objects`; deploy backend and client together.
+A populated graph requires a pre-migration backup for a lossless downgrade.
 
 Open <http://127.0.0.1:8000/docs> for the Scalar API reference. The generated OpenAPI document is
 served at <http://127.0.0.1:8000/api/v1/openapi.json>. The backend loads configuration from
@@ -210,9 +224,8 @@ an `ETag` containing its revision, for example `"4"`. Send that value in `If-Mat
 the canonical API; a stale value returns `409`, and an omitted value returns `428`. Legacy aliases
 do not require `If-Match`.
 
-[SPECS.md](SPECS.md) is the implementation contract for backend behavior. FastAPI routes
-and Pydantic models implement its HTTP contract and generate OpenAPI. Keep them aligned with
-the specification and regenerate the checked-in schema artifact after changing the API contract:
+FastAPI routes and Pydantic models define the HTTP contract and generate OpenAPI.
+Regenerate the checked-in schema artifact after changing the API contract:
 
 ```bash
 cd backend

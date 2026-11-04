@@ -3,14 +3,14 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useSceneModels } from "@camera-path/api/resources";
 import { useCameraState, useEditorTool } from "@camera-path/store";
 
-import { useProjectCloudActionMutation } from "@camera-path/actions";
+import { useSceneObjectActionMutation } from "@camera-path/actions";
 import type { SceneSurfaceReady } from "@camera-path/scene-runtime/surface";
 import { SurfaceTargetRing } from "@camera-path/scene-runtime/three/surface-target-ring";
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { useSceneEvent } from "@camera-path/scene-runtime/viewport/use-scene-event";
 import { useSurfaceEvents } from "@camera-path/scene-runtime/viewport/use-surface-events";
 import { useViewportServices } from "@camera-path/scene-runtime/viewport/viewport-provider";
-import type { ProjectCloud } from "@camera-path/types/api";
+import type { SceneObject } from "@camera-path/types/api";
 import type { Vec3 } from "@camera-path/types/project";
 import {
   Suspense,
@@ -24,7 +24,8 @@ import { resolveInitialSceneBounds } from "../lib/resolve-initial-scene-bounds";
 import { SceneClouds } from "./scene-clouds";
 import { useCloudPlacementInteraction } from "./use-cloud-placement-interaction";
 import { useCloudPlacementRaycast } from "./use-cloud-placement-raycast";
-const EMPTY: ProjectCloud[] = [];
+import { resolveSceneObjectTransforms } from "./resolve-scene-object-transforms";
+const EMPTY: SceneObject[] = [];
 export function SceneModels() {
   const query = useSceneModels();
   const clouds = query.data?.data ?? EMPTY;
@@ -34,7 +35,7 @@ export function SceneModels() {
   const services = useSceneServices();
   const viewport = useViewportServices();
   const surfaceEvents = useSurfaceEvents();
-  const action = useProjectCloudActionMutation();
+  const action = useSceneObjectActionMutation();
   const placement = useCloudPlacementInteraction({
     clouds,
     onPlace: async (assetId, position) => {
@@ -42,7 +43,7 @@ export function SceneModels() {
       const result = await action.mutateAsync({
         type: "add",
         assetId,
-        translation: position.map((v) => Number(v.toFixed(4))) as Vec3,
+        position: position.map((v) => Number(v.toFixed(4))) as Vec3,
       });
       return result.status === 201;
     },
@@ -72,16 +73,23 @@ export function SceneModels() {
       return;
     initial.current ??= clouds.map((c) => c.id);
     if (!initial.current.length) return;
-    const visible = clouds.filter((c) => c.visible);
+    const transforms = resolveSceneObjectTransforms(clouds);
+    const visible = clouds.filter((c) => transforms.get(c.id)!.visible);
     const current = new Set(visible.map((c) => c.id));
     const pending = new Map(
       visible.map((c) => [
         c.id,
         {
-          center: c.translation,
+          center: transforms.get(c.id)!.matrix.elements.slice(12, 15) as Vec3,
           radius: 0.3,
-          min: c.translation.map((v) => v - 0.3) as Vec3,
-          max: c.translation.map((v) => v + 0.3) as Vec3,
+          min: transforms
+            .get(c.id)!
+            .matrix.elements.slice(12, 15)
+            .map((v) => v - 0.3) as Vec3,
+          max: transforms
+            .get(c.id)!
+            .matrix.elements.slice(12, 15)
+            .map((v) => v + 0.3) as Vec3,
         },
       ]),
     );
