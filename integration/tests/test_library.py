@@ -45,7 +45,10 @@ def test_upload_download_defaults_instances_restart_and_delete(editor, fmt, data
     p = b.project()
     first = p.mutate("POST", "/scene-objects", 201, json={"library_asset_id": ready["id"]}).json()
     second = p.mutate(
-        "POST", "/scene-objects", 201, json={"library_asset_id": ready["id"], "position": [2, 0.3, -4]}
+        "POST",
+        "/scene-objects",
+        201,
+        json={"library_asset_id": ready["id"], "position": [2, 0.3, -4]},
     ).json()
     assert first["id"] != second["id"]
     assert first["scale"] == [1.5, 1.5, 1.5] and first["library_asset_file_id"] == "main"
@@ -112,6 +115,9 @@ def test_invalid_uploads_cannot_publish_or_change_other_assets(editor):
     p = b.project()
     p.mutate("POST", "/scene-objects", 404, json={"library_asset_id": pending["id"]})
     p.mutate(
-        "POST", "/scene-objects", 422, json={"library_asset_id": good["id"], "position": ["NaN", 0, 0]}
+        "POST",
+        "/scene-objects",
+        422,
+        json={"library_asset_id": good["id"], "position": ["NaN", 0, 0]},
     )
     assert p.get("/scene-objects").json() == []
