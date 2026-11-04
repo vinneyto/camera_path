@@ -8,23 +8,29 @@ import {
   fireEvent,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { featureSlots } from "@host/composition/feature-slots";
 import { JobsPage } from "./jobs-page";
 import { JobDetailsPage } from "./job-details-page";
 
-const identity = vi.hoisted(() => ({ canEdit: true, push: vi.fn() }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: identity.push }),
-}));
+const identity = vi.hoisted(() => ({ canEdit: true }));
 vi.mock("@camera-path/api/identity/auth-provider", () => ({
   useAuth: () => identity,
 }));
 
 const id = "443f452a-cb09-4eb5-9087-9643d99c649a";
-const pending: Job = { id, completed_at: null, assets: [] };
+const pending: Job = {
+  id,
+  type: "generation",
+  status: "running",
+  input: { prompt: "A wooden chair" },
+  created_at: "2026-11-04T12:00:00Z",
+  started_at: "2026-11-04T12:00:01Z",
+  completed_at: null,
+  error: null,
+  assets: [],
+};
 const asset: LibraryAsset = {
   id: "cloud-1",
   job_id: id,
@@ -50,17 +56,27 @@ const asset: LibraryAsset = {
 };
 const completed: Job = {
   ...pending,
-  completed_at: "2026-11-01T12:00:00Z",
+  status: "succeeded",
+  completed_at: "2026-11-04T12:01:00Z",
   assets: [asset],
+};
+const completedSummary: JobSummary = {
+  id,
+  type: "generation",
+  status: "succeeded",
+  created_at: completed.created_at,
+  started_at: completed.started_at,
+  completed_at: completed.completed_at,
+  error: null,
+  prompt: "A wooden chair",
+  asset_count: 1,
+  assets: [{ id: asset.id, name: asset.name }],
 };
 let jobs: JobSummary[];
 let job: Job;
 let listError: boolean;
-let createError: boolean;
 let detailStatus: number;
-let releaseCreate: (() => void) | undefined;
-let holdCreate: boolean;
-const requests: { url: string; method: string; body: unknown }[] = [];
+const requests: { url: string; method: string }[] = [];
 const clients: QueryClient[] = [];
 
 function mount(detailId?: string) {
@@ -81,32 +97,16 @@ function mount(detailId?: string) {
 
 beforeEach(() => {
   identity.canEdit = true;
-  identity.push.mockReset();
   job = structuredClone(pending);
   jobs = [];
-  listError = createError = holdCreate = false;
+  listError = false;
   detailStatus = 200;
-  releaseCreate = undefined;
   requests.length = 0;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, options: RequestInit) => {
-      requests.push({
-        url,
-        method: options.method ?? "GET",
-        body: options.body,
-      });
+      requests.push({ url, method: options.method ?? "GET" });
       if (url === "/api/v1/jobs") {
-        if (options.method === "POST") {
-          if (holdCreate)
-            await new Promise<void>((resolve) => {
-              releaseCreate = resolve;
-            });
-          if (createError)
-            return Response.json({ detail: "Unavailable" }, { status: 503 });
-          jobs = [{ id, completed_at: null, asset_count: 0 }];
-          return Response.json(pending, { status: 201 });
-        }
         return listError
           ? Response.json({ detail: "Unavailable" }, { status: 503 })
           : Response.json(jobs);
@@ -132,66 +132,106 @@ it("shows an empty public list without creation controls for guests", async () =
   expect(requests.every((request) => request.method === "GET")).toBe(true);
 });
 
-it("creates a job without a body, blocks duplicate submits, refreshes the list and opens details", async () => {
-  holdCreate = true;
+it("shows a disabled create button for editors and never submits a job", async () => {
   mount();
   await screen.findByText("No jobs yet.");
-  fireEvent.click(screen.getByRole("button", { name: "Create job" }));
-  const button = await screen.findByRole("button", { name: "Creating…" });
-  expect((button as HTMLButtonElement).disabled).toBe(true);
+  const button = screen.getByRole("button", {
+    name: "Create job",
+  }) as HTMLButtonElement;
+  expect(button.disabled).toBe(true);
   fireEvent.click(button);
-  await waitFor(() => expect(releaseCreate).toBeDefined());
-  expect(requests.filter((request) => request.method === "POST")).toEqual([
-    { url: "/api/v1/jobs", method: "POST", body: undefined },
-  ]);
-  await act(async () => releaseCreate!());
-  await waitFor(() =>
-    expect(identity.push).toHaveBeenCalledWith(`/jobs/${id}`),
-  );
-  const link = await screen.findByRole("link", { name: new RegExp(id) });
-  expect(link.getAttribute("href")).toBe(`/jobs/${id}`);
-  expect(link.textContent).toContain("Pending");
-  expect(link.textContent).toContain("0 assets");
+  expect(requests.every((request) => request.method === "GET")).toBe(true);
 });
 
-it("keeps creation errors visible and allows an explicit retry", async () => {
-  createError = true;
+it("shows prompt, explicit status, error, unknown type and direct library result links", async () => {
+  jobs = [
+    completedSummary,
+    {
+      ...completedSummary,
+      id: "failed-job",
+      status: "failed",
+      prompt: "A broken chair",
+      asset_count: 0,
+      assets: [],
+      error: {
+        code: "generation_failed",
+        message: "Generation failed. Please retry later.",
+      },
+    },
+    {
+      ...completedSummary,
+      id: "legacy-job",
+      status: "draft",
+      completed_at: null,
+      started_at: null,
+      type: null,
+      prompt: null,
+      created_at: null,
+      asset_count: 0,
+      assets: [],
+    },
+  ];
   mount();
-  fireEvent.click(screen.getByRole("button", { name: "Create job" }));
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "Could not create",
-  );
-  expect(identity.push).not.toHaveBeenCalled();
-  createError = false;
-  fireEvent.click(screen.getByRole("button", { name: "Create job" }));
-  await waitFor(() =>
-    expect(identity.push).toHaveBeenCalledWith(`/jobs/${id}`),
-  );
+  const link = await screen.findByRole("link", { name: /A wooden chair/ });
+  expect(link.getAttribute("href")).toBe(`/jobs/${id}`);
+  expect(screen.getByText("succeeded")).toBeTruthy();
+  expect(screen.getByText("failed")).toBeTruthy();
+  expect(
+    screen.getByText("Generation failed. Please retry later."),
+  ).toBeTruthy();
+  expect(screen.getByText("Type not specified")).toBeTruthy();
+  expect(
+    screen.getByRole("link", { name: "Generated cloud" }).getAttribute("href"),
+  ).toBe("/library/cloud-1");
+  expect(requests.every((r) => r.url === "/api/v1/jobs")).toBe(true);
 });
 
-it("retries a failed catalogue read and shows completed result counts", async () => {
+it("retries a failed catalogue read", async () => {
   listError = true;
-  jobs = [{ id, completed_at: completed.completed_at, asset_count: 1 }];
+  jobs = [completedSummary];
   mount();
   await screen.findByRole("alert");
   listError = false;
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-  const link = await screen.findByRole("link", { name: new RegExp(id) });
-  expect(link.textContent).toContain("Completed");
-  expect(link.textContent).toContain("1 asset");
+  await screen.findByRole("link", { name: /A wooden chair/ });
+  expect(screen.getByText("1 asset")).toBeTruthy();
 });
 
-it("refreshes pending job results automatically and links each result to the library", async () => {
+it("refreshes running jobs automatically and links each result to the library", async () => {
   mount(id);
   await screen.findByText("Waiting for results.");
   expect(screen.getByText(id)).toBeTruthy();
+  expect(screen.getByText(/A wooden chair/)).toBeTruthy();
   job = structuredClone(completed);
-  await screen.findByText("Completed", {}, { timeout: 4000 });
+  await screen.findByText("succeeded", {}, { timeout: 4000 });
   const link = screen.getByRole("link", { name: /Generated cloud/ });
   expect(link.getAttribute("href")).toBe("/library/cloud-1");
   expect(link.textContent).toContain("2 files");
   expect(screen.queryByText("Waiting for results.")).toBeNull();
 });
+
+it.each(["failed", "cancelled"] as const)(
+  "stops polling a %s job without inventing results",
+  async (status) => {
+    job = {
+      ...pending,
+      status,
+      completed_at: completed.completed_at,
+      error:
+        status === "failed"
+          ? { code: "failed", message: "Generation failed." }
+          : null,
+    };
+    mount(id);
+    await screen.findByText(status);
+    expect(screen.getByText("No results for this job.")).toBeTruthy();
+    const count = requests.length;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+    });
+    expect(requests.length).toBe(count);
+  },
+);
 
 it("shows every result and keeps completed jobs completed after result removal", async () => {
   job = {
@@ -206,7 +246,7 @@ it("shows every result and keeps completed jobs completed after result removal",
   job = { ...completed, assets: [] };
   fireEvent.click(screen.getByRole("button", { name: "Refresh job" }));
   await screen.findByText("No assets remain for this job.");
-  expect(screen.getByText("Completed")).toBeTruthy();
+  expect(screen.getByText("succeeded")).toBeTruthy();
 });
 
 it("clears the previous job when navigating to a missing job", async () => {

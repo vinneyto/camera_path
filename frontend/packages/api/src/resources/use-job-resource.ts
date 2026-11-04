@@ -9,7 +9,10 @@ export function useJobResource(id?: string) {
     query: {
       refetchInterval: (query) =>
         query.state.status === "error" ||
-        (query.state.data?.status === 200 && query.state.data.data.completed_at)
+        (query.state.data?.status === 200 &&
+          ["succeeded", "failed", "cancelled"].includes(
+            query.state.data.data.status,
+          ))
           ? false
           : 2000,
       retry: (attempt, error) =>

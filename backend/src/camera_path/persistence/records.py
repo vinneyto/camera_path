@@ -33,6 +33,7 @@ from camera_path.persistence.enums import (
     CurveLaw,
     FocusKind,
     Interpolation,
+    JobStatus,
     LibraryAssetStatus,
     LiftAxis,
     SegmentKind,
@@ -127,8 +128,30 @@ class LibraryAssetRecord(Base):
 
 class JobRecord(Base):
     __tablename__ = "jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "(type IS NULL AND input IS NULL) OR (type IS NOT NULL AND input IS NOT NULL)",
+            name="ck_jobs_input_type",
+        ),
+        CheckConstraint(
+            "(status IN ('succeeded','failed','cancelled') AND completed_at IS NOT NULL) OR "
+            "(status IN ('draft','queued','running') AND completed_at IS NULL)",
+            name="ck_jobs_completion",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
+    type: Mapped[str | None] = mapped_column(Text)
+    input: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    status: Mapped[JobStatus] = mapped_column(
+        enum_column(JobStatus, "ck_jobs_status"),
+        nullable=False,
+        default=JobStatus.DRAFT,
+        server_default="draft",
+    )
+    error: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     assets: Mapped[list[LibraryAssetRecord]] = relationship(
         back_populates="job",

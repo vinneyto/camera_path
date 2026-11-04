@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { useJobsCatalog } from "@camera-path/api/resources";
-import { Badge, Button, Card } from "@camera-path/ui-kit";
+import { Button } from "@camera-path/ui-kit";
 import { CreateJobButton } from "./create-job-button";
+import { JobListItem } from "./job-list-item";
 
 export function JobsPage() {
   const jobs = useJobsCatalog();
@@ -16,7 +15,7 @@ export function JobsPage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Jobs</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Create a job and follow its results.
+            Follow the status and results of your jobs.
           </p>
         </div>
         <CreateJobButton />
@@ -49,27 +48,7 @@ export function JobsPage() {
             <ul className="space-y-2" aria-label="Jobs">
               {entries.map((job) => (
                 <li key={job.id}>
-                  <Link
-                    href={`/jobs/${job.id}`}
-                    className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Card className="flex items-center gap-3 p-4 transition-colors hover:bg-accent/50">
-                      <div className="min-w-0 flex-1">
-                        <p className="break-all font-mono text-xs">{job.id}</p>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          {job.asset_count}{" "}
-                          {job.asset_count === 1 ? "asset" : "assets"}
-                        </p>
-                      </div>
-                      <Badge>
-                        {job.completed_at ? "Completed" : "Pending"}
-                      </Badge>
-                      <ArrowRight
-                        className="size-3.5 shrink-0 text-muted-foreground"
-                        aria-hidden
-                      />
-                    </Card>
-                  </Link>
+                  <JobListItem job={job} />
                 </li>
               ))}
             </ul>
