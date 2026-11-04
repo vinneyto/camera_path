@@ -4,6 +4,7 @@ export default defineConfig({
   cameraPath: {
     input: "../backend/openapi.json",
     output: {
+      clean: true,
       target: "packages/api/src/client/generated/client.ts",
       schemas: "packages/types/src/api",
       client: "react-query",

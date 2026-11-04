@@ -35,7 +35,7 @@
         "packages/actions/src/mutations/library/use-upload-library-file.ts",
         "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
         "packages/actions/src/mutations/projects/use-create-project.ts",
-        "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+        "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
         "packages/actions/src/mutations/speed-track/use-delete-speed-timeline.ts",
         "packages/actions/src/use-cloud-placement.ts",
         "packages/actions/src/use-seek-playback.ts",
@@ -723,7 +723,7 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
-              "file": "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
               "line": 20,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
@@ -1007,7 +1007,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6931,
+            "line": 6434,
             "column": 1
           },
           "usages": [
@@ -1134,24 +1134,6 @@
           ]
         },
         {
-          "name": "useListProjectClouds",
-          "kind": "api-hook",
-          "package": "@camera-path/api",
-          "definition": {
-            "file": "packages/api/src/client/generated/client.ts",
-            "line": 6320,
-            "column": 1
-          },
-          "usages": [
-            {
-              "file": "packages/api/src/resources/use-scene-models.ts",
-              "line": 5,
-              "column": 17,
-              "expression": "useListProjectClouds(useProjectId(id))"
-            }
-          ]
-        },
-        {
           "name": "useListProjects",
           "kind": "api-hook",
           "package": "@camera-path/api",
@@ -1172,6 +1154,24 @@
               "line": 4,
               "column": 17,
               "expression": "useListProjects()"
+            }
+          ]
+        },
+        {
+          "name": "useListSceneObjects",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 7174,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-scene-models.ts",
+              "line": 5,
+              "column": 17,
+              "expression": "useListSceneObjects(useProjectId(id))"
             }
           ]
         },
@@ -1293,7 +1293,7 @@
             {
               "file": "packages/api/src/resources/use-scene-models.ts",
               "line": 5,
-              "column": 38,
+              "column": 37,
               "expression": "useProjectId(id)"
             },
             {
@@ -3838,11 +3838,13 @@
         "packages/features/scene-models/src/lib/resolve-initial-scene-bounds.ts",
         "packages/features/scene-models/src/lib/update-loading-ring-angle.ts",
         "packages/features/scene-models/src/scene/cloud-loading-ring.tsx",
+        "packages/features/scene-models/src/scene/create-library-object-transform.ts",
         "packages/features/scene-models/src/scene/create-placement-preview-cloud.ts",
-        "packages/features/scene-models/src/scene/project-cloud-surface.tsx",
+        "packages/features/scene-models/src/scene/resolve-scene-object-transforms.ts",
         "packages/features/scene-models/src/scene/scene-clouds.tsx",
+        "packages/features/scene-models/src/scene/scene-object-surface.tsx",
         "packages/features/scene-models/src/scene/scene.tsx",
-        "packages/features/scene-models/src/scene/transform-project-cloud-bounds.ts",
+        "packages/features/scene-models/src/scene/transform-scene-object-bounds.ts",
         "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
         "packages/features/scene-models/src/scene/use-cloud-placement-raycast.ts",
         "packages/features/scene-models/src/ui/hint.tsx"
@@ -3853,7 +3855,7 @@
             {
               "name": "SceneModels",
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 28,
+              "line": 29,
               "column": 1
             }
           ],
@@ -3894,7 +3896,7 @@
           "usages": [
             {
               "file": "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
-              "line": 90,
+              "line": 100,
               "column": 7,
               "expression": "cancel"
             }
@@ -3936,18 +3938,18 @@
             },
             {
               "file": "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
-              "line": 30,
+              "line": 32,
               "column": 36,
               "expression": "useCloudPlacement"
             }
           ]
         },
         {
-          "name": "useProjectCloudActionMutation",
+          "name": "useSceneObjectActionMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
           "definition": {
-            "file": "packages/actions/src/mutations/scene-models/use-project-cloud-actions.ts",
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
             "line": 19,
             "column": 1
           },
@@ -3956,13 +3958,13 @@
               "file": "packages/features/scene-models/src/commands/remove-cloud-command.tsx",
               "line": 13,
               "column": 19,
-              "expression": "useProjectCloudActionMutation"
+              "expression": "useSceneObjectActionMutation"
             },
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 37,
+              "line": 38,
               "column": 18,
-              "expression": "useProjectCloudActionMutation"
+              "expression": "useSceneObjectActionMutation"
             }
           ]
         }
@@ -3992,7 +3994,7 @@
             },
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 31,
+              "line": 32,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -4040,7 +4042,7 @@
             },
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 29,
+              "line": 30,
               "column": 17,
               "expression": "useSceneModels()"
             }
@@ -4059,7 +4061,7 @@
           "usages": [
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 32,
+              "line": 33,
               "column": 16,
               "expression": "useCameraState()"
             },
@@ -4084,7 +4086,7 @@
           "usages": [
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 33,
+              "line": 34,
               "column": 16,
               "expression": "useEditorTool()"
             },

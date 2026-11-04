@@ -44,7 +44,7 @@ vi.mock("@camera-path/api/resources", () => ({
 }));
 vi.mock("@camera-path/actions", async (importOriginal) => ({
   ...(await importOriginal()),
-  useProjectCloudActionMutation: () => ({
+  useSceneObjectActionMutation: () => ({
     mutate,
     isPending: false,
     error: null,

@@ -21,8 +21,9 @@ from camera_path.repositories import (
     RevisionConflictError,
 )
 from camera_path.repositories.auth import AuthRepository
+from camera_path.repositories.exceptions import ReferenceConflictError
 from camera_path.repositories.library import LibraryRepository
-from camera_path.repositories.project_cloud import ProjectCloudRepository
+from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.repositories.user_settings import UserSettingsRepository
 from camera_path.routers.api import router as business_router
 from camera_path.routers.auth import router as auth_router
@@ -30,8 +31,8 @@ from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.routers.jobs import router as jobs_router
 from camera_path.routers.library import router as library_router
 from camera_path.routers.profile import router as profile_router
-from camera_path.routers.project_clouds import router as project_cloud_router
 from camera_path.routers.resources import router as resource_router
+from camera_path.routers.scene_objects import router as scene_object_router
 from camera_path.services import (
     AnchorService,
     ChatMessageConflictError,
@@ -49,7 +50,7 @@ from camera_path.services.jobs import JobService
 from camera_path.services.library import LibraryService
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorageError
-from camera_path.services.project_clouds import ProjectCloudService
+from camera_path.services.scene_objects import SceneObjectService
 from camera_path.services.user_settings import UserSettingsService
 from camera_path.trajectory import GeometryError
 
@@ -96,10 +97,10 @@ ETAG_OPERATION_IDS = {
     "setLidarTimeline",
     "deleteLidarTimeline",
     "listChatMessages",
-    "listProjectClouds",
-    "createProjectCloud",
-    "updateProjectCloud",
-    "deleteProjectCloud",
+    "listSceneObjects",
+    "createSceneObject",
+    "updateSceneObject",
+    "deleteSceneObject",
     "clearProjectChat",
     "createChatMessage",
     "saveUserChatMessage",
@@ -140,8 +141,8 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             importer,
             configured.message_queue_max_attempts,
         )
-    project_cloud_service = ProjectCloudService(
-        ProjectCloudRepository(project_repository.session_factory),
+    scene_object_service = SceneObjectService(
+        SceneObjectRepository(project_repository.session_factory),
         library_service.repository,
         storage,
     )
@@ -203,7 +204,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             {"name": "Timelines", "description": "Motion and camera control timelines."},
             {"name": "Chat", "description": "Trajectory-agent chat operations."},
             {"name": "Library", "description": "Uploaded 3DGS assets, independent of projects."},
-            {"name": "Clouds", "description": "Library cloud instances in projects."},
+            {"name": "Scene objects", "description": "Project scene graph and local transforms."},
             {"name": "Profile", "description": "Settings of the current user."},
         ],
     )
@@ -228,7 +229,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
 
     application.state.job_service = JobService(library_service)
     application.state.library_service = library_service
-    application.state.project_cloud_service = project_cloud_service
+    application.state.scene_object_service = scene_object_service
     application.state.project_repository = project_repository
     application.state.auth_service = AuthService(
         AuthRepository(project_repository.session_factory), configured, dependencies.email_sender
@@ -284,6 +285,12 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         return JSONResponse(
             status_code=409,
             content=_error_content(request, "revision_conflict", str(error)),
+        )
+
+    @application.exception_handler(ReferenceConflictError)
+    async def reference_conflict(request: Request, error: ReferenceConflictError) -> JSONResponse:
+        return JSONResponse(
+            status_code=409, content=_error_content(request, "reference_conflict", str(error))
         )
 
     @application.exception_handler(PreconditionRequiredError)
@@ -346,7 +353,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     application.include_router(auth_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
     application.include_router(jobs_router, prefix=API_PREFIX)
-    application.include_router(project_cloud_router, prefix=API_PREFIX)
+    application.include_router(scene_object_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)
     application.include_router(business_router, include_in_schema=False)
 

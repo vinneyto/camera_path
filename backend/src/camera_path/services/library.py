@@ -15,7 +15,7 @@ from camera_path.persistence.records import (
     LibraryAssetRecord,
 )
 from camera_path.repositories.library import LibraryRepository
-from camera_path.repositories.project_cloud import ProjectCloudRepository
+from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.services.io import blocking_io
 from camera_path.services.library_metadata import (
     LibraryError,
@@ -101,7 +101,7 @@ class LibraryUpload(LibraryAsset):
 class LibraryService:
     def __init__(self, repository: LibraryRepository, storage: LibraryStorage) -> None:
         self.repository, self.storage = repository, storage
-        self.clouds = ProjectCloudRepository(repository.sessions)
+        self.clouds = SceneObjectRepository(repository.sessions)
 
     async def _model(self, record: LibraryAssetRecord, request: Request) -> LibraryAsset:
         ready = record.status == LibraryAssetStatus.READY

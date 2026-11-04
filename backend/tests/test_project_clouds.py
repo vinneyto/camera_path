@@ -11,7 +11,7 @@ from camera_path.config import Settings
     "file_format,data",
     [("ply", b"ply\nformat ascii 1.0\nend_header\n"), ("sog", b"PK\x03\x04test")],
 )
-async def test_project_clouds_are_independent_and_persist(
+async def test_scene_objects_are_independent_and_persist(
     tmp_path: Path, file_format: str, data: bytes
 ) -> None:
     settings = Settings(
@@ -26,7 +26,7 @@ async def test_project_clouds_are_independent_and_persist(
             project = await client.post("/api/v1/projects", json={"name": "Scene"})
             project_id = project.json()["id"]
             assert project.headers["etag"] == '"0"'
-            url = f"/api/v1/projects/{project_id}/clouds"
+            url = f"/api/v1/projects/{project_id}/scene-objects"
             assert (await client.get(url)).json() == []
             assert (await client.post(url, json={"library_asset_id": "missing"})).status_code == 428
             upload = (
@@ -56,7 +56,7 @@ async def test_project_clouds_are_independent_and_persist(
                 )
             ).status_code == 422
             defaults = {
-                "default_rotation_deg": [15, -30, 90],
+                "default_rotation_deg": [0, 0, 90],
                 "default_scale": 1.5,
                 "default_offset": [0, -0.5, 0],
             }
@@ -66,20 +66,19 @@ async def test_project_clouds_are_independent_and_persist(
             )
             assert first.status_code == 201
             assert first.json()["format"] == file_format
-            assert first.json()["rotation_deg"] == defaults["default_rotation_deg"]
-            assert first.json()["scale"] == defaults["default_scale"]
-            assert first.json()["translation"] == [0, 0, 0]
-            assert first.json()["offset"] == defaults["default_offset"]
+            assert first.json()["quaternion"] == pytest.approx([0, 0, 2**-0.5, 2**-0.5])
+            assert first.json()["scale"] == [1.5, 1.5, 1.5]
+            assert first.json()["position"] == pytest.approx([0.75, 0, 0])
+            assert first.json()["parent_id"] is None
+            assert first.json()["library_asset_file_id"] == "main"
             changed_defaults = {
                 "default_rotation_deg": [0, 45, 0],
                 "default_scale": 2,
                 "default_offset": [1, -1, 0],
             }
             assert (await client.patch(defaults_url, json=changed_defaults)).status_code == 200
-            assert (await client.get(url)).json()[0]["rotation_deg"] == defaults[
-                "default_rotation_deg"
-            ]
-            assert (await client.get(url)).json()[0]["offset"] == defaults["default_offset"]
+            assert (await client.get(url)).json()[0]["quaternion"] == first.json()["quaternion"]
+            assert (await client.get(url)).json()[0]["position"] == first.json()["position"]
             assert first.headers["etag"] == '"1"'
             assert (
                 await client.post(
@@ -88,25 +87,26 @@ async def test_project_clouds_are_independent_and_persist(
             ).status_code == 409
             second = await client.post(
                 url,
-                json={"library_asset_id": upload["id"], "translation": [2, 0.3, -4]},
+                json={"library_asset_id": upload["id"], "position": [2, 0.3, -4]},
                 headers={"If-Match": '"1"'},
             )
             assert second.status_code == 201
             assert second.json()["id"] != first.json()["id"]
-            assert second.json()["rotation_deg"] == changed_defaults["default_rotation_deg"]
-            assert second.json()["scale"] == changed_defaults["default_scale"]
-            assert second.json()["offset"] == changed_defaults["default_offset"]
-            assert second.json()["translation"] == [2, 0.3, -4]
+            assert second.json()["quaternion"] == pytest.approx(
+                [0, 0.3826834323650898, 0, 0.9238795325112867]
+            )
+            assert second.json()["scale"] == [2, 2, 2]
+            assert second.json()["position"] == [2, 0.3, -4]
             assert (
                 await client.post(
                     url,
-                    json={"library_asset_id": upload["id"], "translation": ["NaN", 0, 0]},
+                    json={"library_asset_id": upload["id"], "position": ["NaN", 0, 0]},
                     headers={"If-Match": '"2"'},
                 )
             ).status_code == 422
             changed = await client.patch(
                 f"{url}/{second.json()['id']}",
-                json={"position": 0, "visible": False},
+                json={"sort_order": 0, "visible": False},
                 headers={"If-Match": '"2"'},
             )
             assert changed.status_code == 200
@@ -121,7 +121,7 @@ async def test_project_clouds_are_independent_and_persist(
             assert (await client.get(listed.json()[0]["download_url"])).content == data
             other = (await client.post("/api/v1/projects", json={"name": "Other"})).json()["id"]
             reused = await client.post(
-                f"/api/v1/projects/{other}/clouds",
+                f"/api/v1/projects/{other}/scene-objects",
                 json={"library_asset_id": upload["id"]},
                 headers={"If-Match": '"0"'},
             )
@@ -139,20 +139,20 @@ async def test_project_clouds_are_independent_and_persist(
             assert len((await client.get(url)).json()) == 2
             assert all(item["format"] == file_format for item in (await client.get(url)).json())
             assert (await client.get("/api/v1/library")).json()[0]["default_scale"] == 2
-            assert (await client.get(url)).json()[1]["scale"] == 1.5
-            assert (await client.get(url)).json()[0]["translation"] == [2, 0.3, -4]
+            assert (await client.get(url)).json()[1]["scale"] == [1.5, 1.5, 1.5]
+            assert (await client.get(url)).json()[0]["position"] == [2, 0.3, -4]
             removed = await client.delete(
                 f"{url}/{second.json()['id']}", headers={"If-Match": '"3"'}
             )
             assert removed.status_code == 204
-            assert [cloud["position"] for cloud in (await client.get(url)).json()] == [0]
+            assert [cloud["sort_order"] for cloud in (await client.get(url)).json()] == [0]
             assert len((await client.get("/api/v1/library")).json()) == 1
             reset = await client.post(
                 f"/api/v1/projects/{project_id}/reset", headers={"If-Match": '"4"'}
             )
             assert reset.status_code == 200
             assert (await client.get(url)).json() == []
-            assert len((await client.get(f"/api/v1/projects/{other}/clouds")).json()) == 1
+            assert len((await client.get(f"/api/v1/projects/{other}/scene-objects")).json()) == 1
             assert len((await client.get("/api/v1/library")).json()) == 1
     finally:
         await reopened.state.project_repository.close()

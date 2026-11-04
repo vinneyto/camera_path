@@ -43,31 +43,31 @@ def test_upload_download_defaults_instances_restart_and_delete(editor, fmt, data
     }
     assert b.request("PATCH", base + "/defaults", json=defaults).json()["default_scale"] == 1.5
     p = b.project()
-    first = p.mutate("POST", "/clouds", 201, json={"library_asset_id": ready["id"]}).json()
+    first = p.mutate("POST", "/scene-objects", 201, json={"library_asset_id": ready["id"]}).json()
     second = p.mutate(
-        "POST", "/clouds", 201, json={"library_asset_id": ready["id"], "translation": [2, 0.3, -4]}
+        "POST", "/scene-objects", 201, json={"library_asset_id": ready["id"], "position": [2, 0.3, -4]}
     ).json()
     assert first["id"] != second["id"]
-    assert first["scale"] == 1.5 and first["offset"] == defaults["default_offset"]
-    assert second["translation"] == [2, 0.3, -4]
+    assert first["scale"] == [1.5, 1.5, 1.5] and first["library_asset_file_id"] == "main"
+    assert second["position"] == [2, 0.3, -4]
     updated = p.mutate(
-        "PATCH", f"/clouds/{second['id']}", json={"visible": False, "position": 0}
+        "PATCH", f"/scene-objects/{second['id']}", json={"visible": False, "sort_order": 0}
     ).json()
     assert not updated["visible"]
-    assert [x["id"] for x in p.get("/clouds").json()] == [second["id"], first["id"]]
+    assert [x["id"] for x in p.get("/scene-objects").json()] == [second["id"], first["id"]]
     other = b.project("Other")
-    other.mutate("POST", "/clouds", 201, json={"library_asset_id": ready["id"]})
-    before = p.get("/clouds").json()
+    other.mutate("POST", "/scene-objects", 201, json={"library_asset_id": ready["id"]})
+    before = p.get("/scene-objects").json()
     b.stop()
     b.start()
-    assert p.get("/clouds").json() == before
+    assert p.get("/scene-objects").json() == before
     assert b.request("GET", base, auth=False).json()["default_scale"] == 1.5
     assert b.request("GET", ready["download_url"], auth=False).content == data
-    p.mutate("DELETE", f"/clouds/{second['id']}", 204)
-    assert len(p.get("/clouds").json()) == 1
-    assert len(other.get("/clouds").json()) == 1
+    p.mutate("DELETE", f"/scene-objects/{second['id']}", 204)
+    assert len(p.get("/scene-objects").json()) == 1
+    assert len(other.get("/scene-objects").json()) == 1
     b.request("DELETE", base, 204)
-    assert p.get("/clouds").json() == other.get("/clouds").json() == []
+    assert p.get("/scene-objects").json() == other.get("/scene-objects").json() == []
     b.request("GET", ready["download_url"], 404, auth=False)
     assert b.request("GET", "/api/v1/library", auth=False).json() == []
 
@@ -76,11 +76,11 @@ def test_bulk_delete_is_atomic_for_missing_ids(editor):
     b = editor
     a, second = upload(b), upload(b)
     p = b.project()
-    p.mutate("POST", "/clouds", 201, json={"library_asset_id": a["id"]})
+    p.mutate("POST", "/scene-objects", 201, json={"library_asset_id": a["id"]})
     before = p.get().headers["etag"]
     b.request("POST", "/api/v1/library/bulk-delete", 404, json={"asset_ids": [a["id"], "missing"]})
     assert len(b.request("GET", "/api/v1/library").json()) == 2
-    assert len(p.get("/clouds").json()) == 1 and p.get().headers["etag"] == before
+    assert len(p.get("/scene-objects").json()) == 1 and p.get().headers["etag"] == before
     b.request(
         "POST",
         "/api/v1/library/bulk-delete",
@@ -88,7 +88,7 @@ def test_bulk_delete_is_atomic_for_missing_ids(editor):
         json={"asset_ids": [a["id"], second["id"], a["id"]]},
     )
     assert b.request("GET", "/api/v1/library").json() == []
-    assert p.get("/clouds").json() == []
+    assert p.get("/scene-objects").json() == []
 
 
 def test_invalid_uploads_cannot_publish_or_change_other_assets(editor):
@@ -110,8 +110,8 @@ def test_invalid_uploads_cannot_publish_or_change_other_assets(editor):
         json={"default_rotation_deg": [0, 0, 0], "default_scale": 0},
     )
     p = b.project()
-    p.mutate("POST", "/clouds", 404, json={"library_asset_id": pending["id"]})
+    p.mutate("POST", "/scene-objects", 404, json={"library_asset_id": pending["id"]})
     p.mutate(
-        "POST", "/clouds", 422, json={"library_asset_id": good["id"], "translation": ["NaN", 0, 0]}
+        "POST", "/scene-objects", 422, json={"library_asset_id": good["id"], "position": ["NaN", 0, 0]}
     )
-    assert p.get("/clouds").json() == []
+    assert p.get("/scene-objects").json() == []

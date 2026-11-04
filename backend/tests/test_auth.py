@@ -15,9 +15,9 @@ from camera_path.routers import (
     chat,
     library,
     profile,
-    project_clouds,
     projects,
     resources,
+    scene_objects,
     scene_points,
     timelines,
     trajectory,
@@ -99,7 +99,7 @@ async def test_every_write_route_authenticates_before_validation(auth_app):
         count = 0
         routers = [
             ("/api/v1", module.router)
-            for module in (resources, library, profile, project_clouds, auth, library_routes)
+            for module in (resources, library, profile, scene_objects, auth, library_routes)
         ]
         routers += [
             ("", module.router)

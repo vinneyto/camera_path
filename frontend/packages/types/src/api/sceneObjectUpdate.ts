@@ -6,7 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface ProjectCloudUpdate {
-  position?: number | null;
+export interface SceneObjectUpdate {
+  parent_id?: string | null;
+  position?: [number, number, number] | null;
+  quaternion?: [number, number, number, number] | null;
+  scale?: [number, number, number] | null;
+  sort_order?: number | null;
   visible?: boolean | null;
 }

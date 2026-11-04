@@ -63,12 +63,12 @@ import type {
   MotionProfile,
   MotionProfileUpdate,
   OrientationTimeline,
-  ProjectCloud,
-  ProjectCloudCreate,
-  ProjectCloudUpdate,
   ProjectCreate,
   ProjectMetadata,
   ProjectUpdate,
+  SceneObject,
+  SceneObjectCreate,
+  SceneObjectUpdate,
   ScenePoint,
   ScenePointCreate,
   ScenePointUpdate,
@@ -6242,503 +6242,6 @@ export const useSaveUserChatMessage = <TError = void | ErrorResponse,
       return useMutation(getSaveUserChatMessageMutationOptions(options), queryClient);
     }
 
-export type listProjectCloudsResponse200 = {
-  data: ProjectCloud[]
-  status: 200
-}
-
-export type listProjectCloudsResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type listProjectCloudsResponseSuccess = (listProjectCloudsResponse200) & {
-  headers: Headers;
-};
-export type listProjectCloudsResponseError = (listProjectCloudsResponse422) & {
-  headers: Headers;
-};
-
-export type listProjectCloudsResponse = (listProjectCloudsResponseSuccess | listProjectCloudsResponseError)
-
-export const getListProjectCloudsUrl = (projectId: string,) => {
-
-
-
-
-  return `/api/v1/projects/${projectId}/clouds`
-}
-
-/**
- * List instances and resolve library download URLs.
- * @summary List project clouds
- */
-export const listProjectClouds = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<listProjectCloudsResponse> => {
-
-  return orvalFetch<listProjectCloudsResponse>(getListProjectCloudsUrl(projectId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListProjectCloudsQueryKey = (projectId: string,) => {
-    return [
-    `/api/v1/projects/${projectId}/clouds`
-    ] as const;
-    }
-
-
-export const getListProjectCloudsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListProjectCloudsQueryKey(projectId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectClouds>>> = ({ signal }) => listProjectClouds(projectId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListProjectCloudsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectClouds>>>
-export type ListProjectCloudsQueryError = HTTPValidationError
-
-
-export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
- projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listProjectClouds>>,
-          TError,
-          Awaited<ReturnType<typeof listProjectClouds>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
- projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listProjectClouds>>,
-          TError,
-          Awaited<ReturnType<typeof listProjectClouds>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
- projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List project clouds
- */
-
-export function useListProjectClouds<TData = Awaited<ReturnType<typeof listProjectClouds>>, TError = HTTPValidationError>(
- projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectClouds>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListProjectCloudsQueryOptions(projectId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export type createProjectCloudResponse201 = {
-  data: ProjectCloud
-  status: 201
-}
-
-export type createProjectCloudResponse401 = {
-  data: void
-  status: 401
-}
-
-export type createProjectCloudResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type createProjectCloudResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type createProjectCloudResponse422 = {
-  data: ErrorResponse
-  status: 422
-}
-
-export type createProjectCloudResponse428 = {
-  data: ErrorResponse
-  status: 428
-}
-
-export type createProjectCloudResponseSuccess = (createProjectCloudResponse201) & {
-  headers: Headers;
-};
-export type createProjectCloudResponseError = (createProjectCloudResponse401 | createProjectCloudResponse404 | createProjectCloudResponse409 | createProjectCloudResponse422 | createProjectCloudResponse428) & {
-  headers: Headers;
-};
-
-export type createProjectCloudResponse = (createProjectCloudResponseSuccess | createProjectCloudResponseError)
-
-export const getCreateProjectCloudUrl = (projectId: string,) => {
-
-
-
-
-  return `/api/v1/projects/${projectId}/clouds`
-}
-
-/**
- * Attach a ready library asset to the project.
- * @summary Add a library cloud
- */
-export const createProjectCloud = async (projectId: string,
-    projectCloudCreate: ProjectCloudCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createProjectCloudResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return orvalFetch<createProjectCloudResponse>(getCreateProjectCloudUrl(projectId),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(projectCloudCreate)
-  }
-);}
-
-
-
-
-
-export const getCreateProjectCloudMutationKey = () => ['createProjectCloud'] as const;
-
-export const getCreateProjectCloudMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext> => {
-
-const mutationKey = getCreateProjectCloudMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectCloud>>, CreateProjectCloudMutationVariables> = (props) => {
-          const {projectId,data} = props ?? {};
-
-          return  createProjectCloud(projectId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectCloud>>>
-    export type CreateProjectCloudMutationBody = ProjectCloudCreate
-    export type CreateProjectCloudMutationError = void | ErrorResponse
-    export type CreateProjectCloudMutationVariables = {projectId: string;data: ProjectCloudCreate}
-
-    /**
- * @summary Add a library cloud
- */
-export const useCreateProjectCloud = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCloud>>, TError,CreateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createProjectCloud>>,
-        TError,
-        CreateProjectCloudMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreateProjectCloudMutationOptions(options), queryClient);
-    }
-
-export type deleteProjectCloudResponse204 = {
-  data: void
-  status: 204
-}
-
-export type deleteProjectCloudResponse401 = {
-  data: void
-  status: 401
-}
-
-export type deleteProjectCloudResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteProjectCloudResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type deleteProjectCloudResponse422 = {
-  data: ErrorResponse
-  status: 422
-}
-
-export type deleteProjectCloudResponse428 = {
-  data: ErrorResponse
-  status: 428
-}
-
-export type deleteProjectCloudResponseSuccess = (deleteProjectCloudResponse204) & {
-  headers: Headers;
-};
-export type deleteProjectCloudResponseError = (deleteProjectCloudResponse401 | deleteProjectCloudResponse404 | deleteProjectCloudResponse409 | deleteProjectCloudResponse422 | deleteProjectCloudResponse428) & {
-  headers: Headers;
-};
-
-export type deleteProjectCloudResponse = (deleteProjectCloudResponseSuccess | deleteProjectCloudResponseError)
-
-export const getDeleteProjectCloudUrl = (projectId: string,
-    cloudId: string,) => {
-
-
-
-
-  return `/api/v1/projects/${projectId}/clouds/${cloudId}`
-}
-
-/**
- * Detach an instance without deleting its library file.
- * @summary Remove a project cloud
- */
-export const deleteProjectCloud = async (projectId: string,
-    cloudId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteProjectCloudResponse> => {
-
-  return orvalFetch<deleteProjectCloudResponse>(getDeleteProjectCloudUrl(projectId,cloudId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteProjectCloudMutationKey = () => ['deleteProjectCloud'] as const;
-
-export const getDeleteProjectCloudMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext> => {
-
-const mutationKey = getDeleteProjectCloudMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectCloud>>, DeleteProjectCloudMutationVariables> = (props) => {
-          const {projectId,cloudId} = props ?? {};
-
-          return  deleteProjectCloud(projectId,cloudId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectCloud>>>
-
-    export type DeleteProjectCloudMutationError = void | ErrorResponse
-    export type DeleteProjectCloudMutationVariables = {projectId: string;cloudId: string}
-
-    /**
- * @summary Remove a project cloud
- */
-export const useDeleteProjectCloud = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCloud>>, TError,DeleteProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteProjectCloud>>,
-        TError,
-        DeleteProjectCloudMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteProjectCloudMutationOptions(options), queryClient);
-    }
-
-export type updateProjectCloudResponse200 = {
-  data: ProjectCloud
-  status: 200
-}
-
-export type updateProjectCloudResponse401 = {
-  data: void
-  status: 401
-}
-
-export type updateProjectCloudResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type updateProjectCloudResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type updateProjectCloudResponse422 = {
-  data: ErrorResponse
-  status: 422
-}
-
-export type updateProjectCloudResponse428 = {
-  data: ErrorResponse
-  status: 428
-}
-
-export type updateProjectCloudResponseSuccess = (updateProjectCloudResponse200) & {
-  headers: Headers;
-};
-export type updateProjectCloudResponseError = (updateProjectCloudResponse401 | updateProjectCloudResponse404 | updateProjectCloudResponse409 | updateProjectCloudResponse422 | updateProjectCloudResponse428) & {
-  headers: Headers;
-};
-
-export type updateProjectCloudResponse = (updateProjectCloudResponseSuccess | updateProjectCloudResponseError)
-
-export const getUpdateProjectCloudUrl = (projectId: string,
-    cloudId: string,) => {
-
-
-
-
-  return `/api/v1/projects/${projectId}/clouds/${cloudId}`
-}
-
-/**
- * Change visibility or ordering of an instance.
- * @summary Update a project cloud
- */
-export const updateProjectCloud = async (projectId: string,
-    cloudId: string,
-    projectCloudUpdate: ProjectCloudUpdate, options?: Parameters<typeof orvalFetch>[1]): Promise<updateProjectCloudResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return orvalFetch<updateProjectCloudResponse>(getUpdateProjectCloudUrl(projectId,cloudId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(projectCloudUpdate)
-  }
-);}
-
-
-
-
-
-export const getUpdateProjectCloudMutationKey = () => ['updateProjectCloud'] as const;
-
-export const getUpdateProjectCloudMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext> => {
-
-const mutationKey = getUpdateProjectCloudMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectCloud>>, UpdateProjectCloudMutationVariables> = (props) => {
-          const {projectId,cloudId,data} = props ?? {};
-
-          return  updateProjectCloud(projectId,cloudId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateProjectCloudMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectCloud>>>
-    export type UpdateProjectCloudMutationBody = ProjectCloudUpdate
-    export type UpdateProjectCloudMutationError = void | ErrorResponse
-    export type UpdateProjectCloudMutationVariables = {projectId: string;cloudId: string;data: ProjectCloudUpdate}
-
-    /**
- * @summary Update a project cloud
- */
-export const useUpdateProjectCloud = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCloud>>, TError,UpdateProjectCloudMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProjectCloud>>,
-        TError,
-        UpdateProjectCloudMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateProjectCloudMutationOptions(options), queryClient);
-    }
-
 export type deleteSpeedTimelineResponse204 = {
   data: void
   status: 204
@@ -7591,6 +7094,503 @@ export const useResetProject = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getResetProjectMutationOptions(options), queryClient);
+    }
+
+export type listSceneObjectsResponse200 = {
+  data: SceneObject[]
+  status: 200
+}
+
+export type listSceneObjectsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type listSceneObjectsResponseSuccess = (listSceneObjectsResponse200) & {
+  headers: Headers;
+};
+export type listSceneObjectsResponseError = (listSceneObjectsResponse422) & {
+  headers: Headers;
+};
+
+export type listSceneObjectsResponse = (listSceneObjectsResponseSuccess | listSceneObjectsResponseError)
+
+export const getListSceneObjectsUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/scene-objects`
+}
+
+/**
+ * List instances and resolve library download URLs.
+ * @summary List scene objects
+ */
+export const listSceneObjects = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<listSceneObjectsResponse> => {
+
+  return orvalFetch<listSceneObjectsResponse>(getListSceneObjectsUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSceneObjectsQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/scene-objects`
+    ] as const;
+    }
+
+
+export const getListSceneObjectsQueryOptions = <TData = Awaited<ReturnType<typeof listSceneObjects>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSceneObjects>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSceneObjectsQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSceneObjects>>> = ({ signal }) => listSceneObjects(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSceneObjects>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSceneObjectsQueryResult = NonNullable<Awaited<ReturnType<typeof listSceneObjects>>>
+export type ListSceneObjectsQueryError = HTTPValidationError
+
+
+export function useListSceneObjects<TData = Awaited<ReturnType<typeof listSceneObjects>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSceneObjects>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSceneObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listSceneObjects>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSceneObjects<TData = Awaited<ReturnType<typeof listSceneObjects>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSceneObjects>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSceneObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listSceneObjects>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSceneObjects<TData = Awaited<ReturnType<typeof listSceneObjects>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSceneObjects>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List scene objects
+ */
+
+export function useListSceneObjects<TData = Awaited<ReturnType<typeof listSceneObjects>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSceneObjects>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSceneObjectsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createSceneObjectResponse201 = {
+  data: SceneObject
+  status: 201
+}
+
+export type createSceneObjectResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createSceneObjectResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type createSceneObjectResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type createSceneObjectResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type createSceneObjectResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type createSceneObjectResponseSuccess = (createSceneObjectResponse201) & {
+  headers: Headers;
+};
+export type createSceneObjectResponseError = (createSceneObjectResponse401 | createSceneObjectResponse404 | createSceneObjectResponse409 | createSceneObjectResponse422 | createSceneObjectResponse428) & {
+  headers: Headers;
+};
+
+export type createSceneObjectResponse = (createSceneObjectResponseSuccess | createSceneObjectResponseError)
+
+export const getCreateSceneObjectUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/scene-objects`
+}
+
+/**
+ * Attach a ready library asset to the project.
+ * @summary Add a scene object
+ */
+export const createSceneObject = async (projectId: string,
+    sceneObjectCreate: SceneObjectCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createSceneObjectResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<createSceneObjectResponse>(getCreateSceneObjectUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sceneObjectCreate)
+  }
+);}
+
+
+
+
+
+export const getCreateSceneObjectMutationKey = () => ['createSceneObject'] as const;
+
+export const getCreateSceneObjectMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSceneObject>>, TError,CreateSceneObjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSceneObject>>, TError,CreateSceneObjectMutationVariables, TContext> => {
+
+const mutationKey = getCreateSceneObjectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSceneObject>>, CreateSceneObjectMutationVariables> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createSceneObject(projectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSceneObjectMutationResult = NonNullable<Awaited<ReturnType<typeof createSceneObject>>>
+    export type CreateSceneObjectMutationBody = SceneObjectCreate
+    export type CreateSceneObjectMutationError = void | ErrorResponse
+    export type CreateSceneObjectMutationVariables = {projectId: string;data: SceneObjectCreate}
+
+    /**
+ * @summary Add a scene object
+ */
+export const useCreateSceneObject = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSceneObject>>, TError,CreateSceneObjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createSceneObject>>,
+        TError,
+        CreateSceneObjectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateSceneObjectMutationOptions(options), queryClient);
+    }
+
+export type deleteSceneObjectResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteSceneObjectResponse401 = {
+  data: void
+  status: 401
+}
+
+export type deleteSceneObjectResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteSceneObjectResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteSceneObjectResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type deleteSceneObjectResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type deleteSceneObjectResponseSuccess = (deleteSceneObjectResponse204) & {
+  headers: Headers;
+};
+export type deleteSceneObjectResponseError = (deleteSceneObjectResponse401 | deleteSceneObjectResponse404 | deleteSceneObjectResponse409 | deleteSceneObjectResponse422 | deleteSceneObjectResponse428) & {
+  headers: Headers;
+};
+
+export type deleteSceneObjectResponse = (deleteSceneObjectResponseSuccess | deleteSceneObjectResponseError)
+
+export const getDeleteSceneObjectUrl = (projectId: string,
+    objectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/scene-objects/${objectId}`
+}
+
+/**
+ * Detach an instance without deleting its library file.
+ * @summary Remove a scene object
+ */
+export const deleteSceneObject = async (projectId: string,
+    objectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<deleteSceneObjectResponse> => {
+
+  return orvalFetch<deleteSceneObjectResponse>(getDeleteSceneObjectUrl(projectId,objectId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSceneObjectMutationKey = () => ['deleteSceneObject'] as const;
+
+export const getDeleteSceneObjectMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSceneObject>>, TError,DeleteSceneObjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSceneObject>>, TError,DeleteSceneObjectMutationVariables, TContext> => {
+
+const mutationKey = getDeleteSceneObjectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSceneObject>>, DeleteSceneObjectMutationVariables> = (props) => {
+          const {projectId,objectId} = props ?? {};
+
+          return  deleteSceneObject(projectId,objectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSceneObjectMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSceneObject>>>
+
+    export type DeleteSceneObjectMutationError = void | ErrorResponse
+    export type DeleteSceneObjectMutationVariables = {projectId: string;objectId: string}
+
+    /**
+ * @summary Remove a scene object
+ */
+export const useDeleteSceneObject = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSceneObject>>, TError,DeleteSceneObjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSceneObject>>,
+        TError,
+        DeleteSceneObjectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteSceneObjectMutationOptions(options), queryClient);
+    }
+
+export type updateSceneObjectResponse200 = {
+  data: SceneObject
+  status: 200
+}
+
+export type updateSceneObjectResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateSceneObjectResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateSceneObjectResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type updateSceneObjectResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type updateSceneObjectResponse428 = {
+  data: ErrorResponse
+  status: 428
+}
+
+export type updateSceneObjectResponseSuccess = (updateSceneObjectResponse200) & {
+  headers: Headers;
+};
+export type updateSceneObjectResponseError = (updateSceneObjectResponse401 | updateSceneObjectResponse404 | updateSceneObjectResponse409 | updateSceneObjectResponse422 | updateSceneObjectResponse428) & {
+  headers: Headers;
+};
+
+export type updateSceneObjectResponse = (updateSceneObjectResponseSuccess | updateSceneObjectResponseError)
+
+export const getUpdateSceneObjectUrl = (projectId: string,
+    objectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/scene-objects/${objectId}`
+}
+
+/**
+ * Change local transform, parent, visibility or ordering of a scene object.
+ * @summary Update a scene object
+ */
+export const updateSceneObject = async (projectId: string,
+    objectId: string,
+    sceneObjectUpdate: SceneObjectUpdate, options?: Parameters<typeof orvalFetch>[1]): Promise<updateSceneObjectResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<updateSceneObjectResponse>(getUpdateSceneObjectUrl(projectId,objectId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sceneObjectUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateSceneObjectMutationKey = () => ['updateSceneObject'] as const;
+
+export const getUpdateSceneObjectMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSceneObject>>, TError,UpdateSceneObjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSceneObject>>, TError,UpdateSceneObjectMutationVariables, TContext> => {
+
+const mutationKey = getUpdateSceneObjectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSceneObject>>, UpdateSceneObjectMutationVariables> = (props) => {
+          const {projectId,objectId,data} = props ?? {};
+
+          return  updateSceneObject(projectId,objectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSceneObjectMutationResult = NonNullable<Awaited<ReturnType<typeof updateSceneObject>>>
+    export type UpdateSceneObjectMutationBody = SceneObjectUpdate
+    export type UpdateSceneObjectMutationError = void | ErrorResponse
+    export type UpdateSceneObjectMutationVariables = {projectId: string;objectId: string;data: SceneObjectUpdate}
+
+    /**
+ * @summary Update a scene object
+ */
+export const useUpdateSceneObject = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSceneObject>>, TError,UpdateSceneObjectMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateSceneObject>>,
+        TError,
+        UpdateSceneObjectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateSceneObjectMutationOptions(options), queryClient);
     }
 
 export type listScenePointsResponse200 = {

@@ -38,6 +38,9 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     this.previousAlpha = renderer.getClearAlpha();
     this.container = new SparkRenderer({
       renderer,
+      // Covariance transforms preserve nonuniform scale and hierarchy-induced shear.
+      accumExtSplats: true,
+      covSplats: true,
       transparent: true,
       depthTest: true,
       depthWrite: false,
@@ -68,6 +71,8 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     if (this.disposed)
       throw new Error("SparkGaussianRenderingBackend is disposed");
     const mesh = new SplatMesh({
+      extSplats: true,
+      covSplats: true,
       ...(source.kind === "url"
         ? { url: source.url }
         : { fileBytes: source.buffer, fileName: source.name }),

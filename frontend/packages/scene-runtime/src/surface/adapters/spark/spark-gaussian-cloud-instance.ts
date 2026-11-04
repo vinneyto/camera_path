@@ -19,11 +19,14 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
   ) {
     this.object = mesh;
     mesh.updateWorldMatrix(true, false);
-    const sphere = mesh
-      .getBoundingBox()
-      .getBoundingSphere(new Sphere())
-      .applyMatrix4(mesh.matrixWorld);
-    this.bounds = { center: sphere.center.toArray(), radius: sphere.radius };
+    const box = mesh.getBoundingBox().clone().applyMatrix4(mesh.matrixWorld);
+    const sphere = box.getBoundingSphere(new Sphere());
+    this.bounds = {
+      center: sphere.center.toArray(),
+      radius: sphere.radius,
+      min: box.min.toArray(),
+      max: box.max.toArray(),
+    };
   }
 
   dispose(): void {

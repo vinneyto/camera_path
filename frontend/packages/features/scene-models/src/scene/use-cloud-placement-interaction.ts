@@ -3,9 +3,11 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { useCloudPlacement } from "@camera-path/actions";
 import type { SceneSurfaceHit } from "@camera-path/scene-runtime/surface";
-import type { LibraryAsset, ProjectCloud } from "@camera-path/types/api";
+import type { LibraryAsset, SceneObject } from "@camera-path/types/api";
 import type { Vec3 } from "@camera-path/types/project";
 import { usePointerTap } from "@camera-path/ui-kit/lib/use-pointer-tap";
+
+import { createLibraryObjectTransform } from "./create-library-object-transform";
 
 let nextPlacementKey = 0;
 const ORIGIN_HIT: SceneSurfaceHit = { position: [0, 0, 0], normal: [0, 1, 0] };
@@ -25,7 +27,7 @@ export function useCloudPlacementInteraction({
   clouds,
 }: {
   onPlace: (assetId: string, position: Vec3) => Promise<boolean>;
-  clouds: ProjectCloud[];
+  clouds: SceneObject[];
 }) {
   const { pendingCloud, cancel } = useCloudPlacement();
   const [preview, setPreview] = useState<PlacementPreview | null>(null);
@@ -44,8 +46,13 @@ export function useCloudPlacementInteraction({
       (cloud) =>
         !placed.previousIds.has(cloud.id) &&
         cloud.library_asset_id === placed.asset.id &&
-        cloud.translation.every(
-          (value, axis) => Math.abs(value - placed.hit.position[axis]) < 0.0002,
+        cloud.position.every(
+          (value, axis) =>
+            Math.abs(
+              value -
+                createLibraryObjectTransform(placed.asset, placed.hit.position)
+                  .position[axis],
+            ) < 0.0002,
         ),
     );
   function resourceKeyForAsset(asset: LibraryAsset): string {
@@ -75,7 +82,10 @@ export function useCloudPlacementInteraction({
         ...committed,
         previousIds: new Set(clouds.map((cloud) => cloud.id)),
       });
-      void onPlace(pendingCloud.id, hit.position)
+      void onPlace(
+        pendingCloud.id,
+        createLibraryObjectTransform(pendingCloud, hit.position).position,
+      )
         .then((created) => {
           if (!created)
             setPlaced((current) =>

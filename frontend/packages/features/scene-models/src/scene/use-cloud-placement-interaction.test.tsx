@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { useCloudPlacement } from "@camera-path/actions";
 import type { SceneSurfaceHit } from "@camera-path/scene-runtime/surface";
-import type { LibraryAsset, ProjectCloud } from "@camera-path/types/api";
+import type { LibraryAsset, SceneObject } from "@camera-path/types/api";
 
 import { useCloudPlacementInteraction } from "@camera-path/feature-scene-models/scene/use-cloud-placement-interaction";
 
@@ -19,7 +19,7 @@ function wrapper({ children }: PropsWithChildren) {
 describe("cloud placement", () => {
   it("previews a hit and creates the cloud only after the click", () => {
     const onPlace = vi.fn().mockResolvedValue(true);
-    let clouds: ProjectCloud[] = [];
+    let clouds: SceneObject[] = [];
     const { result, rerender } = renderHook(
       () => ({
         placement: useCloudPlacementInteraction({ onPlace, clouds }),
@@ -60,8 +60,8 @@ describe("cloud placement", () => {
       {
         id: "new-cloud",
         library_asset_id: "asset",
-        translation: [1, 2, 3],
-      } as ProjectCloud,
+        position: [1, 2, 3],
+      } as SceneObject,
     ];
     rerender();
     expect(result.current.placement.resourceKeyForCloud("new-cloud")).toBe(

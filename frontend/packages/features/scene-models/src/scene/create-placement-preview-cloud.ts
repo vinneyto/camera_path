@@ -1,22 +1,23 @@
 import type { PlacementPreview } from "@camera-path/feature-scene-models/scene/use-cloud-placement-interaction";
-import type { ProjectCloud } from "@camera-path/types/api";
+import type { SceneObject } from "@camera-path/types/api";
+import { createLibraryObjectTransform } from "./create-library-object-transform";
 
 export function createPlacementPreviewCloud({
   asset,
   hit,
-}: PlacementPreview): ProjectCloud {
+  resourceKey,
+}: PlacementPreview): SceneObject {
   return {
-    id: `cloud-placement-${asset.id}`,
+    id: `cloud-placement-${resourceKey}`,
     project_id: "",
+    parent_id: null,
     library_asset_id: asset.id,
+    library_asset_file_id: asset.primary_file_id,
     name: asset.name,
     format: asset.format,
-    position: 0,
+    sort_order: 0,
     visible: true,
     download_url: asset.download_url!,
-    translation: hit.position,
-    rotation_deg: asset.default_rotation_deg,
-    scale: asset.default_scale,
-    offset: asset.default_offset,
+    ...createLibraryObjectTransform(asset, hit.position),
   };
 }
