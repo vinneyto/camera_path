@@ -8,13 +8,22 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { featureSlots } from "@host/composition/feature-slots";
 import { JobsPage } from "./jobs-page";
+import { JobCreatePage } from "./job-create-page";
 import { JobDetailsPage } from "./job-details-page";
 
-const identity = vi.hoisted(() => ({ canEdit: true }));
+const { identity, push } = vi.hoisted(() => ({
+  identity: { canEdit: true, loading: false },
+  push: vi.fn(),
+}));
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => ({ push }),
+}));
 vi.mock("@camera-path/api/identity/auth-provider", () => ({
   useAuth: () => identity,
 }));
@@ -75,8 +84,9 @@ const completedSummary: JobSummary = {
 let jobs: JobSummary[];
 let job: Job;
 let listError: boolean;
+let createError: boolean;
 let detailStatus: number;
-const requests: { url: string; method: string }[] = [];
+const requests: { url: string; method: string; body?: BodyInit | null }[] = [];
 const clients: QueryClient[] = [];
 
 function mount(detailId?: string) {
@@ -87,7 +97,13 @@ function mount(detailId?: string) {
   const page = (detailId?: string) => (
     <QueryClientProvider client={client}>
       <SlotProvider features={featureSlots}>
-        {detailId ? <JobDetailsPage jobId={detailId} /> : <JobsPage />}
+        {detailId === "new" ? (
+          <JobCreatePage />
+        ) : detailId ? (
+          <JobDetailsPage jobId={detailId} />
+        ) : (
+          <JobsPage />
+        )}
       </SlotProvider>
     </QueryClientProvider>
   );
@@ -100,13 +116,24 @@ beforeEach(() => {
   job = structuredClone(pending);
   jobs = [];
   listError = false;
+  createError = false;
   detailStatus = 200;
+  push.mockClear();
   requests.length = 0;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, options: RequestInit) => {
-      requests.push({ url, method: options.method ?? "GET" });
+      requests.push({
+        url,
+        method: options.method ?? "GET",
+        body: options.body,
+      });
       if (url === "/api/v1/jobs") {
+        if (options.method === "POST") {
+          return createError
+            ? Response.json({ detail: "Unavailable" }, { status: 503 })
+            : Response.json({ ...pending, status: "draft" }, { status: 201 });
+        }
         return listError
           ? Response.json({ detail: "Unavailable" }, { status: 503 })
           : Response.json(jobs);
@@ -132,15 +159,55 @@ it("shows an empty public list without creation controls for guests", async () =
   expect(requests.every((request) => request.method === "GET")).toBe(true);
 });
 
-it("shows a disabled create button for editors and never submits a job", async () => {
-  mount();
-  await screen.findByText("No jobs yet.");
-  const button = screen.getByRole("button", {
+it("opens creation from the list and saves a generation draft", async () => {
+  const view = mount();
+  fireEvent.click(screen.getByRole("button", { name: "Create job" }));
+  expect(push).toHaveBeenCalledWith("/jobs/new");
+  expect(requests.every((request) => request.method === "GET")).toBe(true);
+  view.changeJob("new");
+  const submit = screen.getByRole("button", {
     name: "Create job",
   }) as HTMLButtonElement;
-  expect(button.disabled).toBe(true);
-  fireEvent.click(button);
-  expect(requests.every((request) => request.method === "GET")).toBe(true);
+  expect(submit.disabled).toBe(true);
+  const prompt = screen.getByRole("textbox", {
+    name: "Prompt",
+  }) as HTMLTextAreaElement;
+  fireEvent.change(prompt, { target: { value: "A wooden chair" } });
+  createError = true;
+  fireEvent.click(submit);
+  await screen.findByRole("alert");
+  expect(prompt.value).toBe("A wooden chair");
+  expect(push).not.toHaveBeenCalledWith(`/jobs/${id}`);
+
+  createError = false;
+  fireEvent.click(submit);
+  await waitFor(() => expect(push).toHaveBeenCalledWith(`/jobs/${id}`));
+  const submissions = requests.filter((request) => request.method === "POST");
+  expect(
+    submissions.map((request) => ({
+      url: request.url,
+      body: JSON.parse(String(request.body)),
+    })),
+  ).toEqual([
+    {
+      url: "/api/v1/jobs",
+      body: { type: "generation", input: { prompt: "A wooden chair" } },
+    },
+    {
+      url: "/api/v1/jobs",
+      body: { type: "generation", input: { prompt: "A wooden chair" } },
+    },
+  ]);
+});
+
+it("asks guests to sign in on the creation route", () => {
+  identity.canEdit = false;
+  mount("new");
+  expect(
+    screen.getByText("Sign in as an editor to create a job."),
+  ).toBeTruthy();
+  expect(screen.queryByRole("textbox", { name: "Prompt" })).toBeNull();
+  expect(requests).toHaveLength(0);
 });
 
 it("shows prompt, explicit status, error, unknown type and direct library result links", async () => {

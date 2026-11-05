@@ -2717,8 +2717,12 @@
       "files": [
         "packages/features/jobs/src/index.ts",
         "packages/features/jobs/src/ui/create-job-button.tsx",
+        "packages/features/jobs/src/ui/job-create-form.tsx",
+        "packages/features/jobs/src/ui/job-create-page.tsx",
+        "packages/features/jobs/src/ui/job-input-editor.tsx",
         "packages/features/jobs/src/ui/job-list-item.tsx",
-        "packages/features/jobs/src/ui/jobs-page.tsx"
+        "packages/features/jobs/src/ui/jobs-page.tsx",
+        "packages/features/jobs/src/ui/parse-generation-input.ts"
       ],
       "slots": {
         "jobs": {
@@ -2729,10 +2733,37 @@
               "line": 8,
               "column": 1
             }
+          ],
+          "create": [
+            {
+              "name": "JobCreatePage",
+              "file": "packages/features/jobs/src/ui/job-create-page.tsx",
+              "line": 7,
+              "column": 1
+            }
           ]
         }
       },
-      "actions": [],
+      "actions": [
+        {
+          "name": "useCreateJobMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/jobs/use-create-job.ts",
+            "line": 10,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/jobs/src/ui/job-create-form.tsx",
+              "line": 28,
+              "column": 20,
+              "expression": "useCreateJobMutation"
+            }
+          ]
+        }
+      ],
       "selectors": [
         {
           "name": "useAuth",
@@ -2746,8 +2777,14 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/create-job-button.tsx",
-              "line": 8,
+              "line": 9,
               "column": 23,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/jobs/src/ui/job-create-page.tsx",
+              "line": 8,
+              "column": 32,
               "expression": "useAuth()"
             }
           ]
@@ -4631,6 +4668,7 @@
         "apps/host/src/ui/app-shell/profile-menu.tsx",
         "apps/host/src/ui/commands/workspace-commands.tsx",
         "apps/host/src/ui/feature-page-route.tsx",
+        "apps/host/src/ui/job-create-page.tsx",
         "apps/host/src/ui/job-details-page.tsx",
         "apps/host/src/ui/jobs-page.tsx",
         "apps/host/src/ui/project-list/index.ts",
@@ -4656,6 +4694,7 @@
         "src/app/[...featurePath]/page.tsx",
         "src/app/api/v1/[...path]/route.ts",
         "src/app/jobs/[jobId]/page.tsx",
+        "src/app/jobs/new/page.tsx",
         "src/app/jobs/page.tsx",
         "src/app/layout.tsx",
         "src/app/library/[assetId]/page.tsx",
