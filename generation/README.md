@@ -14,7 +14,7 @@ environment and run this setup once from the repository root.
 
 ```bash
 docker compose -f backend/compose.yaml up -d rabbitmq
-python -m pip install -e generation
+uv pip install -e generation
 cp -n generation/.env.example generation/.env
 ```
 
