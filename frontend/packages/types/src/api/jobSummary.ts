@@ -5,10 +5,20 @@
  * Create camera-path projects, author scene and trajectory data, edit playback timelines, and run the trajectory agent. Canonical operations use project revision ETags for optimistic concurrency.
  * OpenAPI spec version: 1.0.0
  */
+import type { JobError } from './jobError';
+import type { JobResultSummary } from './jobResultSummary';
+import type { JobStatus } from './jobStatus';
 
 export interface JobSummary {
   /** @minimum 0 */
   asset_count: number;
+  assets: JobResultSummary[];
   completed_at: string | null;
+  created_at: string | null;
+  error: JobError | null;
   id: string;
+  prompt: string | null;
+  started_at: string | null;
+  status: JobStatus;
+  type: string | null;
 }

@@ -51,6 +51,7 @@ import type {
   ErrorResponse,
   HTTPValidationError,
   Job,
+  JobCreate,
   JobSummary,
   LibraryAsset,
   LibraryAssetDefaultsUpdate,
@@ -660,7 +661,7 @@ export const getListJobsUrl = () => {
 }
 
 /**
- * List pending and completed jobs with surviving result counts, ordered by ID.
+ * List all job types, newest first, with status, prompt, errors and result links.
  * @summary List Jobs
  */
 export const listJobs = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<listJobsResponse> => {
@@ -763,10 +764,15 @@ export type createJobResponse401 = {
   status: 401
 }
 
+export type createJobResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
 export type createJobResponseSuccess = (createJobResponse201) & {
   headers: Headers;
 };
-export type createJobResponseError = (createJobResponse401) & {
+export type createJobResponseError = (createJobResponse401 | createJobResponse422) & {
   headers: Headers;
 };
 
@@ -781,17 +787,31 @@ export const getCreateJobUrl = () => {
 }
 
 /**
- * Reserve an empty job without starting a generator.
+ * Create a draft with server-validated input. Does not start a pipeline.
  * @summary Create Job
  */
-export const createJob = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<createJobResponse> => {
+export const createJob = async (jobCreate: JobCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createJobResponse> => {
 
-  return orvalFetch<createJobResponse>(getCreateJobUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<createJobResponse>(getCreateJobUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(jobCreate)
   }
 );}
 
@@ -801,9 +821,9 @@ export const createJob = async ( options?: Parameters<typeof orvalFetch>[1]): Pr
 
 export const getCreateJobMutationKey = () => ['createJob'] as const;
 
-export const getCreateJobMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,void, TContext> => {
+export const getCreateJobMutationOptions = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,CreateJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,CreateJobMutationVariables, TContext> => {
 
 const mutationKey = getCreateJobMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -815,10 +835,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJob>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJob>>, CreateJobMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  createJob(requestOptions)
+          return  createJob(data,requestOptions)
         }
 
 
@@ -829,19 +849,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CreateJobMutationResult = NonNullable<Awaited<ReturnType<typeof createJob>>>
-
-    export type CreateJobMutationError = void
-
+    export type CreateJobMutationBody = JobCreate
+    export type CreateJobMutationError = void | HTTPValidationError
+    export type CreateJobMutationVariables = {data: JobCreate}
 
     /**
  * @summary Create Job
  */
-export const useCreateJob = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+export const useCreateJob = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,CreateJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createJob>>,
         TError,
-        void,
+        CreateJobMutationVariables,
         TContext
       > => {
       return useMutation(getCreateJobMutationOptions(options), queryClient);

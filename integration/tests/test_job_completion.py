@@ -30,7 +30,7 @@ def descriptor(b):
         )
     return {
         "schema_version": 2,
-        "job_id": b.request("POST", "/api/v1/jobs", 201).json()["id"],
+        "job_id": b.create_job()["id"],
         "message_id": str(uuid4()),
         "assets": [
             {
@@ -70,9 +70,12 @@ def test_rabbitmq_completion_multiple_files_and_restart(dev_backend):
     job = enqueue(b, data)
     assert job["completed_at"] is not None
     asset = job["assets"][0]
-    assert b.request("GET", "/api/v1/jobs", auth=False).json() == [
-        {"id": job["id"], "completed_at": job["completed_at"], "asset_count": 1}
+    summary = b.request("GET", "/api/v1/jobs", auth=False).json()[0]
+    assert summary["id"] == job["id"] and summary["status"] == job["status"] == "succeeded"
+    assert summary["asset_count"] == 1 and summary["assets"] == [
+        {"id": asset["id"], "name": "Tree"}
     ]
+    assert "input" not in summary and "download_url" not in summary["assets"][0]
     assert asset["job_id"] == job["id"]
     assert asset["tags"] == ["Tree"]
     assert asset["primary_file_id"] == "sog" and asset["format"] == "sog"
@@ -102,9 +105,9 @@ def test_rabbitmq_completion_multiple_files_and_restart(dev_backend):
     enqueue(b, replay)
     deleted = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
     assert deleted["completed_at"] == job["completed_at"] and deleted["assets"] == []
-    assert b.request("GET", "/api/v1/jobs", auth=False).json() == [
-        {"id": job["id"], "completed_at": job["completed_at"], "asset_count": 0}
-    ]
+    summary = b.request("GET", "/api/v1/jobs", auth=False).json()[0]
+    assert summary["id"] == job["id"] and summary["status"] == "succeeded"
+    assert summary["asset_count"] == 0 and summary["assets"] == []
 
 
 def test_rabbitmq_bad_files_are_quarantined_without_partial_results(dev_backend):
@@ -145,8 +148,9 @@ def test_debug_routes_are_absent_with_rabbitmq(dev_backend):
 def test_jobs_reservation_validation_and_unknown_completion(dev_backend):
     b = dev_backend
     b.request("POST", "/api/v1/jobs", 401, auth=False)
-    reserved = b.request("POST", "/api/v1/jobs", 201).json()
-    assert reserved == {"id": reserved["id"], "completed_at": None, "assets": []}
+    reserved = b.create_job()
+    assert reserved["status"] == "draft" and reserved["completed_at"] is None
+    assert reserved["input"] == {"prompt": "A wooden chair"} and reserved["assets"] == []
     assert b.request("GET", f"/api/v1/jobs/{reserved['id']}", auth=False).json() == reserved
     b.request("GET", "/api/v1/jobs/not-a-uuid", 422)
     b.request("GET", f"/api/v1/jobs/{uuid4()}", 404)
@@ -172,7 +176,7 @@ def test_documented_helper_submits_two_ply_files(dev_backend):
     files = [source / "full.ply", source / "preview.ply"]
     for path, data in zip(files, contents, strict=True):
         path.write_bytes(data)
-    job = b.request("POST", "/api/v1/jobs", 201).json()
+    job = b.create_job()
     helper = Path(__file__).resolve().parents[2] / "backend/examples/make_job_completion.py"
     generated = subprocess.run(
         [
@@ -237,7 +241,7 @@ def test_temporary_source_failure_retries_without_blocking_other_jobs(dev_backen
         assert json.loads(retry["body"]) == data
         assert retry["properties"]["headers"]["camera-path-attempt"] == 4
         other = copy.deepcopy(data)
-        other["job_id"] = b.request("POST", "/api/v1/jobs", 201).json()["id"]
+        other["job_id"] = b.create_job()["id"]
         other["message_id"] = str(uuid4())
         other["assets"][0]["files"] = [other["assets"][0]["files"][1]]
         other["assets"][0]["primary_file_id"] = "ply"

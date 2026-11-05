@@ -50,3 +50,12 @@ class LibraryAssetStatus(StrEnum):
 class ChatRole(StrEnum):
     USER = "user"
     ASSISTANT = "assistant"
+
+
+class JobStatus(StrEnum):
+    DRAFT = "draft"
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"

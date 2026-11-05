@@ -58,18 +58,42 @@ export function JobDetailsPage() {
             className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
             aria-live="polite"
           >
-            <Badge>{job.completed_at ? "Completed" : "Pending"}</Badge>
+            <Badge className="capitalize">{job.status}</Badge>
             {job.completed_at ? (
               <time dateTime={job.completed_at}>
                 {new Date(job.completed_at).toLocaleString()}
               </time>
             ) : (
-              <span>Waiting for results.</span>
+              <span>
+                {job.status === "draft"
+                  ? "Not started."
+                  : "Waiting for results."}
+              </span>
             )}
           </div>
           {resource.isError && (
             <p className="text-xs text-destructive" role="alert">
               Could not refresh this job. Try again.
+            </p>
+          )}
+          {job.type && (
+            <p className="text-xs capitalize text-muted-foreground">
+              {job.type}
+            </p>
+          )}
+          {job.input && (
+            <details className="rounded-lg border p-4 text-xs">
+              <summary className="cursor-pointer font-medium">
+                Input parameters
+              </summary>
+              <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-words">
+                {JSON.stringify(job.input, null, 2)}
+              </pre>
+            </details>
+          )}
+          {job.error && (
+            <p role="alert" className="text-xs text-destructive">
+              {job.error.message}
             </p>
           )}
           <section className="space-y-3" aria-labelledby="job-assets-heading">
@@ -86,9 +110,11 @@ export function JobDetailsPage() {
               </ul>
             ) : (
               <p className="rounded-lg border border-dashed p-8 text-center text-xs text-muted-foreground">
-                {job.completed_at
+                {job.status === "succeeded"
                   ? "No assets remain for this job."
-                  : "Results will appear here when the job completes."}
+                  : job.status === "failed" || job.status === "cancelled"
+                    ? "No results for this job."
+                    : "Results will appear here when the job completes."}
               </p>
             )}
           </section>

@@ -242,6 +242,8 @@ class JobCompletionService:
                             ],
                         )
                     )
+                job.status = "succeeded"
+                job.error = None
                 job.completed_at = datetime.now(UTC)
                 await session.flush()
             return message.job_id

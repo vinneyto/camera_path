@@ -222,6 +222,14 @@ class Backend:
         )
         return response
 
+    def create_job(self, prompt="A wooden chair"):
+        return self.request(
+            "POST",
+            "/api/v1/jobs",
+            201,
+            json={"type": "generation", "input": {"prompt": prompt}},
+        ).json()
+
     def project(self, name="Integration"):
         return Project(
             self, self.request("POST", "/api/v1/projects", 201, json={"name": name}).json()["id"]

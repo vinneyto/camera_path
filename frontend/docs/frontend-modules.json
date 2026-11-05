@@ -833,7 +833,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3258,
+            "line": 3278,
             "column": 1
           },
           "usages": [
@@ -857,7 +857,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8796,
+            "line": 8816,
             "column": 1
           },
           "usages": [
@@ -881,7 +881,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3622,
+            "line": 3642,
             "column": 1
           },
           "usages": [
@@ -905,7 +905,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 925,
+            "line": 945,
             "column": 1
           },
           "usages": [
@@ -913,7 +913,7 @@
               "file": "packages/api/src/resources/use-job-resource.ts",
               "line": 8,
               "column": 17,
-              "expression": "useGetJob(useJobId(id), {\n    query: {\n      refetchInterval: (query) =>\n        query.state.status === \"error\" ||\n        (query.state.data?.status === 200 && query.state.data.data.completed_at)\n          ? false\n          : 2000,\n      retry: (attempt, error) =>\n        !(error instanceof ApiError && [404, 422].includes(error.status)) &&\n        attempt < 2,\n    },\n  })"
+              "expression": "useGetJob(useJobId(id), {\n    query: {\n      refetchInterval: (query) =>\n        query.state.status === \"error\" ||\n        (query.state.data?.status === 200 &&\n          [\"succeeded\", \"failed\", \"cancelled\"].includes(\n            query.state.data.data.status,\n          ))\n          ? false\n          : 2000,\n      retry: (attempt, error) =>\n        !(error instanceof ApiError && [404, 422].includes(error.status)) &&\n        attempt < 2,\n    },\n  })"
             }
           ]
         },
@@ -923,7 +923,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1485,
+            "line": 1505,
             "column": 1
           },
           "usages": [
@@ -941,7 +941,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4723,
+            "line": 4743,
             "column": 1
           },
           "usages": [
@@ -965,7 +965,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5087,
+            "line": 5107,
             "column": 1
           },
           "usages": [
@@ -989,7 +989,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2397,
+            "line": 2417,
             "column": 1
           },
           "usages": [
@@ -1007,7 +1007,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6434,
+            "line": 6454,
             "column": 1
           },
           "usages": [
@@ -1031,7 +1031,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8665,
+            "line": 8685,
             "column": 1
           },
           "usages": [
@@ -1055,7 +1055,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2647,
+            "line": 2667,
             "column": 1
           },
           "usages": [
@@ -1079,7 +1079,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5827,
+            "line": 5847,
             "column": 1
           },
           "usages": [
@@ -1103,7 +1103,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 710,
+            "line": 711,
             "column": 1
           },
           "usages": [
@@ -1121,7 +1121,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1039,
+            "line": 1059,
             "column": 1
           },
           "usages": [
@@ -1139,7 +1139,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2039,
+            "line": 2059,
             "column": 1
           },
           "usages": [
@@ -1163,7 +1163,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7174,
+            "line": 7194,
             "column": 1
           },
           "usages": [
@@ -1181,7 +1181,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7671,
+            "line": 7691,
             "column": 1
           },
           "usages": [
@@ -2717,6 +2717,7 @@
       "files": [
         "packages/features/jobs/src/index.ts",
         "packages/features/jobs/src/ui/create-job-button.tsx",
+        "packages/features/jobs/src/ui/job-list-item.tsx",
         "packages/features/jobs/src/ui/jobs-page.tsx"
       ],
       "slots": {
@@ -2725,32 +2726,13 @@
             {
               "name": "JobsPage",
               "file": "packages/features/jobs/src/ui/jobs-page.tsx",
-              "line": 9,
+              "line": 8,
               "column": 1
             }
           ]
         }
       },
-      "actions": [
-        {
-          "name": "useCreateJobMutation",
-          "kind": "hook",
-          "package": "@camera-path/actions",
-          "definition": {
-            "file": "packages/actions/src/mutations/jobs/use-create-job.ts",
-            "line": 9,
-            "column": 1
-          },
-          "usages": [
-            {
-              "file": "packages/features/jobs/src/ui/create-job-button.tsx",
-              "line": 11,
-              "column": 20,
-              "expression": "useCreateJobMutation"
-            }
-          ]
-        }
-      ],
+      "actions": [],
       "selectors": [
         {
           "name": "useAuth",
@@ -2764,7 +2746,7 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/create-job-button.tsx",
-              "line": 10,
+              "line": 8,
               "column": 23,
               "expression": "useAuth()"
             }
@@ -2782,7 +2764,7 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/jobs-page.tsx",
-              "line": 10,
+              "line": 9,
               "column": 16,
               "expression": "useJobsCatalog()"
             }

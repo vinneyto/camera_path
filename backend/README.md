@@ -476,10 +476,16 @@ assets. The monolith verifies every file, registers all assets and completes the
 The first successful completion wins, including after assets are deleted. Development uses
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
-The frontend's Jobs page lists jobs and lets the editor reserve one without inputs; its detail
-page follows completion and links to all result assets. `GET /api/v1/jobs` returns summaries
-with surviving asset counts. Read a job and its ordered results through `/api/v1/jobs/{job_id}`; job reservation does not start
-a generator. Manual uploads remain independent, and project clouds use the primary representation.
+The Jobs page lists every job type with its prompt, explicit lifecycle status, errors and
+surviving library results. Its Create button is currently disabled. Editors can reserve a draft
+through `POST /api/v1/jobs` with `{"type":"generation","input":{"prompt":"A wooden chair"}}`.
+The server validates input against its JSON Schema, rejects unknown types/fields and blank prompts,
+and stores the exact validated JSON. Frontend presets are not stored on the backend. Creation does
+not start a pipeline. Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
+status; terminal states have `completed_at`. Successful completion import updates the status
+atomically with the results. Deleting assets does not change job history. Legacy jobs keep their
+IDs/results with null type/input and unknown creation/start times; their completion timestamps
+are preserved. Apply `alembic upgrade head` before running against an existing database.
 
 See [the local verification and AWS configuration guide](docs/library-import.md). Run
 `uv run alembic upgrade head` before starting against an existing database. Queue consumption is

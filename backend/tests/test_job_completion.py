@@ -17,6 +17,7 @@ from camera_path.persistence.records import LibraryAssetFileRecord
 from camera_path.services.job_completion import JobCompletionService
 from camera_path.services.job_completion_models import JobCompletionMessage
 from camera_path.services.job_consumer import JobCompletionConsumer
+from camera_path.services.jobs import JobCreate
 
 PLY = b"ply\nformat ascii 1.0\nend_header\n"
 SOG = b"PK\x03\x04fixture"
@@ -49,7 +50,9 @@ async def setup(tmp_path):
 
 
 async def message(app, root, files=("sog", "ply"), storage="incoming"):
-    job = await app.state.job_service.create()
+    job = await app.state.job_service.create(
+        JobCreate(type="generation", input={"prompt": "A tree"})
+    )
     result = {
         "schema_version": 2,
         "job_id": job.id,
@@ -148,7 +151,9 @@ async def test_existing_library_files_are_adopted_with_original_keys(setup):
     assert set(p.name for p in (root / "library").iterdir()) <= {"tree.ply", "tree.sog", "_imports"}
     other = copy.deepcopy(payload)
     other["message_id"] = str(uuid4())
-    other["job_id"] = (await app.state.job_service.create()).id
+    other["job_id"] = (
+        await app.state.job_service.create(JobCreate(type="generation", input={"prompt": "A tree"}))
+    ).id
     assert (await process(app, other)).error_code == "library_import_object_conflict"
     assert (root / "library/tree.sog").read_bytes() == SOG
 
