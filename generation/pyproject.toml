@@ -8,6 +8,7 @@ dependencies = [
     "numpy>=2,<3",
     "plyfile>=1.1,<2",
     "pydantic>=2.13.5,<3",
+    "python-dotenv>=1.1,<2",
 ]
 
 [build-system]

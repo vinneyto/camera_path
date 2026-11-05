@@ -9,33 +9,35 @@ receives requests and publishes results for local development.
 Use the Python environment of a working Trellis Mac port and its prepared
 `microsoft/TRELLIS-text-base` model directory. The directory must contain
 `pipeline.json` with paths to the local text encoder and checkpoints. The
-pipeline must support Gaussian PLY export. Point `TRELLIS_PORT` at the port
-checkout and `TRELLIS_PYTHON` at that environment's Python executable. Point
-`TRELLIS_MODEL_DIR` at the prepared directory. Run from the repository root.
+pipeline must support Gaussian PLY export. Activate the Trellis Python
+environment and run this setup once from the repository root.
 
 ```bash
 docker compose -f backend/compose.yaml up -d rabbitmq
-"$TRELLIS_PYTHON" -m pip install -e generation
-
-HF_HUB_OFFLINE=1 PYTHONPATH="$TRELLIS_PORT${PYTHONPATH:+:$PYTHONPATH}" \
-  "$TRELLIS_PYTHON" -m camera_path_generation \
-  --model-dir "$TRELLIS_MODEL_DIR" --output-dir /tmp/camera-path-generation \
-  --request-queue camera-path.smoke.generate --result-queue camera-path.smoke.result
+python -m pip install -e generation
+cp -n generation/.env.example generation/.env
 ```
 
-The default broker URL is `amqp://guest:guest@127.0.0.1:5672/`. Override it
-with `GENERATION_AMQP_URL` in both terminals if needed. The worker loads the
-model on the first valid request. The backend process is not needed for this
-run.
-
-In another terminal, use dedicated queues and submit one request at a time.
+In `generation/.env`, set `GENERATION_TRELLIS_PORT_DIR` to the port checkout
+and `GENERATION_MODEL_DIR` to the prepared model directory. The default output
+directory is `~/.camera-path/generation`. Use absolute paths or paths starting
+with `~/` to run from either the repository root or `generation/`.
 
 ```bash
-"$TRELLIS_PYTHON" generation/examples/request.py "A small wooden chair." \
-  --request-queue camera-path.smoke.generate --result-queue camera-path.smoke.result
+python -m camera_path_generation
+```
 
-"$TRELLIS_PYTHON" generation/examples/request.py "" \
-  --request-queue camera-path.smoke.generate --result-queue camera-path.smoke.result
+Command-line flags override environment variables, which override the file.
+The worker loads the model on the first valid request. The backend process is
+not needed for this run.
+
+In another terminal, activate the same Python environment and submit one request
+at a time. If you changed the broker URL or queues, pass the same values to the
+client through `GENERATION_AMQP_URL`, `--request-queue` and `--result-queue`.
+
+```bash
+python generation/examples/request.py "A small wooden chair."
+python generation/examples/request.py ""
 ```
 
 The first request should return `succeeded` and a relative `result_path`.
