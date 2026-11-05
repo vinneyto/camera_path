@@ -6,38 +6,44 @@ receives requests and publishes results for local development.
 
 ## Run on a Mac
 
-Use the Python environment of a working Trellis Mac port and its prepared
-`microsoft/TRELLIS-text-base` model directory. The directory must contain
-`pipeline.json` with paths to the local text encoder and checkpoints. The
-pipeline must support Gaussian PLY export. Activate the Trellis Python
-environment and run this setup once from the repository root.
+Set up the worker on Apple Silicon from the repository root. Its Python 3.12
+environment and Trellis checkout live under `generation/` and are ignored by
+Git. The patch keeps exported Gaussian opacity values finite.
 
 ```bash
-docker compose -f backend/compose.yaml up -d rabbitmq
-uv pip install -e generation
-cp -n generation/.env.example generation/.env
+cd generation
+git clone https://github.com/vinayapathak/trellis-mac-mps.git
+git -C trellis-mac-mps checkout --detach f7c175a8620c2c23923d5b6fca3bf7f53604335f
+git -C trellis-mac-mps apply ../trellis-finite-opacity.patch
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e . -r requirements-trellis-mps.txt
+cp -n .env.example .env
 ```
 
-In `generation/.env`, set `GENERATION_TRELLIS_PORT_DIR` to the port checkout
-and `GENERATION_MODEL_DIR` to the prepared model directory. The default output
-directory is `~/.camera-path/generation`. Use absolute paths or paths starting
-with `~/` to run from either the repository root or `generation/`.
+In `.env`, set `GENERATION_MODEL_DIR` to the prepared `microsoft/TRELLIS-text-base`
+model directory containing `pipeline.json` and references to the local text
+encoder and checkpoints. The model can live outside the repository. The default
+output directory is `~/.camera-path/generation`. Remove any previous
+`GENERATION_TRELLIS_PORT_DIR` setting to use the checkout beside `.env`.
+
+Start RabbitMQ and the worker from `generation/`.
 
 ```bash
-python -m camera_path_generation
+docker compose -f ../backend/compose.yaml up -d --wait rabbitmq
+.venv/bin/python -m camera_path_generation
 ```
 
 Command-line flags override environment variables, which override the file.
 The worker loads the model on the first valid request. The backend process is
 not needed for this run.
 
-In another terminal, activate the same Python environment and submit one request
-at a time. If you changed the broker URL or queues, pass the same values to the
-client through `GENERATION_AMQP_URL`, `--request-queue` and `--result-queue`.
+In another terminal, submit one request at a time from `generation/`. If you
+changed the broker URL or queues, pass the same values to the client through
+`GENERATION_AMQP_URL`, `--request-queue` and `--result-queue`.
 
 ```bash
-python generation/examples/request.py "A small wooden chair."
-python generation/examples/request.py ""
+.venv/bin/python examples/request.py "A small wooden chair."
+.venv/bin/python examples/request.py ""
 ```
 
 The first request should return `succeeded` and a relative `result_path`.

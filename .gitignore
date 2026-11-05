@@ -19,3 +19,6 @@ frontend/public/sift/
 
 # Autonomous HTTP integration report
 api-coverage.json
+
+# Local Trellis checkout for the generation worker
+/generation/trellis-mac-mps/

@@ -16,6 +16,7 @@ from .trellis_runner import TrellisRunner
 def main() -> None:
     env_dir = Path("generation") if Path("generation/pyproject.toml").is_file() else Path.cwd()
     load_dotenv(env_dir / ".env", override=False)
+    local_port = env_dir / "trellis-mac-mps"
 
     parser = argparse.ArgumentParser(description="Run the standalone Trellis generation worker")
     parser.add_argument("--model-dir", type=Path, default=os.getenv("GENERATION_MODEL_DIR") or None)
@@ -25,7 +26,10 @@ def main() -> None:
         default=os.getenv("GENERATION_OUTPUT_DIR") or Path.home() / ".camera-path" / "generation",
     )
     parser.add_argument(
-        "--trellis-port-dir", type=Path, default=os.getenv("GENERATION_TRELLIS_PORT_DIR") or None
+        "--trellis-port-dir",
+        type=Path,
+        default=os.getenv("GENERATION_TRELLIS_PORT_DIR")
+        or (local_port if local_port.is_dir() else None),
     )
     parser.add_argument(
         "--request-queue",

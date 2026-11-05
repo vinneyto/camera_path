@@ -1,0 +1,13 @@
+diff --git a/trellis/representations/gaussian/gaussian_model.py b/trellis/representations/gaussian/gaussian_model.py
+index ec1aee0..599714f 100755
+--- a/trellis/representations/gaussian/gaussian_model.py
++++ b/trellis/representations/gaussian/gaussian_model.py
+@@ -127,5 +127,7 @@ class Gaussian:
+         normals = np.zeros_like(xyz)
+         f_dc = self._features_dc.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
+-        opacities = inverse_sigmoid(self.get_opacity).detach().cpu().numpy()
++        # Export logits directly: sigmoid can round large finite logits to 1,
++        # making inverse_sigmoid produce infinity.
++        opacities = (self._opacity + self.opacity_bias).detach().cpu().numpy()
+         scale = torch.log(self.get_scaling).detach().cpu().numpy()
+         rotation = (self._rotation + self.rots_bias[None, :]).detach().cpu().numpy()
