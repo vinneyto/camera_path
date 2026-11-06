@@ -4,6 +4,21 @@ import re
 import unicodedata
 from uuid import UUID
 
+from pydantic import BaseModel, ConfigDict, FiniteFloat, model_validator
+
+
+class BoundingBox(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    min: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
+    max: tuple[FiniteFloat, FiniteFloat, FiniteFloat]
+
+    @model_validator(mode="after")
+    def validate_order(self):
+        if any(lower > upper for lower, upper in zip(self.min, self.max, strict=True)):
+            raise ValueError("Bounding box min must not exceed max")
+        return self
+
 
 def canonical_uuid(value: str) -> str:
     parsed = UUID(value)

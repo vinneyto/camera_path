@@ -37,7 +37,7 @@ export function JobCreateForm() {
     event.preventDefault();
     if (busy || !input?.prompt.trim()) return;
     creation.mutate(
-      { type: trellisTemplate.type, input },
+      { type: trellisTemplate.type, input, start: true },
       { onSuccess: (job) => router.push(`/jobs/${job.id}`) },
     );
   }
@@ -116,12 +116,12 @@ export function JobCreateForm() {
         </fieldset>
         {creation.isError && (
           <p role="alert" className="text-xs text-destructive">
-            Could not save the job. Try again.
+            Could not queue the job for generation. Try again.
           </p>
         )}
         <div className="flex justify-end">
           <Button type="submit" disabled={busy || !input?.prompt.trim()}>
-            {busy ? "Creating…" : "Create job"}
+            {busy ? "Queuing…" : "Create and generate"}
           </Button>
         </div>
       </form>

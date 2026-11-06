@@ -15,6 +15,7 @@ export * from './anchorLiftAxis';
 export * from './anchorUpdate';
 export * from './anchorUpdateLiftAxis';
 export * from './arcLengthSample';
+export * from './boundingBox';
 export * from './cameraKeyframe';
 export * from './cameraKeyframeCreate';
 export * from './cameraKeyframeCreateInterpolationToNext';

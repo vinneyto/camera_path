@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager, suppress
+from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -44,6 +44,8 @@ from camera_path.services import (
 )
 from camera_path.services.app_dependencies import AppDependencies
 from camera_path.services.auth import AuthService
+from camera_path.services.generation_integration import GenerationIntegration
+from camera_path.services.generation_models import GENERATION_SOURCE
 from camera_path.services.job_completion import JobCompletionService
 from camera_path.services.job_consumer import JobCompletionConsumer
 from camera_path.services.jobs import JobService
@@ -133,7 +135,9 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     storage = dependencies.library_storage
     library_service = LibraryService(LibraryRepository(project_repository.session_factory), storage)
     message_queue = dependencies.message_queue
+    generation_queue = dependencies.generation_queue
     importer = consumer = None
+    generation = generation_consumer = None
     if message_queue is not None:
         importer = JobCompletionService(library_service, dependencies.import_sources)
         consumer = JobCompletionConsumer(
@@ -141,6 +145,16 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             importer,
             configured.message_queue_max_attempts,
         )
+        if generation_queue is not None:
+            generation = GenerationIntegration(
+                generation_queue, importer, dependencies.import_sources[GENERATION_SOURCE]
+            )
+            generation_consumer = JobCompletionConsumer(
+                generation_queue,
+                generation,
+                configured.message_queue_max_attempts,
+                on_rejection=generation.on_rejection,
+            )
     scene_object_service = SceneObjectService(
         SceneObjectRepository(project_repository.session_factory),
         library_service.repository,
@@ -162,26 +176,33 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        task = None
-        try:
+        async with AsyncExitStack() as cleanup:
+            if dependencies.owns_repository:
+                cleanup.push_async_callback(project_repository.close)
+            for queue in (message_queue, generation_queue):
+                if queue is not None:
+                    cleanup.push_async_callback(queue.aclose)
             initialize = getattr(project_repository, "initialize", None)
             if initialize is not None:
                 await initialize()
-            task = asyncio.create_task(consumer.run()) if consumer is not None else None
-            yield
-        finally:
+            tasks = [
+                asyncio.create_task(worker.run())
+                for worker in (consumer, generation_consumer)
+                if worker is not None
+            ]
+            if generation is not None:
+                tasks.append(asyncio.create_task(generation.dispatch()))
             try:
-                if task is not None:
-                    task.cancel()
-                    with suppress(asyncio.CancelledError):
-                        await task
+                yield
             finally:
-                try:
-                    if message_queue is not None:
-                        await message_queue.aclose()
-                finally:
-                    if dependencies.owns_repository:
-                        await project_repository.close()
+                for task in tasks:
+                    task.cancel()
+                outcomes = await asyncio.gather(*tasks, return_exceptions=True)
+                for outcome in outcomes:
+                    if isinstance(outcome, BaseException) and not isinstance(
+                        outcome, asyncio.CancelledError
+                    ):
+                        raise outcome
 
     application = FastAPI(
         title="Camera Path API",
@@ -227,7 +248,9 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             content=_error_content(request, "storage_unavailable", "Library storage unavailable"),
         )
 
-    application.state.job_service = JobService(library_service)
+    application.state.job_service = JobService(
+        library_service, generation_enabled=generation is not None
+    )
     application.state.library_service = library_service
     application.state.scene_object_service = scene_object_service
     application.state.project_repository = project_repository

@@ -8,20 +8,29 @@ import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
 from aio_pika.connection import make_url
 
+from camera_path.services.generation_models import GenerationRequest, GenerationResult
 from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES, JobCompletionMessage
-from camera_path.services.message_queue import Delivery, MessageQueue
+from camera_path.services.message_queue import Delivery, GenerationQueue, MessageQueue
 
 RETRY_DELAYS = (1, 2, 4, 8, 16, 32, 60)
 
 
 class RabbitMQMessageQueue(MessageQueue):
+    message_model = JobCompletionMessage
+    queue_arguments = {"x-queue-type": "quorum", "x-delivery-limit": -1}
+
     def __init__(self, url: str, queue_name: str):
         self.url, self.queue_name = url, queue_name
         self._connection = self._channel = None
         self._inbox: asyncio.Queue[AbstractIncomingMessage] = asyncio.Queue(maxsize=1)
         self._pending: dict[str, AbstractIncomingMessage] = {}
+        self._connection_lock = asyncio.Lock()
 
     async def _connect(self):
+        async with self._connection_lock:
+            await self._ensure_connection()
+
+    async def _ensure_connection(self):
         if self._connection is not None:
             await self._channel.ready()
             return
@@ -31,7 +40,9 @@ class RabbitMQMessageQueue(MessageQueue):
             channel = await connection.channel(publisher_confirms=True, on_return_raises=True)
             await channel.set_qos(prefetch_count=1)
             arguments = {"x-queue-type": "quorum", "x-delivery-limit": -1}
-            queue = await channel.declare_queue(self.queue_name, durable=True, arguments=arguments)
+            queue = await channel.declare_queue(
+                self.queue_name, durable=True, arguments=self.queue_arguments
+            )
             await channel.declare_queue(
                 self.queue_name + ".failed", durable=True, arguments=arguments
             )
@@ -74,7 +85,7 @@ class RabbitMQMessageQueue(MessageQueue):
             _ = message.channel
             if len(message.body) > MAX_MESSAGE_BYTES:
                 raise ValueError("Oversized message")
-            payload = JobCompletionMessage.model_validate_json(message.body)
+            payload = self.message_model.model_validate_json(message.body)
             attempts = self._attempts(message)
         except (ValueError, TypeError, OverflowError):
             async with self.hold(receipt):
@@ -134,3 +145,28 @@ class RabbitMQMessageQueue(MessageQueue):
         self._pending.clear()
         while not self._inbox.empty():
             self._inbox.get_nowait()
+
+
+class RabbitMQGenerationQueue(RabbitMQMessageQueue, GenerationQueue):
+    message_model = GenerationResult
+    # The standalone worker and terminal client declare these queues as classic.
+    queue_arguments = {}
+
+    def __init__(self, url: str, request_queue: str, result_queue: str):
+        super().__init__(url, result_queue)
+        self.request_queue = request_queue
+
+    async def publish(self, request: GenerationRequest) -> None:
+        await self._connect()
+        await self._channel.declare_queue(self.request_queue, durable=True, timeout=5)
+        await self._channel.default_exchange.publish(
+            aio_pika.Message(
+                body=request.model_dump_json().encode(),
+                content_type="application/json",
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                correlation_id=request.job_id,
+            ),
+            routing_key=self.request_queue,
+            mandatory=True,
+            timeout=10,
+        )

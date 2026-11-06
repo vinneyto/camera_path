@@ -37,3 +37,13 @@ def test_invalid_job_input_does_not_create_partial_job(editor, body):
     b = editor
     b.request("POST", "/api/v1/jobs", 422, json=body)
     assert b.request("GET", "/api/v1/jobs", auth=False).json() == []
+
+
+def test_start_without_generation_configuration_leaves_no_job(editor):
+    editor.request(
+        "POST",
+        "/api/v1/jobs",
+        503,
+        json={"type": "generation", "input": {"prompt": "Chair"}, "start": True},
+    )
+    assert editor.request("GET", "/api/v1/jobs", auth=False).json() == []

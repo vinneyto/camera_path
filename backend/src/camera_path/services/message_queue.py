@@ -4,12 +4,13 @@ from abc import ABC, abstractmethod
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 
+from camera_path.services.generation_models import GenerationRequest, GenerationResult
 from camera_path.services.job_completion_models import JobCompletionMessage
 
 
 @dataclass(frozen=True)
 class Delivery:
-    message: JobCompletionMessage
+    message: JobCompletionMessage | GenerationResult
     receipt: str
     attempts: int
 
@@ -32,3 +33,8 @@ class MessageQueue(ABC):
 
     @abstractmethod
     async def aclose(self) -> None: ...
+
+
+class GenerationQueue(MessageQueue):
+    @abstractmethod
+    async def publish(self, request: GenerationRequest) -> None: ...
