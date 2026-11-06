@@ -21,6 +21,8 @@ cd frontend && npm install && npm run dev
 See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)
 for configuration and development commands.
 
+See [generation/README.md](generation/README.md) to run and test the standalone Trellis worker.
+
 ## AWS infrastructure
 
 See [infra/README.md](infra/README.md) for the CDK stack, GitHub-based EC2 releases,
