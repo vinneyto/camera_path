@@ -143,11 +143,16 @@ class JobCompletionService:
                 # have committed: cleanup must never turn that success into a new import.
                 logger.warning("Import cleanup deferred to recovery")
 
-    async def register(self, message: JobCompletionMessage) -> str:
+    async def register(
+        self,
+        message: JobCompletionMessage,
+        *,
+        default_rotation_deg: tuple[float, float, float] | None = None,
+    ) -> str:
         if await self._completed(message.job_id):
             return message.job_id
         try:
-            return await self._complete_pending(message)
+            return await self._complete_pending(message, default_rotation_deg)
         except Exception:
             # A concurrent winner makes this a successful replay, even if the
             # losing attempt's producer files were removed in the meantime.
@@ -155,7 +160,10 @@ class JobCompletionService:
                 return message.job_id
             raise
 
-    async def _complete_pending(self, message: JobCompletionMessage) -> str:
+    async def _complete_pending(
+        self, message: JobCompletionMessage, default_rotation_deg: tuple[float, float, float] | None
+    ) -> str:
+        rotation_x, rotation_y, rotation_z = default_rotation_deg or (0.0, 0.0, 0.0)
         results, identities = [], set()
         for asset in message.assets:
             resolved = []
@@ -229,6 +237,9 @@ class JobCompletionService:
                             tags=asset.tags,
                             thumbnail_key=asset.thumbnail_key,
                             bbox=asset.bbox.model_dump(mode="json") if asset.bbox else None,
+                            default_rotation_x_deg=rotation_x,
+                            default_rotation_y_deg=rotation_y,
+                            default_rotation_z_deg=rotation_z,
                             files=[
                                 LibraryAssetFileRecord(
                                     id=f.id,

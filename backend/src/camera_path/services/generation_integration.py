@@ -38,12 +38,18 @@ MAX_MANIFEST_BYTES = 2 * MAX_MESSAGE_BYTES
 
 class GenerationIntegration:
     def __init__(
-        self, queue: GenerationQueue, importer: JobCompletionService, source: LibraryStorage
+        self,
+        queue: GenerationQueue,
+        importer: JobCompletionService,
+        source: LibraryStorage,
+        *,
+        default_rotation_deg: tuple[float, float, float] | None,
     ):
         self.queue = queue
         self.importer = importer
         self.source = source
         self.sessions = importer.sessions
+        self.default_rotation_deg = default_rotation_deg
 
     async def dispatch(self) -> None:
         while True:
@@ -103,7 +109,7 @@ class GenerationIntegration:
                 message = await blocking_io(lambda: self._completion(event, job_input))
             except ValueError as error:
                 raise LibraryError("invalid_generation_result", 422) from error
-            await self.importer.register(message)
+            await self.importer.register(message, default_rotation_deg=self.default_rotation_deg)
         return event.job_id
 
     async def on_rejection(self, event: GenerationResult, code: str) -> None:
