@@ -76,9 +76,7 @@ def create_editor():
         from camera_path.repositories.auth import AuthRepository
 
         async def has_editor():
-            engine, sessions = create_engine_and_session_factory(
-                Settings().database_url
-            )
+            engine, sessions = create_engine_and_session_factory(Settings().database_url)
             try:
                 async with sessions() as session:
                     return await AuthRepository(sessions).editor(session) is not None
@@ -105,9 +103,7 @@ def trellis_paths():
 
 def trellis_backend_settings():
     config = effective_env(GENERATION_ENV)
-    output = Path(
-        config.get("GENERATION_OUTPUT_DIR") or "~/.camera-path/generation"
-    ).expanduser()
+    output = Path(config.get("GENERATION_OUTPUT_DIR") or "~/.camera-path/generation").expanduser()
     return {
         "CAMERA_PATH_MESSAGE_QUEUE": "rabbitmq",
         "CAMERA_PATH_RABBITMQ_URL": config.get("GENERATION_AMQP_URL")
@@ -195,14 +191,7 @@ def setup_trellis():
 
 def setup():
     require("uv", "node", "npm", "rustup", "cargo", "rustc")
-    if (
-        int(
-            subprocess.check_output(
-                ["node", "-p", "process.versions.node.split('.')[0]"]
-            )
-        )
-        < 24
-    ):
+    if int(subprocess.check_output(["node", "-p", "process.versions.node.split('.')[0]"])) < 24:
         raise SystemExit("Install Node.js 24 or newer.")
     version = subprocess.check_output(["rustc", "--version"], text=True).split()[1]
     if tuple(map(int, version.split(".")[:2])) < (1, 95):
@@ -232,9 +221,7 @@ def check_trellis_settings(backend):
     output_key = "CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"
     output = (BACKEND / Path(backend[output_key]).expanduser()).resolve()
     if str(output) != expected[output_key]:
-        raise SystemExit(
-            "Match CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY to GENERATION_OUTPUT_DIR."
-        )
+        raise SystemExit("Match CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY to GENERATION_OUTPUT_DIR.")
     for key in (
         "CAMERA_PATH_RABBITMQ_URL",
         "CAMERA_PATH_GENERATION_REQUEST_QUEUE",
@@ -265,6 +252,20 @@ def stop_processes(processes):
             except ProcessLookupError:
                 pass
             proc.wait()
+
+
+def start_infrastructure():
+    # Reuse the standalone Mailpit container from the previous local instructions.
+    legacy = subprocess.run(
+        ["docker", "port", "camera-path-mailpit"], capture_output=True, text=True, check=False
+    )
+    mailpit_ports = {"1025/tcp -> 127.0.0.1:1025", "8025/tcp -> 127.0.0.1:8025"}
+    services = ["rabbitmq"]
+    if legacy.returncode == 0 and mailpit_ports.issubset(legacy.stdout.splitlines()):
+        print("Using the existing camera-path-mailpit container.", flush=True)
+    else:
+        services.append("mailpit")
+    run(*COMPOSE, "up", "-d", "--wait", *services)
 
 
 def start():
@@ -338,7 +339,7 @@ def start():
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGTERM, interrupt)
-    run(*COMPOSE, "up", "-d", "--wait", "rabbitmq", "mailpit")
+    start_infrastructure()
     print(
         f"Frontend http://127.0.0.1:{frontend_port} · Mailpit http://127.0.0.1:8025",
         flush=True,
@@ -347,9 +348,7 @@ def start():
     try:
         for name, cwd, env, command in services:
             print(f"Starting {name}", flush=True)
-            processes.append(
-                subprocess.Popen(command, cwd=cwd, env=env, start_new_session=True)
-            )
+            processes.append(subprocess.Popen(command, cwd=cwd, env=env, start_new_session=True))
         while True:
             for (name, *_), proc in zip(services, processes, strict=True):
                 if (status := proc.poll()) is not None:
@@ -360,14 +359,10 @@ def start():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Set up and run the local Camera Path stack."
-    )
+    parser = argparse.ArgumentParser(description="Set up and run the local Camera Path stack.")
     parser.add_argument("action", choices=("setup", "start", "migrate"))
     try:
-        {"setup": setup, "start": start, "migrate": migrate}[
-            parser.parse_args().action
-        ]()
+        {"setup": setup, "start": start, "migrate": migrate}[parser.parse_args().action]()
     except KeyboardInterrupt:
         sys.exit(130)
     except EOFError:

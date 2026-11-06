@@ -384,12 +384,11 @@ this is not a full RFC validator or a claim of inbox ownership before confirmati
 
 ### Local verification before any CDK deployment
 
-Use Mailpit as a local inbox. This exercises the full email-code flow without
-creating AWS resources or sending to a real mailbox:
+Use Mailpit as a local inbox. This exercises the full email-code flow locally.
+From the repository root, start the inbox with Compose.
 
 ```bash
-docker run --rm --name camera-path-mailpit \
-  -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 axllent/mailpit
+docker compose -f backend/compose.yaml up -d --wait mailpit
 ```
 
 In a separate terminal, from `backend/`, add these settings to `.env` (keep your
