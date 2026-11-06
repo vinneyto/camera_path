@@ -3,7 +3,7 @@
 import json
 import sqlite3
 
-from test_job_completion import PLY, SOG, wait_job
+from test_job_completion import PLY, SOG, descriptor, enqueue, wait_job
 
 BOUNDS = {"min": [-1, -2, -3], "max": [1, 2, 3]}
 
@@ -114,6 +114,7 @@ def test_generation_round_trip_after_backend_restart(dev_backend):
     asset = finished["assets"][0]
     assert len(finished["assets"]) == 1 and len(asset["files"]) == 2
     assert asset["job_id"] == job["id"] and asset["bbox"] == BOUNDS
+    assert asset["default_rotation_deg"] == [0, 0, 0]
     assert b.request("GET", asset["download_url"]).content == PLY
     assert b.request("GET", asset["files"][1]["download_url"]).content == SOG
     assert b.request("GET", f"/api/v1/library/{asset['id']}").json()["bbox"] == BOUNDS
@@ -140,3 +141,22 @@ def test_generation_round_trip_after_backend_restart(dev_backend):
     # Legacy completion messages still use their own queue and importer.
     draft = b.create_job()
     assert draft["status"] == "draft"
+
+
+def test_trellis_rotation_is_opt_in_and_applies_only_to_generated_assets(dev_backend):
+    b = dev_backend
+    b.stop()
+    configure(b, b.broker.url)
+    b.env["CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG"] = "[180,0,0]"
+    b.start()
+
+    job = create_generation(b, "An upright chair")
+    take_request(b, job)
+    b.broker.publish(b.env["CAMERA_PATH_GENERATION_RESULT_QUEUE"], completion(b, job))
+    asset = wait_job(b, job["id"])["assets"][0]
+    assert asset["default_rotation_deg"] == [180, 0, 0]
+    assert asset["bbox"] == BOUNDS
+    assert b.request("GET", asset["download_url"]).content == PLY
+
+    external = enqueue(b, descriptor(b))["assets"][0]
+    assert external["default_rotation_deg"] == [0, 0, 0]

@@ -147,7 +147,10 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         )
         if generation_queue is not None:
             generation = GenerationIntegration(
-                generation_queue, importer, dependencies.import_sources[GENERATION_SOURCE]
+                generation_queue,
+                importer,
+                dependencies.import_sources[GENERATION_SOURCE],
+                default_rotation_deg=configured.generation_default_rotation_deg,
             )
             generation_consumer = JobCompletionConsumer(
                 generation_queue,

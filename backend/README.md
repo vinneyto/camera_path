@@ -507,3 +507,8 @@ The directory must match `GENERATION_OUTPUT_DIR` in the worker's configuration. 
 the queue names, set `CAMERA_PATH_GENERATION_REQUEST_QUEUE` and `CAMERA_PATH_GENERATION_RESULT_QUEUE`
 to the same values used by the worker. The backend reads the result manifest and imports the files
 as one library asset with a shared bounding box. The job details page refreshes through SSE.
+
+Optionally set `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in `backend/.env`
+to correct upside-down Trellis output. The three values are Euler XYZ angles in degrees.
+The backend saves them as library placement defaults on newly generated assets. The PLY
+and its bounding box stay in the original asset coordinates. Omit the setting for zero rotation.

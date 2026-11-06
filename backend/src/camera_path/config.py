@@ -3,7 +3,15 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    SecretStr,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DATABASE_URL = f"sqlite+aiosqlite:///{Path.home() / '.camera-path' / 'camera_path.sqlite3'}"
@@ -80,6 +88,7 @@ class Settings(BaseSettings):
         default="camera-path.job-completions", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
     )
     generation_output_directory: Path | None = None
+    generation_default_rotation_deg: tuple[FiniteFloat, FiniteFloat, FiniteFloat] | None = None
     generation_request_queue: str = Field(
         default="camera-path.generation.requests", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
     )
