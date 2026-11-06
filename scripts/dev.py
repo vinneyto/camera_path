@@ -69,27 +69,23 @@ def migrate():
 
 
 def create_editor():
-    os.chdir(BACKEND)
-    try:
-        from camera_path.config import Settings
-        from camera_path.persistence.database import create_engine_and_session_factory
-        from camera_path.repositories.auth import AuthRepository
+    from camera_path.config import settings
+    from camera_path.persistence.database import create_engine_and_session_factory
+    from camera_path.repositories.auth import AuthRepository
 
-        async def has_editor():
-            engine, sessions = create_engine_and_session_factory(Settings().database_url)
-            try:
-                async with sessions() as session:
-                    return await AuthRepository(sessions).editor(session) is not None
-            finally:
-                await engine.dispose()
+    async def has_editor():
+        engine, sessions = create_engine_and_session_factory(settings.database_url)
+        try:
+            async with sessions() as session:
+                return await AuthRepository(sessions).editor(session) is not None
+        finally:
+            await engine.dispose()
 
-        if asyncio.run(has_editor()):
-            print("Editor already exists.")
-        else:
-            email = input("Editor email: ").strip()
-            run(BACKEND / ".venv/bin/editor-create", email, cwd=BACKEND)
-    finally:
-        os.chdir(ROOT)
+    if asyncio.run(has_editor()):
+        print("Editor already exists.")
+    else:
+        email = input("Editor email: ").strip()
+        run(BACKEND / ".venv/bin/editor-create", email, cwd=BACKEND)
 
 
 def trellis_paths():
@@ -211,15 +207,14 @@ def setup():
     print("Setup complete. Run Dev Start.")
 
 
-def check_trellis_settings(backend):
-    from camera_path.config import Settings
+def check_trellis_settings():
+    from camera_path.config import settings
 
     if (platform.system(), platform.machine()) != ("Darwin", "arm64"):
         raise SystemExit("The configured Trellis worker requires Apple Silicon.")
     expected = trellis_backend_settings()
-    configured = Settings(_env_file=BACKEND_ENV)
     output_key = "CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"
-    output = (BACKEND / Path(backend[output_key]).expanduser()).resolve()
+    output = settings.generation_output_directory.expanduser().resolve()
     if str(output) != expected[output_key]:
         raise SystemExit("Match CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY to GENERATION_OUTPUT_DIR.")
     for key in (
@@ -227,7 +222,7 @@ def check_trellis_settings(backend):
         "CAMERA_PATH_GENERATION_REQUEST_QUEUE",
         "CAMERA_PATH_GENERATION_RESULT_QUEUE",
     ):
-        value = getattr(configured, key.removeprefix("CAMERA_PATH_").lower())
+        value = getattr(settings, key.removeprefix("CAMERA_PATH_").lower())
         if key == "CAMERA_PATH_RABBITMQ_URL":
             value = value.get_secret_value()
         if value != expected[key]:
@@ -275,7 +270,7 @@ def start():
     backend = effective_env(BACKEND_ENV)
     trellis = bool(backend.get("CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"))
     if trellis:
-        check_trellis_settings(backend)
+        check_trellis_settings()
         port, model = trellis_paths()
         if not all(
             (
@@ -362,6 +357,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Set up and run the local Camera Path stack.")
     parser.add_argument("action", choices=("setup", "start", "migrate"))
     try:
+        # The backend settings load .env from the current working directory.
+        os.chdir(BACKEND)
         {"setup": setup, "start": start, "migrate": migrate}[parser.parse_args().action]()
     except KeyboardInterrupt:
         sys.exit(130)
