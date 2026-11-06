@@ -250,6 +250,9 @@ After a successful mutation, invalidate these resources:
 
 ## Test
 
+Run the suite in a shell without exported `AWS_*` or `CAMERA_PATH_*` settings. Tests
+that load their own `.env` files depend on those values taking effect.
+
 ```bash
 cd backend
 uv sync --frozen --extra aws --extra rabbitmq
