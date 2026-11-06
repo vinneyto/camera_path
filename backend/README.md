@@ -26,9 +26,9 @@ repository backed by a temporary database through `create_app()`.
 ```bash
 cd backend
 cp .env.example .env
-uv sync
+uv sync --frozen
 uv run alembic upgrade head
-uv run uvicorn camera_path.api:app --reload
+uv run uvicorn camera_path.api:app --reload --no-proxy-headers
 ```
 
 For a different development database:
@@ -44,25 +44,26 @@ are intentionally discarded; CP-41 and CP-42 introduce the replacement command-b
 
 ### Local 3DGS library
 
-The library stores file metadata in the database and PLY bytes in
+The library stores file metadata in the database and PLY or SOG files in
 `~/.camera-path/library` by default. Set `CAMERA_PATH_LIBRARY_DIRECTORY` to choose another
 directory. Keep this directory persistent across backend restarts. The local storage adapter
 provides development upload and download routes. Storage access is behind `LibraryStorage`,
 so API and library service code do not depend on
 the storage implementation.
 
-To upload a file, call `POST /api/v1/library/uploads` with its name and byte size, PUT the bytes
-to the returned `upload_url`, then call `POST /api/v1/library/{id}/complete`. The final step checks
-the uploaded size and PLY signature before the asset appears in `GET /api/v1/library` with a
-`download_url`. Library assets are independent of projects; associating clouds with projects is
-tracked separately. Preparing, uploading, confirming and deleting assets require an editor JWT;
-downloading ready files remains public.
+To upload a file, call `POST /api/v1/library/uploads` with its `name`, `size_bytes` and `format`
+(`ply` by default, or `sog` for a self-contained SOG archive). PUT the bytes to the returned
+`upload_url`, then call `POST /api/v1/library/{id}/complete`. The final step checks the uploaded
+size and format signature before the asset appears in `GET /api/v1/library` with a
+`download_url`. Scene objects reference library assets from individual projects.
+Preparing, uploading, confirming and deleting assets require an editor JWT. Downloading
+ready files is public.
 
-`DELETE /api/v1/library/{id}` removes the asset, its stored file and every cloud instance
+`DELETE /api/v1/library/{id}` removes the asset, its stored files and every scene object
 that references it in every project. Remaining clouds retain their order with consecutive
 positions, and each affected project's revision advances once. A storage deletion error
 rolls back database changes so the request can be retried; missing file content is tolerated.
-An unknown or already deleted asset returns 404. No database migration is required.
+An unknown or already deleted asset returns 404.
 
 `POST /api/v1/library/bulk-delete` accepts `{"asset_ids": ["id-1", "id-2"]}` and deletes
 the entire selection in one request. All IDs are validated before files are touched. Each
@@ -73,63 +74,58 @@ The frontend uses checkboxes and Actions → Delete selected with a React confir
 
 ### S3 library with a local backend (M3-1)
 
-Install the AWS extra with `uv sync --extra aws`. Add these values to `backend/.env`, alongside
-your existing JWT/OpenAI configuration:
+Install the AWS extra with `uv sync --extra aws`. Set these values in `backend/.env`, using the
+`LibraryBucket` output from the [CDK stack](../infra/README.md) and its region.
 
 ```dotenv
 CAMERA_PATH_AWS_LIBRARY_STORAGE=s3
-CAMERA_PATH_AWS_S3_BUCKET=camera-path-library-d9f856354df8-992382434156
+CAMERA_PATH_AWS_S3_BUCKET=<LibraryBucket output>
 CAMERA_PATH_AWS_S3_PREFIX=library/
 CAMERA_PATH_AWS_REGION=us-east-1
 ```
 
 The existing `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `.env` are read as secrets and
 passed to Boto3; temporary credentials may also set `AWS_SESSION_TOKEN`. Alternatively set
-`CAMERA_PATH_AWS_PROFILE=camera-path-backend-d9f856354df8` and omit explicit keys. With neither supplied,
+`CAMERA_PATH_AWS_PROFILE` to a configured local profile and omit explicit keys. With neither supplied,
 Boto3 uses its standard credential chain, including an EC2 IAM role. Standard `AWS_REGION`, `AWS_DEFAULT_REGION` and `AWS_PROFILE` remain supported as fallbacks;
 project-prefixed values take priority. No AWS credentials reach
 the browser. Keep `.env` untracked.
 
 Run `uv run --extra aws alembic upgrade head`, then
-`uv run --extra aws uvicorn camera_path.api:app --reload`. Start the frontend normally, with its
+`uv run --extra aws uvicorn camera_path.api:app --reload --no-proxy-headers`. Start the frontend with its
 server-side `CAMERA_PATH_BACKEND_URL=http://127.0.0.1:8000`. S3 mode does not mount the local
 file-content routes. Set `CAMERA_PATH_AWS_LIBRARY_STORAGE=local` to use filesystem storage again.
 Use a separate `CAMERA_PATH_DATABASE_URL` for the S3 trial: switching adapters does not migrate
 existing local files, and the database stores keys, not the storage backend or temporary URLs.
 
-The browser PUTs bytes directly to a SigV4 URL for `library/_uploads/<id>.ply`. Completion
-checks the actual size and PLY signature using HeadObject and a four-byte range read, then
-copies the inspected ETag to `library/<id>.ply`. The staging object is removed. An old upload
-URL cannot overwrite the confirmed file. Completion is idempotent; if SQL fails after the
-copy, the next attempt can recover the promoted object. Download URLs use the permanent key
+The browser PUTs bytes directly to a SigV4 URL for `library/_uploads/<id>.<format>`. Completion
+checks the actual size and file signature using HeadObject and a range read, then copies the
+staged object with the inspected ETag to `library/<id>.<format>`. The staging object is removed.
+An old upload URL cannot overwrite the confirmed file. Completion is idempotent. If SQL fails
+after the copy, the next attempt can recover the promoted object. Download URLs use the permanent key
 and an attachment filename, including for guest viewing and project-cloud instances.
 `CAMERA_PATH_AWS_S3_URL_TTL_SECONDS` defaults to 300 (60–3600). Refresh library/project metadata to
 obtain fresh URLs after expiration; temporary AWS credentials may expire sooner.
 
-The manually prepared bucket uses region `us-east-1`, disabled ACLs, Block Public Access and
-SSE-S3. Bucket and backend IAM user carry `DeploymentId=d9f856354df8`. IAM needs GetObject,
-PutObject and DeleteObject on `library/*`; ListBucket with a `library/*` prefix is useful for
-the CLI smoke test. Server-side copy uses those same object permissions. Bucket CORS must
-allow local frontend origins, GET/HEAD/PUT/POST and request headers, as configured in M3-1.
+See the [infrastructure guide](../infra/README.md) for the bucket's CORS rules and IAM
+permissions for local development.
 
 Deletion copies objects into `library/_delete/<operation-id>/` before removing live keys.
 Staging or SQL failures restore them; backups are removed after commit. If restoration fails,
 backups are retained for recovery. Cleanup failure after commit is logged without reporting a
 failed deletion. A process crash can leave staging/backup objects: retain `_delete/` for manual
 recovery and remove abandoned `_uploads/` only after their signed URLs expire. Replaying an
-unexpired upload URL may recreate an unreferenced staging object. Automatic cleanup and upload
-quotas are follow-up work in M3-5; this PR keeps the existing size limit and does not change
-bucket lifecycle policies.
+unexpired upload URL may recreate an unreferenced staging object.
 
-Local smoke check: sign in, upload a PLY, view it in a project, download as a guest, restart the
+Local smoke check: sign in, upload a PLY or SOG, view it in a project, download as a guest, restart the
 backend and reopen it, then delete as an editor (including bulk deletion). Verify that guest
-upload/completion/deletion is rejected. AWS adapter tests run with
-`uv run --extra aws pytest`; ordinary local tests can run without the extra.
+upload/completion/deletion is rejected. See [Test](#test) for the full backend suite.
 
 ### User profile settings
 
-`GET /api/v1/profile/settings` returns the shared guest viewer profile: `webgpu_tile_renderer`
-and `show_grid` default to true; `gaussian_dpr` defaults to `"1x"` and also accepts `"system"`.
+`GET /api/v1/profile/settings` returns the shared guest viewer profile. `webgpu_tile_renderer`
+defaults to false (Spark/WebGL), `show_grid` defaults to true and `gaussian_dpr` defaults to
+`"1x"` and also accepts `"system"`.
 Anonymous reads never create or update profile rows. `PATCH` requires an editor JWT and saves
 only supplied fields; it publishes the confirmed values as the guest fallback. No project ETag
 is required. `CAMERA_PATH_DEV_USER_ID` (default `dev-user`) retains the existing M2 profile key;
@@ -140,14 +136,13 @@ Login, logout and session expiry preserve local preferences.
 
 ### Editor authentication
 
-All reads of projects, resources, library files and chat history remain public. Every ordinary
-write route, including legacy aliases, local PLY uploads and both agent endpoints, uses the common
+Reads of projects, resources, library files, chat history and jobs are public. Every ordinary
+write route, including local library uploads, job creation and both agent endpoints, uses the common
 `@authenticated` decorator below `@router.post/patch/put/delete(...)`. Anonymous or invalid JWT
 writes return
 401 before revision checks or side effects. `AuthenticatedRoute` adds the standard FastAPI dependency
 when registering marked endpoints; the decorator leaves endpoint signatures unchanged. Data remains
-shared between guest and editor. Job-completion producers authenticate to the message broker;
-there are no HTTP submission/status routes or `/api/v1/dev` namespace.
+shared between guest and editor. Job-completion producers publish to the message broker.
 
 Configure these routers with `APIRouter(route_class=AuthenticatedRoute)`. Decorators execute from
 bottom to top: `@authenticated` marks the function first, then `@router...` registers the protected
@@ -248,6 +243,8 @@ After a successful mutation, invalidate these resources:
 | Aim timeline | aim timeline, compiled trajectory |
 | Orientation timeline | orientation timeline, compiled trajectory |
 | Depth-of-field timeline | depth-of-field timeline, compiled trajectory |
+| LiDAR settings | LiDAR settings |
+| Scene objects | scene objects, project metadata |
 | Chat message/history | chat messages |
 | Agent command or project reset | all project resources |
 
@@ -255,23 +252,23 @@ After a successful mutation, invalidate these resources:
 
 ```bash
 cd backend
-uv run pytest
-uv run ruff check .
+uv sync --frozen --extra aws --extra rabbitmq
+.venv/bin/python -m pytest
+.venv/bin/ruff check .
 ```
 
 ## Populate development data
 
-Create three ready-to-use projects for frontend development: one random spline, one random spiral,
-and a mixed spline → spiral → spline path that exercises smooth semantic junctions. All include
-anchors, a scene target, speed keys and a camera key. The default seed is deterministic, and
-rerunning the command with the same seed does not create duplicates.
+Create four demo projects for frontend development. The set includes a random spline, a random
+spiral, a mixed spline → spiral → spline path and a sparse inertial path. Rerunning the command
+with the same seed reuses the existing projects.
 
 ```bash
 cd backend
 uv run db-populate
 ```
 
-Use another seed to create another pair of demo projects:
+Use another seed to create another set of demo projects.
 
 ```bash
 uv run db-populate --seed 17
@@ -344,8 +341,7 @@ quaternion.
     `POST /api/v1/projects/{id}/reset`.
 
 Deleting a referenced scene point returns `409` unless `?cascade=true` is supplied; cascade also
-deletes its camera keys. Mutations advance one shared project revision. Undo/redo is intentionally
-absent from CP-40.
+deletes its camera keys. Mutations advance one shared project revision.
 
 ## Streaming chat
 
@@ -477,7 +473,9 @@ The first successful completion wins, including after assets are deleted. Develo
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
 The Jobs page lists every job type with its prompt, lifecycle status, errors and surviving library
-results. Editors can reserve a draft through `POST /api/v1/jobs` with
+results. The public API lists jobs at `GET /api/v1/jobs`, returns details at
+`GET /api/v1/jobs/{id}` and streams status through `GET /api/v1/jobs/{id}/events`.
+Editors can reserve a draft through `POST /api/v1/jobs` with
 `{"type":"generation","input":{"prompt":"A wooden chair"}}`. The generation form includes
 `"start":true` so the backend persists the job as queued and dispatches it to Trellis.
 The server validates input against its JSON Schema, rejects unknown types/fields and blank prompts,

@@ -239,13 +239,17 @@ The follow-up profile below found that 12 warm-up calls were insufficient for
 steady-state runtime performance. Keep the table above as an early-warm-up
 snapshot; do not compare its CPU row with the longer-warmed GPU figures below.
 
-`scripts/benchmark-webgpu.mjs` serves a fixed PNG and three saved release WASM
-packages. Prepare a directory with `frame.png` and `before/`, `batch/`, `after/`, `gaussian/`, `sparse/`, `cpu/`,
-each containing `camera_path_sift.js` and `camera_path_sift_bg.wasm`. Build each
-revision with `npm run sift:build`, then copy those two generated files before
-building the next revision. `before` is commit `66c4983`; `batch` is the optional
-frame-level-transaction-only intermediate; `after` is commit `5b1e95c` with the
-custom extrema kernel; `gaussian` is the current default optimized GPU build.
+`scripts/benchmark-webgpu.mjs` serves `frame.png` and a directory for each variant
+you want to compare. Each variant directory contains `camera_path_sift.js` and
+`camera_path_sift_bg.wasm`. Build revisions with `npm run sift:build` from `frontend/`,
+then copy the two files from `public/sift/` before building the next revision.
+
+- `before/` is the baseline from commit `66c4983`.
+- `batch/` is the optional intermediate with frame-level readback batching.
+- `after/` is commit `5b1e95c` with the custom extrema kernel.
+- `gaussian/` is the default optimized GPU build.
+- `sparse/` and `cpu/` are the GPU localization and CPU variants.
+
 For the same current source, build `sparse` and `cpu` as follows (all variants
 use release optimization level 2):
 

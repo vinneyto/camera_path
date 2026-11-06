@@ -30,6 +30,7 @@ resource import is required. Keep the deployment ID stable for an environment.
 ## Prepare and deploy
 
 Run from `infra/` with Node.js 24 and AWS CLI credentials authorized to deploy CDK.
+Replace the example account and deployment values before running the commands.
 The administrative AWS identity is used only on the developer's machine. Use your
 configured profile or AWS CLI login session; an IAM username is not automatically
 an AWS CLI profile. Confirm the identity with `aws sts get-caller-identity` first.
@@ -37,14 +38,14 @@ Do not commit environment values or contact information to the repository.
 
 ```bash
 npm ci
-export CP_DEPLOYMENT_ID=<your-deployment-id>
-export CP_DOMAIN=<your-registered-domain>
-export CP_HOSTED_ZONE_ID=<existing-public-zone-id>
-export CP_TLS_EMAIL=<your-certificate-contact-email>
+export CP_DEPLOYMENT_ID='<your-deployment-id>'
+export CP_DOMAIN='<your-registered-domain>'
+export CP_HOSTED_ZONE_ID='<existing-public-zone-id>'
+export CP_TLS_EMAIL='<your-certificate-contact-email>'
 export CP_AWS_REGION=us-east-1
 export CP_BACKEND_REVISION=$(git rev-parse HEAD)
 export CP_FRONTEND_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-npm run cdk -- bootstrap aws://<your-account-id>/us-east-1
+npm run cdk -- bootstrap 'aws://<your-account-id>/us-east-1'
 npm run cdk -- diff
 npm run cdk -- deploy
 ```
@@ -80,13 +81,13 @@ Create/reset the single editor interactively through Session Manager, after the
 first deployment (do not pass the password via CDK/SSM command arguments):
 
 ```bash
-aws ssm start-session --region us-east-1 --target <InstanceId>
+aws ssm start-session --region us-east-1 --target '<InstanceId>'
 ```
 
 Inside the session:
 
 ```bash
-sudo -u camera-path -H sh -c 'set -a; . /etc/camera-path/backend.env; set +a; cd /opt/camera-path/current/backend && exec .venv/bin/editor-create your-login'
+sudo -u camera-path -H sh -c 'set -a; . /etc/camera-path/backend.env; set +a; cd /opt/camera-path/current/backend && exec .venv/bin/editor-create you@example.com'
 ```
 
 For the Next.js proxy set `CAMERA_PATH_BACKEND_URL` to the output `ApiUrl`.
@@ -266,10 +267,9 @@ CAMERA_PATH_AWS_S3_PREFIX=library/
 CAMERA_PATH_AWS_REGION=us-east-1
 ```
 
-Supply credentials using the existing Boto3 configuration. EC2 automatically uses
-its IAM role; developer credentials are never copied to the server. Because the
-old bucket was deleted, old local library rows refer to missing files; use a fresh
-local development database for a clean trial, or remove/recreate those assets.
+Supply credentials using the existing Boto3 configuration. EC2 uses its IAM role.
+The database stores library object keys. To try S3 with a local backend, use a
+separate database or make the referenced objects available in the selected bucket.
 
 ## Verification
 
@@ -289,7 +289,7 @@ does not deploy. First real AWS deployment and browser/SSE acceptance are manual
 After a successful deploy, check externally:
 
 ```bash
-curl --fail --silent --show-error https://api.<your-domain>/health
+curl --fail --silent --show-error 'https://api.<your-domain>/health'
 ```
 
 Inside Session Manager, verify renewal and services:
