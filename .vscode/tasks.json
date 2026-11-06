@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev Setup",
+      "type": "shell",
+      "command": "./scripts/dev.sh",
+      "args": ["setup"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Start",
+      "type": "shell",
+      "command": "./scripts/dev.sh",
+      "args": ["start"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

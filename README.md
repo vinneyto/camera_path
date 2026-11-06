@@ -15,20 +15,39 @@ camera_path/
 └── rust/sift/   # SIFT detector, WASM module and native CLI
 ```
 
-Install the [frontend build prerequisites](frontend/README.md#run) first.
-From the repository root, run each application in a separate terminal.
+## Local development
+
+Install `uv`, Node.js 24 or newer, Rust 1.95 or newer via `rustup`, and Docker
+with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**.
+
+1. **Dev Setup** installs the Python and npm dependencies, prepares the WASM
+   toolchain, creates missing environment files and runs the database migrations.
+   For a new database it prompts for the editor's email and password. On Apple
+   Silicon it also offers to set up Trellis and download missing model weights.
+2. **Dev Start** starts the backend, frontend, RabbitMQ and Mailpit. It also starts
+   the Trellis worker when the backend is configured for local generation.
+
+Open [the editor](http://127.0.0.1:3000) and use
+[Mailpit](http://127.0.0.1:8025) to read the email confirmation code. The backend API
+listens on `127.0.0.1:8000`. Stopping **Dev Start** stops the application processes.
+RabbitMQ and Mailpit stay up between launches.
+
+The same commands work in a terminal from the repository root.
 
 ```bash
-cd backend
-uv sync --frozen
-uv run alembic upgrade head
-uv run uvicorn camera_path.api:app --reload --no-proxy-headers
+./scripts/dev.sh setup
+./scripts/dev.sh start
 ```
 
+After pulling a schema change, run just the migrations with `./scripts/dev.sh migrate`.
+Setup preserves existing environment files and editor credentials. New clones use
+SQLite and filesystem storage under `backend/.dev/`. Opting in to Trellis configures
+the backend's RabbitMQ settings and output path to match `generation/.env`.
+
+For a second local instance, choose different HTTP ports.
+
 ```bash
-cd frontend
-npm ci
-npm run dev
+CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/dev.sh start
 ```
 
 See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)
