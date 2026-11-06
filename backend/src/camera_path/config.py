@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     rabbitmq_queue: str = Field(
         default="camera-path.job-completions", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
     )
+    generation_output_directory: Path | None = None
+    generation_request_queue: str = Field(
+        default="camera-path.generation.requests", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    )
+    generation_result_queue: str = Field(
+        default="camera-path.generation.results", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    )
     message_queue_max_attempts: int = Field(default=5, ge=1)
     message_queue_lease_seconds: int = Field(default=60, ge=1, le=43200)
     library_import_sources: dict[str, ImportSourceSettings] = Field(default_factory=dict)
@@ -95,6 +102,25 @@ class Settings(BaseSettings):
             url = urlsplit(self.rabbitmq_url.get_secret_value())
             if url.scheme not in {"amqp", "amqps"} or not url.hostname:
                 raise ValueError("RabbitMQ requires an amqp/amqps URL")
+        if self.generation_output_directory is not None:
+            if self.message_queue != "rabbitmq":
+                raise ValueError("Local generation requires RabbitMQ")
+            queues = (
+                self.rabbitmq_queue,
+                self.generation_request_queue,
+                self.generation_result_queue,
+            )
+            # Completion consumers also declare retry and failed queues under these prefixes.
+            if any(
+                other == name or other.startswith(f"{name}.") or name.startswith(f"{other}.")
+                for index, name in enumerate(queues)
+                for other in queues[index + 1 :]
+            ):
+                raise ValueError("Generation and completion queues must have distinct namespaces")
+            if "generation" in self.library_import_sources:
+                raise ValueError(
+                    "The generation import source is configured by its output directory"
+                )
         if self.message_queue == "sqs" and (
             not self.sqs_queue_url
             or not self.sqs_failure_queue_url

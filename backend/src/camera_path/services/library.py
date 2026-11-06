@@ -18,6 +18,7 @@ from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.services.io import blocking_io
 from camera_path.services.library_metadata import (
+    BoundingBox,
     LibraryError,
     normalize_tags,
     validate_thumbnail,
@@ -54,6 +55,7 @@ class LibraryAsset(BaseModel):
     status: Literal["pending", "ready"]
     created_at: datetime
     tags: list[str]
+    bbox: BoundingBox | None = None
     thumbnail_url: str | None = None
     download_url: str | None = None
     primary_file_id: str
@@ -135,6 +137,7 @@ class LibraryService:
             status=record.status.value,
             created_at=record.created_at,
             tags=record.tags,
+            bbox=record.bbox,
             files=files,
             primary_file_id=primary.id,
             download_url=next(f.download_url for f in files if f.id == primary.id),

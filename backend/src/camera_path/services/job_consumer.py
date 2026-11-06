@@ -11,16 +11,22 @@ logger = logging.getLogger(__name__)
 
 
 class JobCompletionConsumer:
-    def __init__(self, queue: MessageQueue, importer, max_attempts=5):
+    def __init__(self, queue: MessageQueue, importer, max_attempts=5, on_rejection=None):
         self.queue, self.importer = queue, importer
         self.max_attempts = max_attempts
+        self.on_rejection = on_rejection
+
+    async def _reject(self, delivery, code: str):
+        if self.on_rejection is not None:
+            await self.on_rejection(delivery.message, code)
+        await self.queue.reject(delivery.receipt, code)
 
     async def process(self, delivery):
         async with self.queue.hold(delivery.receipt):
             try:
                 await self.importer.register(delivery.message)
             except LibraryError as error:
-                await self.queue.reject(delivery.receipt, error.code)
+                await self._reject(delivery, error.code)
                 logger.info(
                     "Import rejected message=%s job=%s attempt=%s code=%s",
                     delivery.message.message_id,
@@ -30,7 +36,7 @@ class JobCompletionConsumer:
                 )
             except Exception:
                 if delivery.attempts >= self.max_attempts:
-                    await self.queue.reject(delivery.receipt, "library_import_unavailable")
+                    await self._reject(delivery, "library_import_unavailable")
                 else:
                     await self.queue.retry(
                         delivery.receipt, min(60, 2 ** min(delivery.attempts - 1, 6))

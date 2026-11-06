@@ -10,5 +10,6 @@ import type { JobCreateType } from './jobCreateType';
 
 export interface JobCreate {
   input: JobCreateInput;
+  start?: boolean;
   type: JobCreateType;
 }

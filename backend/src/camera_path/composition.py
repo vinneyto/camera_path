@@ -11,6 +11,7 @@ from camera_path.dev.library_storage import LocalLibraryStorage
 from camera_path.repositories import ProjectRepository
 from camera_path.services.app_dependencies import AppDependencies
 from camera_path.services.auth_email import AuthEmailSender
+from camera_path.services.generation_models import GENERATION_SOURCE
 from camera_path.services.library_storage import LibraryStorage
 from camera_path.services.message_queue import MessageQueue
 
@@ -82,6 +83,19 @@ def with_infrastructure(
             repository if repository is not None else ProjectRepository(configured.database_url)
         )
         queue = _message_queue(configured)
+        import_sources = _import_sources(configured) if queue is not None else {}
+        generation_queue = None
+        if configured.generation_output_directory is not None:
+            from camera_path.dev.message_queue import RabbitMQGenerationQueue
+
+            import_sources[GENERATION_SOURCE] = LocalLibraryStorage(
+                configured.generation_output_directory
+            )
+            generation_queue = RabbitMQGenerationQueue(
+                configured.rabbitmq_url.get_secret_value(),
+                configured.generation_request_queue,
+                configured.generation_result_queue,
+            )
         dependencies = AppDependencies(
             repository=project_repository,
             owns_repository=repository is None,
@@ -90,7 +104,8 @@ def with_infrastructure(
             ),
             email_sender=_email_sender(configured),
             message_queue=queue,
-            import_sources=_import_sources(configured) if queue is not None else {},
+            import_sources=import_sources,
+            generation_queue=generation_queue,
         )
         application = factory(configured, dependencies)
         if isinstance(dependencies.library_storage, LocalLibraryStorage):

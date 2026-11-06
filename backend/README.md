@@ -476,12 +476,13 @@ assets. The monolith verifies every file, registers all assets and completes the
 The first successful completion wins, including after assets are deleted. Development uses
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
-The Jobs page lists every job type with its prompt, explicit lifecycle status, errors and
-surviving library results. Its Create button is currently disabled. Editors can reserve a draft
-through `POST /api/v1/jobs` with `{"type":"generation","input":{"prompt":"A wooden chair"}}`.
+The Jobs page lists every job type with its prompt, lifecycle status, errors and surviving library
+results. Editors can reserve a draft through `POST /api/v1/jobs` with
+`{"type":"generation","input":{"prompt":"A wooden chair"}}`. The generation form includes
+`"start":true` so the backend persists the job as queued and dispatches it to Trellis.
 The server validates input against its JSON Schema, rejects unknown types/fields and blank prompts,
-and stores the exact validated JSON. Frontend presets are not stored on the backend. Creation does
-not start a pipeline. Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
+and stores the exact validated JSON. Frontend presets are not stored on the backend.
+Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
 status; terminal states have `completed_at`. Successful completion import updates the status
 atomically with the results. Deleting assets does not change job history. Legacy jobs keep their
 IDs/results with null type/input and unknown creation/start times; their completion timestamps
@@ -493,3 +494,16 @@ disabled by default; install `uv sync --frozen --extra rabbitmq`, start `docker 
 and enable `CAMERA_PATH_MESSAGE_QUEUE=rabbitmq` for local verification. Publish JSON using the
 broker's management API or an AMQP client, without a backend debug API. Ordinary job creation
 still requires the editor. AWS resource setup and live verification are separate manual work.
+
+To enable generation from the Jobs form, start the [local Trellis worker](../generation/README.md)
+and set these values in `backend/.env`.
+
+```dotenv
+CAMERA_PATH_MESSAGE_QUEUE=rabbitmq
+CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY=~/.camera-path/generation
+```
+
+The directory must match `GENERATION_OUTPUT_DIR` in the worker's configuration. If you override
+the queue names, set `CAMERA_PATH_GENERATION_REQUEST_QUEUE` and `CAMERA_PATH_GENERATION_RESULT_QUEUE`
+to the same values used by the worker. The backend reads the result manifest and imports the files
+as one library asset with a shared bounding box. The job details page refreshes through SSE.

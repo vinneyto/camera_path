@@ -105,6 +105,7 @@ class LibraryAssetRecord(Base):
     job_position: Mapped[int | None] = mapped_column(Integer)
     job: Mapped[JobRecord | None] = relationship(back_populates="assets", lazy="raise")
     thumbnail_key: Mapped[str | None] = mapped_column(Text)
+    bbox: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list, server_default="[]")
     files: Mapped[list[LibraryAssetFileRecord]] = relationship(
         lazy="selectin", cascade="all, delete-orphan", order_by="LibraryAssetFileRecord.position"
@@ -152,6 +153,9 @@ class JobRecord(Base):
     error: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    generation_dispatch_pending: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     assets: Mapped[list[LibraryAssetRecord]] = relationship(
         back_populates="job",

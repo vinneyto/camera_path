@@ -54,8 +54,9 @@ docker compose -f ../backend/compose.yaml up -d --wait rabbitmq
 ```
 
 Command-line flags override environment variables, which override the file.
-The worker loads the model on the first valid request. The backend process is
-not needed for this run.
+The worker loads the model on the first valid request. For standalone verification, send requests
+from the terminal below. To run from the Jobs form, see the
+[backend configuration](../backend/README.md#queued-job-completion-and-multiple-representations).
 
 In another terminal, submit one request at a time from `generation/`. If you
 changed the broker URL or queues, pass the same values to the client through
@@ -94,4 +95,4 @@ accept duplicate events after a lost acknowledgement.
 The result JSON contains the job ID, input, relative file paths and `bbox` with
 `min` and `max` XYZ coordinates of the exported Gaussian centers. The worker
 publishes the PLY and result JSON together under a directory named for the job
-UUID. The backend integration and stop commands are separate work.
+UUID.

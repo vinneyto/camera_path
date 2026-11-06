@@ -312,6 +312,51 @@
         "title": "ArcLengthSample",
         "type": "object"
       },
+      "BoundingBox": {
+        "additionalProperties": false,
+        "properties": {
+          "max": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Max",
+            "type": "array"
+          },
+          "min": {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Min",
+            "type": "array"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "BoundingBox",
+        "type": "object"
+      },
       "CameraKeyframe": {
         "properties": {
           "aim": {
@@ -1496,6 +1541,11 @@
             "title": "Input",
             "type": "object"
           },
+          "start": {
+            "default": false,
+            "title": "Start",
+            "type": "boolean"
+          },
           "type": {
             "enum": [
               "generation"
@@ -1666,6 +1716,16 @@
       },
       "LibraryAsset": {
         "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1931,6 +1991,16 @@
       },
       "LibraryUpload": {
         "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -3633,7 +3703,7 @@
         ]
       },
       "post": {
-        "description": "Create a draft with server-validated input. Does not start a pipeline.",
+        "description": "Create a draft, or queue it for generation when start is true.",
         "operationId": "createJob",
         "requestBody": {
           "content": {
@@ -3719,6 +3789,49 @@
           }
         },
         "summary": "Get Job",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}/events": {
+      "get": {
+        "description": "Stream job status changes until the job leaves the active queue.",
+        "operationId": "streamJobStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stream Job Status",
         "tags": [
           "Jobs"
         ]

@@ -11,6 +11,8 @@ from sqlalchemy.orm import selectinload
 
 from camera_path.persistence.enums import JobStatus
 from camera_path.persistence.records import JobRecord, LibraryAssetRecord
+from camera_path.services.generation_models import GenerationRequest
+from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES
 from camera_path.services.job_inputs import JOB_INPUT_SCHEMAS, validate_job_input
 from camera_path.services.library import LibraryAsset, LibraryService
 from camera_path.services.library_metadata import LibraryError, canonical_uuid
@@ -21,6 +23,7 @@ class JobCreate(BaseModel):
 
     type: str = Field(json_schema_extra={"enum": list(JOB_INPUT_SCHEMAS)})
     input: dict[str, Any] = Field(json_schema_extra={"oneOf": list(JOB_INPUT_SCHEMAS.values())})
+    start: bool = False
 
 
 class JobError(BaseModel):
@@ -65,17 +68,26 @@ class JobSummary(JobFields):
 
 
 class JobService:
-    def __init__(self, library: LibraryService):
+    def __init__(self, library: LibraryService, generation_enabled: bool = False):
         self.library = library
         self.sessions = library.repository.sessions
+        self.generation_enabled = generation_enabled
 
     async def create(self, data: JobCreate) -> Job:
         validate_job_input(data.type, data.input)
+        job_id = str(uuid4())
+        if data.start:
+            if not self.generation_enabled or data.type != "generation":
+                raise LibraryError("generation_unavailable", 503)
+            payload = GenerationRequest(job_id=job_id, input=data.input).model_dump_json()
+            if len(payload.encode()) > MAX_MESSAGE_BYTES:
+                raise LibraryError("generation_request_too_large", 422)
         job = JobRecord(
-            id=str(uuid4()),
+            id=job_id,
             type=data.type,
             input=data.input,
-            status=JobStatus.DRAFT,
+            status=JobStatus.QUEUED if data.start else JobStatus.DRAFT,
+            generation_dispatch_pending=data.start,
             error=None,
             created_at=datetime.now(UTC),
             started_at=None,
@@ -84,6 +96,10 @@ class JobService:
         async with self.sessions.begin() as session:
             session.add(job)
         return Job(**JobFields.model_validate(job).model_dump(), input=data.input, assets=[])
+
+    async def status(self, job_id: str) -> JobStatus | None:
+        async with self.sessions() as session:
+            return await session.scalar(select(JobRecord.status).where(JobRecord.id == job_id))
 
     async def list(self) -> list[JobSummary]:
         async with self.sessions() as session:

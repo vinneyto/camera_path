@@ -787,7 +787,7 @@ export const getCreateJobUrl = () => {
 }
 
 /**
- * Create a draft with server-validated input. Does not start a pipeline.
+ * Create a draft, or queue it for generation when start is true.
  * @summary Create Job
  */
 export const createJob = async (jobCreate: JobCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createJobResponse> => {
@@ -976,6 +976,127 @@ export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = H
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetJobQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type streamJobStatusResponse200 = {
+  data: string
+  status: 200
+}
+
+export type streamJobStatusResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type streamJobStatusResponseSuccess = (streamJobStatusResponse200) & {
+  headers: Headers;
+};
+export type streamJobStatusResponseError = (streamJobStatusResponse422) & {
+  headers: Headers;
+};
+
+export type streamJobStatusResponse = (streamJobStatusResponseSuccess | streamJobStatusResponseError)
+
+export const getStreamJobStatusUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/jobs/${jobId}/events`
+}
+
+/**
+ * Stream job status changes until the job leaves the active queue.
+ * @summary Stream Job Status
+ */
+export const streamJobStatus = async (jobId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<streamJobStatusResponse> => {
+
+  return orvalFetch<streamJobStatusResponse>(getStreamJobStatusUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamJobStatusQueryKey = (jobId: string,) => {
+    return [
+    `/api/v1/jobs/${jobId}/events`
+    ] as const;
+    }
+
+
+export const getStreamJobStatusQueryOptions = <TData = Awaited<ReturnType<typeof streamJobStatus>>, TError = HTTPValidationError>(jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamJobStatus>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamJobStatusQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamJobStatus>>> = ({ signal }) => streamJobStatus(jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamJobStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StreamJobStatusQueryResult = NonNullable<Awaited<ReturnType<typeof streamJobStatus>>>
+export type StreamJobStatusQueryError = HTTPValidationError
+
+
+export function useStreamJobStatus<TData = Awaited<ReturnType<typeof streamJobStatus>>, TError = HTTPValidationError>(
+ jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamJobStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamJobStatus>>,
+          TError,
+          Awaited<ReturnType<typeof streamJobStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamJobStatus<TData = Awaited<ReturnType<typeof streamJobStatus>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamJobStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamJobStatus>>,
+          TError,
+          Awaited<ReturnType<typeof streamJobStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamJobStatus<TData = Awaited<ReturnType<typeof streamJobStatus>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamJobStatus>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Stream Job Status
+ */
+
+export function useStreamJobStatus<TData = Awaited<ReturnType<typeof streamJobStatus>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamJobStatus>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStreamJobStatusQueryOptions(jobId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

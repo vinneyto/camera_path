@@ -228,6 +228,7 @@ class JobCompletionService:
                             created_at=datetime.now(UTC),
                             tags=asset.tags,
                             thumbnail_key=asset.thumbnail_key,
+                            bbox=asset.bbox.model_dump(mode="json") if asset.bbox else None,
                             files=[
                                 LibraryAssetFileRecord(
                                     id=f.id,
@@ -243,6 +244,7 @@ class JobCompletionService:
                         )
                     )
                 job.status = "succeeded"
+                job.generation_dispatch_pending = False
                 job.error = None
                 job.completed_at = datetime.now(UTC)
                 await session.flush()

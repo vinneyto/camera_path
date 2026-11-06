@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator
 
 from camera_path.services.library_metadata import (
+    BoundingBox,
     canonical_uuid,
     normalize_tags,
     relative_key,
@@ -44,6 +45,7 @@ class JobCompletionAsset(MessageModel):
     name: str = Field(min_length=1, max_length=200)
     tags: list[str] = Field(default_factory=list)
     thumbnail_key: str | None = None
+    bbox: BoundingBox | None = None
     primary_file_id: FileId
     files: list[LibraryImportFile] = Field(min_length=1)
 

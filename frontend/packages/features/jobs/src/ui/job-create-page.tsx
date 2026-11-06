@@ -20,7 +20,7 @@ export function JobCreatePage() {
           Create generation job
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          Set the parameters for a new generation draft.
+          Set the parameters and queue a new generation job.
         </p>
       </header>
       {loading ? (

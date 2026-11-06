@@ -833,7 +833,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3278,
+            "line": 3399,
             "column": 1
           },
           "usages": [
@@ -857,7 +857,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8816,
+            "line": 8937,
             "column": 1
           },
           "usages": [
@@ -881,7 +881,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3642,
+            "line": 3763,
             "column": 1
           },
           "usages": [
@@ -911,9 +911,9 @@
           "usages": [
             {
               "file": "packages/api/src/resources/use-job-resource.ts",
-              "line": 8,
+              "line": 11,
               "column": 17,
-              "expression": "useGetJob(useJobId(id), {\n    query: {\n      refetchInterval: (query) =>\n        query.state.status === \"error\" ||\n        (query.state.data?.status === 200 &&\n          [\"succeeded\", \"failed\", \"cancelled\"].includes(\n            query.state.data.data.status,\n          ))\n          ? false\n          : 2000,\n      retry: (attempt, error) =>\n        !(error instanceof ApiError && [404, 422].includes(error.status)) &&\n        attempt < 2,\n    },\n  })"
+              "expression": "useGetJob(jobId, {\n    query: {\n      retry: (attempt, error) =>\n        !(error instanceof ApiError && [404, 422].includes(error.status)) &&\n        attempt < 2,\n    },\n  })"
             }
           ]
         },
@@ -923,7 +923,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1505,
+            "line": 1626,
             "column": 1
           },
           "usages": [
@@ -941,7 +941,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4743,
+            "line": 4864,
             "column": 1
           },
           "usages": [
@@ -965,7 +965,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5107,
+            "line": 5228,
             "column": 1
           },
           "usages": [
@@ -989,7 +989,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2417,
+            "line": 2538,
             "column": 1
           },
           "usages": [
@@ -1007,7 +1007,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6454,
+            "line": 6575,
             "column": 1
           },
           "usages": [
@@ -1031,7 +1031,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8685,
+            "line": 8806,
             "column": 1
           },
           "usages": [
@@ -1055,7 +1055,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2667,
+            "line": 2788,
             "column": 1
           },
           "usages": [
@@ -1079,7 +1079,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5847,
+            "line": 5968,
             "column": 1
           },
           "usages": [
@@ -1121,7 +1121,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1059,
+            "line": 1180,
             "column": 1
           },
           "usages": [
@@ -1139,7 +1139,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2059,
+            "line": 2180,
             "column": 1
           },
           "usages": [
@@ -1163,7 +1163,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7194,
+            "line": 7315,
             "column": 1
           },
           "usages": [
@@ -1181,7 +1181,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7691,
+            "line": 7812,
             "column": 1
           },
           "usages": [
@@ -1231,8 +1231,8 @@
           "usages": [
             {
               "file": "packages/api/src/resources/use-job-resource.ts",
-              "line": 8,
-              "column": 27,
+              "line": 10,
+              "column": 17,
               "expression": "useJobId(id)"
             }
           ]
@@ -2695,7 +2695,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/resources/use-job-resource.ts",
-            "line": 7,
+            "line": 9,
             "column": 1
           },
           "usages": [

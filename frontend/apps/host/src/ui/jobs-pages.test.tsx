@@ -132,7 +132,7 @@ beforeEach(() => {
         if (options.method === "POST") {
           return createError
             ? Response.json({ detail: "Unavailable" }, { status: 503 })
-            : Response.json({ ...pending, status: "draft" }, { status: 201 });
+            : Response.json({ ...pending, status: "queued" }, { status: 201 });
         }
         return listError
           ? Response.json({ detail: "Unavailable" }, { status: 503 })
@@ -159,14 +159,14 @@ it("shows an empty public list without creation controls for guests", async () =
   expect(requests.every((request) => request.method === "GET")).toBe(true);
 });
 
-it("opens creation from the list and saves a generation draft", async () => {
+it("opens creation from the list and queues generation", async () => {
   const view = mount();
   fireEvent.click(screen.getByRole("button", { name: "Create job" }));
   expect(push).toHaveBeenCalledWith("/jobs/new");
   expect(requests.every((request) => request.method === "GET")).toBe(true);
   view.changeJob("new");
   const submit = screen.getByRole("button", {
-    name: "Create job",
+    name: "Create and generate",
   }) as HTMLButtonElement;
   expect(submit.disabled).toBe(true);
   const prompt = screen.getByRole("textbox", {
@@ -191,11 +191,19 @@ it("opens creation from the list and saves a generation draft", async () => {
   ).toEqual([
     {
       url: "/api/v1/jobs",
-      body: { type: "generation", input: { prompt: "A wooden chair" } },
+      body: {
+        type: "generation",
+        input: { prompt: "A wooden chair" },
+        start: true,
+      },
     },
     {
       url: "/api/v1/jobs",
-      body: { type: "generation", input: { prompt: "A wooden chair" } },
+      body: {
+        type: "generation",
+        input: { prompt: "A wooden chair" },
+        start: true,
+      },
     },
   ]);
 });
@@ -264,17 +272,31 @@ it("retries a failed catalogue read", async () => {
   expect(screen.getByText("1 asset")).toBeTruthy();
 });
 
-it("refreshes running jobs automatically and links each result to the library", async () => {
+it("refreshes running jobs on SSE and links the imported asset", async () => {
+  const connections: JobEventSource[] = [];
+  class JobEventSource extends EventTarget {
+    close = vi.fn();
+
+    constructor(readonly url: string) {
+      super();
+      connections.push(this);
+    }
+  }
+  vi.stubGlobal("EventSource", JobEventSource);
   mount(id);
   await screen.findByText("Waiting for results.");
   expect(screen.getByText(id)).toBeTruthy();
   expect(screen.getByText(/A wooden chair/)).toBeTruthy();
+  const source = connections[0];
+  expect(source.url).toBe(`/api/v1/jobs/${id}/events`);
   job = structuredClone(completed);
-  await screen.findByText("succeeded", {}, { timeout: 4000 });
+  source.dispatchEvent(new Event("job-status"));
+  await screen.findByText("succeeded");
   const link = screen.getByRole("link", { name: /Generated cloud/ });
   expect(link.getAttribute("href")).toBe("/library/cloud-1");
   expect(link.textContent).toContain("2 files");
   expect(screen.queryByText("Waiting for results.")).toBeNull();
+  expect(source.close).toHaveBeenCalled();
 });
 
 it.each(["failed", "cancelled"] as const)(
