@@ -24,15 +24,13 @@ uv sync --frozen
 .venv/bin/python -m pytest tests --require-api-coverage --api-report=api-coverage.json
 ```
 
-The autonomous suite runs against local filesystem storage and SMTP. Install the optional
-backend `--extra aws` only when also running the existing unit suite's mocked SES tests.
+The autonomous suite runs against local filesystem storage and SMTP. To also run the
+[backend unit suite](../backend/README.md#test), install its AWS and RabbitMQ extras as in CI.
 Dependencies and the `rabbitmq:4.2-management` image must be available (the first run pulls it
 through Docker). Test traffic uses loopback; the suite creates its own container with ephemeral
 ports and credentials, then removes it on teardown. It never uses your Compose broker or data.
 Override `CP_TEST_RABBITMQ_IMAGE` to use a compatible local image.
-No environment activation is needed: use the explicit Python path shown above. The fast suite
-usually takes about two minutes locally. Verbose output names each running test; the first
-one prepares the database/editor and exercises email login and two real server restarts.
+Use the explicit Python path shown above. Verbose output names each running test.
 CI also runs this suite under a pseudo-terminal to cover interactive-terminal startup.
 
 For a focused run, omit `--require-api-coverage` and select a test or module normally.
@@ -51,14 +49,14 @@ The Alembic bootstrap uses a temporary config with an absolute migrations path a
 from that temporary directory. The checkout's `.env` is never read.
 
 The default administrative bootstrap is **Alembic upgrade + the existing `editor-create` CLI**.
-The CLI receives a generated password over stdin, never a command-line argument. That is the
-only application-specific setup. The bootstrap CLI runs in a separate session so Python's
-`getpass` cannot read from your terminal instead of the supplied stdin. You should never be
-prompted to enter the test editor's password. Test assertions never query SQLite or read
-backend internals.
+The CLI receives a generated password over stdin. The bootstrap CLI runs in a separate session
+so Python's `getpass` reads the supplied stdin. You should never be
+prompted to enter the test editor's password. The generation recovery scenario prepares a
+previously queued job directly in its temporary SQLite database. It verifies the resulting
+behavior through HTTP and RabbitMQ.
 
-The production auth implementation is unchanged: password → persisted challenge → SMTP email
-→ HTTP code verification → server-issued token. Codes are read from a test-owned SMTP socket,
+The suite exercises the production auth flow from password and persisted challenge through SMTP
+email, HTTP code verification and server-issued token. Codes are read from a test-owned SMTP socket,
 not a database, log, fixed code, dependency override or test-only login route. Logout, replay,
 wrong-code lockout, concurrency, rate limits, delivery failure and process restarts are tested.
 
@@ -137,6 +135,10 @@ SOG/PLY representations, adopts existing library objects and copies external sou
 It checks public job results, malformed descriptors and quarantined errors, process/broker
 restarts, and replay without duplicate assets. Deleted results stay deleted; unknown jobs fail
 before source reads. Default and RabbitMQ modes both check that debug routes are absent.
-The success gate covers the unchanged public `backend/openapi.json` inventory; broker operations
-are separate scenarios. All files, queues and messages belong to the suite. SQS SDK behavior is
-checked separately by backend tests; live AWS configuration/acceptance is separate.
+Generation scenarios submit jobs with `start: true`, recover undispatched work after a backend
+restart, and observe status changes over SSE. The test acts as the worker through RabbitMQ and
+supplies result manifests and fixture files. It checks imports, bounding boxes, replay, error
+handling and the opt-in placement rotation for generated assets.
+
+The success gate covers the checked-in `backend/openapi.json` inventory. All files, queues and
+messages belong to the suite. Backend tests cover SQS SDK behavior.

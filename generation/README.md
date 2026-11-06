@@ -54,17 +54,32 @@ docker compose -f ../backend/compose.yaml up -d --wait rabbitmq
 ```
 
 Command-line flags override environment variables, which override the file.
-The worker loads the model on the first valid request. For standalone verification, send requests
-from the terminal below. To run from the Jobs form, see the
-[backend configuration](../backend/README.md#queued-job-completion-and-multiple-representations).
+The worker loads the model on the first valid request. To run from the Jobs form,
+see the [backend configuration](../backend/README.md#queued-job-completion-and-multiple-representations).
 
-In another terminal, submit one request at a time from `generation/`. If you
-changed the broker URL or queues, pass the same values to the client through
-`GENERATION_AMQP_URL`, `--request-queue` and `--result-queue`.
+### Verify from the terminal
+
+For a standalone check, start a worker from `generation/` with dedicated queues.
+Use queue names distinct from the backend's, so it cannot consume the test client's replies.
 
 ```bash
-.venv/bin/python examples/request.py "A small wooden chair."
-.venv/bin/python examples/request.py ""
+.venv/bin/python -m camera_path_generation \
+  --request-queue camera-path.generation.smoke.requests \
+  --result-queue camera-path.generation.smoke.results
+```
+
+In another terminal, submit one request at a time from `generation/` using the same
+queue names. If the worker uses a custom broker URL, export the same
+`GENERATION_AMQP_URL` in the client terminal. The example client reads this variable
+from the shell environment.
+
+```bash
+.venv/bin/python examples/request.py "A small wooden chair." \
+  --request-queue camera-path.generation.smoke.requests \
+  --result-queue camera-path.generation.smoke.results
+.venv/bin/python examples/request.py "" \
+  --request-queue camera-path.generation.smoke.requests \
+  --result-queue camera-path.generation.smoke.results
 ```
 
 The first request should return `succeeded` and a relative `result_path`.

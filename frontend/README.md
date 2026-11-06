@@ -21,9 +21,10 @@ providers, the full feature/slot map and review entrypoints.
 
 ## Run
 
-The supported product viewport uses Three.js WebGPU and `3dgs-tile-webgpu` for Gaussian splats.
-Library assets and project cloud instances are loaded from the backend.
-Project model downloads run in parallel. Each model appears independently after its Rust/WASM
+The project viewport defaults to Spark/WebGL. To use Three.js WebGPU and `3dgs-tile-webgpu`,
+turn on **Use WebGPU renderer** in **Profile & settings**.
+Library assets and project cloud instances are loaded from the backend. In the WebGPU viewport,
+model downloads run in parallel. Each model appears independently after its Rust/WASM
 mipmap cut is ready to render. Pending visible instances show a horizontal loading ring at their
 saved translation: a faint full ring and a brighter progress arc. The ring diameter is 0.6 m
 (the same proportions as the anchor platform, at a larger size). Download byte progress occupies
@@ -33,13 +34,10 @@ size, the download arc rotates instead of displaying a made-up percentage.
 Initial framing includes pending model positions and expands as real bounds arrive, until the
 user starts orbiting/panning/zooming. Failed models do not block others; their errors remain in the
 viewport. Removing a pending model or leaving the project aborts its download.
-The Settings button opens renderer, grid, Gaussian DPR controls. Changing the renderer
-saves the preference and reloads the current page; editor saves must succeed first.
+**Profile & settings** contains sign-in, renderer, grid and Gaussian DPR controls. Changing the
+renderer saves the preference and reloads the current page. For editors, the save must succeed first.
 The current renderer remains mounted during saving and after errors. Grid and DPR
 changes continue to apply without reloading.
-A separate Profile button opens the sign-in dialog for guests or the logout menu for editors.
-The theme toggle stays beside Settings and Profile. Unchecking the WebGPU
-option selects the Spark/WebGL reference adapter, which has no feature parity guarantee.
 
 Visitors can browse projects, library details/downloads, scenes and playback. Chat history and the agent composer are available only to signed-in editors.
 Sign in with the editor account to create/delete projects, upload/delete library assets, edit
@@ -56,35 +54,31 @@ are always stored under `camera-path-editor-settings` in localStorage (the exist
 Local values take priority over the backend fallback, survive login/logout and session expiry, and
 remain usable when backend profile reads fail. Guests only edit local preferences; editors also
 publish changed fields to the backend. Failed saves show an error without reverting local choices.
-Settings and sign-in windows use the shared modal, with a lightly blurred overlay, focus trapping,
-and dismissal by clicking outside, the close button, or Escape.
+The desktop sidebar and the mobile navigation menu both contain **Profile & settings** and
+the theme toggle. The settings modal can be closed with its close button or Escape.
 
-The workspace uses a compact header with Settings, Profile and theme icons on desktop and mobile. Below 768 px, the cloud
-command field moves to a second header row, and chat becomes a bottom drawer opened from the
-input-style bar below the scene. The drawer traps focus, closes with its cross, outside tap or
-Escape, and fits the visual viewport when the software keyboard opens. Chat drafts and retry IDs
-survive closing and desktop/mobile resizing; logout or session expiry removes the entire chat.
-Mobile controls respect bottom safe-area insets and reduced-motion preferences.
+Local development uses Node.js 24 and the [SIFT toolchain](../rust/sift/README.md#local-browser-demo).
+Install Rust 1.95 or newer, the WebAssembly target and `wasm-pack` before starting the frontend.
 
 Start the backend first, then:
 
 ```bash
 cd frontend
 cp .env.example .env.local
-npm install
+npm ci
 npm run dev
 ```
 
 Open <http://localhost:3000>. Browser requests use same-origin `/api/v1` route handlers.
-Set server-only `CAMERA_PATH_BACKEND_URL` to local FastAPI or the HTTPS CloudFront origin;
-`NEXT_PUBLIC_API_URL` is no longer used. On Vercel set the same server-side variable.
+Set server-only `CAMERA_PATH_BACKEND_URL` to the FastAPI address for local development. On Vercel,
+set it to the HTTPS `ApiUrl` output from the [CDK stack](../infra/README.md).
 The proxy keeps JWTs in HttpOnly cookies, validates Origin on writes, forwards revision headers,
-streams binary local uploads/downloads and agent SSE, and rewrites local content URLs to itself.
+streams binary local uploads/downloads and SSE for chat and jobs, and rewrites local content URLs to itself.
 Signed S3 URLs stay direct browser transfers. Production cookies require HTTPS.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
 
-The frontend API client, types, and TanStack Query hooks are generated from
-`backend/openapi.json` with Orval and committed under `packages/api/src/client/generated`.
+Orval generates the API client and TanStack Query hooks from `backend/openapi.json` under
+`packages/api/src/client/generated` and the DTO types under `packages/types/src/api`.
 After changing the backend contract, run `npm run api:generate` in `frontend` and commit the
 result. The normal build never regenerates code. `api:check` verifies the committed output.
 Mutations send the latest project revision as `If-Match`; the backend exposes revision ETags
@@ -93,9 +87,13 @@ to the browser. A revision conflict requires refetching the affected resources.
 ## Checks
 
 ```bash
-npm run test
-npm run lint
 npm run api:check
+npm run boundaries:check
+npm run modules:check
+npm run typecheck
+npm run format:check
+npm run lint
+npm test
 npm run build
 ```
 
@@ -105,15 +103,15 @@ speed and camera-aim panels. Playback uses the compiled speed profile and camera
 
 ### Gaussian backend and file formats
 
-The pinned `3dgs-tile-webgpu` revision (`2d628df`, upstream PR #46) uses a Rust/WASM
+The `3dgs-tile-webgpu` dependency pinned in [package.json](package.json) uses a Rust/WASM
 backend inside a Web Worker. Adding a cloud retains the current scene's displayed
 LOD while preparing the new cloud's target cut, then activates it atomically.
 Removing a cloud hides only its own active slots and retains the surviving clouds'
 detail while preparing any refined replacement cut.
 The first view-dependent selection uses the actual drawing-buffer dimensions.
-Its npm package includes the compiled WASM and inline worker, so `npm ci` and Vercel builds
-do not need Rust or a separate WASM asset deployment. The diagnostic mode
-`?gaussianBackendDebug` wraps the same worker backend. GPU capacity is negotiated by
+Its npm package includes the compiled WASM and inline worker. The separate SIFT module builds
+from Rust during `predev` and `prebuild`. On Vercel, the SIFT build script prepares its toolchain.
+The diagnostic mode `?gaussianBackendDebug` wraps the same worker backend. GPU capacity is negotiated by
 the Gaussian pass from renderer capabilities.
 
 The library accepts PLY and self-contained `.sog` ZIP containers (SOG v1/v2). Both local
@@ -127,18 +125,8 @@ responses, so local `/content` endpoints and signed URLs do not need a file exte
 
 ### Dependency audit
 
-After the Rust/SOG integration, `npm audit --omit=dev` reports zero frontend production
-vulnerabilities. `npm audit` still reports five high findings along the single development
-chain `eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch -> braces`.
-The root issue is [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm);
-`braces` has no patched release. The suggested forced downgrade to Next.js 14 ESLint
-configuration is not applied. These packages are used for linting rather than shipped
-in the browser or the Next.js production server.
-
-Next.js/ESLint config are updated to 16.4.0, Orval to 8.41.0 and Vitest to 4.1.11.
-The lockfile also resolves patched `sharp`, `source-map-js` and `undici`. The infra audit
-is clean after updating `aws-cdk-lib` to 2.273.0, which fixes its bundled `brace-expansion`.
-Recheck using `npm audit` in both `frontend` and `infra` when updating dependencies.
+Run `npm audit` in `frontend` to check the locked dependency tree against current advisories.
+Use `npm audit --omit=dev` for the production dependency tree.
 
 ### Cloud placement
 
@@ -168,6 +156,6 @@ The challenge step shows expiry and resend cooldown, handles incorrect codes and
 allows starting again or cancellation without retaining the password. The proxy
 exposes no JWT to browser JavaScript: it creates the HttpOnly session cookie only
 after successful confirmation (or explicit local off mode). Password-only challenge
-responses clear any prior authenticated cookie. See `../backend/README.md` for a
-Mailpit local inbox setup requiring no AWS deployment. Deploy backend and frontend
-together after accepting the PR locally.
+responses clear any prior authenticated cookie. See the
+[local Mailpit setup](../backend/README.md#local-verification-before-any-cdk-deployment) for
+testing sign-in.

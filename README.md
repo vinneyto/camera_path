@@ -8,14 +8,27 @@ OpenAPI and the generated frontend client describe the HTTP interface.
 ```text
 camera_path/
 ├── backend/     # FastAPI application, geometry compiler, agent and tests
-└── frontend/    # Next.js camera-path editor
+├── frontend/    # Next.js camera-path editor
+├── generation/  # Standalone Trellis worker
+├── infra/       # AWS deployment
+├── integration/ # HTTP and RabbitMQ integration tests
+└── rust/sift/   # SIFT detector, WASM module and native CLI
 ```
 
-Run both applications in separate terminals:
+Install the [frontend build prerequisites](frontend/README.md#run) first.
+From the repository root, run each application in a separate terminal.
 
 ```bash
-cd backend && uv sync && uv run uvicorn camera_path.api:app --reload
-cd frontend && npm install && npm run dev
+cd backend
+uv sync --frozen
+uv run alembic upgrade head
+uv run uvicorn camera_path.api:app --reload --no-proxy-headers
+```
+
+```bash
+cd frontend
+npm ci
+npm run dev
 ```
 
 See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)
@@ -28,7 +41,7 @@ See [generation/README.md](generation/README.md) to run and test the standalone 
 See [infra/README.md](infra/README.md) for the CDK stack, GitHub-based EC2 releases,
 SQLite recovery and local access to the S3 library.
 
-### Experimental LiDAR timeline
+## Experimental LiDAR timeline
 
 Select a trajectory, open **Add effect → LiDAR**, then edit **Vertical angle (°)**,
 **Azimuth samples**, and **Elevation samples** in its controls. Apply saves the
@@ -47,9 +60,7 @@ The WebGPU adapter owns a second `GaussianPass` with an angular Jacobian and
 `dataMode: "external"`. It reads the same active Gaussian selection as the main
 view. It does **not** request an independent backend camera, mipmap selection or
 spherical frustum. Coverage outside the main view can therefore be missing or
-coarse. The dependency is pinned to renderer PR
-[3dgs_tile_webgpu #49](https://github.com/vinneyto/3dgs_tile_webgpu/pull/49),
-which implements the abstract API from #48.
+coarse. Enable WebGPU in **Profile & settings** to use LiDAR.
 
 An internal transparent pipeline node depends on the managed main Gaussian pass,
 then renders the sensor pass and dispatches GPU hit reconstruction before the
