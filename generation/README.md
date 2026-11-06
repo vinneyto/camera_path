@@ -20,11 +20,31 @@ uv pip install --python .venv/bin/python -e . -r requirements-trellis-mps.txt
 cp -n .env.example .env
 ```
 
-In `.env`, set `GENERATION_MODEL_DIR` to the prepared `microsoft/TRELLIS-text-base`
-model directory containing `pipeline.json` and references to the local text
-encoder and checkpoints. The model can live outside the repository. The default
-output directory is `~/.camera-path/generation`. Remove any previous
-`GENERATION_TRELLIS_PORT_DIR` setting to use the checkout beside `.env`.
+### Download model weights
+
+From `generation/`, download the text model, its shared Gaussian decoders and
+the CLIP text encoder from Hugging Face.
+
+```bash
+HF_HUB_OFFLINE=0 .venv/bin/python scripts/prepare_model.py
+```
+
+The script downloads about 2.7 GB on an empty Hugging Face cache and reuses
+cached files on later runs. It writes a `pipeline.json` with the local
+checkpoint paths and prints the setting to put in `.env`.
+
+```dotenv
+GENERATION_MODEL_DIR=~/.camera-path/models/trellis-text-base
+```
+
+Use `--model-dir` to put the config in another directory. The weights stay in
+the Hugging Face cache. Keep `HF_HUB_OFFLINE=1` in `.env` for worker runs.
+If you already have a prepared model, point `GENERATION_MODEL_DIR` to that
+directory. The default output directory is `~/.camera-path/generation`.
+Remove any previous `GENERATION_TRELLIS_PORT_DIR` setting to use the checkout
+beside `.env`.
+
+### Start the worker
 
 Start RabbitMQ and the worker from `generation/`.
 
