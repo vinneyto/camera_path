@@ -1,5 +1,6 @@
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
 import { Color, SRGBColorSpace, WebGLRenderer } from "three";
+import { SPARK_RENDER_ORDER } from "./constants";
 
 import { SparkGaussianCloudInstance } from "@camera-path/scene-runtime/surface/adapters/spark/spark-gaussian-cloud-instance";
 import { enableAdditionalObjectLayers } from "@camera-path/scene-runtime/surface/model/enable-additional-object-layers";
@@ -47,7 +48,7 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     });
     // Stay after the grid (-3/-2), before ordinary transparent helpers (0+).
     // Keep opaque geometry in Three's normal depth-writing queue before splats.
-    this.container.renderOrder = -1;
+    this.container.renderOrder = SPARK_RENDER_ORDER;
     // Spark's shader-driven quad is a compositor, not scene geometry. Picking
     // belongs to its SplatMesh children, not Mesh.raycast's dummy quad.
     this.container.raycast = () => undefined;
@@ -56,14 +57,10 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   setBackground(background: SceneSurfaceBackground): void {
     if (this.disposed)
       throw new Error("SparkGaussianRenderingBackend is disposed");
+    const [red, green, blue, alpha] = background;
     this.renderer.setClearColor(
-      new Color().setRGB(
-        background[0],
-        background[1],
-        background[2],
-        SRGBColorSpace,
-      ),
-      background[3],
+      new Color().setRGB(red, green, blue, SRGBColorSpace),
+      alpha,
     );
   }
 

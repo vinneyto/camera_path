@@ -1342,6 +1342,7 @@
       "root": "packages/features/anchors",
       "entrypoint": "packages/features/anchors/src/index.ts",
       "files": [
+        "packages/features/anchors/src/constants.ts",
         "packages/features/anchors/src/index.ts",
         "packages/features/anchors/src/lib/get-anchor-label.ts",
         "packages/features/anchors/src/lib/get-anchor-tool-modifier.ts",
@@ -1358,6 +1359,7 @@
         "packages/features/anchors/src/scene/scene.tsx",
         "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
         "packages/features/anchors/src/scene/use-anchor-placement.ts",
+        "packages/features/anchors/src/selectors/select-anchor-marker-appearance.ts",
         "packages/features/anchors/src/ui/anchor-tool-shortcut.tsx",
         "packages/features/anchors/src/ui/hint.tsx",
         "packages/features/anchors/src/ui/status.tsx"
@@ -1368,7 +1370,7 @@
             {
               "name": "AnchorsScene",
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 27,
+              "line": 29,
               "column": 1
             }
           ],
@@ -1463,7 +1465,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 35,
+              "line": 37,
               "column": 15,
               "expression": "useAddAnchorMutation"
             }
@@ -1481,7 +1483,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 37,
+              "line": 39,
               "column": 20,
               "expression": "useDeleteAnchorMutation"
             }
@@ -1529,7 +1531,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 47,
+              "line": 49,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             },
@@ -1553,7 +1555,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 36,
+              "line": 38,
               "column": 18,
               "expression": "useUpdateAnchorMutation"
             }
@@ -1573,7 +1575,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 28,
+              "line": 30,
               "column": 17,
               "expression": "useAnchors()"
             },
@@ -1597,7 +1599,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 31,
+              "line": 33,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -1628,7 +1630,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 30,
+              "line": 32,
               "column": 16,
               "expression": "useCameraState()"
             },
@@ -3746,9 +3748,11 @@
       "root": "packages/features/scene-grid",
       "entrypoint": "packages/features/scene-grid/src/index.ts",
       "files": [
+        "packages/features/scene-grid/src/constants.ts",
         "packages/features/scene-grid/src/index.ts",
         "packages/features/scene-grid/src/scene/scene-grid.tsx",
         "packages/features/scene-grid/src/scene/scene.tsx",
+        "packages/features/scene-grid/src/selectors/select-scene-grid-appearance.ts",
         "packages/features/scene-grid/src/ui/grid-settings.tsx"
       ],
       "slots": {
@@ -4372,9 +4376,11 @@
       "entrypoint": "packages/features/trajectory/src/index.ts",
       "files": [
         "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
+        "packages/features/trajectory/src/constants.ts",
         "packages/features/trajectory/src/index.ts",
         "packages/features/trajectory/src/scene/scene.tsx",
         "packages/features/trajectory/src/scene/trajectory-line.tsx",
+        "packages/features/trajectory/src/selectors/select-trajectory-line-appearance.ts",
         "packages/features/trajectory/src/ui/status.tsx"
       ],
       "slots": {
@@ -4645,8 +4651,10 @@
         "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
         "apps/host/src/ui/project-workspace/ui/trajectory-panel-slot.tsx",
         "apps/host/src/ui/project-workspace/ui/use-element-height.ts",
+        "apps/host/src/ui/scene-editor/constants.ts",
         "apps/host/src/ui/scene-editor/index.ts",
         "apps/host/src/ui/scene-editor/lib/is-gaussian-surface-pick-active.ts",
+        "apps/host/src/ui/scene-editor/selectors/select-scene-lighting.ts",
         "apps/host/src/ui/scene-editor/ui/configure-webgl-viewport.ts",
         "apps/host/src/ui/scene-editor/ui/frame-surface.ts",
         "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
@@ -4927,7 +4935,7 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 36,
+              "line": 42,
               "column": 17,
               "expression": "useCompiledTrajectoryQuery(useProjectId())"
             }
@@ -4982,7 +4990,7 @@
           "usages": [
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 35,
+              "line": 41,
               "column": 23,
               "expression": "useCameraState()"
             },
@@ -5051,7 +5059,7 @@
           "usages": [
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 36,
+              "line": 42,
               "column": 44,
               "expression": "useProjectId()"
             }
@@ -5095,7 +5103,7 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 34,
+              "line": 40,
               "column": 27,
               "expression": "useUserSettings()"
             }
@@ -5133,10 +5141,12 @@
       "root": "packages/scene-runtime",
       "entrypoint": null,
       "files": [
+        "packages/scene-runtime/src/interaction/constants.ts",
         "packages/scene-runtime/src/interaction/find-hovered-scene-object.ts",
         "packages/scene-runtime/src/interaction/scene-hover.tsx",
         "packages/scene-runtime/src/interaction/scene-object.tsx",
         "packages/scene-runtime/src/picking/raycast-placement-surfaces.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/constants.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-cloud-hover-color-node.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-hit-kernel.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-hit-node.ts",
@@ -5155,8 +5165,10 @@
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-gaussian-lidar.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-gaussian-rendering-backend.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/tile-lidar-frame-node.ts",
+        "packages/scene-runtime/src/surface/adapters/spark/constants.ts",
         "packages/scene-runtime/src/surface/adapters/spark/spark-gaussian-cloud-instance.ts",
         "packages/scene-runtime/src/surface/adapters/spark/spark-gaussian-rendering-backend.ts",
+        "packages/scene-runtime/src/surface/constants.ts",
         "packages/scene-runtime/src/surface/index.ts",
         "packages/scene-runtime/src/surface/model/enable-additional-object-layers.ts",
         "packages/scene-runtime/src/surface/model/gaussian-cloud-load-progress.ts",
@@ -5428,6 +5440,7 @@
         "packages/ui-kit/src/card.tsx",
         "packages/ui-kit/src/checkbox.tsx",
         "packages/ui-kit/src/confirmation-dialog.tsx",
+        "packages/ui-kit/src/constants.ts",
         "packages/ui-kit/src/context-menu.tsx",
         "packages/ui-kit/src/dropdown-menu.tsx",
         "packages/ui-kit/src/editable-provider.tsx",

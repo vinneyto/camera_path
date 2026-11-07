@@ -1,6 +1,7 @@
 import type { SplatMesh } from "@sparkjsdev/spark";
 import type { Intersection, Object3D, Ray } from "three";
 import { Sphere } from "three";
+import { GAUSSIAN_HOVER_GAIN } from "../../constants";
 
 import type { GaussianCloudInstance } from "@camera-path/scene-runtime/surface/model/gaussian-rendering-backend";
 import type {
@@ -39,7 +40,9 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
 
   setHovered(hovered: boolean): void {
     if (this.disposed || this.hovered === hovered) return;
-    this.object.recolor.multiplyScalar(hovered ? 1.18 : 1 / 1.18);
+    this.object.recolor.multiplyScalar(
+      hovered ? GAUSSIAN_HOVER_GAIN : 1 / GAUSSIAN_HOVER_GAIN,
+    );
     this.hovered = hovered;
   }
 

@@ -4,6 +4,7 @@ import { useThree } from "@react-three/fiber";
 import { useEffect, useEffectEvent } from "react";
 import { Raycaster, Vector2, type Object3D } from "three";
 import { findHoveredSceneObject } from "./find-hovered-scene-object";
+import { NDC_MIN, NDC_MAX, NDC_SPAN } from "./constants";
 
 export function SceneHover({
   enabled,
@@ -43,8 +44,8 @@ export function SceneHover({
       }
       const { camera, scene } = get();
       pointer.set(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1,
+        ((event.clientX - rect.left) / rect.width) * NDC_SPAN + NDC_MIN,
+        -((event.clientY - rect.top) / rect.height) * NDC_SPAN + NDC_MAX,
       );
       scene.updateMatrixWorld();
       camera.updateWorldMatrix(true, false);

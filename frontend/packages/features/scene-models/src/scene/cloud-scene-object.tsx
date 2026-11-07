@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
-import type { Matrix4 } from "three";
+import { Vector3, type Matrix4 } from "three";
 import { SceneObject as SceneObjectRoot } from "@camera-path/scene-runtime/interaction/scene-object";
 
 import {
@@ -106,11 +106,7 @@ export function CloudSceneObject({
       </SceneObjectRoot>
       {loading && effectiveVisible && (
         <CloudLoadingRing
-          position={[
-            worldMatrix.elements[12],
-            worldMatrix.elements[13],
-            worldMatrix.elements[14],
-          ]}
+          position={new Vector3().setFromMatrixPosition(worldMatrix).toArray()}
           progress={load?.source === source ? load.progress : null}
         />
       )}

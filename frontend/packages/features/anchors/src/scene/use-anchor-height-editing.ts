@@ -8,6 +8,8 @@ import { useActiveEditorTool } from "../ports/use-active-editor-tool";
 import { useHoveredAnchor } from "../ports/use-hovered-anchor";
 
 import { getWorldYAxisLift } from "@camera-path/feature-anchors/lib/get-world-y-axis-lift";
+import { ANCHOR_TRANSFORM_PRECISION } from "../constants";
+import { POINTER_BUTTON } from "@camera-path/ui-kit/constants";
 
 interface AnchorHeightPreview {
   anchorId: string;
@@ -84,7 +86,7 @@ export function useAnchorHeightEditing({
   }, [anchors, selectedAnchorId, clearSelectedAnchor]);
 
   function handlePointerDown(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (activeTool !== null || event.button !== 0) return;
+    if (activeTool !== null || event.button !== POINTER_BUTTON.primary) return;
     event.stopPropagation();
     event.nativeEvent.preventDefault();
     const target = event.target as Element | null;
@@ -120,7 +122,7 @@ export function useAnchorHeightEditing({
     event.stopPropagation();
     drag.target?.releasePointerCapture?.(drag.pointerId);
     dragRef.current = null;
-    const lift = Number(drag.lift.toFixed(4));
+    const lift = Number(drag.lift.toFixed(ANCHOR_TRANSFORM_PRECISION));
     setPreview({ anchorId: anchor.id, dragging: false, lift });
     setActiveTool(null);
     void onCommit(anchor.id, lift).finally(() => {

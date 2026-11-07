@@ -23,6 +23,8 @@ import { AnchorMarker } from "./anchor-marker";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
 import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useAnchorPlacement } from "./use-anchor-placement";
+import { ANCHOR_TRANSFORM_PRECISION } from "../constants";
+import { ANCHOR_PLACEMENT_HEIGHT } from "./anchor-placement-constants";
 const EMPTY: Anchor[] = [];
 export function AnchorsScene() {
   const query = useAnchors();
@@ -41,9 +43,13 @@ export function AnchorsScene() {
       if (!busy && canEdit)
         add.mutate({
           label: getAnchorLabel(items),
-          surface_position: position.map((v) => Number(v.toFixed(4))) as Vec3,
-          surface_normal: normal.map((v) => Number(v.toFixed(4))) as Vec3,
-          lift: 0.5,
+          surface_position: position.map((v) =>
+            Number(v.toFixed(ANCHOR_TRANSFORM_PRECISION)),
+          ) as Vec3,
+          surface_normal: normal.map((v) =>
+            Number(v.toFixed(ANCHOR_TRANSFORM_PRECISION)),
+          ) as Vec3,
+          lift: ANCHOR_PLACEMENT_HEIGHT,
           lift_axis: "world_up",
         });
     },

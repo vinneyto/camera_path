@@ -10,6 +10,9 @@ import {
 import type { ContextMenuPosition } from "@camera-path/ui-kit";
 import { SceneObject } from "@camera-path/scene-runtime/interaction/scene-object";
 import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
+import { selectTrajectoryLineAppearance } from "../selectors/select-trajectory-line-appearance";
+import { TRAJECTORY_LINE_MIN_POINTS } from "../constants";
+import { POINTER_BUTTON } from "@camera-path/ui-kit/constants";
 
 interface TrajectoryLineProps {
   dark: boolean;
@@ -29,7 +32,7 @@ export function TrajectoryLine({
   onSelect,
 }: TrajectoryLineProps) {
   const points = sampleTrajectory(trajectory);
-  if (points.length < 2) return null;
+  if (points.length < TRAJECTORY_LINE_MIN_POINTS) return null;
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     if (!interactive) return;
@@ -48,7 +51,7 @@ export function TrajectoryLine({
   }
 
   function handlePointerDown(event: ThreeEvent<PointerEvent>) {
-    if (!interactive || event.button !== 2) return;
+    if (!interactive || event.button !== POINTER_BUTTON.secondary) return;
     event.stopPropagation();
     event.nativeEvent.preventDefault();
   }
@@ -57,27 +60,15 @@ export function TrajectoryLine({
     <SceneObject sceneObjectID={trajectoryObjectId} hoverable={interactive}>
       {({ hovered }) => (
         <ScreenSpaceLine
-          color={
-            hovered
-              ? "#fb923c"
-              : selected
-                ? "#f97316"
-                : dark
-                  ? "#e5e7eb"
-                  : "#171717"
-          }
+          {...selectTrajectoryLineAppearance({ dark, hovered, selected })}
           depthTest={false}
           depthWrite={false}
-          hitSlop={0.025}
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           onPointerDown={handlePointerDown}
           layer={RENDER_PIPELINE_OVERLAY_LAYER}
           points={points}
-          radius={selected ? 0.018 : 0.014}
           transparent
-          webGpuHitSlop={selected ? 6 : 6.5}
-          width={selected || hovered ? 4 : 3}
         />
       )}
     </SceneObject>
