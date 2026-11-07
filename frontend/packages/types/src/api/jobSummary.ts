@@ -18,7 +18,7 @@ export interface JobSummary {
   error: JobError | null;
   id: string;
   image_asset_id?: string | null;
-  /** Name saved at creation from the source image or trimmed prompt. */
+  /** Explicit job name or an automatic name saved at creation. */
   name: string | null;
   prompt: string | null;
   started_at: string | null;

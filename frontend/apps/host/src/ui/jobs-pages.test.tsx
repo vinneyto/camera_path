@@ -210,6 +210,90 @@ it("opens creation from the list and queues generation", async () => {
   ]);
 });
 
+it("sends an explicit text job name outside the pipeline input", async () => {
+  mount("new");
+  fireEvent.change(
+    screen.getByRole("textbox", { name: "Job name (optional)" }),
+    { target: { value: " Hero chair " } },
+  );
+  fireEvent.change(screen.getByRole("textbox", { name: "Prompt" }), {
+    target: { value: "A small wooden chair with curved legs" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create and generate" }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith(`/jobs/${id}`));
+  const sent = requests.find((request) => request.method === "POST");
+  expect(JSON.parse(String(sent?.body))).toEqual({
+    type: "generation",
+    input: { prompt: "A small wooden chair with curved legs" },
+    start: true,
+    name: "Hero chair",
+  });
+});
+
+it.each(["", " Hero image "])(
+  "keeps the source filename when an image job name is %j",
+  async (name) => {
+    const imageId = "74eeae84-3235-4825-bd78-c6cdedd3628c";
+    const submissions: { url: string; options: RequestInit }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, options: RequestInit = {}) => {
+        submissions.push({ url, options });
+        if (url === "/api/v1/library/uploads")
+          return Response.json(
+            { id: imageId, upload_url: "/upload-image" },
+            { status: 201 },
+          );
+        if (url === "/upload-image") return new Response(null, { status: 204 });
+        if (url.endsWith("/complete"))
+          return Response.json({
+            id: imageId,
+            name: "chair.png",
+            format: "png",
+          });
+        if (url === "/api/v1/jobs")
+          return Response.json(
+            { ...pending, status: "queued" },
+            { status: 201 },
+          );
+        throw new Error(`Unexpected request: ${url}`);
+      }),
+    );
+    mount("new");
+    fireEvent.change(screen.getByLabelText("Template"), {
+      target: { value: "image" },
+    });
+    fireEvent.change(screen.getByLabelText("Job name (optional)"), {
+      target: { value: name },
+    });
+    fireEvent.change(screen.getByLabelText("Source image"), {
+      target: {
+        files: [
+          new File(["image fixture"], "chair.png", { type: "image/png" }),
+        ],
+      },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Create and generate" }),
+    );
+    await waitFor(() => expect(push).toHaveBeenCalledWith(`/jobs/${id}`));
+    const upload = submissions.find(
+      (request) => request.url === "/api/v1/library/uploads",
+    );
+    expect(JSON.parse(String(upload?.options.body))).toMatchObject({
+      name: "chair.png",
+      format: "png",
+    });
+    const sent = submissions.find((request) => request.url === "/api/v1/jobs");
+    expect(JSON.parse(String(sent?.options.body))).toEqual({
+      type: "generation",
+      input: { image_asset_id: imageId },
+      start: true,
+      ...(name.trim() ? { name: name.trim() } : {}),
+    });
+  },
+);
+
 it("asks guests to sign in on the creation route", () => {
   identity.canEdit = false;
   mount("new");

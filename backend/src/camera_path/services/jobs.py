@@ -14,6 +14,7 @@ from camera_path.persistence.records import JobRecord, LibraryAssetRecord
 from camera_path.services.generation_models import GenerationRequest
 from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES
 from camera_path.services.job_inputs import JOB_INPUT_SCHEMAS, validate_job_input
+from camera_path.services.job_naming import image_generation_name, text_generation_name
 from camera_path.services.library import IMAGE_FORMATS, LibraryAsset, LibraryService
 from camera_path.services.library_metadata import LibraryError, canonical_uuid
 
@@ -24,6 +25,12 @@ class JobCreate(BaseModel):
     type: str = Field(json_schema_extra={"enum": list(JOB_INPUT_SCHEMAS)})
     input: dict[str, Any] = Field(json_schema_extra={"oneOf": list(JOB_INPUT_SCHEMAS.values())})
     start: bool = False
+    name: str | None = Field(default=None, max_length=200)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def trim_optional_name(cls, value):
+        return value.strip() or None if isinstance(value, str) else value
 
 
 class JobError(BaseModel):
@@ -37,7 +44,7 @@ class JobFields(BaseModel):
     id: str
     name: str | None = Field(
         max_length=200,
-        description="Name saved at creation from the source image or trimmed prompt.",
+        description="Explicit job name or an automatic name saved at creation.",
     )
     type: str | None
     status: JobStatus
@@ -112,7 +119,11 @@ class JobService:
                 image is None or image.status != "ready" or image.format not in IMAGE_FORMATS
             ):
                 raise LibraryError("generation_image_not_found", 422)
-            job.name = image.name if image else data.input["prompt"].strip()[:200]
+            job.name = data.name or (
+                image_generation_name(image.name)
+                if image
+                else text_generation_name(data.input["prompt"])
+            )
             session.add(job)
             input_asset = await self.library._model(image, request) if image and request else None
         return Job(

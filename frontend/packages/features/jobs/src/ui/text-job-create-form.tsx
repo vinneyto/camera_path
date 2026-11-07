@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { useCreateJobMutation } from "@camera-path/actions";
-import { Button, Card, Textarea } from "@camera-path/ui-kit";
+import { Button, Card, Input, Textarea } from "@camera-path/ui-kit";
 import { parseGenerationInput } from "./parse-generation-input";
 
 const JobInputEditor = dynamic(() => import("./job-input-editor"), {
@@ -26,6 +26,7 @@ const trellisTemplate = {
 export function TextJobCreateForm() {
   const router = useRouter();
   const creation = useCreateJobMutation();
+  const [name, setName] = useState("");
   const [mode, setMode] = useState<"form" | "json">("form");
   const [source, setSource] = useState(() =>
     JSON.stringify(trellisTemplate.input, null, 2),
@@ -37,7 +38,12 @@ export function TextJobCreateForm() {
     event.preventDefault();
     if (busy || !input?.prompt.trim()) return;
     creation.mutate(
-      { type: trellisTemplate.type, input, start: true },
+      {
+        type: trellisTemplate.type,
+        input,
+        start: true,
+        ...(name.trim() ? { name: name.trim() } : {}),
+      },
       { onSuccess: (job) => router.push(`/jobs/${job.id}`) },
     );
   }
@@ -46,6 +52,24 @@ export function TextJobCreateForm() {
     <Card className="p-4 sm:p-5">
       <form onSubmit={submit} className="space-y-5">
         <fieldset disabled={busy} className="space-y-5">
+          <div className="space-y-2">
+            <label
+              htmlFor="text-job-name"
+              className="block text-sm font-medium"
+            >
+              Job name (optional)
+            </label>
+            <Input
+              id="text-job-name"
+              value={name}
+              maxLength={200}
+              placeholder="Leave blank to use the first 5 prompt words"
+              onChange={(event) => setName(event.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              If blank, up to 5 prompt words are joined with underscores.
+            </p>
+          </div>
           <div className="flex gap-1" role="group" aria-label="Input mode">
             <Button
               type="button"

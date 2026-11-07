@@ -15,6 +15,7 @@ const JobInputEditor = dynamic(() => import("./job-input-editor"), {
 export function ImageJobCreateForm() {
   const router = useRouter();
   const creation = useCreateImageJobMutation();
+  const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<"form" | "json">("form");
   const [source, setSource] = useState('{"image_asset_id": ""}');
@@ -31,9 +32,12 @@ export function ImageJobCreateForm() {
     event.preventDefault();
     if (busy || !ready) return;
     creation.mutate(
-      mode === "form" && file
-        ? { file }
-        : { imageAssetId: input?.image_asset_id },
+      {
+        ...(mode === "form" && file
+          ? { file }
+          : { imageAssetId: input?.image_asset_id }),
+        name,
+      },
       {
         onSuccess: (job) => router.push(`/jobs/${job.id}`),
       },
@@ -44,6 +48,21 @@ export function ImageJobCreateForm() {
     <Card className="p-4 sm:p-5">
       <form onSubmit={submit} className="space-y-5">
         <fieldset disabled={busy} className="space-y-5">
+          <div className="space-y-2">
+            <label
+              htmlFor="image-job-name"
+              className="block text-sm font-medium"
+            >
+              Job name (optional)
+            </label>
+            <Input
+              id="image-job-name"
+              value={name}
+              maxLength={200}
+              placeholder="Leave blank to use the image name without its extension"
+              onChange={(event) => setName(event.target.value)}
+            />
+          </div>
           <div className="flex gap-1" role="group" aria-label="Input mode">
             <Button
               type="button"

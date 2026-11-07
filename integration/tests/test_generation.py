@@ -19,12 +19,12 @@ def configure(b, broker_url):
     )
 
 
-def create_generation(b, prompt):
+def create_generation(b, prompt, *, name=None):
     job = b.request(
         "POST",
         "/api/v1/jobs",
         201,
-        json={"type": "generation", "input": {"prompt": prompt}, "start": True},
+        json={"type": "generation", "input": {"prompt": prompt}, "start": True, "name": name},
     ).json()
     assert job["status"] == "queued" and job["assets"] == []
     return job
@@ -85,7 +85,7 @@ def test_generation_round_trip_after_backend_restart(dev_backend):
         db.execute("UPDATE jobs SET status = 'queued' WHERE id = ?", (legacy["id"],))
     configure(b, "amqp://guest:guest@127.0.0.1:1/")
     b.start()
-    job = create_generation(b, "A red chair")
+    job = create_generation(b, "A red chair", name="Hero chair")
     job_path = f"/api/v1/jobs/{job['id']}"
     b.stop()
     configure(b, b.broker.url)
@@ -114,6 +114,7 @@ def test_generation_round_trip_after_backend_restart(dev_backend):
     asset = finished["assets"][0]
     assert len(finished["assets"]) == 1 and len(asset["files"]) == 2
     assert asset["job_id"] == job["id"] and asset["bbox"] == BOUNDS
+    assert asset["name"] == job["name"] == "Hero chair"
     assert asset["default_rotation_deg"] == [0, 0, 0]
     assert b.request("GET", asset["download_url"]).content == PLY
     assert b.request("GET", asset["files"][1]["download_url"]).content == SOG
@@ -180,7 +181,7 @@ def test_image_generation_original_lock_and_result_round_trip(dev_backend):
         "/api/v1/library/uploads",
         201,
         json={
-            "name": "Original image",
+            "name": "Original image.png",
             "format": "png",
             "size_bytes": len(original),
         },
@@ -195,13 +196,14 @@ def test_image_generation_original_lock_and_result_round_trip(dev_backend):
             "type": "generation",
             "input": {"image_asset_id": image["id"]},
             "start": True,
+            "name": "Image study",
         },
     ).json()
     b.request("DELETE", f"/api/v1/library/{image['id']}", 409)
     queue = b.env["CAMERA_PATH_GENERATION_REQUEST_QUEUE"]
     b.broker.wait_queue(queue)
     command = json.loads(b.broker.get_message(queue)["body"])
-    assert job["name"] == image["name"]
+    assert job["name"] == "Image study"
     assert command["job_id"] == job["id"]
     assert Path(command["input"]["image_path"]).read_bytes() == original
     assert command["input"]["image_sha256"] == hashlib.sha256(original).hexdigest()
@@ -212,10 +214,12 @@ def test_image_generation_original_lock_and_result_round_trip(dev_backend):
     assert finished["input"] == {"image_asset_id": image["id"]}
     assert finished["input_asset"]["id"] == image["id"]
     assert len(finished["assets"]) == 1
+    assert finished["assets"][0]["name"] == "Original image"
+    assert finished["input_asset"]["name"] == "Original image.png"
     assert finished["assets"][0]["default_rotation_deg"] == [180, 0, 0]
     assert b.request("GET", image["download_url"]).content == original
     b.request("DELETE", f"/api/v1/library/{image['id']}", 204)
     history = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
     assert history["input_asset"] is None and history["input"] == job["input"]
-    assert history["name"] == image["name"]
+    assert history["name"] == "Image study"
     assert len(history["assets"]) == 1

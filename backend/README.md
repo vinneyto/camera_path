@@ -476,9 +476,12 @@ The first successful completion wins, including after assets are deleted. Develo
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
 The Jobs page lists every job type with its saved `name`, lifecycle status, errors and surviving
-library results. Generation jobs snapshot the source image name or the trimmed prompt (up to
-200 characters) on creation. The name remains after source deletion. Migration fills existing
-generation names from their prompt, surviving image, or previous image-generation result;
+library results. Creation accepts an optional top-level `name` (up to 200 characters);
+blank/null selects an automatic name. Text jobs join the first five whitespace-separated prompt words with `_`.
+Image jobs use the source filename without its final extension. The name remains after source
+deletion. Original image assets retain the complete filename; image-generated 3DGS assets use
+the filename stem, including when the job has a custom name. Text-generated assets use the job
+name. Migrations update the old automatic job/result labels while preserving custom names;
 legacy jobs without recoverable metadata keep a null name. The public API lists jobs at
 `GET /api/v1/jobs`, returns details at
 `GET /api/v1/jobs/{id}` and streams status through `GET /api/v1/jobs/{id}/events`.
@@ -527,7 +530,9 @@ the queue names, set `CAMERA_PATH_GENERATION_REQUEST_QUEUE` and `CAMERA_PATH_GEN
 to the same values used by the worker. The backend reads the result manifest and imports the files
 as one library asset with a shared bounding box. The job details page refreshes through SSE.
 
-Optionally set `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in `backend/.env`
+Dev Setup writes an active `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in
+`backend/.env` when no value is configured, and preserves custom values. You can also set it manually
 to correct upside-down Trellis output. The three values are Euler XYZ angles in degrees.
 The backend saves them as library placement defaults on newly generated assets. The PLY
-and its bounding box stay in the original asset coordinates. Omit the setting for zero rotation.
+and its bounding box stay in the original asset coordinates. Set `[0,0,0]` explicitly
+to keep zero rotation through Dev Setup.

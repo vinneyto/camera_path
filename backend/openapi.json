@@ -1495,7 +1495,7 @@
                 "type": "null"
               }
             ],
-            "description": "Name saved at creation from the source image or trimmed prompt.",
+            "description": "Explicit job name or an automatic name saved at creation.",
             "title": "Name"
           },
           "started_at": {
@@ -1581,6 +1581,18 @@
             ],
             "title": "Input",
             "type": "object"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "start": {
             "default": false,
@@ -1723,7 +1735,7 @@
                 "type": "null"
               }
             ],
-            "description": "Name saved at creation from the source image or trimmed prompt.",
+            "description": "Explicit job name or an automatic name saved at creation.",
             "title": "Name"
           },
           "prompt": {

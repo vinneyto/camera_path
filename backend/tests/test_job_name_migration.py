@@ -37,7 +37,7 @@ def test_job_name_backfill_preserves_sources_outputs_and_unknown_legacy_jobs(tmp
                 "'2026-11-07',?,?)",
                 (asset_id, name, f"{asset_id}.png", job_id, position),
             )
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261107_0019")
     with sqlite3.connect(database) as connection:
         assert dict(connection.execute("SELECT id,name FROM jobs")) == {
             "text": prompt.strip()[:200],

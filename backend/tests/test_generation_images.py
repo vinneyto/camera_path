@@ -106,12 +106,13 @@ async def test_image_job_locks_input_dispatches_a_path_imports_output_and_preser
             "type": "generation",
             "input": {"image_asset_id": image["id"]},
             "start": True,
+            "name": " Hero shot ",
         },
     )
     assert response.status_code == 201
     job = response.json()
-    assert job["name"] == image["name"]
-    assert (await client.get("/api/v1/jobs")).json()[0]["name"] == image["name"]
+    assert job["name"] == "Hero shot"
+    assert (await client.get("/api/v1/jobs")).json()[0]["name"] == "Hero shot"
     assert job["input"] == {"image_asset_id": image["id"]}
     assert job["input_asset"]["id"] == image["id"] and job["assets"] == []
     assert (await client.delete(f"/api/v1/library/{image['id']}")).status_code == 409
@@ -160,11 +161,12 @@ async def test_image_job_locks_input_dispatches_a_path_imports_output_and_preser
     assert finished["status"] == "succeeded" and len(finished["assets"]) == 1
     assert finished["input_asset"]["id"] == image["id"]
     assert finished["assets"][0]["default_rotation_deg"] == [180, 0, 0]
-    assert finished["assets"][0]["name"] == image["name"]
+    assert finished["assets"][0]["name"] == "Original"
+    assert finished["input_asset"]["name"] == "Original.png"
     assert (await client.delete(f"/api/v1/library/{image['id']}")).status_code == 204
     history = (await client.get(f"/api/v1/jobs/{job['id']}")).json()
     assert history["input_asset"] is None and history["input"] == job["input"]
-    assert history["name"] == image["name"]
+    assert history["name"] == "Hero shot"
     assert len(history["assets"]) == 1
 
 

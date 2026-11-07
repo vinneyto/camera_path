@@ -13,7 +13,11 @@ export function useCreateImageJob() {
   const client = useQueryClient();
   const uploaded = useRef<{ file: File; id: string } | null>(null);
   return useMutation({
-    mutationFn: async (data: { file?: File; imageAssetId?: string }) => {
+    mutationFn: async (data: {
+      file?: File;
+      imageAssetId?: string;
+      name?: string;
+    }) => {
       let id = data.imageAssetId;
       if (data.file) {
         if (uploaded.current?.file !== data.file) {
@@ -30,6 +34,7 @@ export function useCreateImageJob() {
         type: "generation",
         input: { image_asset_id: id },
         start: true,
+        ...(data.name?.trim() ? { name: data.name.trim() } : {}),
       });
       if (response.status !== 201)
         throw new Error("Could not create the image job.");

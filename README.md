@@ -60,7 +60,9 @@ Rerun **Dev Setup** to update a clone prepared before this change. Messages alre
 sent to its previous queues stay in those queues.
 
 Opting in to Trellis also configures the backend's broker URL and output path to
-match `generation/.env`. For simultaneous local instances, choose different HTTP ports.
+match `generation/.env`. Dev Setup also enables `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]`
+for new generated assets when no rotation is configured, and preserves custom values.
+For simultaneous local instances, choose different HTTP ports.
 
 ```bash
 CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/dev.sh start

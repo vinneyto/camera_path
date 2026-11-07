@@ -87,6 +87,10 @@ def configure_env():
             "CAMERA_PATH_RABBITMQ_QUEUE": f"{prefix}.job-completions",
             "CAMERA_PATH_GENERATION_REQUEST_QUEUE": request_queue,
             "CAMERA_PATH_GENERATION_RESULT_QUEUE": result_queue,
+            "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG": effective_env(BACKEND_ENV).get(
+                "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG"
+            )
+            or "[180,0,0]",
         },
     )
     update_env(

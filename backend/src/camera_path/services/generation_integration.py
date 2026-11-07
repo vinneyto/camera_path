@@ -30,6 +30,7 @@ from camera_path.services.job_completion_models import (
     LibraryFileSource,
     LibraryImportFile,
 )
+from camera_path.services.job_naming import image_generation_name, text_generation_name
 from camera_path.services.library import IMAGE_FORMATS, MAX_IMAGE_BYTES, MAX_LIBRARY_FILE_BYTES
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorage
@@ -117,12 +118,15 @@ class GenerationIntegration:
             if job.status not in ACTIVE_STATUSES:
                 return job.id
             job_input = job.input
+            job_name = job.name
 
         if event.error is not None:
             await self._fail(event.job_id, event.error)
         else:
             try:
                 worker_input, name = await self._worker_input(event.job_id, job_input, stage=False)
+                if "prompt" in job_input and job_name:
+                    name = job_name
                 message = await blocking_io(lambda: self._completion(event, worker_input, name))
             except ValueError as error:
                 raise LibraryError("invalid_generation_result", 422) from error
@@ -154,7 +158,7 @@ class GenerationIntegration:
 
     async def _worker_input(self, job_id: str, job_input: dict, *, stage: bool):
         if "prompt" in job_input:
-            return TextGenerationInput(**job_input), job_input["prompt"].strip()[:200]
+            return TextGenerationInput(**job_input), text_generation_name(job_input["prompt"])
         async with self.sessions() as session:
             image = await session.get(LibraryAssetRecord, job_input["image_asset_id"])
             if image is None or image.status != "ready" or image.format not in IMAGE_FORMATS:
@@ -179,7 +183,7 @@ class GenerationIntegration:
                 image_sha256=hashlib.sha256(data).hexdigest(),
             )
 
-        return await blocking_io(prepare), name[:200]
+        return await blocking_io(prepare), image_generation_name(name)
 
     def _completion(self, event: GenerationResult, job_input, name: str) -> JobCompletionMessage:
         with self.source.open_reader(event.result_path) as file:
