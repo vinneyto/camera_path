@@ -40,11 +40,18 @@ The same commands work in a terminal from the repository root.
 ```
 
 After pulling a schema change, run just the migrations with `./scripts/dev.sh migrate`.
-Setup preserves existing environment files and editor credentials. New clones use
-SQLite and filesystem storage under `backend/.dev/`. Opting in to Trellis configures
-the backend's RabbitMQ settings and output path to match `generation/.env`.
+New clones use SQLite and filesystem storage under `backend/.dev/`.
 
-For a second local instance, choose different HTTP ports.
+All clones share the RabbitMQ and Mailpit containers. **Dev Setup** enables RabbitMQ
+and assigns queues with a prefix derived from the clone's absolute path, such as
+`camera-path.a1b2c3d4e5f6.generation.requests`. It writes matching queue names to
+`backend/.env` and `generation/.env` before the editor and Trellis prompts.
+Repeated setup in the same directory keeps the same queue names.
+Rerun **Dev Setup** to update a clone prepared before this change. Messages already
+sent to its previous queues stay in those queues.
+
+Opting in to Trellis also configures the backend's broker URL and output path to
+match `generation/.env`. For simultaneous local instances, choose different HTTP ports.
 
 ```bash
 CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/dev.sh start

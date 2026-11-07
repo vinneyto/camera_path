@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import fcntl
+import hashlib
 import os
 import platform
 import secrets
@@ -51,6 +52,19 @@ def create_env(path, example, extra=""):
     print(f"Created {path.relative_to(ROOT)}")
 
 
+def update_env(path, values):
+    current = dotenv_values(path)
+    changes = {key: value for key, value in values.items() if current.get(key) != value}
+    if not changes:
+        return
+    with TemporaryDirectory(dir=path.parent) as temp:
+        updated = Path(temp) / ".env"
+        shutil.copy2(path, updated)
+        for key, value in changes.items():
+            set_key(updated, key, value)
+        updated.replace(path)
+
+
 def configure_env():
     create_env(
         BACKEND_ENV,
@@ -59,9 +73,27 @@ def configure_env():
         "CAMERA_PATH_LIBRARY_DIRECTORY=.dev/library\n",
     )
     if not effective_env(BACKEND_ENV).get("CAMERA_PATH_JWT_SECRET"):
-        set_key(BACKEND_ENV, "CAMERA_PATH_JWT_SECRET", secrets.token_urlsafe(48))
+        update_env(BACKEND_ENV, {"CAMERA_PATH_JWT_SECRET": secrets.token_urlsafe(48)})
     create_env(FRONTEND / ".env.local", FRONTEND / ".env.example")
     create_env(GENERATION_ENV, GENERATION / ".env.example")
+    clone_id = hashlib.sha256(os.fsencode(ROOT)).hexdigest()[:12]
+    prefix = f"camera-path.{clone_id}"
+    request_queue = f"{prefix}.generation.requests"
+    result_queue = f"{prefix}.generation.results"
+    update_env(
+        BACKEND_ENV,
+        {
+            "CAMERA_PATH_MESSAGE_QUEUE": "rabbitmq",
+            "CAMERA_PATH_RABBITMQ_QUEUE": f"{prefix}.job-completions",
+            "CAMERA_PATH_GENERATION_REQUEST_QUEUE": request_queue,
+            "CAMERA_PATH_GENERATION_RESULT_QUEUE": result_queue,
+        },
+    )
+    update_env(
+        GENERATION_ENV,
+        {"GENERATION_REQUEST_QUEUE": request_queue, "GENERATION_RESULT_QUEUE": result_queue},
+    )
+    print(f"Configured RabbitMQ queues for {prefix}")
 
 
 def migrate():
@@ -176,13 +208,7 @@ def setup_trellis():
             env={**os.environ, "HF_HUB_OFFLINE": "0"},
         )
     if not enabled:
-        # Commit the matching backend settings together after the worker is ready.
-        with TemporaryDirectory(dir=BACKEND) as temp:
-            updated = Path(temp) / ".env"
-            shutil.copy2(BACKEND_ENV, updated)
-            for key, value in trellis_backend_settings().items():
-                set_key(updated, key, value)
-            updated.replace(BACKEND_ENV)
+        update_env(BACKEND_ENV, trellis_backend_settings())
 
 
 def setup():
