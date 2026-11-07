@@ -11,10 +11,49 @@
     },
     {
       "label": "Dev Start",
+      "dependsOn": ["Dev Frontend", "Dev Backend", "Dev Trellis"],
+      "dependsOrder": "parallel",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Frontend",
       "type": "shell",
       "isBackground": true,
       "command": "./scripts/dev.sh",
-      "args": ["start"],
+      "args": ["frontend"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Backend",
+      "type": "shell",
+      "isBackground": true,
+      "command": "./scripts/dev.sh",
+      "args": ["backend"],
+      "dependsOn": ["Dev Infrastructure"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Trellis",
+      "type": "shell",
+      "isBackground": true,
+      "command": "./scripts/dev.sh",
+      "args": ["trellis"],
+      "dependsOn": ["Dev Infrastructure"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Infrastructure",
+      "type": "shell",
+      "hide": true,
+      "command": "./scripts/dev.sh",
+      "args": ["infrastructure"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     }

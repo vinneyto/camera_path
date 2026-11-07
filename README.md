@@ -24,20 +24,29 @@ with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**
    toolchain, creates missing environment files and runs the database migrations.
    For a new database it prompts for the editor's email and password. On Apple
    Silicon it also offers to set up Trellis and download missing model weights.
-2. **Dev Start** starts the backend, frontend, RabbitMQ and Mailpit. It also starts
-   the Trellis worker when the backend is configured for local generation.
+2. **Dev Start** launches **Dev Frontend**, **Dev Backend** and **Dev Trellis** in
+   separate terminals. Backend and Trellis tasks first start the shared RabbitMQ
+   and Mailpit containers. Trellis runs when local generation is configured.
+
+Start, stop or restart each service through its own task and view its logs in its
+dedicated terminal. Use **Tasks: Terminate Task** to stop a service, or choose
+**All** to stop all running tasks.
 
 Open [the editor](http://127.0.0.1:3000) and use
 [Mailpit](http://127.0.0.1:8025) to read the email confirmation code. The backend API
-listens on `127.0.0.1:8000`. Stopping **Dev Start** stops the application processes.
-RabbitMQ and Mailpit stay up between launches.
+listens on `127.0.0.1:8000`. RabbitMQ and Mailpit stay up between launches.
 
-The same commands work in a terminal from the repository root.
+From the repository root, the terminal launcher also supports starting the full stack.
+Press Ctrl+C to stop its application processes.
 
 ```bash
 ./scripts/dev.sh setup
 ./scripts/dev.sh start
 ```
+
+For separate terminals, use `./scripts/dev.sh infrastructure` once, then launch
+`./scripts/dev.sh frontend`, `./scripts/dev.sh backend` and
+`./scripts/dev.sh trellis` in their own terminals.
 
 After pulling a schema change, run just the migrations with `./scripts/dev.sh migrate`.
 New clones use SQLite and filesystem storage under `backend/.dev/`.

@@ -276,6 +276,7 @@ def stop_processes(processes):
 
 
 def start_infrastructure():
+    require("docker")
     # Reuse the standalone Mailpit container from the previous local instructions.
     legacy = subprocess.run(
         ["docker", "port", "camera-path-mailpit"], capture_output=True, text=True, check=False
@@ -289,32 +290,13 @@ def start_infrastructure():
     run(*COMPOSE, "up", "-d", "--wait", *services)
 
 
-def start():
-    require("docker", "npm", "wasm-pack")
-    if not BACKEND_ENV.is_file() or not (FRONTEND / "node_modules").is_dir():
+def service_command(service):
+    if not BACKEND_ENV.is_file():
         raise SystemExit("Run ./scripts/dev.sh setup first.")
-    backend = effective_env(BACKEND_ENV)
-    trellis = bool(backend.get("CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"))
-    if trellis:
-        check_trellis_settings()
-        port, model = trellis_paths()
-        if not all(
-            (
-                WORKER_PYTHON.is_file(),
-                (GENERATION / port / "trellis/pipelines").is_dir(),
-                (GENERATION / model / "pipeline.json").is_file(),
-            )
-        ):
-            raise SystemExit("Run Dev Setup to prepare the configured Trellis worker.")
 
     backend_port = os.getenv("CAMERA_PATH_DEV_BACKEND_PORT", "8000")
-    frontend_port = os.getenv("CAMERA_PATH_DEV_FRONTEND_PORT", "3000")
-    frontend_env = os.environ.copy()
-    if "CAMERA_PATH_DEV_BACKEND_PORT" in os.environ:
-        frontend_env["CAMERA_PATH_BACKEND_URL"] = f"http://127.0.0.1:{backend_port}"
-    services = [
-        (
-            "backend",
+    if service == "backend":
+        return (
             BACKEND,
             os.environ,
             [
@@ -329,9 +311,15 @@ def start():
                 "--port",
                 backend_port,
             ],
-        ),
-        (
-            "frontend",
+        )
+    if service == "frontend":
+        require("npm", "wasm-pack")
+        if not (FRONTEND / "node_modules").is_dir():
+            raise SystemExit("Run ./scripts/dev.sh setup first.")
+        frontend_env = os.environ.copy()
+        if "CAMERA_PATH_DEV_BACKEND_PORT" in os.environ:
+            frontend_env["CAMERA_PATH_BACKEND_URL"] = f"http://127.0.0.1:{backend_port}"
+        return (
             FRONTEND,
             frontend_env,
             [
@@ -342,25 +330,48 @@ def start():
                 "--hostname",
                 "127.0.0.1",
                 "--port",
-                frontend_port,
+                os.getenv("CAMERA_PATH_DEV_FRONTEND_PORT", "3000"),
             ],
-        ),
-    ]
-    if trellis:
-        services.append(
-            (
-                "Trellis",
-                GENERATION,
-                os.environ,
-                [WORKER_PYTHON, "-m", "camera_path_generation"],
-            )
         )
+    if not effective_env(BACKEND_ENV).get("CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"):
+        return None
+    check_trellis_settings()
+    port, model = trellis_paths()
+    if not all(
+        (
+            WORKER_PYTHON.is_file(),
+            (GENERATION / port / "trellis/pipelines").is_dir(),
+            (GENERATION / model / "pipeline.json").is_file(),
+        )
+    ):
+        raise SystemExit("Run Dev Setup to prepare the configured Trellis worker.")
+    return GENERATION, os.environ, [WORKER_PYTHON, "-m", "camera_path_generation"]
+
+
+def run_service(service):
+    command = service_command(service)
+    if command is None:
+        print("Trellis is not configured. Run Dev Setup to enable it.", flush=True)
+        return
+    cwd, env, args = command
+    print(f"Starting {service}", flush=True)
+    os.chdir(cwd)
+    os.execvpe(args[0], args, env)
+
+
+def start():
+    services = []
+    for service in ("backend", "frontend", "trellis"):
+        command = service_command(service)
+        if command is not None:
+            services.append((service, *command))
 
     def interrupt(_signum, _frame):
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGTERM, interrupt)
     start_infrastructure()
+    frontend_port = os.getenv("CAMERA_PATH_DEV_FRONTEND_PORT", "3000")
     print(
         f"Frontend http://127.0.0.1:{frontend_port} · Mailpit http://127.0.0.1:8025",
         flush=True,
@@ -381,11 +392,21 @@ def start():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Set up and run the local Camera Path stack.")
-    parser.add_argument("action", choices=("setup", "start", "migrate"))
+    actions = {
+        "setup": setup,
+        "start": start,
+        "migrate": migrate,
+        "infrastructure": start_infrastructure,
+    }
+    parser.add_argument("action", choices=(*actions, "backend", "frontend", "trellis"))
     try:
         # The backend settings load .env from the current working directory.
         os.chdir(BACKEND)
-        {"setup": setup, "start": start, "migrate": migrate}[parser.parse_args().action]()
+        action = parser.parse_args().action
+        if action in actions:
+            actions[action]()
+        else:
+            run_service(action)
     except KeyboardInterrupt:
         sys.exit(130)
     except EOFError:
