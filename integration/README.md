@@ -138,7 +138,8 @@ before source reads. Default and RabbitMQ modes both check that debug routes are
 Generation scenarios submit jobs with `start: true`, recover undispatched work after a backend
 restart, and observe status changes over SSE. The test acts as the worker through RabbitMQ and
 supplies result manifests and fixture files. It checks imports, bounding boxes, replay, error
-handling and the opt-in placement rotation for generated assets.
+handling and the opt-in placement rotation for generated assets. Image scenarios also check
+original byte preservation, ID-to-path dispatch, input deletion locking and deleted-input history.
 
 The success gate covers the checked-in `backend/openapi.json` inventory. All files, queues and
 messages belong to the suite. Backend tests cover SQS SDK behavior.

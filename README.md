@@ -23,7 +23,7 @@ with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**
 1. **Dev Setup** installs the Python and npm dependencies, prepares the WASM
    toolchain, creates missing environment files and runs the database migrations.
    For a new database it prompts for the editor's email and password. On Apple
-   Silicon it also offers to set up Trellis and download missing model weights.
+   Silicon it also offers to set up Trellis and download missing text/image model weights.
 2. **Dev Start** launches **Dev Frontend**, **Dev Backend** and **Dev Trellis** in
    separate terminals. Backend and Trellis tasks first start the shared RabbitMQ
    and Mailpit containers. Trellis runs when local generation is configured.

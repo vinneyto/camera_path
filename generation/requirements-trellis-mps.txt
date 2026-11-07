@@ -1,4 +1,4 @@
-# Local text-to-Gaussian-PLY runtime for the Apple Silicon port on Python 3.12.
+# Local text/image-to-Gaussian-PLY runtime for the Apple Silicon port on Python 3.12.
 easydict==1.13
 einops==0.8.2
 huggingface-hub==2.3.0

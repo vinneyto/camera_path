@@ -17,6 +17,7 @@ export interface JobSummary {
   created_at: string | null;
   error: JobError | null;
   id: string;
+  image_asset_id?: string | null;
   prompt: string | null;
   started_at: string | null;
   status: JobStatus;

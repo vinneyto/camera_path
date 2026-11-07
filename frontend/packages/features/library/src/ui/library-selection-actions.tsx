@@ -73,7 +73,9 @@ export function LibrarySelectionActions({
         pending={deletion.isPending}
         error={
           deletion.error
-            ? "Could not delete the selected files. Please try again or reload the library."
+            ? deletion.error.message === "generation_input_in_use"
+              ? "A source image is being used by an active generation job. Wait for it to finish."
+              : "Could not delete the selected files. Please try again or reload the library."
             : undefined
         }
         onConfirm={confirmDelete}

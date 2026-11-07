@@ -44,7 +44,7 @@ are intentionally discarded; CP-41 and CP-42 introduce the replacement command-b
 
 ### Local 3DGS library
 
-The library stores file metadata in the database and PLY or SOG files in
+The library stores file metadata in the database and PLY, SOG or original image files in
 `~/.camera-path/library` by default. Set `CAMERA_PATH_LIBRARY_DIRECTORY` to choose another
 directory. Keep this directory persistent across backend restarts. The local storage adapter
 provides development upload and download routes. Storage access is behind `LibraryStorage`,
@@ -52,7 +52,7 @@ so API and library service code do not depend on
 the storage implementation.
 
 To upload a file, call `POST /api/v1/library/uploads` with its `name`, `size_bytes` and `format`
-(`ply` by default, or `sog` for a self-contained SOG archive). PUT the bytes to the returned
+(`ply` by default; `sog`, `png`, `jpg`, `jpeg` and `webp` are also supported). PUT the bytes to the returned
 `upload_url`, then call `POST /api/v1/library/{id}/complete`. The final step checks the uploaded
 size and format signature before the asset appears in `GET /api/v1/library` with a
 `download_url`. Scene objects reference library assets from individual projects.
@@ -483,6 +483,20 @@ Editors can reserve a draft through `POST /api/v1/jobs` with
 `"start":true` so the backend persists the job as queued and dispatches it to Trellis.
 The server validates input against its JSON Schema, rejects unknown types/fields and blank prompts,
 and stores the exact validated JSON. Frontend presets are not stored on the backend.
+Image jobs use `{"type":"generation","input":{"image_asset_id":"<image UUID>"},"start":true}`.
+The referenced image must already be ready in the library. PNG/JPEG/WebP uploads are
+limited to 20 MB, 40 megapixels and one frame, and fully decoded before publication.
+Job details expose the original as `input_asset`, separately from generated `assets`.
+Deleting an image used by any queued/running job returns `409 generation_input_in_use`
+(including bulk deletion). After success/failure/cancellation, deletion is allowed;
+`input_asset` becomes null while `input.image_asset_id` preserves history. Images cannot
+be placed in scenes or receive 3D transform defaults.
+
+For local RabbitMQ generation the backend copies the original into the worker output
+directory, sends its absolute `image_path` and `image_sha256`, and validates the returned
+manifest against those resolved parameters. This also works when the library uses S3.
+The worker removes backgrounds for generation only. The configured default rotation
+applies to generated PLY/SOG outputs from both text and image jobs.
 Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
 status; terminal states have `completed_at`. Successful completion import updates the status
 atomically with the results. Deleting assets does not change job history. Legacy jobs keep their

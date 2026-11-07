@@ -5,6 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { useJobResource } from "@camera-path/api/resources";
 import { Badge, Button } from "@camera-path/ui-kit";
 import { JobResultCard } from "./job-result-card";
+import { JobSourceImage } from "./job-source-image";
 
 export function JobDetailsPage() {
   const resource = useJobResource();
@@ -95,6 +96,12 @@ export function JobDetailsPage() {
             <p role="alert" className="text-xs text-destructive">
               {job.error.message}
             </p>
+          )}
+          {typeof job.input?.image_asset_id === "string" && (
+            <JobSourceImage
+              asset={job.input_asset ?? null}
+              active={job.status === "queued" || job.status === "running"}
+            />
           )}
           <section className="space-y-3" aria-labelledby="job-assets-heading">
             <h2 id="job-assets-heading" className="text-sm font-medium">

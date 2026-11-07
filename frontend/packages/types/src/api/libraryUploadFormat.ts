@@ -12,4 +12,8 @@ export type LibraryUploadFormat = typeof LibraryUploadFormat[keyof typeof Librar
 export const LibraryUploadFormat = {
   ply: 'ply',
   sog: 'sog',
+  png: 'png',
+  jpg: 'jpg',
+  jpeg: 'jpeg',
+  webp: 'webp',
 } as const;

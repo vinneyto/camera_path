@@ -1130,7 +1130,7 @@ export const getListLibraryAssetsUrl = () => {
 }
 
 /**
- * List ready 3DGS files in the reusable library.
+ * List ready 3DGS files and original images in the reusable library.
  * @summary List Library Assets
  */
 export const listLibraryAssets = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<listLibraryAssetsResponse> => {
@@ -1702,7 +1702,7 @@ export const getCompleteLibraryUploadUrl = (assetId: string,) => {
 }
 
 /**
- * Validate the uploaded PLY and publish it in the library.
+ * Validate the uploaded file and publish it in the library.
  * @summary Complete Library Upload
  */
 export const completeLibraryUpload = async (assetId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<completeLibraryUploadResponse> => {

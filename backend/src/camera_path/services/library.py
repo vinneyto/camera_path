@@ -6,11 +6,12 @@ from uuid import uuid4
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, field_validator, model_validator
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 
-from camera_path.persistence.enums import LibraryAssetStatus
+from camera_path.persistence.enums import JobStatus, LibraryAssetStatus
 from camera_path.persistence.records import (
+    JobRecord,
     LibraryAssetFileRecord,
     LibraryAssetRecord,
 )
@@ -26,6 +27,9 @@ from camera_path.services.library_metadata import (
 from camera_path.services.library_storage import LibraryStorage
 
 MAX_LIBRARY_FILE_BYTES = 2 * 1024**3
+MAX_IMAGE_BYTES = 20 * 1024**2
+IMAGE_FORMATS = {"png", "jpg", "jpeg", "webp"}
+LibraryFormat = Literal["ply", "sog", "png", "jpg", "jpeg", "webp"]
 
 
 def thumbnail_type(key: str, header: bytes) -> str | None:
@@ -40,7 +44,7 @@ def thumbnail_type(key: str, header: bytes) -> str | None:
 
 class LibraryAssetFile(BaseModel):
     id: str
-    format: Literal["ply", "sog"]
+    format: LibraryFormat
     size_bytes: int
     sha256: str | None = None
     download_url: str | None = None
@@ -50,7 +54,7 @@ class LibraryAsset(BaseModel):
     id: str
     job_id: str | None = None
     name: str
-    format: Literal["ply", "sog"]
+    format: LibraryFormat
     size_bytes: int
     status: Literal["pending", "ready"]
     created_at: datetime
@@ -75,7 +79,7 @@ class LibraryUploadCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=200)
     size_bytes: int = Field(gt=0, le=MAX_LIBRARY_FILE_BYTES)
-    format: Literal["ply", "sog"] = "ply"
+    format: LibraryFormat = "ply"
     thumbnail_key: str | None = None
     tags: list[str] = Field(default_factory=list)
 
@@ -89,6 +93,8 @@ class LibraryUploadCreate(BaseModel):
     @model_validator(mode="after")
     def validate_metadata(self):
         validate_thumbnail(self.thumbnail_key)
+        if self.format in IMAGE_FORMATS and self.size_bytes > MAX_IMAGE_BYTES:
+            raise ValueError("Images must be at most 20 MB")
         return self
 
 
@@ -128,6 +134,7 @@ class LibraryService:
                 )
             )
         primary = next(f for f in record.files if f.is_primary)
+        download = next(f.download_url for f in files if f.id == primary.id)
         return LibraryAsset(
             id=record.id,
             job_id=record.job_id,
@@ -140,8 +147,10 @@ class LibraryService:
             bbox=record.bbox,
             files=files,
             primary_file_id=primary.id,
-            download_url=next(f.download_url for f in files if f.id == primary.id),
-            thumbnail_url=await self.storage.thumbnail_url(record.id, record.thumbnail_key, request)
+            download_url=download,
+            thumbnail_url=await self.storage.image_url(record.id, record.object_key, request)
+            if ready and record.format in IMAGE_FORMATS
+            else await self.storage.thumbnail_url(record.id, record.thumbnail_key, request)
             if ready and record.thumbnail_key
             else None,
             default_rotation_deg=(
@@ -184,6 +193,17 @@ class LibraryService:
                 if record is None:
                     raise HTTPException(404, "Library file not found; reload the library")
                 records.append(record)
+            in_use = await session.scalar(
+                select(JobRecord.id)
+                .where(
+                    JobRecord.type == "generation",
+                    JobRecord.status.in_((JobStatus.QUEUED, JobStatus.RUNNING)),
+                    JobRecord.input["image_asset_id"].as_string().in_(asset_ids),
+                )
+                .limit(1)
+            )
+            if in_use is not None:
+                raise LibraryError("generation_input_in_use", 409)
             keys = [f.object_key for record in records for f in record.files]
             keys.extend(r.thumbnail_key for r in records if r.thumbnail_key)
             try:
@@ -197,6 +217,8 @@ class LibraryService:
                 raise HTTPException(502, "Could not delete the selected library files") from error
 
     async def update_defaults(self, asset_id, data, request) -> LibraryAsset:
+        if (await self.get_record(asset_id)).format in IMAGE_FORMATS:
+            raise LibraryError("image_has_no_transform", 422)
         record = await self.repository.update_defaults(
             asset_id, data.default_rotation_deg, data.default_scale, data.default_offset
         )
@@ -266,7 +288,34 @@ class LibraryService:
             if record.status == LibraryAssetStatus.PENDING:
                 if not await self.storage.finalize_upload(record.object_key, record.size_bytes):
                     raise HTTPException(422, "Uploaded file is missing, incomplete or invalid")
+                if record.format in IMAGE_FORMATS:
+                    await blocking_io(lambda: self._validate_image(record))
                 await self.check_thumbnail(record.thumbnail_key)
                 record.status = LibraryAssetStatus.READY
                 await session.flush()
         return await self._model(record, request)
+
+    def _validate_image(self, record: LibraryAssetRecord) -> None:
+        from io import BytesIO
+
+        from PIL import Image, UnidentifiedImageError
+
+        try:
+            with self.storage.open_reader(record.object_key) as stream:
+                data = stream.read(MAX_IMAGE_BYTES + 1)
+            if len(data) > MAX_IMAGE_BYTES:
+                raise ValueError("Image exceeds 20 MB")
+            with Image.open(BytesIO(data)) as image:
+                expected = {"png": "PNG", "jpg": "JPEG", "jpeg": "JPEG", "webp": "WEBP"}
+                if (
+                    image.format != expected[record.format]
+                    or image.width * image.height > 40_000_000
+                ):
+                    raise ValueError("Invalid image format or dimensions")
+                if getattr(image, "n_frames", 1) != 1:
+                    raise ValueError("Animated images are not supported")
+                image.verify()
+            with Image.open(BytesIO(data)) as image:
+                image.load()
+        except (ValueError, OSError, UnidentifiedImageError, Image.DecompressionBombError) as error:
+            raise LibraryError("invalid_image", 422) from error

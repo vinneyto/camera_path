@@ -21,6 +21,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the standalone Trellis generation worker")
     parser.add_argument("--model-dir", type=Path, default=os.getenv("GENERATION_MODEL_DIR") or None)
     parser.add_argument(
+        "--image-model-dir",
+        type=Path,
+        default=os.getenv("GENERATION_IMAGE_MODEL_DIR") or None,
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=os.getenv("GENERATION_OUTPUT_DIR") or Path.home() / ".camera-path" / "generation",
@@ -45,6 +50,11 @@ def main() -> None:
     model_dir = args.model_dir.expanduser().resolve()
     if not (model_dir / "pipeline.json").is_file():
         parser.error("The model directory must contain the Trellis pipeline.json")
+    image_model_dir = args.image_model_dir.expanduser().resolve() if args.image_model_dir else None
+    if image_model_dir and not (image_model_dir / "pipeline.json").is_file():
+        parser.error(
+            "Prepare GENERATION_IMAGE_MODEL_DIR with scripts/prepare_model.py --mode image"
+        )
     if args.trellis_port_dir is not None:
         port_dir = args.trellis_port_dir.expanduser().resolve()
         if not (port_dir / "trellis" / "pipelines").is_dir():
@@ -54,7 +64,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     url = os.environ.get("GENERATION_AMQP_URL", "amqp://guest:guest@127.0.0.1:5672/")
     output_dir = args.output_dir.expanduser().resolve()
-    service = GenerationService(output_dir, TrellisRunner(model_dir))
+    service = GenerationService(output_dir, TrellisRunner(model_dir, image_model_dir))
     with suppress(KeyboardInterrupt):
         asyncio.run(consume(url, args.request_queue, args.result_queue, service.process))
 

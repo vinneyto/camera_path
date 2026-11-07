@@ -11,8 +11,16 @@ GENERATION_SOURCE = "generation"
 Version = Annotated[StrictInt, Field(ge=1, le=1)]
 
 
-class GenerationInput(MessageModel):
-    prompt: str
+class TextGenerationInput(MessageModel):
+    prompt: str = Field(min_length=1, pattern=r"\S")
+
+
+class ImageGenerationInput(MessageModel):
+    image_path: str = Field(min_length=1)
+    image_sha256: str = Field(pattern="^[0-9a-f]{64}$")
+
+
+GenerationInput = TextGenerationInput | ImageGenerationInput
 
 
 class GenerationRequest(MessageModel):

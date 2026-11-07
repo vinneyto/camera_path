@@ -30,7 +30,7 @@ async def list_jobs(request: Request) -> list[JobSummary]:
 )
 @authenticated
 async def create_job(data: JobCreate, request: Request) -> Job:
-    return await request.app.state.job_service.create(data)
+    return await request.app.state.job_service.create(data, request)
 
 
 @router.get(

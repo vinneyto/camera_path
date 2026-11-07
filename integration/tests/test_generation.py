@@ -160,3 +160,60 @@ def test_trellis_rotation_is_opt_in_and_applies_only_to_generated_assets(dev_bac
 
     external = enqueue(b, descriptor(b))["assets"][0]
     assert external["default_rotation_deg"] == [0, 0, 0]
+
+
+def test_image_generation_original_lock_and_result_round_trip(dev_backend):
+    import base64
+    import hashlib
+    from pathlib import Path
+
+    b = dev_backend
+    b.stop()
+    configure(b, b.broker.url)
+    b.env["CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG"] = "[180,0,0]"
+    b.start()
+    original = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVR4nGP8zwAFTDAGEgsAHVsBBeg3qMUAAAAASUVORK5CYII="
+    )
+    image = b.request(
+        "POST",
+        "/api/v1/library/uploads",
+        201,
+        json={
+            "name": "Original image",
+            "format": "png",
+            "size_bytes": len(original),
+        },
+    ).json()
+    b.request("PUT", image["upload_url"], 204, content=original)
+    image = b.request("POST", f"/api/v1/library/{image['id']}/complete").json()
+    job = b.request(
+        "POST",
+        "/api/v1/jobs",
+        201,
+        json={
+            "type": "generation",
+            "input": {"image_asset_id": image["id"]},
+            "start": True,
+        },
+    ).json()
+    b.request("DELETE", f"/api/v1/library/{image['id']}", 409)
+    queue = b.env["CAMERA_PATH_GENERATION_REQUEST_QUEUE"]
+    b.broker.wait_queue(queue)
+    command = json.loads(b.broker.get_message(queue)["body"])
+    assert command["job_id"] == job["id"]
+    assert Path(command["input"]["image_path"]).read_bytes() == original
+    assert command["input"]["image_sha256"] == hashlib.sha256(original).hexdigest()
+    result = completion(b, {**job, "input": command["input"]})
+    b.broker.publish(b.env["CAMERA_PATH_GENERATION_RESULT_QUEUE"], result)
+    finished = wait_job(b, job["id"])
+    assert finished["status"] == "succeeded"
+    assert finished["input"] == {"image_asset_id": image["id"]}
+    assert finished["input_asset"]["id"] == image["id"]
+    assert len(finished["assets"]) == 1
+    assert finished["assets"][0]["default_rotation_deg"] == [180, 0, 0]
+    assert b.request("GET", image["download_url"]).content == original
+    b.request("DELETE", f"/api/v1/library/{image['id']}", 204)
+    history = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
+    assert history["input_asset"] is None and history["input"] == job["input"]
+    assert len(history["assets"]) == 1

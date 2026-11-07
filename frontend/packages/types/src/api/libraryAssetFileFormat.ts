@@ -12,4 +12,8 @@ export type LibraryAssetFileFormat = typeof LibraryAssetFileFormat[keyof typeof 
 export const LibraryAssetFileFormat = {
   ply: 'ply',
   sog: 'sog',
+  png: 'png',
+  jpg: 'jpg',
+  jpeg: 'jpeg',
+  webp: 'webp',
 } as const;

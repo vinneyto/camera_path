@@ -12,4 +12,7 @@ export type JobCreateInput = {
      * @pattern \S
      */
   prompt: string;
+} | {
+  /** @pattern ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
+  image_asset_id: string;
 };

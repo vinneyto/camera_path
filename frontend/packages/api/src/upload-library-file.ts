@@ -4,8 +4,15 @@ import {
 } from "./client/generated/client";
 export async function uploadLibraryFile(file: File) {
   const extension = file.name.split(".").pop()?.toLowerCase();
-  if (extension !== "ply" && extension !== "sog") {
-    throw new Error("Select a PLY or SOG file");
+  if (
+    extension !== "ply" &&
+    extension !== "sog" &&
+    extension !== "png" &&
+    extension !== "jpg" &&
+    extension !== "jpeg" &&
+    extension !== "webp"
+  ) {
+    throw new Error("Select a PLY, SOG, PNG, JPEG or WebP file");
   }
   const created = await createLibraryUpload({
     name: file.name,

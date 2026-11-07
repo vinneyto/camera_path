@@ -7,6 +7,9 @@ export function createPlacementPreviewCloud({
   hit,
   resourceKey,
 }: PlacementPreview): SceneObject {
+  if (asset.format !== "ply" && asset.format !== "sog") {
+    throw new Error("Only PLY and SOG assets can be placed in a scene");
+  }
   return {
     id: `cloud-placement-${resourceKey}`,
     project_id: "",

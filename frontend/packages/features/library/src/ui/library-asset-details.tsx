@@ -24,16 +24,17 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
           ← Library
         </Link>
         {asset.isPending ? (
-          <p className="mt-4 text-xs text-muted-foreground">Loading cloud…</p>
+          <p className="mt-4 text-xs text-muted-foreground">Loading asset…</p>
         ) : asset.error || current === null ? (
           <p className="mt-4 text-xs text-destructive" role="alert">
-            Could not load this library cloud.
+            Could not load this library asset.
           </p>
         ) : (
           <>
             <LibraryAssetThumbnail
               url={current.thumbnail_url}
               name={current.name}
+              large={current.format !== "ply" && current.format !== "sog"}
             />
             <h1 className="mt-4 break-words text-xl font-semibold">
               {current.name}
@@ -80,7 +81,7 @@ export function LibraryAssetDetails({ assetId }: LibraryAssetDetailsProps) {
           </>
         )}
       </div>
-      {current && (
+      {current && (current.format === "ply" || current.format === "sog") && (
         <EditorOnly>
           <LibraryAssetDefaults asset={current} />
         </EditorOnly>

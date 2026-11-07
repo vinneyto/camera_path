@@ -17,6 +17,7 @@ export interface Job {
   error: JobError | null;
   id: string;
   input: JobInput;
+  input_asset?: LibraryAsset | null;
   started_at: string | null;
   status: JobStatus;
   type: string | null;

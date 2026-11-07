@@ -5,6 +5,7 @@ on:
     paths:
       - "backend/**"
       - "integration/**"
+      - "generation/**"
       - ".github/workflows/backend.yml"
   workflow_dispatch:
     inputs:
@@ -17,6 +18,17 @@ permissions:
   contents: read
 
 jobs:
+  generation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.3"
+      - run: uv sync --frozen --project generation
+      - name: Worker request, replay and image integrity tests
+        run: generation/.venv/bin/python -m unittest discover -s generation/tests
+
   api:
     runs-on: ubuntu-latest
     timeout-minutes: 20
