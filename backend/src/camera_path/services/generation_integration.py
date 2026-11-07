@@ -4,18 +4,22 @@ import asyncio
 import hashlib
 import logging
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import PurePosixPath
+from urllib.parse import unquote, urlsplit
 
 from sqlalchemy import select, update
 
 from camera_path.persistence.enums import JobStatus
-from camera_path.persistence.records import JobRecord
+from camera_path.persistence.records import JobRecord, LibraryAssetRecord
 from camera_path.services.generation_models import (
     GENERATION_SOURCE,
     GenerationError,
     GenerationManifest,
     GenerationRequest,
     GenerationResult,
+    ImageGenerationInput,
+    TextGenerationInput,
 )
 from camera_path.services.io import blocking_io
 from camera_path.services.job_completion import JobCompletionService
@@ -26,7 +30,8 @@ from camera_path.services.job_completion_models import (
     LibraryFileSource,
     LibraryImportFile,
 )
-from camera_path.services.library import MAX_LIBRARY_FILE_BYTES
+from camera_path.services.job_naming import image_generation_name, text_generation_name
+from camera_path.services.library import IMAGE_FORMATS, MAX_IMAGE_BYTES, MAX_LIBRARY_FILE_BYTES
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorage
 from camera_path.services.message_queue import GenerationQueue
@@ -79,7 +84,19 @@ class GenerationIntegration:
         job_id, job_input = pending
         # The queued row is the durable dispatch intent. If the process stops after
         # the broker confirm, replay uses the same UUID and the worker reuses its result.
-        await self.queue.publish(GenerationRequest(job_id=job_id, input=job_input))
+        try:
+            worker_input, _ = await self._worker_input(job_id, job_input, stage=True)
+        except (FileNotFoundError, ValueError) as error:
+            await self._fail(
+                job_id,
+                GenerationError(
+                    code="generation_input_unavailable",
+                    message="Could not read the source image.",
+                ),
+            )
+            logger.warning("Generation input unavailable for %s: %s", job_id, error)
+            return True
+        await self.queue.publish(GenerationRequest(job_id=job_id, input=worker_input))
         async with self.sessions.begin() as session:
             await session.execute(
                 update(JobRecord)
@@ -101,12 +118,16 @@ class GenerationIntegration:
             if job.status not in ACTIVE_STATUSES:
                 return job.id
             job_input = job.input
+            job_name = job.name
 
         if event.error is not None:
             await self._fail(event.job_id, event.error)
         else:
             try:
-                message = await blocking_io(lambda: self._completion(event, job_input))
+                worker_input, name = await self._worker_input(event.job_id, job_input, stage=False)
+                if "prompt" in job_input and job_name:
+                    name = job_name
+                message = await blocking_io(lambda: self._completion(event, worker_input, name))
             except ValueError as error:
                 raise LibraryError("invalid_generation_result", 422) from error
             await self.importer.register(message, default_rotation_deg=self.default_rotation_deg)
@@ -135,13 +156,42 @@ class GenerationIntegration:
                 )
             )
 
-    def _completion(self, event: GenerationResult, job_input: dict) -> JobCompletionMessage:
+    async def _worker_input(self, job_id: str, job_input: dict, *, stage: bool):
+        if "prompt" in job_input:
+            return TextGenerationInput(**job_input), text_generation_name(job_input["prompt"])
+        async with self.sessions() as session:
+            image = await session.get(LibraryAssetRecord, job_input["image_asset_id"])
+            if image is None or image.status != "ready" or image.format not in IMAGE_FORMATS:
+                raise ValueError("Source image is no longer available")
+            key = f"inputs/{job_id}/{image.id}.{image.format}"
+            identity = urlsplit(self.source.identity(key))
+            if identity.scheme != "file" or identity.netloc:
+                raise ValueError("Generation requires a shared local output directory")
+            image_path = unquote(identity.path)
+            object_key, name = image.object_key, image.name
+
+        def prepare():
+            with self.importer.library.storage.open_reader(object_key) as file:
+                data = file.read(MAX_IMAGE_BYTES + 1)
+            if len(data) > MAX_IMAGE_BYTES:
+                raise ValueError("Image exceeds size limit")
+            if stage:
+                # Atomic replacement also repairs an interrupted dispatch attempt.
+                self.source.write_object(key, BytesIO(data), replace=True)
+            return ImageGenerationInput(
+                image_path=image_path,
+                image_sha256=hashlib.sha256(data).hexdigest(),
+            )
+
+        return await blocking_io(prepare), image_generation_name(name)
+
+    def _completion(self, event: GenerationResult, job_input, name: str) -> JobCompletionMessage:
         with self.source.open_reader(event.result_path) as file:
             raw = file.read(MAX_MANIFEST_BYTES + 1)
         if len(raw) > MAX_MANIFEST_BYTES:
             raise ValueError("Generation manifest is too large")
         manifest = GenerationManifest.model_validate_json(raw)
-        if manifest.job_id != event.job_id or manifest.input.model_dump() != job_input:
+        if manifest.job_id != event.job_id or manifest.input != job_input:
             raise ValueError("Generation manifest does not match the job")
         files = [self._describe(path, index) for index, path in enumerate(manifest.files)]
         return JobCompletionMessage(
@@ -150,7 +200,7 @@ class GenerationIntegration:
             job_id=event.job_id,
             assets=[
                 JobCompletionAsset(
-                    name=manifest.input.prompt.strip()[:200],
+                    name=name,
                     primary_file_id=files[0].id,
                     files=files,
                     bbox=manifest.bbox,

@@ -195,6 +195,9 @@ class S3LibraryStorage(LibraryStorage):
             )
         )
 
+    async def image_url(self, asset_id: str, key: str, request: Request) -> str:
+        return await self.thumbnail_url(asset_id, key, request)
+
     async def thumbnail_url(self, asset_id: str, key: str, request: Request) -> str:
         content_type = {
             "png": "image/png",

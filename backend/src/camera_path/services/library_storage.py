@@ -12,11 +12,17 @@ class LibraryStorageError(OSError):
 
 
 def has_library_file_header(key: str, header: bytes) -> bool:
-    """Check the container signature; full decoding belongs to the renderer."""
+    """Check the signature; LibraryService also decodes images before publication."""
     if key.endswith(".ply"):
         return header in {b"ply\n", b"ply\r"}
     if key.endswith(".sog"):
         return header == b"PK\x03\x04"
+    if key.endswith(".png"):
+        return header.startswith(b"\x89PNG")
+    if key.endswith((".jpg", ".jpeg")):
+        return header.startswith(b"\xff\xd8\xff")
+    if key.endswith(".webp"):
+        return header.startswith(b"RIFF")
     return False
 
 
@@ -54,6 +60,9 @@ class LibraryStorage(ABC):
         return await self.download_url(asset_id, key, request)
 
     async def thumbnail_url(self, asset_id: str, key: str, request: Request) -> str:
+        return await self.download_url(asset_id, key, request)
+
+    async def image_url(self, asset_id: str, key: str, request: Request) -> str:
         return await self.download_url(asset_id, key, request)
 
     async def finalize_upload(self, key: str, expected_size: int) -> bool:

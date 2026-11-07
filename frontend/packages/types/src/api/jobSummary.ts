@@ -17,6 +17,9 @@ export interface JobSummary {
   created_at: string | null;
   error: JobError | null;
   id: string;
+  image_asset_id?: string | null;
+  /** Explicit job name or an automatic name saved at creation. */
+  name: string | null;
   prompt: string | null;
   started_at: string | null;
   status: JobStatus;

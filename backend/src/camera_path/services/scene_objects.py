@@ -133,6 +133,8 @@ class SceneObjectService:
                 )
                 if file is None:
                     raise KeyError("Library asset file not found in this asset")
+                if file.format not in {"ply", "sog"}:
+                    raise ValueError("Only PLY and SOG assets can be placed in a scene")
                 quaternion = data.quaternion or quaternion_from_euler_xyz(
                     tuple(getattr(asset, f"default_rotation_{axis}_deg") for axis in "xyz")
                 )

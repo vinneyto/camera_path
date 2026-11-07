@@ -17,6 +17,9 @@ export interface Job {
   error: JobError | null;
   id: string;
   input: JobInput;
+  input_asset?: LibraryAsset | null;
+  /** Explicit job name or an automatic name saved at creation. */
+  name: string | null;
   started_at: string | null;
   status: JobStatus;
   type: string | null;

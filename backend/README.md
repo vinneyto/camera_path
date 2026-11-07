@@ -44,7 +44,7 @@ are intentionally discarded; CP-41 and CP-42 introduce the replacement command-b
 
 ### Local 3DGS library
 
-The library stores file metadata in the database and PLY or SOG files in
+The library stores file metadata in the database and PLY, SOG or original image files in
 `~/.camera-path/library` by default. Set `CAMERA_PATH_LIBRARY_DIRECTORY` to choose another
 directory. Keep this directory persistent across backend restarts. The local storage adapter
 provides development upload and download routes. Storage access is behind `LibraryStorage`,
@@ -52,7 +52,7 @@ so API and library service code do not depend on
 the storage implementation.
 
 To upload a file, call `POST /api/v1/library/uploads` with its `name`, `size_bytes` and `format`
-(`ply` by default, or `sog` for a self-contained SOG archive). PUT the bytes to the returned
+(`ply` by default; `sog`, `png`, `jpg`, `jpeg` and `webp` are also supported). PUT the bytes to the returned
 `upload_url`, then call `POST /api/v1/library/{id}/complete`. The final step checks the uploaded
 size and format signature before the asset appears in `GET /api/v1/library` with a
 `download_url`. Scene objects reference library assets from individual projects.
@@ -475,14 +475,35 @@ assets. The monolith verifies every file, registers all assets and completes the
 The first successful completion wins, including after assets are deleted. Development uses
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
-The Jobs page lists every job type with its prompt, lifecycle status, errors and surviving library
-results. The public API lists jobs at `GET /api/v1/jobs`, returns details at
+The Jobs page lists every job type with its saved `name`, lifecycle status, errors and surviving
+library results. Creation accepts an optional top-level `name` (up to 200 characters);
+blank/null selects an automatic name. Text jobs join the first five whitespace-separated prompt words with `_`.
+Image jobs use the complete source filename, including its extension. The name remains after source
+deletion. Original image assets retain the complete filename; image-generated 3DGS assets use
+the filename stem, including when the job has a custom name. Text-generated assets use the job
+name. Migrations update the old automatic job/result labels while preserving custom names;
+legacy jobs without recoverable metadata keep a null name. The public API lists jobs at
+`GET /api/v1/jobs`, returns details at
 `GET /api/v1/jobs/{id}` and streams status through `GET /api/v1/jobs/{id}/events`.
 Editors can reserve a draft through `POST /api/v1/jobs` with
 `{"type":"generation","input":{"prompt":"A wooden chair"}}`. The generation form includes
 `"start":true` so the backend persists the job as queued and dispatches it to Trellis.
 The server validates input against its JSON Schema, rejects unknown types/fields and blank prompts,
 and stores the exact validated JSON. Frontend presets are not stored on the backend.
+Image jobs use `{"type":"generation","input":{"image_asset_id":"<image UUID>"},"start":true}`.
+The referenced image must already be ready in the library. PNG/JPEG/WebP uploads are
+limited to 20 MB, 40 megapixels and one frame, and fully decoded before publication.
+Job details expose the original as `input_asset`, separately from generated `assets`.
+Deleting an image used by any queued/running job returns `409 generation_input_in_use`
+(including bulk deletion). After success/failure/cancellation, deletion is allowed;
+`input_asset` becomes null while `input.image_asset_id` preserves history. Images cannot
+be placed in scenes or receive 3D transform defaults.
+
+For local RabbitMQ generation the backend copies the original into the worker output
+directory, sends its absolute `image_path` and `image_sha256`, and validates the returned
+manifest against those resolved parameters. This also works when the library uses S3.
+The worker removes backgrounds for generation only. The configured default rotation
+applies to generated PLY/SOG outputs from both text and image jobs.
 Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
 status; terminal states have `completed_at`. Successful completion import updates the status
 atomically with the results. Deleting assets does not change job history. Legacy jobs keep their
@@ -509,7 +530,9 @@ the queue names, set `CAMERA_PATH_GENERATION_REQUEST_QUEUE` and `CAMERA_PATH_GEN
 to the same values used by the worker. The backend reads the result manifest and imports the files
 as one library asset with a shared bounding box. The job details page refreshes through SSE.
 
-Optionally set `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in `backend/.env`
+Dev Setup writes an active `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in
+`backend/.env` when no value is configured, and preserves custom values. You can also set it manually
 to correct upside-down Trellis output. The three values are Euler XYZ angles in degrees.
 The backend saves them as library placement defaults on newly generated assets. The PLY
-and its bounding box stay in the original asset coordinates. Omit the setting for zero rotation.
+and its bounding box stay in the original asset coordinates. Set `[0,0,0]` explicitly
+to keep zero rotation through Dev Setup.

@@ -87,6 +87,10 @@ def configure_env():
             "CAMERA_PATH_RABBITMQ_QUEUE": f"{prefix}.job-completions",
             "CAMERA_PATH_GENERATION_REQUEST_QUEUE": request_queue,
             "CAMERA_PATH_GENERATION_RESULT_QUEUE": result_queue,
+            "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG": effective_env(BACKEND_ENV).get(
+                "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG"
+            )
+            or "[180,0,0]",
         },
     )
     update_env(
@@ -207,6 +211,22 @@ def setup_trellis():
             cwd=GENERATION,
             env={**os.environ, "HF_HUB_OFFLINE": "0"},
         )
+    image_model = Path(
+        effective_env(GENERATION_ENV).get("GENERATION_IMAGE_MODEL_DIR")
+        or "~/.camera-path/models/trellis-image-large"
+    ).expanduser()
+    if not (GENERATION / image_model / "pipeline.json").is_file():
+        run(
+            WORKER_PYTHON,
+            "scripts/prepare_model.py",
+            "--mode",
+            "image",
+            "--model-dir",
+            image_model,
+            cwd=GENERATION,
+            env={**os.environ, "HF_HUB_OFFLINE": "0"},
+        )
+    update_env(GENERATION_ENV, {"GENERATION_IMAGE_MODEL_DIR": str(image_model)})
     if not enabled:
         update_env(BACKEND_ENV, trellis_backend_settings())
 

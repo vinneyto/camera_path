@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 from collections.abc import Callable
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 MAX_REQUEST_BYTES = 256 * 1024
 
 
-class GenerationInput(BaseModel):
+class TextGenerationInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     prompt: str
@@ -25,6 +26,23 @@ class GenerationInput(BaseModel):
         if not prompt.strip():
             raise ValueError("Prompt is required")
         return prompt
+
+
+class ImageGenerationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    image_path: str = Field(min_length=1)
+    image_sha256: str = Field(pattern="^[0-9a-f]{64}$")
+
+    @field_validator("image_path")
+    @classmethod
+    def absolute_path(cls, value: str) -> str:
+        if not Path(value).is_absolute():
+            raise ValueError("Image path must be absolute")
+        return value
+
+
+GenerationInput = TextGenerationInput | ImageGenerationInput
 
 
 class GenerationRequest(BaseModel):
@@ -40,7 +58,7 @@ class JobConflictError(Exception):
 
 
 class GenerationService:
-    def __init__(self, output_dir: Path, generate_ply: Callable[[str, Path], None]):
+    def __init__(self, output_dir: Path, generate_ply: Callable[[GenerationInput, Path], None]):
         self.output_dir = output_dir
         self.generate_ply = generate_ply
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -73,12 +91,12 @@ class GenerationService:
         job_id = str(request.job_id)
         event["job_id"] = job_id
         try:
-            result_path = self._generate(job_id, request.input.prompt)
+            result_path = self._generate(job_id, request.input)
         except JobConflictError:
             return {
                 **event,
                 "status": "failed",
-                "error": {"code": "job_conflict", "message": "Job ID already has another prompt."},
+                "error": {"code": "job_conflict", "message": "Job ID already has another input."},
             }
         except Exception:
             logger.exception("Generation failed for job %s", job_id)
@@ -89,17 +107,26 @@ class GenerationService:
             }
         return {**event, "status": "succeeded", "result_path": result_path}
 
-    def _generate(self, job_id: str, prompt: str) -> str:
+    def _generate(self, job_id: str, parameters: GenerationInput) -> str:
         target = self.output_dir / job_id
         result_path = f"{job_id}/result.json"
         if target.exists():
-            self._check_existing_result(target, prompt)
+            self._check_existing_result(target, parameters)
             return result_path
+
+        if isinstance(parameters, ImageGenerationInput):
+            with Path(parameters.image_path).open("rb") as image:
+                data = image.read(20 * 1024**2 + 1)
+            if (
+                len(data) > 20 * 1024**2
+                or hashlib.sha256(data).hexdigest() != parameters.image_sha256
+            ):
+                raise ValueError("Source image does not match the request")
 
         with TemporaryDirectory(prefix=".generation-", dir=self.output_dir) as scratch:
             staged = Path(scratch)
             ply = staged / "asset.ply"
-            self.generate_ply(prompt, ply)
+            self.generate_ply(parameters, ply)
             vertices = PlyData.read(ply)["vertex"].data
             if not len(vertices) or not all(
                 np.isfinite(vertices[name]).all() for name in vertices.dtype.names
@@ -112,7 +139,7 @@ class GenerationService:
             result = {
                 "schema_version": 1,
                 "job_id": job_id,
-                "input": {"prompt": prompt},
+                "input": parameters.model_dump(),
                 "files": [f"{job_id}/asset.ply"],
                 "bbox": bbox,
             }
@@ -125,13 +152,13 @@ class GenerationService:
             except OSError:
                 if not target.exists():
                     raise
-                self._check_existing_result(target, prompt)
+                self._check_existing_result(target, parameters)
         return result_path
 
     @staticmethod
-    def _check_existing_result(target: Path, prompt: str) -> None:
+    def _check_existing_result(target: Path, parameters: GenerationInput) -> None:
         result = json.loads((target / "result.json").read_text(encoding="utf-8"))
-        if result["input"]["prompt"] != prompt:
+        if result["input"] != parameters.model_dump():
             raise JobConflictError
         if not (target / "asset.ply").is_file():
             raise FileNotFoundError("Saved generation PLY is missing")

@@ -38,7 +38,7 @@ async def delete_library_assets(data: LibraryAssetsDelete, service: Library) -> 
     "",
     response_model=list[LibraryAsset],
     operation_id="listLibraryAssets",
-    description="List ready 3DGS files in the reusable library.",
+    description="List ready 3DGS files and original images in the reusable library.",
 )
 async def list_library_assets(request: Request, service: Library) -> list[LibraryAsset]:
     return await service.list(request)
@@ -97,7 +97,7 @@ async def create_library_upload(
     "/{asset_id}/complete",
     response_model=LibraryAsset,
     operation_id="completeLibraryUpload",
-    description="Validate the uploaded PLY and publish it in the library.",
+    description="Validate the uploaded file and publish it in the library.",
 )
 @authenticated
 async def complete_library_upload(

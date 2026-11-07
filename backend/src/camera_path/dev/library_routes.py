@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 
 from camera_path.dev.library_storage import LocalLibraryStorage
 from camera_path.routers.auth import AuthenticatedRoute, authenticated
-from camera_path.services.library import LibraryService, thumbnail_type
+from camera_path.services.library import IMAGE_FORMATS, LibraryService, thumbnail_type
 
 router = APIRouter(route_class=AuthenticatedRoute, prefix="/library", include_in_schema=False)
 
@@ -54,7 +54,11 @@ async def download_local_library_content(asset_id: str, request: Request) -> Fil
     path = storage.path(asset.object_key)
     if not path.is_file():
         raise HTTPException(404, "Library file is missing")
-    return FileResponse(path, media_type="application/octet-stream")
+    media_type = None
+    if asset.format in IMAGE_FORMATS:
+        with path.open("rb") as stream:
+            media_type = thumbnail_type(asset.object_key, stream.read(12))
+    return FileResponse(path, media_type=media_type or "application/octet-stream")
 
 
 @router.get("/{asset_id}/files/{file_id}/content", name="download_local_library_file")

@@ -31,6 +31,7 @@ vi.mock("@camera-path/api/identity/auth-provider", () => ({
 const id = "443f452a-cb09-4eb5-9087-9643d99c649a";
 const pending: Job = {
   id,
+  name: "A wooden chair",
   type: "generation",
   status: "running",
   input: { prompt: "A wooden chair" },
@@ -71,6 +72,7 @@ const completed: Job = {
 };
 const completedSummary: JobSummary = {
   id,
+  name: "A wooden chair",
   type: "generation",
   status: "succeeded",
   created_at: completed.created_at,
@@ -208,6 +210,101 @@ it("opens creation from the list and queues generation", async () => {
   ]);
 });
 
+it("sends an explicit text job name outside the pipeline input", async () => {
+  mount("new");
+  expect(screen.queryByLabelText("Job name (optional)")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Set name" }));
+  fireEvent.change(
+    screen.getByRole("textbox", { name: "Job name (optional)" }),
+    { target: { value: " Hero chair " } },
+  );
+  fireEvent.change(screen.getByRole("textbox", { name: "Prompt" }), {
+    target: { value: "A small wooden chair with curved legs" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create and generate" }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith(`/jobs/${id}`));
+  const sent = requests.find((request) => request.method === "POST");
+  expect(JSON.parse(String(sent?.body))).toEqual({
+    type: "generation",
+    input: { prompt: "A small wooden chair with curved legs" },
+    start: true,
+    name: "Hero chair",
+  });
+});
+
+it.each(["", " Hero image "])(
+  "keeps the source filename when an image job name is %j",
+  async (name) => {
+    const imageId = "74eeae84-3235-4825-bd78-c6cdedd3628c";
+    const submissions: { url: string; options: RequestInit }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, options: RequestInit = {}) => {
+        submissions.push({ url, options });
+        if (url === "/api/v1/library/uploads")
+          return Response.json(
+            { id: imageId, upload_url: "/upload-image" },
+            { status: 201 },
+          );
+        if (url === "/upload-image") return new Response(null, { status: 204 });
+        if (url.endsWith("/complete"))
+          return Response.json({
+            id: imageId,
+            name: "chair.png",
+            format: "png",
+          });
+        if (url === "/api/v1/jobs")
+          return Response.json(
+            { ...pending, status: "queued" },
+            { status: 201 },
+          );
+        throw new Error(`Unexpected request: ${url}`);
+      }),
+    );
+    mount("new");
+    fireEvent.change(screen.getByLabelText("Template"), {
+      target: { value: "image" },
+    });
+    expect(screen.queryByLabelText("Job name (optional)")).toBeNull();
+    expect(
+      screen.queryByText(
+        /first 5 prompt words|full image filename|joined with underscores/i,
+      ),
+    ).toBeNull();
+    if (name) {
+      fireEvent.click(screen.getByRole("button", { name: "Set name" }));
+      fireEvent.change(screen.getByLabelText("Job name (optional)"), {
+        target: { value: name },
+      });
+    }
+    fireEvent.change(screen.getByLabelText("Source image"), {
+      target: {
+        files: [
+          new File(["image fixture"], "chair.png", { type: "image/png" }),
+        ],
+      },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Create and generate" }),
+    );
+    await waitFor(() => expect(push).toHaveBeenCalledWith(`/jobs/${id}`));
+    const upload = submissions.find(
+      (request) => request.url === "/api/v1/library/uploads",
+    );
+    expect(JSON.parse(String(upload?.options.body))).toMatchObject({
+      name: "chair.png",
+      format: "png",
+    });
+    const sent = submissions.find((request) => request.url === "/api/v1/jobs");
+    expect(JSON.parse(String(sent?.options.body))).toEqual({
+      type: "generation",
+      input: { image_asset_id: imageId },
+      start: true,
+      ...(name.trim() ? { name: name.trim() } : {}),
+    });
+  },
+);
+
 it("asks guests to sign in on the creation route", () => {
   identity.canEdit = false;
   mount("new");
@@ -218,13 +315,14 @@ it("asks guests to sign in on the creation route", () => {
   expect(requests).toHaveLength(0);
 });
 
-it("shows prompt, explicit status, error, unknown type and direct library result links", async () => {
+it("shows saved name, explicit status, error, unknown type and direct library result links", async () => {
   jobs = [
     completedSummary,
     {
       ...completedSummary,
       id: "failed-job",
       status: "failed",
+      name: "A broken chair",
       prompt: "A broken chair",
       asset_count: 0,
       assets: [],
@@ -240,6 +338,7 @@ it("shows prompt, explicit status, error, unknown type and direct library result
       completed_at: null,
       started_at: null,
       type: null,
+      name: null,
       prompt: null,
       created_at: null,
       asset_count: 0,
@@ -259,6 +358,24 @@ it("shows prompt, explicit status, error, unknown type and direct library result
     screen.getByRole("link", { name: "Generated cloud" }).getAttribute("href"),
   ).toBe("/library/cloud-1");
   expect(requests.every((r) => r.url === "/api/v1/jobs")).toBe(true);
+});
+
+it("uses the image job's saved name without fetching the deleted source image", async () => {
+  jobs = [
+    {
+      ...completedSummary,
+      name: "My source image.png",
+      prompt: null,
+      image_asset_id: "deleted-image",
+    },
+  ];
+  mount();
+  const link = await screen.findByRole("link", { name: /My source image.png/ });
+  expect(link.getAttribute("href")).toBe(`/jobs/${id}`);
+  expect(screen.queryByText("Image to 3D")).toBeNull();
+  expect(requests.every((request) => request.url === "/api/v1/jobs")).toBe(
+    true,
+  );
 });
 
 it("retries a failed catalogue read", async () => {
@@ -286,7 +403,7 @@ it("refreshes running jobs on SSE and links the imported asset", async () => {
   mount(id);
   await screen.findByText("Waiting for results.");
   expect(screen.getByText(id)).toBeTruthy();
-  expect(screen.getByText(/A wooden chair/)).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "A wooden chair" })).toBeTruthy();
   const source = connections[0];
   expect(source.url).toBe(`/api/v1/jobs/${id}/events`);
   job = structuredClone(completed);

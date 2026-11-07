@@ -1475,6 +1475,29 @@
             ],
             "title": "Input"
           },
+          "input_asset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibraryAsset"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit job name or an automatic name saved at creation.",
+            "title": "Name"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -1504,6 +1527,7 @@
         },
         "required": [
           "id",
+          "name",
           "type",
           "status",
           "error",
@@ -1524,22 +1548,51 @@
             "oneOf": [
               {
                 "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "additionalProperties": false,
-                "properties": {
-                  "prompt": {
-                    "minLength": 1,
-                    "pattern": "\\S",
-                    "type": "string"
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "prompt": {
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "prompt"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "image_asset_id": {
+                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "image_asset_id"
+                    ],
+                    "type": "object"
                   }
-                },
-                "required": [
-                  "prompt"
-                ],
-                "type": "object"
+                ]
               }
             ],
             "title": "Input",
             "type": "object"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "start": {
             "default": false,
@@ -1661,6 +1714,30 @@
             "title": "Id",
             "type": "string"
           },
+          "image_asset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Asset Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit job name or an automatic name saved at creation.",
+            "title": "Name"
+          },
           "prompt": {
             "anyOf": [
               {
@@ -1701,6 +1778,7 @@
         },
         "required": [
           "id",
+          "name",
           "type",
           "status",
           "error",
@@ -1791,7 +1869,11 @@
           "format": {
             "enum": [
               "ply",
-              "sog"
+              "sog",
+              "png",
+              "jpg",
+              "jpeg",
+              "webp"
             ],
             "title": "Format",
             "type": "string"
@@ -1939,7 +2021,11 @@
           "format": {
             "enum": [
               "ply",
-              "sog"
+              "sog",
+              "png",
+              "jpg",
+              "jpeg",
+              "webp"
             ],
             "title": "Format",
             "type": "string"
@@ -2066,7 +2152,11 @@
           "format": {
             "enum": [
               "ply",
-              "sog"
+              "sog",
+              "png",
+              "jpg",
+              "jpeg",
+              "webp"
             ],
             "title": "Format",
             "type": "string"
@@ -2154,7 +2244,11 @@
             "default": "ply",
             "enum": [
               "ply",
-              "sog"
+              "sog",
+              "png",
+              "jpg",
+              "jpeg",
+              "webp"
             ],
             "title": "Format",
             "type": "string"
@@ -3839,7 +3933,7 @@
     },
     "/api/v1/library": {
       "get": {
-        "description": "List ready 3DGS files in the reusable library.",
+        "description": "List ready 3DGS files and original images in the reusable library.",
         "operationId": "listLibraryAssets",
         "responses": {
           "200": {
@@ -4043,7 +4137,7 @@
     },
     "/api/v1/library/{asset_id}/complete": {
       "post": {
-        "description": "Validate the uploaded PLY and publish it in the library.",
+        "description": "Validate the uploaded file and publish it in the library.",
         "operationId": "completeLibraryUpload",
         "parameters": [
           {

@@ -10,7 +10,9 @@ export function AddCloudCommand() {
   const library = useLibraryCatalog();
   const placement = useCloudPlacement();
   const assets = ((library.data?.data ?? []) as LibraryAsset[]).filter(
-    (asset) => asset.status === "ready",
+    (asset) =>
+      asset.status === "ready" &&
+      (asset.format === "ply" || asset.format === "sog"),
   );
   if (!canEdit) return null;
   return (

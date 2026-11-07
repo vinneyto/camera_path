@@ -30,6 +30,7 @@
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
         "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
         "packages/actions/src/mutations/depth-of-field/use-delete-depth-of-field-timeline.ts",
+        "packages/actions/src/mutations/jobs/use-create-image-job.ts",
         "packages/actions/src/mutations/jobs/use-create-job.ts",
         "packages/actions/src/mutations/library/use-delete-library-assets.ts",
         "packages/actions/src/mutations/library/use-upload-library-file.ts",
@@ -2673,7 +2674,8 @@
       "files": [
         "packages/features/job-details/src/index.ts",
         "packages/features/job-details/src/ui/job-details-page.tsx",
-        "packages/features/job-details/src/ui/job-result-card.tsx"
+        "packages/features/job-details/src/ui/job-result-card.tsx",
+        "packages/features/job-details/src/ui/job-source-image.tsx"
       ],
       "slots": {
         "jobs": {
@@ -2681,7 +2683,7 @@
             {
               "name": "JobDetailsPage",
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 9,
+              "line": 10,
               "column": 1
             }
           ]
@@ -2701,7 +2703,7 @@
           "usages": [
             {
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 10,
+              "line": 11,
               "column": 20,
               "expression": "useJobResource()"
             }
@@ -2717,12 +2719,17 @@
       "files": [
         "packages/features/jobs/src/index.ts",
         "packages/features/jobs/src/ui/create-job-button.tsx",
+        "packages/features/jobs/src/ui/image-file-preview.tsx",
+        "packages/features/jobs/src/ui/image-job-create-form.tsx",
         "packages/features/jobs/src/ui/job-create-form.tsx",
         "packages/features/jobs/src/ui/job-create-page.tsx",
         "packages/features/jobs/src/ui/job-input-editor.tsx",
         "packages/features/jobs/src/ui/job-list-item.tsx",
         "packages/features/jobs/src/ui/jobs-page.tsx",
-        "packages/features/jobs/src/ui/parse-generation-input.ts"
+        "packages/features/jobs/src/ui/optional-job-name.tsx",
+        "packages/features/jobs/src/ui/parse-generation-input.ts",
+        "packages/features/jobs/src/ui/parse-image-generation-input.ts",
+        "packages/features/jobs/src/ui/text-job-create-form.tsx"
       ],
       "slots": {
         "jobs": {
@@ -2746,6 +2753,24 @@
       },
       "actions": [
         {
+          "name": "useCreateImageJobMutation",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/jobs/use-create-image-job.ts",
+            "line": 12,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/jobs/src/ui/image-job-create-form.tsx",
+              "line": 18,
+              "column": 20,
+              "expression": "useCreateImageJobMutation"
+            }
+          ]
+        },
+        {
           "name": "useCreateJobMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
@@ -2756,8 +2781,8 @@
           },
           "usages": [
             {
-              "file": "packages/features/jobs/src/ui/job-create-form.tsx",
-              "line": 28,
+              "file": "packages/features/jobs/src/ui/text-job-create-form.tsx",
+              "line": 29,
               "column": 20,
               "expression": "useCreateJobMutation"
             }
@@ -3933,7 +3958,7 @@
           "usages": [
             {
               "file": "packages/features/scene-models/src/commands/add-cloud-command.tsx",
-              "line": 24,
+              "line": 26,
               "column": 9,
               "expression": "placement.start"
             }

@@ -7,23 +7,35 @@ import { useState } from "react";
 interface LibraryAssetThumbnailProps {
   url?: string | null;
   name: string;
+  large?: boolean;
 }
 
 export function LibraryAssetThumbnail({
   url,
   name,
+  large = false,
 }: LibraryAssetThumbnailProps) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   return (
-    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+    <div
+      className={
+        large
+          ? "flex h-80 w-full items-center justify-center overflow-hidden rounded-md bg-muted"
+          : "flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted"
+      }
+    >
       {url && failedUrl !== url ? (
         <Image
           src={url}
           alt={`${name} preview`}
-          width={64}
-          height={64}
+          width={large ? 518 : 64}
+          height={large ? 518 : 64}
           unoptimized
-          className="h-full w-full object-cover"
+          className={
+            large
+              ? "h-full w-full object-contain"
+              : "h-full w-full object-cover"
+          }
           onError={() => setFailedUrl(url)}
         />
       ) : (

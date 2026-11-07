@@ -23,7 +23,7 @@ with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**
 1. **Dev Setup** installs the Python and npm dependencies, prepares the WASM
    toolchain, creates missing environment files and runs the database migrations.
    For a new database it prompts for the editor's email and password. On Apple
-   Silicon it also offers to set up Trellis and download missing model weights.
+   Silicon it also offers to set up Trellis and download missing text/image model weights.
 2. **Dev Start** launches **Dev Frontend**, **Dev Backend** and **Dev Trellis** in
    separate terminals. Backend and Trellis tasks first start the shared RabbitMQ
    and Mailpit containers. Trellis runs when local generation is configured.
@@ -60,7 +60,9 @@ Rerun **Dev Setup** to update a clone prepared before this change. Messages alre
 sent to its previous queues stay in those queues.
 
 Opting in to Trellis also configures the backend's broker URL and output path to
-match `generation/.env`. For simultaneous local instances, choose different HTTP ports.
+match `generation/.env`. Dev Setup also enables `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]`
+for new generated assets when no rotation is configured, and preserves custom values.
+For simultaneous local instances, choose different HTTP ports.
 
 ```bash
 CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/dev.sh start

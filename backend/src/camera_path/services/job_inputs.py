@@ -7,10 +7,25 @@ from camera_path.services.library_metadata import LibraryError
 JOB_INPUT_SCHEMAS = {
     "generation": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "type": "object",
-        "required": ["prompt"],
-        "properties": {"prompt": {"type": "string", "minLength": 1, "pattern": r"\S"}},
-        "additionalProperties": False,
+        "oneOf": [
+            {
+                "type": "object",
+                "required": ["prompt"],
+                "properties": {"prompt": {"type": "string", "minLength": 1, "pattern": r"\S"}},
+                "additionalProperties": False,
+            },
+            {
+                "type": "object",
+                "required": ["image_asset_id"],
+                "properties": {
+                    "image_asset_id": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    }
+                },
+                "additionalProperties": False,
+            },
+        ],
     },
 }
 for schema in JOB_INPUT_SCHEMAS.values():
