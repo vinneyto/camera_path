@@ -161,7 +161,8 @@ uv run alembic upgrade head
 uv run editor-create you@example.com
 ```
 
-The command asks for a password twice (12–1024 characters), stores a salted Argon2 hash and
+The command asks for a password twice (6–1024 characters, with any character combination),
+stores a salted Argon2 hash and
 revokes all previous sessions when replacing credentials. There is no public registration API.
 The new migration `20261006_0011` preserves project/library/profile data and adds editor sessions.
 Missing/short signing secrets disable login and authenticated requests; public reads still work.
@@ -418,7 +419,7 @@ uv run editor-create you@example.com
 uv run uvicorn camera_path.api:app --host 127.0.0.1 --port 8000 --no-proxy-headers
 ```
 
-The CLI asks for the password interactively (minimum 12 characters). It revokes
+The CLI asks for the password interactively (minimum 6 characters). It revokes
 existing sessions and unfinished sign-ins when replacing credentials. No placeholder
 email is assigned during migration.
 
