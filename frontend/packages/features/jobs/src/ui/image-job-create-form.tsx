@@ -59,7 +59,7 @@ export function ImageJobCreateForm() {
               id="image-job-name"
               value={name}
               maxLength={200}
-              placeholder="Leave blank to use the image name without its extension"
+              placeholder="Leave blank to use the full image filename"
               onChange={(event) => setName(event.target.value)}
             />
           </div>

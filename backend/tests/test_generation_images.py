@@ -251,3 +251,36 @@ async def test_image_is_locked_until_all_consumers_finish_and_cannot_be_placed_i
     assert (await client.get(project_url)).headers["etag"] == etag
     assert (await client.get(project_url + "/scene-objects")).json() == []
     assert (await client.delete(f"/api/v1/library/{image['id']}")).status_code == 204
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        (None, "Original.png"),
+        ("", "Original.png"),
+        (" \t", "Original.png"),
+        ("Original", "Original"),
+        ("My image study", "My image study"),
+    ],
+)
+async def test_image_job_default_keeps_extension_and_explicit_names_are_preserved(
+    images, name, expected
+):
+    _, client, integration, *_ = images
+    image = (await upload(client, picture())).json()
+    response = await client.post(
+        "/api/v1/jobs",
+        json={
+            "type": "generation",
+            "input": {"image_asset_id": image["id"]},
+            "start": True,
+            "name": name,
+        },
+    )
+    assert response.status_code == 201
+    job = response.json()
+    assert job["name"] == expected
+    assert job["input_asset"]["name"] == "Original.png"
+    assert (await client.get("/api/v1/jobs")).json()[0]["name"] == expected
+    _, result_name = await integration._worker_input(job["id"], job["input"], stage=False)
+    assert result_name == "Original"

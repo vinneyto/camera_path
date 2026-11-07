@@ -14,7 +14,7 @@ from camera_path.persistence.records import JobRecord, LibraryAssetRecord
 from camera_path.services.generation_models import GenerationRequest
 from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES
 from camera_path.services.job_inputs import JOB_INPUT_SCHEMAS, validate_job_input
-from camera_path.services.job_naming import image_generation_name, text_generation_name
+from camera_path.services.job_naming import text_generation_name
 from camera_path.services.library import IMAGE_FORMATS, LibraryAsset, LibraryService
 from camera_path.services.library_metadata import LibraryError, canonical_uuid
 
@@ -120,9 +120,7 @@ class JobService:
             ):
                 raise LibraryError("generation_image_not_found", 422)
             job.name = data.name or (
-                image_generation_name(image.name)
-                if image
-                else text_generation_name(data.input["prompt"])
+                image.name if image else text_generation_name(data.input["prompt"])
             )
             session.add(job)
             input_asset = await self.library._model(image, request) if image and request else None

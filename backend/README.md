@@ -478,7 +478,7 @@ inside library storage are adopted; external files are copied under UUIDs.
 The Jobs page lists every job type with its saved `name`, lifecycle status, errors and surviving
 library results. Creation accepts an optional top-level `name` (up to 200 characters);
 blank/null selects an automatic name. Text jobs join the first five whitespace-separated prompt words with `_`.
-Image jobs use the source filename without its final extension. The name remains after source
+Image jobs use the complete source filename, including its extension. The name remains after source
 deletion. Original image assets retain the complete filename; image-generated 3DGS assets use
 the filename stem, including when the job has a custom name. Text-generated assets use the job
 name. Migrations update the old automatic job/result labels while preserving custom names;
