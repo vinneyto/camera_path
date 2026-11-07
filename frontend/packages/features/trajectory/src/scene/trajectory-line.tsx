@@ -17,28 +17,18 @@ import { POINTER_BUTTON } from "@camera-path/ui-kit/constants";
 interface TrajectoryLineProps {
   dark: boolean;
   interactive: boolean;
-  selected: boolean;
   trajectory: Pick<CompiledTrajectory, "position_segments">;
   onOpenMenu: (position: ContextMenuPosition) => void;
-  onSelect: () => void;
 }
 
 export function TrajectoryLine({
   dark,
   interactive,
-  selected,
   trajectory,
   onOpenMenu,
-  onSelect,
 }: TrajectoryLineProps) {
   const points = sampleTrajectory(trajectory);
   if (points.length < TRAJECTORY_LINE_MIN_POINTS) return null;
-
-  function handleClick(event: ThreeEvent<MouseEvent>) {
-    if (!interactive) return;
-    event.stopPropagation();
-    onSelect();
-  }
 
   function handleContextMenu(event: ThreeEvent<MouseEvent>) {
     if (!interactive) return;
@@ -57,13 +47,16 @@ export function TrajectoryLine({
   }
 
   return (
-    <SceneObject sceneObjectID={trajectoryObjectId} hoverable={interactive}>
-      {({ hovered }) => (
+    <SceneObject
+      sceneObjectID={trajectoryObjectId}
+      hoverable={interactive}
+      selectable={interactive}
+    >
+      {({ hovered, selected }) => (
         <ScreenSpaceLine
           {...selectTrajectoryLineAppearance({ dark, hovered, selected })}
           depthTest={false}
           depthWrite={false}
-          onClick={handleClick}
           onContextMenu={handleContextMenu}
           onPointerDown={handlePointerDown}
           layer={RENDER_PIPELINE_OVERLAY_LAYER}

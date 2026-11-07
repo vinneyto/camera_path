@@ -19,7 +19,7 @@ vi.mock("@camera-path/trajectory-math", async (importOriginal) => ({
 
 vi.mock("@camera-path/scene-runtime/interaction/scene-object", () => ({
   SceneObject: ({ children }: ComponentProps<typeof SceneObject>) =>
-    children({ hovered: false }),
+    children({ hovered: false, selected: false }),
 }));
 
 vi.mock("@camera-path/scene-runtime/three", () => ({
@@ -52,8 +52,6 @@ describe("TrajectoryLine", () => {
           dark
           interactive
           onOpenMenu={onOpenMenu}
-          onSelect={vi.fn()}
-          selected={false}
           trajectory={trajectory}
         />
       </div>,
@@ -87,8 +85,6 @@ describe("TrajectoryLine", () => {
         dark
         interactive={false}
         onOpenMenu={onOpenMenu}
-        onSelect={vi.fn()}
-        selected={false}
         trajectory={trajectory}
       />,
     );

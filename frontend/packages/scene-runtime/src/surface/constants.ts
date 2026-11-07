@@ -1,1 +1,2 @@
 export const GAUSSIAN_HOVER_GAIN = 1.18;
+export const GAUSSIAN_SELECTED_GAIN = 1.35;

@@ -7,7 +7,7 @@ import {
   rasterScreenUV,
 } from "3dgs-tile-webgpu";
 import { uniform } from "three/tsl";
-import { GAUSSIAN_HOVER_GAIN } from "../../constants";
+import { GAUSSIAN_HOVER_GAIN, GAUSSIAN_SELECTED_GAIN } from "../../constants";
 import {
   GAUSSIAN_DEPTH_ALPHA_THRESHOLD,
   GAUSSIAN_PROCESSING_PROGRESS,
@@ -26,7 +26,7 @@ import { getGaussianResolutionScale } from "@camera-path/scene-runtime/surface/a
 import { installWebGpuDrawDiagnostics } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/install-webgpu-draw-diagnostics";
 import { LoggingGaussianBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/logging-gaussian-backend";
 import { TileGaussianCloudInstance } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-cloud-instance";
-import { createCloudHoverColorNode } from "./create-cloud-hover-color-node";
+import { createCloudInteractionColorNode } from "./create-cloud-interaction-color-node";
 import { TileGaussianHighlightVolume } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-highlight-volume";
 import { TileGaussianLidar } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-lidar";
 import { TileLidarFrameNode } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-lidar-frame-node";
@@ -56,6 +56,9 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private hoveredCloud: GaussianCloud | null = null;
   private readonly hoveredObjectId = uniform(0, "uint");
   private readonly hoverGain = uniform(1);
+  private selectedCloud: GaussianCloud | null = null;
+  private readonly selectedObjectId = uniform(0, "uint");
+  private readonly selectedGain = uniform(1);
   private pass: GaussianPass | null = null;
   private readonly debugEnabled =
     typeof window !== "undefined" &&
@@ -153,7 +156,8 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
           if (this.clouds.size === 0 && this.loads.size === 0)
             this.disposePass();
         },
-        (hovered) => this.setCloudHovered(loadedCloud, hovered),
+        (hovered, selected) =>
+          this.setCloudInteractionState(loadedCloud, hovered, selected),
       );
       this.clouds.add(instance);
       options.onProgress?.({
@@ -173,16 +177,33 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
   }
 
-  private setCloudHovered(cloud: GaussianCloud, hovered: boolean): void {
+  private setCloudInteractionState(
+    cloud: GaussianCloud,
+    hovered: boolean,
+    selected: boolean,
+  ): void {
+    let changed = false;
     if (hovered) {
+      changed = this.hoveredCloud !== cloud;
       this.hoveredCloud = cloud;
       this.hoveredObjectId.value = cloud.objectId;
       this.hoverGain.value = GAUSSIAN_HOVER_GAIN;
     } else if (this.hoveredCloud === cloud) {
+      changed = true;
       this.hoveredCloud = null;
       this.hoverGain.value = 1;
-    } else return;
-    this.pass?.invalidate();
+    }
+    if (selected) {
+      changed = changed || this.selectedCloud !== cloud;
+      this.selectedCloud = cloud;
+      this.selectedObjectId.value = cloud.objectId;
+      this.selectedGain.value = GAUSSIAN_SELECTED_GAIN;
+    } else if (this.selectedCloud === cloud) {
+      changed = true;
+      this.selectedCloud = null;
+      this.selectedGain.value = 1;
+    }
+    if (changed) this.pass?.invalidate();
   }
 
   createHighlightVolume(
@@ -304,10 +325,12 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     });
     // The identity predicate keeps overlapping clouds independent. Volume
     // highlights compose over this node and restore it when they are removed.
-    pass.gaussianColorNode = createCloudHoverColorNode(
+    pass.gaussianColorNode = createCloudInteractionColorNode(
       pass.gaussianColorNode,
       this.hoveredObjectId,
       this.hoverGain,
+      this.selectedObjectId,
+      this.selectedGain,
     );
     const depthNodes = createTileRasterDepthNodes(
       getOpaqueViewDepth(rasterScreenUV),

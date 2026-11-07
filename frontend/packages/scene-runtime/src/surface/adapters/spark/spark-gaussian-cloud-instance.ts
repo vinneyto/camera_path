@@ -1,7 +1,7 @@
 import type { SplatMesh } from "@sparkjsdev/spark";
 import type { Intersection, Object3D, Ray } from "three";
 import { Sphere } from "three";
-import { GAUSSIAN_HOVER_GAIN } from "../../constants";
+import { selectGaussianInteractionGain } from "../../select-gaussian-interaction-gain";
 
 import type { GaussianCloudInstance } from "@camera-path/scene-runtime/surface/model/gaussian-rendering-backend";
 import type {
@@ -13,7 +13,7 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
   readonly bounds: SceneSurfaceBounds;
   readonly object: SplatMesh;
   private disposed = false;
-  private hovered = false;
+  private interactionGain = 1;
 
   constructor(
     mesh: SplatMesh,
@@ -38,12 +38,11 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
     this.onDispose();
   }
 
-  setHovered(hovered: boolean): void {
-    if (this.disposed || this.hovered === hovered) return;
-    this.object.recolor.multiplyScalar(
-      hovered ? GAUSSIAN_HOVER_GAIN : 1 / GAUSSIAN_HOVER_GAIN,
-    );
-    this.hovered = hovered;
+  setInteractionState(hovered: boolean, selected: boolean): void {
+    const gain = selectGaussianInteractionGain(hovered, selected);
+    if (this.disposed || this.interactionGain === gain) return;
+    this.object.recolor.multiplyScalar(gain / this.interactionGain);
+    this.interactionGain = gain;
   }
 
   getHit(intersection: Intersection<Object3D>, ray: Ray): SceneSurfaceHit {

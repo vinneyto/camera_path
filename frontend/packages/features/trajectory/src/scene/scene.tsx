@@ -1,8 +1,5 @@
 "use client";
-import {
-  useClearTrajectoryMutation,
-  useEditorActions,
-} from "@camera-path/actions";
+import { useClearTrajectoryMutation } from "@camera-path/actions";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useCompiledTrajectoryResource } from "@camera-path/api/resources";
 import {
@@ -21,10 +18,7 @@ export function TrajectoryScene() {
   const trajectory = query.data?.data;
   const mode = useCameraState().cameraMode;
   const tool = useEditorTool().activeTool;
-  const selected =
-    useSceneInteraction().selectedObjectId === trajectoryObjectId;
   const canEdit = useAuth().canEdit;
-  const select = useEditorActions().selectObject;
   const deletion = useClearTrajectoryMutation();
   const services = useSceneServices();
   const viewport = useViewportServices();
@@ -46,10 +40,8 @@ export function TrajectoryScene() {
   return (
     <TrajectoryLine
       trajectory={trajectory}
-      selected={selected}
       dark={services.dark}
       interactive={tool === null}
-      onSelect={() => void select({ id: trajectoryObjectId })}
       onOpenMenu={(position) => {
         if (canEdit)
           viewport.openMenu(

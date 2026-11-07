@@ -9,6 +9,7 @@ export function SceneSurface({
   name,
   initialWorldMatrix,
   hovered = false,
+  selected = false,
   onProgress,
   onClick,
   onContextMenu,
@@ -50,9 +51,9 @@ export function SceneSurface({
   });
 
   useLayoutEffect(() => {
-    cloud?.setHovered(hovered);
-    return () => cloud?.setHovered(false);
-  }, [cloud, hovered]);
+    cloud?.setInteractionState(hovered, selected);
+    return () => cloud?.setInteractionState(false, false);
+  }, [cloud, hovered, selected]);
 
   useEffect(() => {
     notifyStatus();

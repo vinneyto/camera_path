@@ -116,6 +116,7 @@ export function AnchorsScene() {
                 key={anchor.id}
                 sceneObjectID={anchorObjectId(anchor.id)}
                 hoverable={canEdit && activeTool === null}
+                selectable={false}
               >
                 {({ hovered }) => (
                   <AnchorMarker

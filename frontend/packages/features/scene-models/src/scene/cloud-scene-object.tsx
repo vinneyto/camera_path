@@ -18,6 +18,7 @@ interface CloudSceneObjectProps extends Omit<SceneSurfaceProps, "source"> {
   worldMatrix: Matrix4;
   effectiveVisible: boolean;
   hoverable?: boolean;
+  selectable?: boolean;
 }
 
 export function CloudSceneObject({
@@ -25,6 +26,7 @@ export function CloudSceneObject({
   worldMatrix,
   effectiveVisible,
   hoverable = true,
+  selectable = true,
   resourceKey,
   onReady,
   onLoading,
@@ -64,11 +66,12 @@ export function CloudSceneObject({
       <SceneObjectRoot
         sceneObjectID={cloud.id}
         hoverable={hoverable && effectiveVisible}
+        selectable={selectable && effectiveVisible}
         matrix={worldMatrix}
         matrixAutoUpdate={false}
         visible={effectiveVisible}
       >
-        {({ hovered }) => (
+        {({ hovered, selected }) => (
           <SceneSurface
             {...props}
             name={cloud.id}
@@ -76,6 +79,7 @@ export function CloudSceneObject({
             initialWorldMatrix={initialWorldMatrix}
             source={source}
             hovered={hovered}
+            selected={selected}
             onReady={(surface) => {
               setBounds(surface.bounds);
               setLoad({ source, status: "ready", progress: null });

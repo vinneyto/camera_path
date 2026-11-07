@@ -106,7 +106,7 @@ it("loads a cloud through many streamed progress events without nested React upd
         object: new Object3D(),
         bounds: { center: [0, 0, 0], radius: 1 },
         getHit: vi.fn(),
-        setHovered: vi.fn(),
+        setInteractionState: vi.fn(),
         dispose: vi.fn(),
       });
     });

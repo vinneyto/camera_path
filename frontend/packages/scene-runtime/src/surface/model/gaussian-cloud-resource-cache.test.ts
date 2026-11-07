@@ -14,7 +14,7 @@ function createInstance(): GaussianCloudInstance {
     bounds: null,
     dispose: vi.fn(),
     getHit: vi.fn(),
-    setHovered: vi.fn(),
+    setInteractionState: vi.fn(),
     object: new Object3D(),
   };
 }

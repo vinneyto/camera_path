@@ -33,6 +33,7 @@ import {
   type WebGLRenderer,
 } from "three";
 import { afterEach, expect, it, vi } from "vitest";
+import { vec3 } from "three/tsl";
 
 // SceneGrid must use its WebGPU pre-splat layer, without creating a GPU renderer.
 vi.mock("@camera-path/render-pipeline", async (importOriginal) => ({
@@ -68,6 +69,8 @@ vi.mock("3dgs-tile-webgpu", async (importOriginal) => {
       );
       let resolutionScale = 1;
       return {
+        gaussianColorNode: vec3(1),
+        invalidate: vi.fn(),
         depthSortMode: "float32",
         dispose: vi.fn(),
         warmup: vi.fn(async () => undefined),
