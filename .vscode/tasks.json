@@ -12,6 +12,7 @@
     {
       "label": "Dev Start",
       "type": "shell",
+      "isBackground": true,
       "command": "./scripts/dev.sh",
       "args": ["start"],
       "options": { "cwd": "${workspaceFolder}" },
