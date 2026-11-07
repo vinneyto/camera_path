@@ -17,12 +17,14 @@ export interface AnchorMarkerProps extends Omit<
   anchor: Anchor;
   hovered?: boolean;
   selected?: boolean;
+  dragging?: boolean;
 }
 
 export function AnchorMarkerContent({
   anchor,
   hovered = false,
   selected = false,
+  dragging = false,
   ...groupProps
 }: AnchorMarkerProps) {
   const axis =
@@ -39,7 +41,7 @@ export function AnchorMarkerContent({
   const interactive =
     groupProps.onContextMenu !== undefined ||
     groupProps.onPointerDown !== undefined;
-  const highlighted = hovered || selected;
+  const highlighted = hovered || selected || dragging;
 
   return (
     <group {...groupProps} position={position}>

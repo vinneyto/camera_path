@@ -123,6 +123,10 @@ export function AnchorsScene() {
                         : anchor
                     }
                     hovered={hovered}
+                    dragging={
+                      height.preview?.anchorId === anchor.id &&
+                      height.preview.dragging
+                    }
                     selected={height.selectedAnchorId === anchor.id}
                     {...(canEdit
                       ? height.getAnchorInteractionProps(anchor)

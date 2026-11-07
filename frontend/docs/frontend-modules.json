@@ -1448,18 +1448,6 @@
               "line": 18,
               "column": 6,
               "expression": "select"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 21,
-              "column": 26,
-              "expression": "select"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 22,
-              "column": 6,
-              "expression": "select"
             }
           ]
         },
@@ -1541,7 +1529,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 48,
+              "line": 47,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             },

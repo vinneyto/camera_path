@@ -13,10 +13,6 @@ export function useHoveredAnchor() {
     (id: string) => void hover({ id: null, ifCurrentId: anchorObjectId(id) }),
     [hover],
   );
-  const selectAnchor = useCallback(
-    (id: string) => void select({ id: anchorObjectId(id) }),
-    [select],
-  );
   const clearSelectedAnchor = useCallback(
     (id: string) => void select({ id: null, ifCurrentId: anchorObjectId(id) }),
     [select],
@@ -29,7 +25,6 @@ export function useHoveredAnchor() {
       ? state.selectedObjectId.slice("anchor:".length)
       : null,
     clearHoveredAnchor,
-    selectAnchor,
     clearSelectedAnchor,
   };
 }

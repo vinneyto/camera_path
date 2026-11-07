@@ -42,7 +42,6 @@ export function useAnchorHeightEditing({
     clearHoveredAnchor,
     hoveredAnchorId,
     selectedAnchorId,
-    selectAnchor,
     clearSelectedAnchor,
   } = useHoveredAnchor();
   const setActiveTool = useSetActiveEditorTool();
@@ -98,7 +97,6 @@ export function useAnchorHeightEditing({
       pointerId: event.pointerId,
       target,
     };
-    selectAnchor(anchor.id);
     setPreview({ anchorId: anchor.id, dragging: true, lift: anchor.lift });
     setActiveTool("anchor-height");
   }
