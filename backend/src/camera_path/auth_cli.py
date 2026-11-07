@@ -20,8 +20,8 @@ def run() -> None:
     except ValueError as error:
         parser.error(str(error))
     password = getpass.getpass("Password: ")
-    if not 12 <= len(password) <= 1024:
-        parser.error("Password must contain 12–1024 characters")
+    if not 6 <= len(password) <= 1024:
+        parser.error("Password must contain 6–1024 characters")
     if password != getpass.getpass("Repeat password: "):
         parser.error("Passwords do not match")
 

@@ -15,20 +15,55 @@ camera_path/
 └── rust/sift/   # SIFT detector, WASM module and native CLI
 ```
 
-Install the [frontend build prerequisites](frontend/README.md#run) first.
-From the repository root, run each application in a separate terminal.
+## Local development
+
+Install `uv`, Node.js 24 or newer, Rust 1.95 or newer via `rustup`, and Docker
+with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**.
+
+1. **Dev Setup** installs the Python and npm dependencies, prepares the WASM
+   toolchain, creates missing environment files and runs the database migrations.
+   For a new database it prompts for the editor's email and password. On Apple
+   Silicon it also offers to set up Trellis and download missing model weights.
+2. **Dev Start** launches **Dev Frontend**, **Dev Backend** and **Dev Trellis** in
+   separate terminals. Backend and Trellis tasks first start the shared RabbitMQ
+   and Mailpit containers. Trellis runs when local generation is configured.
+
+Start, stop or restart each service through its own task and view its logs in its
+dedicated terminal. Use **Tasks: Terminate Task** to stop a service, or choose
+**All** to stop all running tasks.
+
+Open [the editor](http://127.0.0.1:3000) and use
+[Mailpit](http://127.0.0.1:8025) to read the email confirmation code. The backend API
+listens on `127.0.0.1:8000`. RabbitMQ and Mailpit stay up between launches.
+
+From the repository root, the terminal launcher also supports starting the full stack.
+Press Ctrl+C to stop its application processes.
 
 ```bash
-cd backend
-uv sync --frozen
-uv run alembic upgrade head
-uv run uvicorn camera_path.api:app --reload --no-proxy-headers
+./scripts/dev.sh setup
+./scripts/dev.sh start
 ```
 
+For separate terminals, use `./scripts/dev.sh infrastructure` once, then launch
+`./scripts/dev.sh frontend`, `./scripts/dev.sh backend` and
+`./scripts/dev.sh trellis` in their own terminals.
+
+After pulling a schema change, run just the migrations with `./scripts/dev.sh migrate`.
+New clones use SQLite and filesystem storage under `backend/.dev/`.
+
+All clones share the RabbitMQ and Mailpit containers. **Dev Setup** enables RabbitMQ
+and assigns queues with a prefix derived from the clone's absolute path, such as
+`camera-path.a1b2c3d4e5f6.generation.requests`. It writes matching queue names to
+`backend/.env` and `generation/.env` before the editor and Trellis prompts.
+Repeated setup in the same directory keeps the same queue names.
+Rerun **Dev Setup** to update a clone prepared before this change. Messages already
+sent to its previous queues stay in those queues.
+
+Opting in to Trellis also configures the backend's broker URL and output path to
+match `generation/.env`. For simultaneous local instances, choose different HTTP ports.
+
 ```bash
-cd frontend
-npm ci
-npm run dev
+CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/dev.sh start
 ```
 
 See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)

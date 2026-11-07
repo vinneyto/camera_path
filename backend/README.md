@@ -161,7 +161,8 @@ uv run alembic upgrade head
 uv run editor-create you@example.com
 ```
 
-The command asks for a password twice (12–1024 characters), stores a salted Argon2 hash and
+The command asks for a password twice (6–1024 characters, with any character combination),
+stores a salted Argon2 hash and
 revokes all previous sessions when replacing credentials. There is no public registration API.
 The new migration `20261006_0011` preserves project/library/profile data and adds editor sessions.
 Missing/short signing secrets disable login and authenticated requests; public reads still work.
@@ -384,12 +385,11 @@ this is not a full RFC validator or a claim of inbox ownership before confirmati
 
 ### Local verification before any CDK deployment
 
-Use Mailpit as a local inbox. This exercises the full email-code flow without
-creating AWS resources or sending to a real mailbox:
+Use Mailpit as a local inbox. This exercises the full email-code flow locally.
+From the repository root, start the inbox with Compose.
 
 ```bash
-docker run --rm --name camera-path-mailpit \
-  -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 axllent/mailpit
+docker compose -f backend/compose.yaml up -d --wait mailpit
 ```
 
 In a separate terminal, from `backend/`, add these settings to `.env` (keep your
@@ -419,7 +419,7 @@ uv run editor-create you@example.com
 uv run uvicorn camera_path.api:app --host 127.0.0.1 --port 8000 --no-proxy-headers
 ```
 
-The CLI asks for the password interactively (minimum 12 characters). It revokes
+The CLI asks for the password interactively (minimum 6 characters). It revokes
 existing sessions and unfinished sign-ins when replacing credentials. No placeholder
 email is assigned during migration.
 
