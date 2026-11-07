@@ -12,6 +12,7 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
   readonly bounds: SceneSurfaceBounds;
   readonly object: SplatMesh;
   private disposed = false;
+  private hovered = false;
 
   constructor(
     mesh: SplatMesh,
@@ -34,6 +35,12 @@ export class SparkGaussianCloudInstance implements GaussianCloudInstance {
     this.disposed = true;
     this.object.dispose();
     this.onDispose();
+  }
+
+  setHovered(hovered: boolean): void {
+    if (this.disposed || this.hovered === hovered) return;
+    this.object.recolor.multiplyScalar(hovered ? 1.18 : 1 / 1.18);
+    this.hovered = hovered;
   }
 
   getHit(intersection: Intersection<Object3D>, ray: Ray): SceneSurfaceHit {

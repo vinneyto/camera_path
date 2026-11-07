@@ -17,6 +17,7 @@ import type { Vec3 } from "@camera-path/types/project";
 import { useThree } from "@react-three/fiber";
 import { useState } from "react";
 import { frameSurface } from "./frame-surface";
+import { SceneHoverEffect } from "./scene-hover-effect";
 const PICK_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 export function SceneContents({
   background,
@@ -84,6 +85,7 @@ export function SceneContents({
         }}
       >
         <TrajectoryPoseProvider trajectory={trajectory}>
+          <SceneHoverEffect />
           <Slot name="project.scene" />
           <ambientLight intensity={dark ? 0.8 : 1.25} />
           <directionalLight

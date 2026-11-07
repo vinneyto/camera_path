@@ -1,6 +1,5 @@
 "use client";
 import type { ThreeEvent } from "@react-three/fiber";
-import { useEffect } from "react";
 
 import { RENDER_PIPELINE_OVERLAY_LAYER } from "@camera-path/render-pipeline";
 import { ScreenSpaceLine } from "@camera-path/scene-runtime/three";
@@ -9,7 +8,8 @@ import {
   type CompiledTrajectory,
 } from "@camera-path/trajectory-math";
 import type { ContextMenuPosition } from "@camera-path/ui-kit";
-import { useHoveredTrajectory } from "../ports/use-hovered-trajectory";
+import { SceneObject } from "@camera-path/scene-runtime/interaction/scene-object";
+import { trajectoryObjectId } from "@camera-path/types/trajectory-object-id";
 
 interface TrajectoryLineProps {
   dark: boolean;
@@ -28,22 +28,7 @@ export function TrajectoryLine({
   onOpenMenu,
   onSelect,
 }: TrajectoryLineProps) {
-  const { clearHoveredTrajectory, hovered, hoverTrajectory } =
-    useHoveredTrajectory();
   const points = sampleTrajectory(trajectory);
-  const color = hovered
-    ? "#fb923c"
-    : selected
-      ? "#f97316"
-      : dark
-        ? "#e5e7eb"
-        : "#171717";
-
-  useEffect(() => () => clearHoveredTrajectory(), [clearHoveredTrajectory]);
-  useEffect(() => {
-    if (!interactive) clearHoveredTrajectory();
-  }, [clearHoveredTrajectory, interactive]);
-
   if (points.length < 2) return null;
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
@@ -68,35 +53,33 @@ export function TrajectoryLine({
     event.nativeEvent.preventDefault();
   }
 
-  function handlePointerOver(event: ThreeEvent<PointerEvent>) {
-    if (!interactive || event.nativeEvent.pointerType === "touch") return;
-    event.stopPropagation();
-    hoverTrajectory();
-  }
-
-  function handlePointerOut(event: ThreeEvent<PointerEvent>) {
-    if (event.nativeEvent.pointerType === "touch") return;
-    event.stopPropagation();
-    clearHoveredTrajectory();
-  }
-
   return (
-    <ScreenSpaceLine
-      color={color}
-      depthTest={false}
-      depthWrite={false}
-      hitSlop={0.025}
-      onClick={handleClick}
-      onContextMenu={handleContextMenu}
-      onPointerDown={handlePointerDown}
-      onPointerOut={handlePointerOut}
-      onPointerOver={handlePointerOver}
-      layer={RENDER_PIPELINE_OVERLAY_LAYER}
-      points={points}
-      radius={selected ? 0.018 : 0.014}
-      transparent
-      webGpuHitSlop={selected ? 6 : 6.5}
-      width={selected || hovered ? 4 : 3}
-    />
+    <SceneObject sceneObjectID={trajectoryObjectId} hoverable={interactive}>
+      {({ hovered }) => (
+        <ScreenSpaceLine
+          color={
+            hovered
+              ? "#fb923c"
+              : selected
+                ? "#f97316"
+                : dark
+                  ? "#e5e7eb"
+                  : "#171717"
+          }
+          depthTest={false}
+          depthWrite={false}
+          hitSlop={0.025}
+          onClick={handleClick}
+          onContextMenu={handleContextMenu}
+          onPointerDown={handlePointerDown}
+          layer={RENDER_PIPELINE_OVERLAY_LAYER}
+          points={points}
+          radius={selected ? 0.018 : 0.014}
+          transparent
+          webGpuHitSlop={selected ? 6 : 6.5}
+          width={selected || hovered ? 4 : 3}
+        />
+      )}
+    </SceneObject>
   );
 }

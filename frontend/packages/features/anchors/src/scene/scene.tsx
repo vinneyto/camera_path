@@ -3,6 +3,8 @@ import { useDeleteAnchorMutation } from "@camera-path/actions";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useAnchors } from "@camera-path/api/resources";
 import { useCameraState } from "@camera-path/store";
+import { SceneObject } from "@camera-path/scene-runtime/interaction/scene-object";
+import { anchorObjectId } from "@camera-path/types/anchor-object-id";
 
 import {
   useAddAnchorMutation,
@@ -104,43 +106,52 @@ export function AnchorsScene() {
           {[...items]
             .sort((a, b) => a.id.localeCompare(b.id))
             .map((anchor) => (
-              <AnchorMarker
+              <SceneObject
                 key={anchor.id}
-                anchor={
-                  height.preview?.anchorId === anchor.id
-                    ? {
-                        ...anchor,
-                        lift: height.preview.lift,
-                        lift_axis: "world_up",
-                      }
-                    : anchor
-                }
-                hovered={height.hoveredAnchorId === anchor.id}
-                selected={height.selectedAnchorId === anchor.id}
-                {...(canEdit ? height.getAnchorInteractionProps(anchor) : {})}
-                onContextMenu={
-                  canEdit
-                    ? (event) => {
-                        event.stopPropagation();
-                        event.nativeEvent.preventDefault();
-                        viewport.openMenu(
-                          [
-                            {
-                              destructive: true,
-                              disabled: deletion.isPending,
-                              label: `Delete anchor ${anchor.label}`,
-                              onSelect: () => deletion.mutate(anchor.id),
-                            },
-                          ],
-                          {
-                            x: event.nativeEvent.clientX,
-                            y: event.nativeEvent.clientY,
-                          },
-                        );
-                      }
-                    : undefined
-                }
-              />
+                sceneObjectID={anchorObjectId(anchor.id)}
+                hoverable={canEdit && activeTool === null}
+              >
+                {({ hovered }) => (
+                  <AnchorMarker
+                    anchor={
+                      height.preview?.anchorId === anchor.id
+                        ? {
+                            ...anchor,
+                            lift: height.preview.lift,
+                            lift_axis: "world_up",
+                          }
+                        : anchor
+                    }
+                    hovered={hovered}
+                    selected={height.selectedAnchorId === anchor.id}
+                    {...(canEdit
+                      ? height.getAnchorInteractionProps(anchor)
+                      : {})}
+                    onContextMenu={
+                      canEdit
+                        ? (event) => {
+                            event.stopPropagation();
+                            event.nativeEvent.preventDefault();
+                            viewport.openMenu(
+                              [
+                                {
+                                  destructive: true,
+                                  disabled: deletion.isPending,
+                                  label: `Delete anchor ${anchor.label}`,
+                                  onSelect: () => deletion.mutate(anchor.id),
+                                },
+                              ],
+                              {
+                                x: event.nativeEvent.clientX,
+                                y: event.nativeEvent.clientY,
+                              },
+                            );
+                          }
+                        : undefined
+                    }
+                  />
+                )}
+              </SceneObject>
             ))}
           {canEdit && height.activeAnchor && (
             <AnchorHeightEditingOverlay

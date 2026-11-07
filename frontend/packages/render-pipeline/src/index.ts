@@ -7,6 +7,7 @@ export {
 export { configureInteractiveRaycasterLayers } from "./configure-interactive-raycaster-layers";
 export { createRenderPipelineEvents } from "./create-render-pipeline-events";
 export { sortRenderPipelineIntersections } from "./sort-render-pipeline-intersections";
+export { HOVERABLE } from "./scene-interaction-layers";
 export {
   DEPTH_OF_FIELD_AUTOFOCUS_LAYER,
   RENDER_PIPELINE_OVERLAY_LAYER,

@@ -30,12 +30,7 @@ interface AnchorHeightDrag {
 
 type AnchorInteractionProps = Pick<
   ThreeElements["group"],
-  | "onPointerCancel"
-  | "onPointerDown"
-  | "onPointerMove"
-  | "onPointerOut"
-  | "onPointerOver"
-  | "onPointerUp"
+  "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"
 >;
 
 export function useAnchorHeightEditing({
@@ -46,7 +41,6 @@ export function useAnchorHeightEditing({
   const {
     clearHoveredAnchor,
     hoveredAnchorId,
-    hoverAnchor,
     selectedAnchorId,
     selectAnchor,
     clearSelectedAnchor,
@@ -90,20 +84,6 @@ export function useAnchorHeightEditing({
       clearSelectedAnchor(selectedAnchorId);
   }, [anchors, selectedAnchorId, clearSelectedAnchor]);
 
-  function handlePointerOver(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (activeTool !== null || event.nativeEvent.pointerType === "touch")
-      return;
-    event.stopPropagation();
-    hoverAnchor(anchor.id);
-  }
-
-  function handlePointerOut(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (event.nativeEvent.pointerType === "touch") return;
-    if (dragRef.current?.anchorId === anchor.id) return;
-    event.stopPropagation();
-    clearHoveredAnchor(anchor.id);
-  }
-
   function handlePointerDown(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
     if (activeTool !== null || event.button !== 0) return;
     event.stopPropagation();
@@ -119,7 +99,6 @@ export function useAnchorHeightEditing({
       target,
     };
     selectAnchor(anchor.id);
-    hoverAnchor(anchor.id);
     setPreview({ anchorId: anchor.id, dragging: true, lift: anchor.lift });
     setActiveTool("anchor-height");
   }
@@ -172,8 +151,6 @@ export function useAnchorHeightEditing({
       onPointerCancel: (event) => handlePointerCancel(anchor, event),
       onPointerDown: (event) => handlePointerDown(anchor, event),
       onPointerMove: (event) => handlePointerMove(anchor, event),
-      onPointerOut: (event) => handlePointerOut(anchor, event),
-      onPointerOver: (event) => handlePointerOver(anchor, event),
       onPointerUp: (event) => handlePointerUp(anchor, event),
     };
   }

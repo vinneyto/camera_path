@@ -48,6 +48,9 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     // Stay after the grid (-3/-2), before ordinary transparent helpers (0+).
     // Keep opaque geometry in Three's normal depth-writing queue before splats.
     this.container.renderOrder = -1;
+    // Spark's shader-driven quad is a compositor, not scene geometry. Picking
+    // belongs to its SplatMesh children, not Mesh.raycast's dummy quad.
+    this.container.raycast = () => undefined;
   }
 
   setBackground(background: SceneSurfaceBackground): void {

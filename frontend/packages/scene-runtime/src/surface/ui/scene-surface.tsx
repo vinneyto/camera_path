@@ -1,6 +1,6 @@
 "use client";
 import type { ThreeEvent } from "@react-three/fiber";
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect } from "react";
 
 import type { SceneSurfaceProps } from "@camera-path/scene-runtime/surface/model/scene-surface-types";
 import { useGaussianCloud } from "@camera-path/scene-runtime/surface/ui/use-gaussian-cloud";
@@ -8,6 +8,7 @@ import { useGaussianCloud } from "@camera-path/scene-runtime/surface/ui/use-gaus
 export function SceneSurface({
   name,
   initialWorldMatrix,
+  hovered = false,
   onProgress,
   onClick,
   onContextMenu,
@@ -47,6 +48,11 @@ export function SceneSurface({
     const bounds = cloud?.bounds;
     if (bounds !== null && bounds !== undefined) onReady?.({ bounds });
   });
+
+  useLayoutEffect(() => {
+    cloud?.setHovered(hovered);
+    return () => cloud?.setHovered(false);
+  }, [cloud, hovered]);
 
   useEffect(() => {
     notifyStatus();

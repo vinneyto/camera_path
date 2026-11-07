@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import type { Matrix4 } from "three";
+import { SceneObject as SceneObjectRoot } from "@camera-path/scene-runtime/interaction/scene-object";
 
 import {
   SceneSurface,
@@ -12,23 +13,25 @@ import type { SceneObject } from "@camera-path/types/api";
 import { CloudLoadingRing } from "./cloud-loading-ring";
 import { transformSceneObjectBounds } from "./transform-scene-object-bounds";
 
-interface SceneObjectSurfaceProps extends Omit<SceneSurfaceProps, "source"> {
+interface CloudSceneObjectProps extends Omit<SceneSurfaceProps, "source"> {
   cloud: SceneObject;
   worldMatrix: Matrix4;
   effectiveVisible: boolean;
+  hoverable?: boolean;
 }
 
-export function SceneObjectSurface({
+export function CloudSceneObject({
   cloud,
   worldMatrix,
   effectiveVisible,
+  hoverable = true,
   resourceKey,
   onReady,
   onLoading,
   onError,
   onProgress,
   ...props
-}: SceneObjectSurfaceProps) {
+}: CloudSceneObjectProps) {
   // Source and initial pose identities are consumed by the resource lease effect.
   const source = useMemo(
     () => ({
@@ -58,44 +61,49 @@ export function SceneObjectSurface({
   }, [bounds, worldMatrix, effectiveVisible]);
   return (
     <>
-      <group
+      <SceneObjectRoot
+        sceneObjectID={cloud.id}
+        hoverable={hoverable && effectiveVisible}
         matrix={worldMatrix}
         matrixAutoUpdate={false}
         visible={effectiveVisible}
       >
-        <SceneSurface
-          {...props}
-          name={cloud.id}
-          resourceKey={resourceKey}
-          initialWorldMatrix={initialWorldMatrix}
-          source={source}
-          onReady={(surface) => {
-            setBounds(surface.bounds);
-            setLoad({ source, status: "ready", progress: null });
-          }}
-          onLoading={() => {
-            setBounds(null);
-            setLoad({ source, status: "loading", progress: null });
-            onLoading?.();
-          }}
-          onProgress={(progress) => {
-            setLoad((current) => ({
-              source,
-              status:
-                current?.source === source && current.status === "ready"
-                  ? "ready"
-                  : "loading",
-              progress,
-            }));
-            onProgress?.(progress);
-          }}
-          onError={(error) => {
-            setBounds(null);
-            setLoad({ source, status: "error", progress: null });
-            onError?.(error);
-          }}
-        />
-      </group>
+        {({ hovered }) => (
+          <SceneSurface
+            {...props}
+            name={cloud.id}
+            resourceKey={resourceKey}
+            initialWorldMatrix={initialWorldMatrix}
+            source={source}
+            hovered={hovered}
+            onReady={(surface) => {
+              setBounds(surface.bounds);
+              setLoad({ source, status: "ready", progress: null });
+            }}
+            onLoading={() => {
+              setBounds(null);
+              setLoad({ source, status: "loading", progress: null });
+              onLoading?.();
+            }}
+            onProgress={(progress) => {
+              setLoad((current) => ({
+                source,
+                status:
+                  current?.source === source && current.status === "ready"
+                    ? "ready"
+                    : "loading",
+                progress,
+              }));
+              onProgress?.(progress);
+            }}
+            onError={(error) => {
+              setBounds(null);
+              setLoad({ source, status: "error", progress: null });
+              onError?.(error);
+            }}
+          />
+        )}
+      </SceneObjectRoot>
       {loading && effectiveVisible && (
         <CloudLoadingRing
           position={[

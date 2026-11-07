@@ -2,6 +2,8 @@ import {
   ACESFilmicToneMapping,
   Color,
   Object3D,
+  Raycaster,
+  Vector3,
   SRGBColorSpace,
   type WebGLRenderer,
 } from "three";
@@ -15,10 +17,26 @@ const sparkState = vi.hoisted(() => ({
 }));
 
 vi.mock("@sparkjsdev/spark", async () => {
-  const { Box3, Object3D, Vector3 } = await import("three");
+  const {
+    Box3,
+    Object3D,
+    Vector3,
+    Mesh,
+    PlaneGeometry,
+    MeshBasicMaterial,
+    DoubleSide,
+  } = await import("three");
   return {
-    SparkRenderer: class extends Object3D {
+    SparkRenderer: class extends Mesh {
+      constructor() {
+        super(
+          new PlaneGeometry(2, 2),
+          new MeshBasicMaterial({ side: DoubleSide }),
+        );
+      }
       dispose() {
+        this.geometry.dispose();
+        if (!Array.isArray(this.material)) this.material.dispose();
         sparkState.disposedRenderers += 1;
       }
     },
@@ -90,6 +108,12 @@ describe("Spark reference backend", () => {
     expect(cloud.bounds?.center).toEqual([0, 0, 0]);
     expect(cloud.bounds?.radius).toBeCloseTo(Math.sqrt(3));
     expect(backend.container).toBeInstanceOf(Object3D);
+    // The renderer's dummy quad would otherwise occlude real scene objects.
+    const raycaster = new Raycaster(
+      new Vector3(0, 0, 5),
+      new Vector3(0, 0, -1),
+    );
+    expect(raycaster.intersectObject(backend.container, false)).toEqual([]);
 
     cloud.dispose();
     backend.dispose();

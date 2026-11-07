@@ -11,6 +11,7 @@ vi.mock("@camera-path/scene-runtime/surface/ui/use-gaussian-cloud", () => ({
     {
       bounds: { center: [0, 0, 0], radius: 1 },
       object: new Object3D(),
+      setHovered: vi.fn(),
     },
     false,
     null,

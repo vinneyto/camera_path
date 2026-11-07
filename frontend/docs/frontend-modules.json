@@ -1368,7 +1368,7 @@
             {
               "name": "AnchorsScene",
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 25,
+              "line": 27,
               "column": 1
             }
           ],
@@ -1418,18 +1418,6 @@
               "line": 14,
               "column": 6,
               "expression": "hover"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 17,
-              "column": 26,
-              "expression": "hover"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 18,
-              "column": 6,
-              "expression": "hover"
             }
           ]
         },
@@ -1451,6 +1439,18 @@
             },
             {
               "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 17,
+              "column": 26,
+              "expression": "select"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+              "line": 18,
+              "column": 6,
+              "expression": "select"
+            },
+            {
+              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
               "line": 21,
               "column": 26,
               "expression": "select"
@@ -1458,18 +1458,6 @@
             {
               "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
               "line": 22,
-              "column": 6,
-              "expression": "select"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 25,
-              "column": 26,
-              "expression": "select"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 26,
               "column": 6,
               "expression": "select"
             }
@@ -1487,7 +1475,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 33,
+              "line": 35,
               "column": 15,
               "expression": "useAddAnchorMutation"
             }
@@ -1505,7 +1493,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 35,
+              "line": 37,
               "column": 20,
               "expression": "useDeleteAnchorMutation"
             }
@@ -1553,7 +1541,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 54,
+              "line": 48,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             },
@@ -1577,7 +1565,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 34,
+              "line": 36,
               "column": 18,
               "expression": "useUpdateAnchorMutation"
             }
@@ -1597,7 +1585,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 26,
+              "line": 28,
               "column": 17,
               "expression": "useAnchors()"
             },
@@ -1621,7 +1609,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 29,
+              "line": 31,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -1652,7 +1640,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 28,
+              "line": 30,
               "column": 16,
               "expression": "useCameraState()"
             },
@@ -3882,11 +3870,11 @@
         "packages/features/scene-models/src/lib/resolve-initial-scene-bounds.ts",
         "packages/features/scene-models/src/lib/update-loading-ring-angle.ts",
         "packages/features/scene-models/src/scene/cloud-loading-ring.tsx",
+        "packages/features/scene-models/src/scene/cloud-scene-object.tsx",
         "packages/features/scene-models/src/scene/create-library-object-transform.ts",
         "packages/features/scene-models/src/scene/create-placement-preview-cloud.ts",
         "packages/features/scene-models/src/scene/resolve-scene-object-transforms.ts",
         "packages/features/scene-models/src/scene/scene-clouds.tsx",
-        "packages/features/scene-models/src/scene/scene-object-surface.tsx",
         "packages/features/scene-models/src/scene/scene.tsx",
         "packages/features/scene-models/src/scene/transform-scene-object-bounds.ts",
         "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
@@ -4378,7 +4366,6 @@
       "files": [
         "packages/features/trajectory/src/commands/remove-trajectory-command.tsx",
         "packages/features/trajectory/src/index.ts",
-        "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
         "packages/features/trajectory/src/scene/scene.tsx",
         "packages/features/trajectory/src/scene/trajectory-line.tsx",
         "packages/features/trajectory/src/ui/status.tsx"
@@ -4412,48 +4399,6 @@
         }
       },
       "actions": [
-        {
-          "name": "createEditorActions.hoverObject",
-          "kind": "action",
-          "package": "@camera-path/actions",
-          "definition": {
-            "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 21,
-            "column": 5
-          },
-          "usages": [
-            {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 9,
-              "column": 17,
-              "expression": "useEditorActions().hoverObject"
-            },
-            {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 12,
-              "column": 16,
-              "expression": "hover"
-            },
-            {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 13,
-              "column": 6,
-              "expression": "hover"
-            },
-            {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 16,
-              "column": 16,
-              "expression": "hover"
-            },
-            {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 17,
-              "column": 6,
-              "expression": "hover"
-            }
-          ]
-        },
         {
           "name": "createEditorActions.selectObject",
           "kind": "action",
@@ -4512,12 +4457,6 @@
             "column": 1
           },
           "usages": [
-            {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 9,
-              "column": 17,
-              "expression": "useEditorActions"
-            },
             {
               "file": "packages/features/trajectory/src/scene/scene.tsx",
               "line": 27,
@@ -4650,12 +4589,6 @@
               "expression": "useSceneInteraction()"
             },
             {
-              "file": "packages/features/trajectory/src/ports/use-hovered-trajectory.tsx",
-              "line": 8,
-              "column": 17,
-              "expression": "useSceneInteraction()"
-            },
-            {
               "file": "packages/features/trajectory/src/scene/scene.tsx",
               "line": 25,
               "column": 5,
@@ -4710,6 +4643,7 @@
         "apps/host/src/ui/scene-editor/ui/configure-webgl-viewport.ts",
         "apps/host/src/ui/scene-editor/ui/frame-surface.ts",
         "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
+        "apps/host/src/ui/scene-editor/ui/scene-hover-effect.tsx",
         "apps/host/src/ui/scene-editor/ui/scene-message.tsx",
         "apps/host/src/ui/scene-editor/ui/scene-viewport-frame.tsx",
         "apps/host/src/ui/scene-editor/ui/scene-viewport-types.ts",
@@ -4747,6 +4681,12 @@
               "line": 19,
               "column": 34,
               "expression": "actions.hoverObject"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-hover-effect.tsx",
+              "line": 13,
+              "column": 24,
+              "expression": "hoverObject"
             }
           ]
         },
@@ -4909,6 +4849,12 @@
               "line": 17,
               "column": 18,
               "expression": "useEditorActions"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-hover-effect.tsx",
+              "line": 7,
+              "column": 27,
+              "expression": "useEditorActions"
             }
           ]
         },
@@ -4974,7 +4920,7 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 35,
+              "line": 36,
               "column": 17,
               "expression": "useCompiledTrajectoryQuery(useProjectId())"
             }
@@ -5029,8 +4975,14 @@
           "usages": [
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 34,
+              "line": 35,
               "column": 23,
+              "expression": "useCameraState()"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-hover-effect.tsx",
+              "line": 8,
+              "column": 26,
               "expression": "useCameraState()"
             }
           ]
@@ -5050,6 +5002,12 @@
               "file": "apps/host/src/ui/project-workspace/ui/scene-viewport-container.tsx",
               "line": 12,
               "column": 16,
+              "expression": "useEditorTool()"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-hover-effect.tsx",
+              "line": 9,
+              "column": 26,
               "expression": "useEditorTool()"
             }
           ]
@@ -5086,7 +5044,7 @@
           "usages": [
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 35,
+              "line": 36,
               "column": 44,
               "expression": "useProjectId()"
             }
@@ -5130,7 +5088,7 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-contents.tsx",
-              "line": 33,
+              "line": 34,
               "column": 27,
               "expression": "useUserSettings()"
             }
@@ -5155,6 +5113,7 @@
         "packages/render-pipeline/src/render-pipeline-provider.tsx",
         "packages/render-pipeline/src/render-pipeline-scene-layers.ts",
         "packages/render-pipeline/src/render-pipeline-types.ts",
+        "packages/render-pipeline/src/scene-interaction-layers.ts",
         "packages/render-pipeline/src/sort-render-pipeline-intersections.ts"
       ],
       "slots": {},
@@ -5167,7 +5126,11 @@
       "root": "packages/scene-runtime",
       "entrypoint": null,
       "files": [
+        "packages/scene-runtime/src/interaction/find-hovered-scene-object.ts",
+        "packages/scene-runtime/src/interaction/scene-hover.tsx",
+        "packages/scene-runtime/src/interaction/scene-object.tsx",
         "packages/scene-runtime/src/picking/raycast-placement-surfaces.ts",
+        "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-cloud-hover-color-node.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-hit-kernel.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-hit-node.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-lidar-projection-node.ts",
@@ -5239,6 +5202,25 @@
               "line": 28,
               "column": 17,
               "expression": "useEditorStoreApi()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/scene-runtime/src/interaction/scene-object.tsx",
+              "line": 21,
+              "column": 31,
+              "expression": "useSceneInteraction()"
             }
           ]
         },
