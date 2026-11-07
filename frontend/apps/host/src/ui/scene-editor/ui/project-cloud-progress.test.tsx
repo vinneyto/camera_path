@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { SceneObjectSurface } from "@camera-path/feature-scene-models/scene/scene-object-surface";
+import { CloudSceneObject } from "@camera-path/feature-scene-models/scene/cloud-scene-object";
 import { SceneSurfaceProvider } from "@camera-path/scene-runtime/surface";
 import type { GaussianCloudLoadProgress } from "@camera-path/scene-runtime/surface/model/gaussian-cloud-load-progress";
 import type {
@@ -12,6 +12,7 @@ import { createRoot, extend } from "@react-three/fiber";
 import { act } from "react";
 import { Group, Matrix4, Object3D, Scene, type WebGLRenderer } from "three";
 import { afterEach, expect, it, vi } from "vitest";
+import { createEditorStore, EditorStoreProvider } from "@camera-path/store";
 
 vi.mock("@camera-path/feature-scene-models/scene/cloud-loading-ring", () => ({
   CloudLoadingRing: () => null,
@@ -57,6 +58,7 @@ it("loads a cloud through many streamed progress events without nested React upd
   };
   const canvas = document.createElement("canvas");
   const root = createRoot(canvas);
+  const store = createEditorStore();
   await root.configure({
     scene: new Scene(),
     frameloop: "never",
@@ -73,15 +75,17 @@ it("loads a cloud through many streamed progress events without nested React upd
   try {
     await act(async () => {
       root.render(
-        <SceneSurfaceProvider backend={backend}>
-          <SceneObjectSurface
-            cloud={cloud}
-            worldMatrix={new Matrix4()}
-            effectiveVisible={true}
-            onReady={ready}
-            onProgress={progress}
-          />
-        </SceneSurfaceProvider>,
+        <EditorStoreProvider store={store}>
+          <SceneSurfaceProvider backend={backend}>
+            <CloudSceneObject
+              cloud={cloud}
+              worldMatrix={new Matrix4()}
+              effectiveVisible={true}
+              onReady={ready}
+              onProgress={progress}
+            />
+          </SceneSurfaceProvider>
+        </EditorStoreProvider>,
       );
     });
     for (let loadedBytes = 1; loadedBytes <= 150; loadedBytes++) {
@@ -93,7 +97,7 @@ it("loads a cloud through many streamed progress events without nested React upd
           totalBytes: 200,
         });
         // Progress is a subscription event; forwarding it must not wait for a
-        // passive effect that performs another update in SceneObjectSurface.
+        // passive effect that performs another update in CloudSceneObject.
         expect(progress.mock.calls.at(-1)?.[0].loadedBytes).toBe(loadedBytes);
       });
     }
@@ -102,6 +106,7 @@ it("loads a cloud through many streamed progress events without nested React upd
         object: new Object3D(),
         bounds: { center: [0, 0, 0], radius: 1 },
         getHit: vi.fn(),
+        setHovered: vi.fn(),
         dispose: vi.fn(),
       });
     });
@@ -110,15 +115,17 @@ it("loads a cloud through many streamed progress events without nested React upd
     expect(backend.createCloud).toHaveBeenCalledOnce();
     await act(async () => {
       root.render(
-        <SceneSurfaceProvider backend={backend}>
-          <SceneObjectSurface
-            cloud={cloud}
-            worldMatrix={new Matrix4().makeTranslation(5, 0, 0)}
-            effectiveVisible={true}
-            onReady={ready}
-            onProgress={progress}
-          />
-        </SceneSurfaceProvider>,
+        <EditorStoreProvider store={store}>
+          <SceneSurfaceProvider backend={backend}>
+            <CloudSceneObject
+              cloud={cloud}
+              worldMatrix={new Matrix4().makeTranslation(5, 0, 0)}
+              effectiveVisible={true}
+              onReady={ready}
+              onProgress={progress}
+            />
+          </SceneSurfaceProvider>
+        </EditorStoreProvider>,
       );
     });
     expect(ready.mock.calls.at(-1)?.[0].bounds.center).toEqual([5, 0, 0]);

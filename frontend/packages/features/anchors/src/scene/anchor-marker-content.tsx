@@ -7,8 +7,14 @@ import { SurfaceTargetRing } from "@camera-path/scene-runtime/three/surface-targ
 import type { Anchor } from "@camera-path/types/project";
 import { ANCHOR_ICON_Z_INDEX_RANGE } from "@camera-path/ui-kit";
 import { cn } from "@camera-path/ui-kit/lib/cn";
-
-const ANCHOR_MARKER_HIT_RADIUS = 0.13;
+import {
+  ANCHOR_ICON_STROKE_WIDTH,
+  ANCHOR_LABEL_DISTANCE_FACTOR,
+  ANCHOR_MARKER_HIT_POSITION,
+  ANCHOR_MARKER_HIT_RADIUS,
+  ANCHOR_MARKER_HIT_SEGMENTS,
+} from "../constants";
+import { selectAnchorMarkerAppearance } from "../selectors/select-anchor-marker-appearance";
 
 export interface AnchorMarkerProps extends Omit<
   ThreeElements["group"],
@@ -17,12 +23,14 @@ export interface AnchorMarkerProps extends Omit<
   anchor: Anchor;
   hovered?: boolean;
   selected?: boolean;
+  dragging?: boolean;
 }
 
 export function AnchorMarkerContent({
   anchor,
   hovered = false,
   selected = false,
+  dragging = false,
   ...groupProps
 }: AnchorMarkerProps) {
   const axis =
@@ -39,19 +47,32 @@ export function AnchorMarkerContent({
   const interactive =
     groupProps.onContextMenu !== undefined ||
     groupProps.onPointerDown !== undefined;
-  const highlighted = hovered || selected;
+  const appearance = selectAnchorMarkerAppearance({
+    hovered,
+    selected,
+    dragging,
+  });
 
   return (
     <group {...groupProps} position={position}>
-      <SurfaceTargetRing highlighted={highlighted} position={surfaceOffset} />
+      <SurfaceTargetRing
+        highlighted={appearance.highlighted}
+        position={surfaceOffset}
+      />
       {interactive && (
-        <mesh position={[0, 0.1, 0]}>
-          <sphereGeometry args={[ANCHOR_MARKER_HIT_RADIUS, 12, 12]} />
+        <mesh position={ANCHOR_MARKER_HIT_POSITION}>
+          <sphereGeometry
+            args={[
+              ANCHOR_MARKER_HIT_RADIUS,
+              ANCHOR_MARKER_HIT_SEGMENTS,
+              ANCHOR_MARKER_HIT_SEGMENTS,
+            ]}
+          />
           <meshBasicMaterial depthWrite={false} opacity={0} transparent />
         </mesh>
       )}
       <Html
-        distanceFactor={8}
+        distanceFactor={ANCHOR_LABEL_DISTANCE_FACTOR}
         style={{ pointerEvents: "none" }}
         zIndexRange={ANCHOR_ICON_Z_INDEX_RANGE}
       >
@@ -60,16 +81,14 @@ export function AnchorMarkerContent({
             aria-hidden
             className={cn(
               "absolute bottom-0 left-0 size-3.5 -translate-x-1/2 drop-shadow-sm transition-colors",
-              highlighted
-                ? "fill-orange-400 text-orange-300"
-                : "fill-orange-500 text-orange-400",
+              appearance.iconColorClass,
             )}
-            strokeWidth={2}
+            strokeWidth={ANCHOR_ICON_STROKE_WIDTH}
           />
           <span
             className={cn(
               "absolute bottom-3 left-0 -translate-x-1/2 whitespace-nowrap rounded border bg-background/90 px-1 py-0.5 text-[9px] font-semibold leading-none text-foreground shadow-sm",
-              highlighted ? "border-orange-300/70" : "border-orange-400/40",
+              appearance.labelBorderClass,
             )}
           >
             {anchor.label}

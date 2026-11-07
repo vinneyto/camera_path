@@ -521,19 +521,21 @@ it.each([
     const renderScene = async () => {
       await act(async () => {
         root.render(
-          <SceneSurfaceProvider backend={backend}>
-            <SceneClouds
-              clouds={clouds}
-              preview={null}
-              placed={null}
-              resourceKeyForCloud={() => undefined}
-              interactive
-              surfaceEvents={{}}
-              onReady={ready}
-              onError={error}
-              onLoading={vi.fn()}
-            />
-          </SceneSurfaceProvider>,
+          <EditorTestHost>
+            <SceneSurfaceProvider backend={backend}>
+              <SceneClouds
+                clouds={clouds}
+                preview={null}
+                placed={null}
+                resourceKeyForCloud={() => undefined}
+                interactive
+                surfaceEvents={{}}
+                onReady={ready}
+                onError={error}
+                onLoading={vi.fn()}
+              />
+            </SceneSurfaceProvider>
+          </EditorTestHost>,
         );
         await new Promise((resolve) => setTimeout(resolve, 0));
       });

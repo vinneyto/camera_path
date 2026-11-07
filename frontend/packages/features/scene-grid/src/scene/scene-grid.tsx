@@ -1,6 +1,6 @@
 "use client";
 import type { ThreeEvent } from "@react-three/fiber";
-import { DoubleSide } from "three";
+import { DoubleSide, Mesh } from "three";
 
 import type {
   SceneSurfaceHit,
@@ -8,9 +8,16 @@ import type {
 } from "@camera-path/scene-runtime/surface";
 import {
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
+  RENDER_PIPELINE_SCENE_LAYER,
   useOptionalRenderPipeline,
 } from "@camera-path/render-pipeline";
 import type { Vec3 } from "@camera-path/types/project";
+import {
+  SCENE_GRID_DIVISIONS,
+  SCENE_GRID_PLANE_ROTATION,
+  SCENE_GRID_SIZE,
+} from "../constants";
+import { selectSceneGridAppearance } from "../selectors/select-scene-grid-appearance";
 
 type PlacementEvents = Pick<
   SceneSurfaceProps,
@@ -33,12 +40,18 @@ export function SceneGrid({
   placementEvents,
 }: SceneGridProps) {
   const pipeline = useOptionalRenderPipeline();
+  const appearance = selectSceneGridAppearance({
+    dark,
+    webgpu: pipeline !== null,
+  });
 
   function assignRenderLayer(object: {
     layers: { set: (layer: number) => void };
   }) {
     object.layers.set(
-      pipeline ? RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER : 0,
+      pipeline
+        ? RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER
+        : RENDER_PIPELINE_SCENE_LAYER,
     );
   }
 
@@ -70,31 +83,31 @@ export function SceneGrid({
           if (isFrontmost(event))
             placementEvents.onSurfacePointerUp?.(hit(event), event);
         }}
-        raycast={interactive ? undefined : () => undefined}
+        raycast={interactive ? Mesh.prototype.raycast : () => undefined}
         userData={{ sceneSurfacePickable: interactive }}
-        renderOrder={pipeline ? -2 : -3}
-        rotation={[-Math.PI / 2, 0, 0]}
+        renderOrder={appearance.renderOrder.plane}
+        rotation={SCENE_GRID_PLANE_ROTATION}
       >
-        <planeGeometry args={[40, 40]} />
+        <planeGeometry args={[SCENE_GRID_SIZE, SCENE_GRID_SIZE]} />
         <meshBasicMaterial
-          color={dark ? "#8291aa" : "#94a3b8"}
+          color={appearance.planeColor}
           depthWrite={Boolean(pipeline)}
-          opacity={dark ? 0.045 : 0.09}
+          opacity={appearance.planeOpacity}
           side={DoubleSide}
           transparent
         />
       </mesh>
       <gridHelper
-        args={[40, 40]}
+        args={[SCENE_GRID_SIZE, SCENE_GRID_DIVISIONS]}
         onUpdate={assignRenderLayer}
         raycast={() => undefined}
-        renderOrder={pipeline ? -1 : -2}
+        renderOrder={appearance.renderOrder.lines}
       >
         <lineBasicMaterial
-          color={dark ? "#9baac3" : "#526073"}
+          color={appearance.lineColor}
           depthTest={false}
           depthWrite={false}
-          opacity={dark ? 0.28 : 0.22}
+          opacity={appearance.lineOpacity}
           transparent
         />
       </gridHelper>

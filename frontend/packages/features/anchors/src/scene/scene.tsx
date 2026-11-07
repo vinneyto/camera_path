@@ -3,6 +3,8 @@ import { useDeleteAnchorMutation } from "@camera-path/actions";
 import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useAnchors } from "@camera-path/api/resources";
 import { useCameraState } from "@camera-path/store";
+import { SceneObject } from "@camera-path/scene-runtime/interaction/scene-object";
+import { anchorObjectId } from "@camera-path/types/anchor-object-id";
 
 import {
   useAddAnchorMutation,
@@ -21,6 +23,8 @@ import { AnchorMarker } from "./anchor-marker";
 import { AnchorPlacementPreview } from "./anchor-placement-preview";
 import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 import { useAnchorPlacement } from "./use-anchor-placement";
+import { ANCHOR_TRANSFORM_PRECISION } from "../constants";
+import { ANCHOR_PLACEMENT_HEIGHT } from "./anchor-placement-constants";
 const EMPTY: Anchor[] = [];
 export function AnchorsScene() {
   const query = useAnchors();
@@ -39,9 +43,13 @@ export function AnchorsScene() {
       if (!busy && canEdit)
         add.mutate({
           label: getAnchorLabel(items),
-          surface_position: position.map((v) => Number(v.toFixed(4))) as Vec3,
-          surface_normal: normal.map((v) => Number(v.toFixed(4))) as Vec3,
-          lift: 0.5,
+          surface_position: position.map((v) =>
+            Number(v.toFixed(ANCHOR_TRANSFORM_PRECISION)),
+          ) as Vec3,
+          surface_normal: normal.map((v) =>
+            Number(v.toFixed(ANCHOR_TRANSFORM_PRECISION)),
+          ) as Vec3,
+          lift: ANCHOR_PLACEMENT_HEIGHT,
           lift_axis: "world_up",
         });
     },
@@ -104,43 +112,56 @@ export function AnchorsScene() {
           {[...items]
             .sort((a, b) => a.id.localeCompare(b.id))
             .map((anchor) => (
-              <AnchorMarker
+              <SceneObject
                 key={anchor.id}
-                anchor={
-                  height.preview?.anchorId === anchor.id
-                    ? {
-                        ...anchor,
-                        lift: height.preview.lift,
-                        lift_axis: "world_up",
-                      }
-                    : anchor
-                }
-                hovered={height.hoveredAnchorId === anchor.id}
-                selected={height.selectedAnchorId === anchor.id}
-                {...(canEdit ? height.getAnchorInteractionProps(anchor) : {})}
-                onContextMenu={
-                  canEdit
-                    ? (event) => {
-                        event.stopPropagation();
-                        event.nativeEvent.preventDefault();
-                        viewport.openMenu(
-                          [
-                            {
-                              destructive: true,
-                              disabled: deletion.isPending,
-                              label: `Delete anchor ${anchor.label}`,
-                              onSelect: () => deletion.mutate(anchor.id),
-                            },
-                          ],
-                          {
-                            x: event.nativeEvent.clientX,
-                            y: event.nativeEvent.clientY,
-                          },
-                        );
-                      }
-                    : undefined
-                }
-              />
+                sceneObjectID={anchorObjectId(anchor.id)}
+                hoverable={canEdit && activeTool === null}
+              >
+                {({ hovered }) => (
+                  <AnchorMarker
+                    anchor={
+                      height.preview?.anchorId === anchor.id
+                        ? {
+                            ...anchor,
+                            lift: height.preview.lift,
+                            lift_axis: "world_up",
+                          }
+                        : anchor
+                    }
+                    hovered={hovered}
+                    dragging={
+                      height.preview?.anchorId === anchor.id &&
+                      height.preview.dragging
+                    }
+                    selected={height.selectedAnchorId === anchor.id}
+                    {...(canEdit
+                      ? height.getAnchorInteractionProps(anchor)
+                      : {})}
+                    onContextMenu={
+                      canEdit
+                        ? (event) => {
+                            event.stopPropagation();
+                            event.nativeEvent.preventDefault();
+                            viewport.openMenu(
+                              [
+                                {
+                                  destructive: true,
+                                  disabled: deletion.isPending,
+                                  label: `Delete anchor ${anchor.label}`,
+                                  onSelect: () => deletion.mutate(anchor.id),
+                                },
+                              ],
+                              {
+                                x: event.nativeEvent.clientX,
+                                y: event.nativeEvent.clientY,
+                              },
+                            );
+                          }
+                        : undefined
+                    }
+                  />
+                )}
+              </SceneObject>
             ))}
           {canEdit && height.activeAnchor && (
             <AnchorHeightEditingOverlay

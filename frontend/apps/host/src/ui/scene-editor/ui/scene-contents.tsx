@@ -17,6 +17,12 @@ import type { Vec3 } from "@camera-path/types/project";
 import { useThree } from "@react-three/fiber";
 import { useState } from "react";
 import { frameSurface } from "./frame-surface";
+import { SceneHoverEffect } from "./scene-hover-effect";
+import {
+  SCENE_DIRECTIONAL_LIGHT_POSITION,
+  SCENE_SHADOW_MAP_SIZE,
+} from "../constants";
+import { selectSceneLighting } from "../selectors/select-scene-lighting";
 const PICK_LAYERS = [DEPTH_OF_FIELD_AUTOFOCUS_LAYER] as const;
 export function SceneContents({
   background,
@@ -30,6 +36,7 @@ export function SceneContents({
   depthSupported?: boolean;
 }) {
   const camera = useThree((s) => s.camera);
+  const lighting = selectSceneLighting(dark);
   const { gaussianDpr } = useUserSettings();
   const interactive = useCameraState().cameraMode === "orbit";
   const query = useCompiledTrajectoryQuery(useProjectId());
@@ -84,13 +91,14 @@ export function SceneContents({
         }}
       >
         <TrajectoryPoseProvider trajectory={trajectory}>
+          <SceneHoverEffect />
           <Slot name="project.scene" />
-          <ambientLight intensity={dark ? 0.8 : 1.25} />
+          <ambientLight intensity={lighting.ambient} />
           <directionalLight
             castShadow
-            intensity={dark ? 1.7 : 2.1}
-            position={[5, 8, 4]}
-            shadow-mapSize={[1024, 1024]}
+            intensity={lighting.directional}
+            position={SCENE_DIRECTIONAL_LIGHT_POSITION}
+            shadow-mapSize={SCENE_SHADOW_MAP_SIZE}
           />
         </TrajectoryPoseProvider>
       </SceneServicesProvider>

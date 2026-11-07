@@ -8,6 +8,8 @@ import { useActiveEditorTool } from "../ports/use-active-editor-tool";
 import { useHoveredAnchor } from "../ports/use-hovered-anchor";
 
 import { getWorldYAxisLift } from "@camera-path/feature-anchors/lib/get-world-y-axis-lift";
+import { ANCHOR_TRANSFORM_PRECISION } from "../constants";
+import { POINTER_BUTTON } from "@camera-path/ui-kit/constants";
 
 interface AnchorHeightPreview {
   anchorId: string;
@@ -30,12 +32,7 @@ interface AnchorHeightDrag {
 
 type AnchorInteractionProps = Pick<
   ThreeElements["group"],
-  | "onPointerCancel"
-  | "onPointerDown"
-  | "onPointerMove"
-  | "onPointerOut"
-  | "onPointerOver"
-  | "onPointerUp"
+  "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"
 >;
 
 export function useAnchorHeightEditing({
@@ -46,9 +43,7 @@ export function useAnchorHeightEditing({
   const {
     clearHoveredAnchor,
     hoveredAnchorId,
-    hoverAnchor,
     selectedAnchorId,
-    selectAnchor,
     clearSelectedAnchor,
   } = useHoveredAnchor();
   const setActiveTool = useSetActiveEditorTool();
@@ -90,22 +85,8 @@ export function useAnchorHeightEditing({
       clearSelectedAnchor(selectedAnchorId);
   }, [anchors, selectedAnchorId, clearSelectedAnchor]);
 
-  function handlePointerOver(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (activeTool !== null || event.nativeEvent.pointerType === "touch")
-      return;
-    event.stopPropagation();
-    hoverAnchor(anchor.id);
-  }
-
-  function handlePointerOut(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (event.nativeEvent.pointerType === "touch") return;
-    if (dragRef.current?.anchorId === anchor.id) return;
-    event.stopPropagation();
-    clearHoveredAnchor(anchor.id);
-  }
-
   function handlePointerDown(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
-    if (activeTool !== null || event.button !== 0) return;
+    if (activeTool !== null || event.button !== POINTER_BUTTON.primary) return;
     event.stopPropagation();
     event.nativeEvent.preventDefault();
     const target = event.target as Element | null;
@@ -118,8 +99,6 @@ export function useAnchorHeightEditing({
       pointerId: event.pointerId,
       target,
     };
-    selectAnchor(anchor.id);
-    hoverAnchor(anchor.id);
     setPreview({ anchorId: anchor.id, dragging: true, lift: anchor.lift });
     setActiveTool("anchor-height");
   }
@@ -143,7 +122,7 @@ export function useAnchorHeightEditing({
     event.stopPropagation();
     drag.target?.releasePointerCapture?.(drag.pointerId);
     dragRef.current = null;
-    const lift = Number(drag.lift.toFixed(4));
+    const lift = Number(drag.lift.toFixed(ANCHOR_TRANSFORM_PRECISION));
     setPreview({ anchorId: anchor.id, dragging: false, lift });
     setActiveTool(null);
     void onCommit(anchor.id, lift).finally(() => {
@@ -172,8 +151,6 @@ export function useAnchorHeightEditing({
       onPointerCancel: (event) => handlePointerCancel(anchor, event),
       onPointerDown: (event) => handlePointerDown(anchor, event),
       onPointerMove: (event) => handlePointerMove(anchor, event),
-      onPointerOut: (event) => handlePointerOut(anchor, event),
-      onPointerOver: (event) => handlePointerOver(anchor, event),
       onPointerUp: (event) => handlePointerUp(anchor, event),
     };
   }

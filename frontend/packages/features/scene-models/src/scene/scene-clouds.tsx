@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { resolveSceneObjectTransforms } from "./resolve-scene-object-transforms";
 import { createPlacementPreviewCloud } from "@camera-path/feature-scene-models/scene/create-placement-preview-cloud";
-import { SceneObjectSurface } from "@camera-path/feature-scene-models/scene/scene-object-surface";
+import { CloudSceneObject } from "@camera-path/feature-scene-models/scene/cloud-scene-object";
 import type { PlacementPreview } from "@camera-path/feature-scene-models/scene/use-cloud-placement-interaction";
 import type { SceneSurfaceProps } from "@camera-path/scene-runtime/surface/model/scene-surface-types";
 import type { SceneObject } from "@camera-path/types/api";
@@ -72,11 +72,12 @@ export function SceneClouds({
   // A resource keeps one React/R3F owner throughout preview -> saved cloud.
   // Mounting a second primitive for the same object loses R3F pointer registration.
   return entries.map(({ cloud, resourceKey, preview }) => (
-    <SceneObjectSurface
+    <CloudSceneObject
       key={resourceKey ?? cloud.id}
       cloud={cloud}
       worldMatrix={transforms.get(cloud.id)!.matrix}
       effectiveVisible={transforms.get(cloud.id)!.visible}
+      hoverable={!preview}
       resourceKey={resourceKey}
       raycastable={!preview && transforms.get(cloud.id)!.visible && interactive}
       onReady={preview ? undefined : (surface) => onReady(cloud.id, surface)}

@@ -2,13 +2,12 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
+import type { SceneObject } from "@camera-path/scene-runtime/interaction/scene-object";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { CompiledTrajectory } from "@camera-path/trajectory-math";
 
 import { TrajectoryLine } from "@camera-path/feature-trajectory/scene/trajectory-line";
-
-const clearHoveredTrajectory = vi.fn();
 
 vi.mock("@camera-path/trajectory-math", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -18,12 +17,9 @@ vi.mock("@camera-path/trajectory-math", async (importOriginal) => ({
   ],
 }));
 
-vi.mock("@camera-path/feature-trajectory/ports/use-hovered-trajectory", () => ({
-  useHoveredTrajectory: () => ({
-    clearHoveredTrajectory,
-    hoverTrajectory: vi.fn(),
-    hovered: false,
-  }),
+vi.mock("@camera-path/scene-runtime/interaction/scene-object", () => ({
+  SceneObject: ({ children }: ComponentProps<typeof SceneObject>) =>
+    children({ hovered: false }),
 }));
 
 vi.mock("@camera-path/scene-runtime/three", () => ({

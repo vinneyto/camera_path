@@ -6,6 +6,15 @@ import {
   gaussianPass,
   rasterScreenUV,
 } from "3dgs-tile-webgpu";
+import { uniform } from "three/tsl";
+import { GAUSSIAN_HOVER_GAIN } from "../../constants";
+import {
+  GAUSSIAN_DEPTH_ALPHA_THRESHOLD,
+  GAUSSIAN_PROCESSING_PROGRESS,
+  GAUSSIAN_RAYCAST_SNAPSHOT_MAX_LEAVES,
+  GAUSSIAN_RENDER_ORDER,
+  LIDAR_RENDER_ORDER,
+} from "./constants";
 import { PerspectiveCamera } from "three/webgpu";
 
 import type { GaussianDprMode } from "@camera-path/scene-runtime/surface/model/gaussian-dpr-mode";
@@ -17,6 +26,7 @@ import { getGaussianResolutionScale } from "@camera-path/scene-runtime/surface/a
 import { installWebGpuDrawDiagnostics } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/install-webgpu-draw-diagnostics";
 import { LoggingGaussianBackend } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/logging-gaussian-backend";
 import { TileGaussianCloudInstance } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-cloud-instance";
+import { createCloudHoverColorNode } from "./create-cloud-hover-color-node";
 import { TileGaussianHighlightVolume } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-highlight-volume";
 import { TileGaussianLidar } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-lidar";
 import { TileLidarFrameNode } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-lidar-frame-node";
@@ -43,6 +53,9 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   private depthEnabled = false;
   private disposed = false;
   private highlightVolume: TileGaussianHighlightVolume | null = null;
+  private hoveredCloud: GaussianCloud | null = null;
+  private readonly hoveredObjectId = uniform(0, "uint");
+  private readonly hoverGain = uniform(1);
   private pass: GaussianPass | null = null;
   private readonly debugEnabled =
     typeof window !== "undefined" &&
@@ -95,7 +108,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
           : source.buffer;
       signal.throwIfAborted();
       options.onProgress?.({
-        fraction: 0.9,
+        fraction: GAUSSIAN_PROCESSING_PROGRESS,
         loadedBytes: buffer.byteLength,
         totalBytes: buffer.byteLength,
         phase: "processing",
@@ -109,7 +122,10 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
           fileName: source.kind === "url" ? source.url : source.name,
           format: source.kind === "url" ? source.format : undefined,
           worldMatrix: options.worldMatrix,
-          mipmaps: { type: "standard", snapshot: { maxLeaves: 25000 } },
+          mipmaps: {
+            type: "standard",
+            snapshot: { maxLeaves: GAUSSIAN_RAYCAST_SNAPSHOT_MAX_LEAVES },
+          },
         },
         signal,
       );
@@ -137,6 +153,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
           if (this.clouds.size === 0 && this.loads.size === 0)
             this.disposePass();
         },
+        (hovered) => this.setCloudHovered(loadedCloud, hovered),
       );
       this.clouds.add(instance);
       options.onProgress?.({
@@ -154,6 +171,18 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       this.loads.delete(controller);
       if (this.clouds.size === 0 && this.loads.size === 0) this.disposePass();
     }
+  }
+
+  private setCloudHovered(cloud: GaussianCloud, hovered: boolean): void {
+    if (hovered) {
+      this.hoveredCloud = cloud;
+      this.hoveredObjectId.value = cloud.objectId;
+      this.hoverGain.value = GAUSSIAN_HOVER_GAIN;
+    } else if (this.hoveredCloud === cloud) {
+      this.hoveredCloud = null;
+      this.hoverGain.value = 1;
+    } else return;
+    this.pass?.invalidate();
   }
 
   createHighlightVolume(
@@ -198,7 +227,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     if (this.pass !== null && this.lidars.size > 0 && !this.disposed) {
       this.unregisterLidarFrame = this.pipeline.registerLayer(
         new TileLidarFrameNode(this.pass, this.lidars),
-        { order: -99 },
+        { order: LIDAR_RENDER_ORDER },
       );
     }
   }
@@ -269,10 +298,17 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     }
     const pass = gaussianPass(renderer, camera, this.store, {
       background: [0, 0, 0, 0],
-      depthAlphaThreshold: 0.95,
+      depthAlphaThreshold: GAUSSIAN_DEPTH_ALPHA_THRESHOLD,
       outputDepth: this.depthEnabled,
       redrawStrategy: "auto",
     });
+    // The identity predicate keeps overlapping clouds independent. Volume
+    // highlights compose over this node and restore it when they are removed.
+    pass.gaussianColorNode = createCloudHoverColorNode(
+      pass.gaussianColorNode,
+      this.hoveredObjectId,
+      this.hoverGain,
+    );
     const depthNodes = createTileRasterDepthNodes(
       getOpaqueViewDepth(rasterScreenUV),
       pass.depthSortMode,
@@ -286,7 +322,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     this.syncResolutionScale(this.dprMode);
     this.unregisterPass = registerLayer(pass, {
       ...(this.depthEnabled ? { depth: pass.getTextureNode("depth").r } : {}),
-      order: -100,
+      order: GAUSSIAN_RENDER_ORDER,
     });
     this.syncLidarFrame();
     this.highlightVolume?.replacePass(pass);
