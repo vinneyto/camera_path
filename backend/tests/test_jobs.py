@@ -33,6 +33,7 @@ async def test_validated_generation_input_is_persisted_without_starting_a_pipeli
     job = response.json()
     assert str(UUID(job["id"])) == job["id"]
     assert job["input"] == data["input"] and job["type"] == "generation"
+    assert job["name"] == "A wooden chair 🪑"
     assert job["status"] == "draft" and job["created_at"] is not None
     assert job["error"] is job["started_at"] is job["completed_at"] is None
     assert job["assets"] == []
@@ -40,8 +41,22 @@ async def test_validated_generation_input_is_persisted_without_starting_a_pipeli
     assert (await client.get(f"/api/v1/jobs/{job['id']}")).json() == job
     summary = (await client.get("/api/v1/jobs")).json()[0]
     assert summary["prompt"] == data["input"]["prompt"]
+    assert summary["name"] == job["name"]
     assert summary["status"] == "draft" and summary["asset_count"] == 0
     assert summary["assets"] == [] and "input" not in summary
+
+
+async def test_job_name_is_a_bounded_snapshot_of_the_full_prompt(jobs):
+    _, client = jobs
+    prompt = "  " + "A very detailed chair 🪑 " * 20 + "\n"
+    job = (
+        await client.post(
+            "/api/v1/jobs",
+            json={"type": "generation", "input": {"prompt": prompt}},
+        )
+    ).json()
+    assert job["name"] == prompt.strip()[:200]
+    assert job["input"]["prompt"] == prompt
 
 
 @pytest.mark.parametrize(

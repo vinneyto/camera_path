@@ -475,8 +475,12 @@ assets. The monolith verifies every file, registers all assets and completes the
 The first successful completion wins, including after assets are deleted. Development uses
 RabbitMQ over AMQP; AWS uses SQS. The common consumer knows neither provider. Files already
 inside library storage are adopted; external files are copied under UUIDs.
-The Jobs page lists every job type with its prompt, lifecycle status, errors and surviving library
-results. The public API lists jobs at `GET /api/v1/jobs`, returns details at
+The Jobs page lists every job type with its saved `name`, lifecycle status, errors and surviving
+library results. Generation jobs snapshot the source image name or the trimmed prompt (up to
+200 characters) on creation. The name remains after source deletion. Migration fills existing
+generation names from their prompt, surviving image, or previous image-generation result;
+legacy jobs without recoverable metadata keep a null name. The public API lists jobs at
+`GET /api/v1/jobs`, returns details at
 `GET /api/v1/jobs/{id}` and streams status through `GET /api/v1/jobs/{id}/events`.
 Editors can reserve a draft through `POST /api/v1/jobs` with
 `{"type":"generation","input":{"prompt":"A wooden chair"}}`. The generation form includes

@@ -142,6 +142,7 @@ class JobRecord(Base):
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str | None] = mapped_column(Text)
     type: Mapped[str | None] = mapped_column(Text)
     input: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     status: Mapped[JobStatus] = mapped_column(

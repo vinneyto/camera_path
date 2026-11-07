@@ -38,8 +38,8 @@ export function JobDetailsPage() {
         <>
           <header className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-xl font-semibold tracking-tight">
-                Job details
+              <h1 className="break-words text-xl font-semibold tracking-tight">
+                {job.name ?? "Job details"}
               </h1>
               <p className="mt-2 select-all break-all font-mono text-xs text-muted-foreground">
                 {job.id}

@@ -18,6 +18,8 @@ export interface Job {
   id: string;
   input: JobInput;
   input_asset?: LibraryAsset | null;
+  /** Name saved at creation from the source image or trimmed prompt. */
+  name: string | null;
   started_at: string | null;
   status: JobStatus;
   type: string | null;

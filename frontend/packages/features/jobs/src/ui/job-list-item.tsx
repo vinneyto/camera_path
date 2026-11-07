@@ -19,14 +19,9 @@ export function JobListItem({ job }: { job: JobSummary }) {
             </span>
             <ArrowRight className="size-3.5" aria-hidden />
           </div>
-          {job.prompt && (
-            <p className="mt-2 whitespace-pre-wrap break-words text-sm font-medium group-hover:text-primary">
-              {job.prompt}
-            </p>
-          )}
-          {job.image_asset_id && (
-            <p className="mt-2 text-sm font-medium">Image to 3D</p>
-          )}
+          <p className="mt-2 whitespace-pre-wrap break-words text-sm font-medium group-hover:text-primary">
+            {job.name ?? "Untitled job"}
+          </p>
           <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">
             {job.id}
           </p>

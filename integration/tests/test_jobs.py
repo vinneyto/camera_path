@@ -10,6 +10,7 @@ def test_public_catalogue_reservation_and_restart(editor):
     before = b.request("GET", "/api/v1/jobs", auth=False).json()
     assert [job["id"] for job in before] == [job["id"] for job in reversed(jobs)]
     assert [job["prompt"] for job in before] == ["Chair 2", "Chair 1", "Chair 0"]
+    assert [job["name"] for job in before] == ["Chair 2", "Chair 1", "Chair 0"]
     for job in jobs:
         assert job["status"] == "draft" and job["completed_at"] is None
         assert job["created_at"] and job["error"] is None and job["assets"] == []

@@ -1485,6 +1485,19 @@
               }
             ]
           },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name saved at creation from the source image or trimmed prompt.",
+            "title": "Name"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -1514,6 +1527,7 @@
         },
         "required": [
           "id",
+          "name",
           "type",
           "status",
           "error",
@@ -1699,6 +1713,19 @@
             ],
             "title": "Image Asset Id"
           },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name saved at creation from the source image or trimmed prompt.",
+            "title": "Name"
+          },
           "prompt": {
             "anyOf": [
               {
@@ -1739,6 +1766,7 @@
         },
         "required": [
           "id",
+          "name",
           "type",
           "status",
           "error",

@@ -110,6 +110,8 @@ async def test_image_job_locks_input_dispatches_a_path_imports_output_and_preser
     )
     assert response.status_code == 201
     job = response.json()
+    assert job["name"] == image["name"]
+    assert (await client.get("/api/v1/jobs")).json()[0]["name"] == image["name"]
     assert job["input"] == {"image_asset_id": image["id"]}
     assert job["input_asset"]["id"] == image["id"] and job["assets"] == []
     assert (await client.delete(f"/api/v1/library/{image['id']}")).status_code == 409
@@ -162,6 +164,7 @@ async def test_image_job_locks_input_dispatches_a_path_imports_output_and_preser
     assert (await client.delete(f"/api/v1/library/{image['id']}")).status_code == 204
     history = (await client.get(f"/api/v1/jobs/{job['id']}")).json()
     assert history["input_asset"] is None and history["input"] == job["input"]
+    assert history["name"] == image["name"]
     assert len(history["assets"]) == 1
 
 

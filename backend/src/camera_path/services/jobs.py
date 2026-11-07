@@ -35,6 +35,10 @@ class JobFields(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
+    name: str | None = Field(
+        max_length=200,
+        description="Name saved at creation from the source image or trimmed prompt.",
+    )
     type: str | None
     status: JobStatus
     error: JobError | None
@@ -108,6 +112,7 @@ class JobService:
                 image is None or image.status != "ready" or image.format not in IMAGE_FORMATS
             ):
                 raise LibraryError("generation_image_not_found", 422)
+            job.name = image.name if image else data.input["prompt"].strip()[:200]
             session.add(job)
             input_asset = await self.library._model(image, request) if image and request else None
         return Job(

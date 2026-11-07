@@ -31,6 +31,7 @@ vi.mock("@camera-path/api/identity/auth-provider", () => ({
 const id = "443f452a-cb09-4eb5-9087-9643d99c649a";
 const pending: Job = {
   id,
+  name: "A wooden chair",
   type: "generation",
   status: "running",
   input: { prompt: "A wooden chair" },
@@ -71,6 +72,7 @@ const completed: Job = {
 };
 const completedSummary: JobSummary = {
   id,
+  name: "A wooden chair",
   type: "generation",
   status: "succeeded",
   created_at: completed.created_at,
@@ -218,13 +220,14 @@ it("asks guests to sign in on the creation route", () => {
   expect(requests).toHaveLength(0);
 });
 
-it("shows prompt, explicit status, error, unknown type and direct library result links", async () => {
+it("shows saved name, explicit status, error, unknown type and direct library result links", async () => {
   jobs = [
     completedSummary,
     {
       ...completedSummary,
       id: "failed-job",
       status: "failed",
+      name: "A broken chair",
       prompt: "A broken chair",
       asset_count: 0,
       assets: [],
@@ -240,6 +243,7 @@ it("shows prompt, explicit status, error, unknown type and direct library result
       completed_at: null,
       started_at: null,
       type: null,
+      name: null,
       prompt: null,
       created_at: null,
       asset_count: 0,
@@ -259,6 +263,24 @@ it("shows prompt, explicit status, error, unknown type and direct library result
     screen.getByRole("link", { name: "Generated cloud" }).getAttribute("href"),
   ).toBe("/library/cloud-1");
   expect(requests.every((r) => r.url === "/api/v1/jobs")).toBe(true);
+});
+
+it("uses the image job's saved name without fetching the deleted source image", async () => {
+  jobs = [
+    {
+      ...completedSummary,
+      name: "My source image.png",
+      prompt: null,
+      image_asset_id: "deleted-image",
+    },
+  ];
+  mount();
+  const link = await screen.findByRole("link", { name: /My source image.png/ });
+  expect(link.getAttribute("href")).toBe(`/jobs/${id}`);
+  expect(screen.queryByText("Image to 3D")).toBeNull();
+  expect(requests.every((request) => request.url === "/api/v1/jobs")).toBe(
+    true,
+  );
 });
 
 it("retries a failed catalogue read", async () => {
@@ -286,7 +308,7 @@ it("refreshes running jobs on SSE and links the imported asset", async () => {
   mount(id);
   await screen.findByText("Waiting for results.");
   expect(screen.getByText(id)).toBeTruthy();
-  expect(screen.getByText(/A wooden chair/)).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "A wooden chair" })).toBeTruthy();
   const source = connections[0];
   expect(source.url).toBe(`/api/v1/jobs/${id}/events`);
   job = structuredClone(completed);

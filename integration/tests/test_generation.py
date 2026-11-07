@@ -201,6 +201,7 @@ def test_image_generation_original_lock_and_result_round_trip(dev_backend):
     queue = b.env["CAMERA_PATH_GENERATION_REQUEST_QUEUE"]
     b.broker.wait_queue(queue)
     command = json.loads(b.broker.get_message(queue)["body"])
+    assert job["name"] == image["name"]
     assert command["job_id"] == job["id"]
     assert Path(command["input"]["image_path"]).read_bytes() == original
     assert command["input"]["image_sha256"] == hashlib.sha256(original).hexdigest()
@@ -216,4 +217,5 @@ def test_image_generation_original_lock_and_result_round_trip(dev_backend):
     b.request("DELETE", f"/api/v1/library/{image['id']}", 204)
     history = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
     assert history["input_asset"] is None and history["input"] == job["input"]
+    assert history["name"] == image["name"]
     assert len(history["assets"]) == 1
