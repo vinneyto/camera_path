@@ -1,6 +1,6 @@
 "use client";
 import type { ThreeEvent } from "@react-three/fiber";
-import { DoubleSide } from "three";
+import { DoubleSide, Mesh } from "three";
 
 import type {
   SceneSurfaceHit,
@@ -70,7 +70,7 @@ export function SceneGrid({
           if (isFrontmost(event))
             placementEvents.onSurfacePointerUp?.(hit(event), event);
         }}
-        raycast={interactive ? undefined : () => undefined}
+        raycast={interactive ? Mesh.prototype.raycast : () => undefined}
         userData={{ sceneSurfacePickable: interactive }}
         renderOrder={pipeline ? -2 : -3}
         rotation={[-Math.PI / 2, 0, 0]}
