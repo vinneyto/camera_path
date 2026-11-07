@@ -2726,6 +2726,7 @@
         "packages/features/jobs/src/ui/job-input-editor.tsx",
         "packages/features/jobs/src/ui/job-list-item.tsx",
         "packages/features/jobs/src/ui/jobs-page.tsx",
+        "packages/features/jobs/src/ui/optional-job-name.tsx",
         "packages/features/jobs/src/ui/parse-generation-input.ts",
         "packages/features/jobs/src/ui/parse-image-generation-input.ts",
         "packages/features/jobs/src/ui/text-job-create-form.tsx"
@@ -2763,7 +2764,7 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/image-job-create-form.tsx",
-              "line": 17,
+              "line": 18,
               "column": 20,
               "expression": "useCreateImageJobMutation"
             }
@@ -2781,7 +2782,7 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/text-job-create-form.tsx",
-              "line": 28,
+              "line": 29,
               "column": 20,
               "expression": "useCreateJobMutation"
             }

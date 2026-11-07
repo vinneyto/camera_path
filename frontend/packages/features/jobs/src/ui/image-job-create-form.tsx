@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { useCreateImageJobMutation } from "@camera-path/actions";
 import { Button, Card, Input } from "@camera-path/ui-kit";
 import { ImageFilePreview } from "./image-file-preview";
+import { OptionalJobName } from "./optional-job-name";
 import { parseImageGenerationInput } from "./parse-image-generation-input";
 
 const JobInputEditor = dynamic(() => import("./job-input-editor"), {
@@ -48,21 +49,7 @@ export function ImageJobCreateForm() {
     <Card className="p-4 sm:p-5">
       <form onSubmit={submit} className="space-y-5">
         <fieldset disabled={busy} className="space-y-5">
-          <div className="space-y-2">
-            <label
-              htmlFor="image-job-name"
-              className="block text-sm font-medium"
-            >
-              Job name (optional)
-            </label>
-            <Input
-              id="image-job-name"
-              value={name}
-              maxLength={200}
-              placeholder="Leave blank to use the full image filename"
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
+          <OptionalJobName value={name} onChange={setName} />
           <div className="flex gap-1" role="group" aria-label="Input mode">
             <Button
               type="button"

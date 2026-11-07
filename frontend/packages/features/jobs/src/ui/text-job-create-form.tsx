@@ -4,7 +4,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { useCreateJobMutation } from "@camera-path/actions";
-import { Button, Card, Input, Textarea } from "@camera-path/ui-kit";
+import { Button, Card, Textarea } from "@camera-path/ui-kit";
+import { OptionalJobName } from "./optional-job-name";
 import { parseGenerationInput } from "./parse-generation-input";
 
 const JobInputEditor = dynamic(() => import("./job-input-editor"), {
@@ -52,24 +53,7 @@ export function TextJobCreateForm() {
     <Card className="p-4 sm:p-5">
       <form onSubmit={submit} className="space-y-5">
         <fieldset disabled={busy} className="space-y-5">
-          <div className="space-y-2">
-            <label
-              htmlFor="text-job-name"
-              className="block text-sm font-medium"
-            >
-              Job name (optional)
-            </label>
-            <Input
-              id="text-job-name"
-              value={name}
-              maxLength={200}
-              placeholder="Leave blank to use the first 5 prompt words"
-              onChange={(event) => setName(event.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              If blank, up to 5 prompt words are joined with underscores.
-            </p>
-          </div>
+          <OptionalJobName value={name} onChange={setName} />
           <div className="flex gap-1" role="group" aria-label="Input mode">
             <Button
               type="button"

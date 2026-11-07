@@ -212,6 +212,8 @@ it("opens creation from the list and queues generation", async () => {
 
 it("sends an explicit text job name outside the pipeline input", async () => {
   mount("new");
+  expect(screen.queryByLabelText("Job name (optional)")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Set name" }));
   fireEvent.change(
     screen.getByRole("textbox", { name: "Job name (optional)" }),
     { target: { value: " Hero chair " } },
@@ -263,9 +265,18 @@ it.each(["", " Hero image "])(
     fireEvent.change(screen.getByLabelText("Template"), {
       target: { value: "image" },
     });
-    fireEvent.change(screen.getByLabelText("Job name (optional)"), {
-      target: { value: name },
-    });
+    expect(screen.queryByLabelText("Job name (optional)")).toBeNull();
+    expect(
+      screen.queryByText(
+        /first 5 prompt words|full image filename|joined with underscores/i,
+      ),
+    ).toBeNull();
+    if (name) {
+      fireEvent.click(screen.getByRole("button", { name: "Set name" }));
+      fireEvent.change(screen.getByLabelText("Job name (optional)"), {
+        target: { value: name },
+      });
+    }
     fireEvent.change(screen.getByLabelText("Source image"), {
       target: {
         files: [
