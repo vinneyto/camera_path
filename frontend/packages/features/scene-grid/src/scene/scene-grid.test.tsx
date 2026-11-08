@@ -5,7 +5,6 @@ import {
   LineSegments,
   Mesh,
   MeshBasicMaterial,
-  Object3D,
   Scene,
   type WebGLRenderer,
 } from "three";
@@ -13,11 +12,12 @@ import { WebGLRenderLists } from "three/src/renderers/webgl/WebGLRenderLists.js"
 import { WebGLProperties } from "three/src/renderers/webgl/WebGLProperties.js";
 import { SparkGaussianRenderingBackend } from "@camera-path/scene-runtime/surface/adapters/spark/spark-gaussian-rendering-backend";
 import { SceneGrid } from "./scene-grid";
+import { RENDER_PIPELINE_DECORATION_LAYER } from "@camera-path/render-pipeline";
 
 const pipeline = vi.hoisted(() => ({ enabled: false }));
 
-vi.mock("@camera-path/render-pipeline", () => ({
-  RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER: 3,
+vi.mock("@camera-path/render-pipeline", async (original) => ({
+  ...(await original<typeof import("@camera-path/render-pipeline")>()),
   useOptionalRenderPipeline: () => (pipeline.enabled ? {} : null),
 }));
 
@@ -131,7 +131,7 @@ it("sorts grid, Spark and transparent helpers independently of camera distance a
   }
 });
 
-it("keeps the WebGPU pre-splat layer and grid depth settings unchanged", () => {
+it("keeps WebGPU grid depth and ordering while rendering on the non-pickable decoration layer", () => {
   pipeline.enabled = true;
   try {
     const grid = SceneGrid({
@@ -145,10 +145,11 @@ it("keeps the WebGPU pre-splat layer and grid depth settings unchanged", () => {
     expect(plane.props.children[1].props.depthWrite).toBe(true);
     expect(lines.props.children.props.depthWrite).toBe(false);
     for (const element of [plane, lines]) {
-      const object = new Object3D();
-      element.props.onUpdate(object);
-      expect(object.layers.isEnabled(3)).toBe(true);
-      expect(object.layers.isEnabled(0)).toBe(false);
+      expect(
+        element.props.layers.isEnabled(RENDER_PIPELINE_DECORATION_LAYER),
+      ).toBe(true);
+      expect(element.props.layers.isEnabled(3)).toBe(false);
+      expect(element.props.layers.isEnabled(0)).toBe(false);
     }
   } finally {
     pipeline.enabled = false;

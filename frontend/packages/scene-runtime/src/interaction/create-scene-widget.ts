@@ -2,6 +2,7 @@ import {
   HOVERABLE,
   SELECTABLE,
   RENDER_PIPELINE_OVERLAY_LAYER,
+  WIDGET_PICK_LAYER,
 } from "@camera-path/render-pipeline";
 import { Object3D, type Camera, type Material, type Scene } from "three";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
@@ -42,7 +43,13 @@ export function createSceneWidget({
   const helper = controls.getHelper();
   helper.name = `widget:${sceneObjectID}`;
   helper.traverse((object) => {
-    object.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+    // TransformControls keeps a scene-sized plane visible as an Object3D but
+    // hides its material. That plane must never enter ordinary hover/select.
+    object.layers.set(
+      "isTransformControlsPlane" in object && object.isTransformControlsPlane
+        ? WIDGET_PICK_LAYER
+        : RENDER_PIPELINE_OVERLAY_LAYER,
+    );
     object.renderOrder = WIDGET_RENDER_ORDER;
     const materials = (
       object as Object3D & { material?: Material | Material[] }
@@ -64,6 +71,7 @@ export function createSceneWidget({
   const raycaster = controls.getRaycaster();
   const previousLayers = raycaster.layers.mask;
   raycaster.layers.set(RENDER_PIPELINE_OVERLAY_LAYER);
+  raycaster.layers.enable(WIDGET_PICK_LAYER);
   controls.setSize(WIDGET_SIZE);
   scene.add(proxy, helper);
   controls.attach(proxy);

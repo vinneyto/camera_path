@@ -5,11 +5,20 @@ import {
   HOVERABLE,
   SELECTABLE,
   RENDER_PIPELINE_OVERLAY_LAYER,
+  configureInteractiveRaycasterLayers,
 } from "@camera-path/render-pipeline";
 import { createSceneWidget } from "./create-scene-widget";
 import { readWidgetTransform } from "./read-widget-transform";
 import { syncWidgetPose } from "./sync-widget-pose";
-import { Object3D } from "three";
+import {
+  Object3D,
+  Mesh,
+  BoxGeometry,
+  MeshBasicMaterial,
+  Raycaster,
+} from "three";
+import { raycastSceneAtPointer } from "./raycast-scene-at-pointer";
+import { findInteractiveSceneObject } from "./find-interactive-scene-object";
 import type { WidgetOptions } from "./widget-types";
 
 function setup(mode: WidgetOptions["mode"] = "position") {
@@ -149,3 +158,48 @@ it("converts world displacement exactly through a scaled/rotated parent and rota
   expect(rotated.position).toEqual(pose.transform.position);
   expect(rotated.scale).toEqual(pose.transform.scale);
 });
+
+it.each(["position", "rotation"] as const)(
+  "keeps empty space and another object pickable while the %s widget is idle",
+  (mode) => {
+    const { widget, scene, camera, canvas } = setup(mode);
+    const other = new Mesh(
+      new BoxGeometry(0.4, 0.4, 0.4),
+      new MeshBasicMaterial(),
+    );
+    other.position.set(1.4, 0, -1);
+    other.layers.enable(SELECTABLE);
+    other.userData.sceneObjectID = "other";
+    scene.add(other);
+    const raycaster = new Raycaster();
+    configureInteractiveRaycasterLayers(raycaster);
+    function pick(point: Vector3) {
+      const projected = point.project(camera);
+      return (
+        findInteractiveSceneObject(
+          raycastSceneAtPointer(
+            raycaster,
+            { scene, camera },
+            canvas.getBoundingClientRect(),
+            {
+              clientX: (projected.x + 1) * 200,
+              clientY: (1 - projected.y) * 200,
+            },
+          ),
+          SELECTABLE,
+        )?.userData.sceneObjectID ?? null
+      );
+    }
+    try {
+      // The invisible TransformControls plane spans the scene at z=0. Neither
+      // empty background nor a model behind that plane may select its owner.
+      expect.soft(pick(new Vector3(-1.7, -1.4, -1))).toBeNull();
+      expect(pick(other.position.clone())).toBe("other");
+    } finally {
+      widget.dispose();
+      scene.remove(other);
+      other.geometry.dispose();
+      other.material.dispose();
+    }
+  },
+);
