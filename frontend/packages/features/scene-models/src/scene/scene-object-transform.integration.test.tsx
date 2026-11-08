@@ -45,6 +45,7 @@ it("previews a parent's local transform on its descendants without reloading mod
     visible: true,
     download_url: "/same.ply",
     format: "ply",
+    library_asset_id: "shared-asset",
   } as SceneObject;
   const child = {
     ...parent,
@@ -102,6 +103,13 @@ it("previews a parent's local transform on its descendants without reloading mod
   }
   try {
     await render(null);
+    const logicalIds: string[] = [];
+    scene.traverse((object) => {
+      if (object.userData.sceneObjectID)
+        logicalIds.push(object.userData.sceneObjectID);
+    });
+    expect(logicalIds.sort()).toEqual(["child", "parent"]);
+    expect(logicalIds).not.toContain(parent.library_asset_id);
     expect(
       instances.get("child")!.getWorldPosition(new Vector3()).toArray(),
     ).toEqual([2, 0, 0]);

@@ -40,3 +40,4 @@ export { useDeleteAimTimeline as useDeleteAimTimelineMutation } from "./mutation
 
 export { useDeleteOrientationTimeline as useDeleteOrientationTimelineMutation } from "./mutations/camera-orientation/use-delete-orientation-timeline";
 export { useSceneObjectTransform } from "./mutations/scene-models/use-scene-object-transform";
+export { useSceneObjectLifecycle } from "./mutations/scene-models/use-scene-object-lifecycle";

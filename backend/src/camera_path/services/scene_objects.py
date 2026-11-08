@@ -95,7 +95,7 @@ class SceneObjectService:
             parent_id=record.parent_id,
             library_asset_id=asset.id,
             library_asset_file_id=file.id,
-            name=asset.name,
+            name=record.name,
             format=file.format,
             sort_order=record.sort_order,
             visible=record.visible,
@@ -156,6 +156,7 @@ class SceneObjectService:
                     project_id,
                     asset.id,
                     file.id,
+                    asset.name,
                     data.parent_id,
                     transform.model_dump(exclude_unset=True),
                 )

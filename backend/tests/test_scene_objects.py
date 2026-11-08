@@ -1,10 +1,11 @@
+import asyncio
 import math
 
 import pytest
 from test_job_completion import first_asset, message, process  # noqa: F401
 from test_job_completion import setup as completion_setup  # noqa: F401
 
-from camera_path.persistence.records import SceneObjectRecord
+from camera_path.persistence.records import LibraryAssetRecord, SceneObjectRecord
 
 
 @pytest.fixture
@@ -141,3 +142,57 @@ async def test_asset_delete_keeps_unselected_children_and_rolls_back_bytes(scene
     )
     assert result.status_code == 204, result.text
     assert (await client.get(url)).json() == []
+
+
+async def test_names_are_persistent_project_scoped_and_never_reused(scene):
+    app, client, asset, url = scene
+    first = (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()
+    second = (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()
+    assert [first["name"], second["name"]] == [f"{asset['name']} 01", f"{asset['name']} 02"]
+    assert first["id"] != second["id"] and first["id"] != asset["id"]
+    async with app.state.project_repository.session_factory.begin() as session:
+        source = await session.get(LibraryAssetRecord, asset["id"])
+        source.name = "Renamed library asset"
+    await mutate(client, f"{url}/{first['id']}", "PATCH", {"sort_order": 1}, 200)
+    await mutate(client, f"{url}/{second['id']}", "DELETE", expected=204)
+    # Failed creation must roll back its name allocation as well as its project revision.
+    await mutate(
+        client, url, data={"library_asset_id": asset["id"], "parent_id": "missing"}, expected=404
+    )
+    await app.state.project_repository.close()
+    third = (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()
+    assert third["name"] == "Renamed library asset 03"
+    assert [item["name"] for item in (await client.get(url)).json()] == [
+        f"{asset['name']} 01",
+        "Renamed library asset 03",
+    ]
+    other = (await client.post("/api/v1/projects", json={"name": "Other"})).json()["id"]
+    obj = (
+        await mutate(
+            client,
+            f"/api/v1/projects/{other}/scene-objects",
+            data={"library_asset_id": asset["id"]},
+        )
+    ).json()
+    assert obj["name"] == "Renamed library asset 01"
+    await mutate(client, f"{url}/{first['id']}", "DELETE", expected=204)
+    await mutate(client, f"{url}/{third['id']}", "DELETE", expected=204)
+    assert (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()[
+        "name"
+    ] == "Renamed library asset 04"
+
+
+async def test_concurrent_creations_do_not_duplicate_or_consume_names_on_conflict(scene):
+    _, client, asset, url = scene
+    revision = (await client.get(url)).headers["etag"]
+    responses = await asyncio.gather(
+        *[
+            client.post(url, json={"library_asset_id": asset["id"]}, headers={"If-Match": revision})
+            for _ in range(2)
+        ]
+    )
+    assert sorted(response.status_code for response in responses) == [201, 409]
+    assert (await client.get(url)).json()[0]["name"] == f"{asset['name']} 01"
+    assert (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()[
+        "name"
+    ] == f"{asset['name']} 02"
