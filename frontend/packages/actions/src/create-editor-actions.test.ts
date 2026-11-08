@@ -14,10 +14,12 @@ it("isolates two projects and guards against stale pointer-out clearing another 
   expect(first.getState().sceneInteraction).toEqual({
     hoveredObjectId: "anchor:b",
     selectedObjectId: "trajectory",
+    widget: "position",
   });
   expect(second.getState().sceneInteraction).toEqual({
     hoveredObjectId: null,
     selectedObjectId: null,
+    widget: "position",
   });
 });
 it("cancels pending placement when entering trajectory camera mode", () => {
@@ -33,4 +35,21 @@ it("cancels pending placement when entering trajectory camera mode", () => {
   expect(store.getState().sceneInteraction.hoveredObjectId).toBeNull();
   actions.setActiveTool(null);
   expect(store.getState().tool.pendingCloud).toBeNull();
+});
+it("switches widget mode independently and releases only the transform tool", () => {
+  const store = createEditorStore();
+  const actions = createEditorActions(store);
+  actions.selectObject({ id: "model" });
+  actions.setSceneWidget("rotation");
+  expect(store.getState().sceneInteraction).toEqual({
+    hoveredObjectId: null,
+    selectedObjectId: "model",
+    widget: "rotation",
+  });
+  actions.setActiveTool("object-transform");
+  actions.finishObjectTransform();
+  expect(store.getState().tool.activeTool).toBeNull();
+  actions.setActiveTool("anchor");
+  actions.finishObjectTransform();
+  expect(store.getState().tool.activeTool).toBe("anchor");
 });

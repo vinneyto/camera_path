@@ -113,6 +113,7 @@ it("deletes the selected trajectory once through the real API and resets playbac
   expect(store.getState().sceneInteraction).toEqual({
     hoveredObjectId: null,
     selectedObjectId: null,
+    widget: "position",
   });
   expect(store.getState().playback).toEqual({
     playing: false,

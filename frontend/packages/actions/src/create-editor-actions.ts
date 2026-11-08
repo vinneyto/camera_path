@@ -1,6 +1,10 @@
 import type { EditorStoreApi } from "@camera-path/store";
 import type { LibraryAsset } from "@camera-path/types/api";
-import type { CameraMode, EditorTool } from "@camera-path/types/editor-state";
+import type {
+  CameraMode,
+  EditorTool,
+  SceneWidgetMode,
+} from "@camera-path/types/editor-state";
 import type { SceneObjectUpdate } from "@camera-path/types/scene-object-update";
 /** Stable, ordinary Zustand actions, owned by the same project lifetime as the store. */
 export function createEditorActions(store: EditorStoreApi) {
@@ -18,6 +22,16 @@ export function createEditorActions(store: EditorStoreApi) {
       return { sceneInteraction: { ...state.sceneInteraction, [field]: id } };
     });
   return {
+    finishObjectTransform: () =>
+      store.setState((state) =>
+        state.tool.activeTool === "object-transform"
+          ? { tool: { ...state.tool, activeTool: null } }
+          : state,
+      ),
+    setSceneWidget: (widget: SceneWidgetMode) =>
+      store.setState((state) => ({
+        sceneInteraction: { ...state.sceneInteraction, widget },
+      })),
     hoverObject: (input: SceneObjectUpdate) =>
       updateObject("hoveredObjectId", input),
     selectObject: (input: SceneObjectUpdate) =>
