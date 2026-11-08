@@ -1,11 +1,12 @@
 import type {
   CameraMode,
+  CameraType,
   PlaybackState,
   ToolState,
 } from "@camera-path/types/editor-state";
 import { createStore, type StoreApi } from "zustand/vanilla";
 export interface EditorState {
-  camera: { cameraMode: CameraMode };
+  camera: { cameraMode: CameraMode; cameraType: CameraType };
   playback: PlaybackState;
   tool: ToolState;
   sceneInteraction: {
@@ -17,7 +18,7 @@ export type EditorStoreApi = StoreApi<EditorState>;
 /** A fresh store per mounted project; no module-level singleton and no actions. */
 export function createEditorStore(): EditorStoreApi {
   return createStore<EditorState>(() => ({
-    camera: { cameraMode: "orbit" },
+    camera: { cameraMode: "orbit", cameraType: "orbit" },
     playback: { elapsed: 0, pathPosition: 0, playing: false },
     tool: { activeTool: null, pendingCloud: null },
     sceneInteraction: { hoveredObjectId: null, selectedObjectId: null },

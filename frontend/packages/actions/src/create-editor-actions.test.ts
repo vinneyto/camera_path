@@ -34,3 +34,17 @@ it("cancels pending placement when entering trajectory camera mode", () => {
   actions.setActiveTool(null);
   expect(store.getState().tool.pendingCloud).toBeNull();
 });
+it("preserves the selected navigation type when placing a cloud or changing view mode", () => {
+  const store = createEditorStore();
+  const actions = createEditorActions(store);
+  actions.setCameraType("freeFlight");
+  actions.startCloudPlacement({ id: "asset" } as LibraryAsset);
+  expect(store.getState().camera).toEqual({
+    cameraMode: "orbit",
+    cameraType: "freeFlight",
+  });
+  actions.setCameraMode("trajectory");
+  actions.setCameraMode("orbit");
+  expect(store.getState().camera.cameraType).toBe("freeFlight");
+  expect(createEditorStore().getState().camera.cameraType).toBe("orbit");
+});

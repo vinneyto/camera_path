@@ -2,6 +2,7 @@ import type { LibraryAsset } from "./api";
 import type { PathPosition } from "./path-position";
 export type EditorTool = "anchor" | "anchor-height" | "cloud";
 export type CameraMode = "orbit" | "trajectory";
+export type CameraType = "orbit" | "freeFlight";
 export interface ToolState {
   readonly activeTool: EditorTool | null;
   readonly pendingCloud: LibraryAsset | null;

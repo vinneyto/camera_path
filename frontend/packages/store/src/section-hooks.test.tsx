@@ -14,7 +14,7 @@ it.each([
   {
     section: "camera" as const,
     hook: useCameraState,
-    next: { cameraMode: "trajectory" as const },
+    next: { cameraMode: "trajectory" as const, cameraType: "orbit" as const },
   },
   {
     section: "playback" as const,
@@ -51,7 +51,12 @@ it.each([
     const before = reads.mock.calls.length;
     const unrelated =
       section === "tool"
-        ? { camera: { cameraMode: "trajectory" as const } }
+        ? {
+            camera: {
+              cameraMode: "trajectory" as const,
+              cameraType: "orbit" as const,
+            },
+          }
         : { tool: { activeTool: "anchor" as const, pendingCloud: null } };
     act(() => store.setState(unrelated));
     expect(reads).toHaveBeenCalledTimes(before);
