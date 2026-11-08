@@ -1,6 +1,10 @@
 import type { EditorStoreApi } from "@camera-path/store";
 import type { LibraryAsset } from "@camera-path/types/api";
-import type { CameraMode, EditorTool } from "@camera-path/types/editor-state";
+import type {
+  CameraMode,
+  CameraType,
+  EditorTool,
+} from "@camera-path/types/editor-state";
 import type { SceneObjectUpdate } from "@camera-path/types/scene-object-update";
 /** Stable, ordinary Zustand actions, owned by the same project lifetime as the store. */
 export function createEditorActions(store: EditorStoreApi) {
@@ -24,7 +28,7 @@ export function createEditorActions(store: EditorStoreApi) {
       updateObject("selectedObjectId", input),
     setCameraMode: (cameraMode: CameraMode) =>
       store.setState((state) => ({
-        camera: { cameraMode },
+        camera: { ...state.camera, cameraMode },
         ...(cameraMode === "trajectory"
           ? {
               tool: { activeTool: null, pendingCloud: null },
@@ -35,6 +39,10 @@ export function createEditorActions(store: EditorStoreApi) {
             }
           : {}),
       })),
+    setCameraType: (cameraType: CameraType) =>
+      store.setState((state) => ({
+        camera: { ...state.camera, cameraType, cameraMode: "orbit" },
+      })),
     setActiveTool: (activeTool: EditorTool | null) =>
       store.setState((state) => ({
         tool: {
@@ -44,7 +52,7 @@ export function createEditorActions(store: EditorStoreApi) {
       })),
     startCloudPlacement: (asset: LibraryAsset) =>
       store.setState((state) => ({
-        camera: { cameraMode: "orbit" },
+        camera: { ...state.camera, cameraMode: "orbit" },
         tool: { activeTool: "cloud", pendingCloud: { ...asset } },
         sceneInteraction: { ...state.sceneInteraction, hoveredObjectId: null },
       })),

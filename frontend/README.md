@@ -101,6 +101,18 @@ Click the Gaussian cloud to create a labeled path anchor. Insert the resulting a
 chat, ask the agent to build a spline or spiral, then click the rendered trajectory to open its
 speed and camera-aim panels. Playback uses the compiled speed profile and camera direction track.
 
+### Navigation cameras
+
+The viewport toolbar offers mutually exclusive **OrbitControl** and **FreeFlight** buttons
+beside **Camera view**. OrbitControl remains the default. Camera view temporarily follows
+the trajectory; returning restores the selected navigation type.
+
+In FreeFlight, click the scene to focus it, then use **W/S** or **Up/Down** to fly along the
+camera's forward axis and **A/D** or **Left/Right** to strafe along its right axis. The wheel
+also moves forward/backward. Hold the **right mouse button** and drag to look around with
+yaw and pitch, without roll. The camera uses a fixed 50° field of view and 0.01–100 m clipping
+range. Movement pauses while an editing tool is active and stops when the scene loses focus.
+
 ### Gaussian backend and file formats
 
 The `3dgs-tile-webgpu` dependency pinned in [package.json](package.json) uses a Rust/WASM
