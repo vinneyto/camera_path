@@ -106,6 +106,7 @@ describe("useClearTrajectory", () => {
     expect(store.getState().sceneInteraction).toEqual({
       hoveredObjectId: null,
       selectedObjectId: null,
+      widget: "position",
     });
     expect(store.getState().playback).toEqual({
       pathPosition: 0,

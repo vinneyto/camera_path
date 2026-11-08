@@ -39,3 +39,4 @@ export { useDeleteSpeedTimeline as useDeleteSpeedTimelineMutation } from "./muta
 export { useDeleteAimTimeline as useDeleteAimTimelineMutation } from "./mutations/camera-aim/use-delete-aim-timeline";
 
 export { useDeleteOrientationTimeline as useDeleteOrientationTimelineMutation } from "./mutations/camera-orientation/use-delete-orientation-timeline";
+export { useSceneObjectTransform } from "./mutations/scene-models/use-scene-object-transform";

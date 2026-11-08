@@ -37,6 +37,7 @@
         "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
         "packages/actions/src/mutations/projects/use-create-project.ts",
         "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
+        "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
         "packages/actions/src/mutations/speed-track/use-delete-speed-timeline.ts",
         "packages/actions/src/use-cloud-placement.ts",
         "packages/actions/src/use-seek-playback.ts",
@@ -134,12 +135,120 @@
           ]
         },
         {
+          "name": "begin",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 30,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 76,
+              "column": 37,
+              "expression": "begin"
+            }
+          ]
+        },
+        {
+          "name": "cancel",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 41,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 76,
+              "column": 60,
+              "expression": "cancel"
+            }
+          ]
+        },
+        {
+          "name": "change",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 37,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 76,
+              "column": 44,
+              "expression": "change"
+            }
+          ]
+        },
+        {
+          "name": "commit",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 47,
+            "column": 3
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 76,
+              "column": 52,
+              "expression": "commit"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.finishObjectTransform",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 25,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 26,
+              "column": 35,
+              "expression": "finishObjectTransform"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 28,
+              "column": 6,
+              "expression": "finishObjectTransform"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 45,
+              "column": 5,
+              "expression": "finishObjectTransform"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 53,
+              "column": 5,
+              "expression": "finishObjectTransform"
+            }
+          ]
+        },
+        {
           "name": "createEditorActions.hoverObject",
           "kind": "action",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 21,
+            "line": 35,
             "column": 5
           },
           "usages": [
@@ -163,7 +272,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 51,
+            "line": 65,
             "column": 5
           },
           "usages": [
@@ -181,7 +290,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 23,
+            "line": 37,
             "column": 5
           },
           "usages": [
@@ -211,10 +320,16 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 38,
+            "line": 52,
             "column": 5
           },
           "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 35,
+              "column": 5,
+              "expression": "setActiveTool"
+            },
             {
               "file": "packages/actions/src/use-cloud-placement.ts",
               "line": 10,
@@ -235,7 +350,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 25,
+            "line": 39,
             "column": 5
           },
           "usages": [
@@ -253,7 +368,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 55,
+            "line": 69,
             "column": 5
           },
           "usages": [
@@ -271,7 +386,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 45,
+            "line": 59,
             "column": 5
           },
           "usages": [
@@ -452,6 +567,96 @@
           ]
         },
         {
+          "name": "setError",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 21,
+            "column": 17
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 33,
+              "column": 5,
+              "expression": "setError"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 65,
+              "column": 11,
+              "expression": "setError"
+            }
+          ]
+        },
+        {
+          "name": "setPending",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 20,
+            "column": 19
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 51,
+              "column": 5,
+              "expression": "setPending"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 73,
+              "column": 9,
+              "expression": "setPending"
+            }
+          ]
+        },
+        {
+          "name": "setPreview",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 17,
+            "column": 19
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 34,
+              "column": 5,
+              "expression": "setPreview"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 39,
+              "column": 7,
+              "expression": "setPreview"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 44,
+              "column": 5,
+              "expression": "setPreview"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 52,
+              "column": 5,
+              "expression": "setPreview"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 72,
+              "column": 9,
+              "expression": "setPreview"
+            }
+          ]
+        },
+        {
           "name": "status",
           "kind": "action",
           "package": "@camera-path/actions",
@@ -499,19 +704,19 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 7,
+            "line": 11,
             "column": 9
           },
           "usages": [
             {
               "file": "packages/actions/src/create-editor-actions.ts",
-              "line": 22,
+              "line": 36,
               "column": 7,
               "expression": "updateObject"
             },
             {
               "file": "packages/actions/src/create-editor-actions.ts",
-              "line": 24,
+              "line": 38,
               "column": 7,
               "expression": "updateObject"
             }
@@ -546,6 +751,12 @@
               "expression": "useEditorActions"
             },
             {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 15,
+              "column": 52,
+              "expression": "useEditorActions"
+            },
+            {
               "file": "packages/actions/src/use-cloud-placement.ts",
               "line": 6,
               "column": 19,
@@ -562,6 +773,24 @@
               "line": 4,
               "column": 10,
               "expression": "useEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "useSceneObjectActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
+            "line": 19,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+              "line": 14,
+              "column": 20,
+              "expression": "useSceneObjectActions"
             }
           ]
         }
@@ -1399,7 +1628,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 21,
+            "line": 35,
             "column": 5
           },
           "usages": [
@@ -1429,7 +1658,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 23,
+            "line": 37,
             "column": 5
           },
           "usages": [
@@ -2058,7 +2287,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 25,
+            "line": 39,
             "column": 5
           },
           "usages": [
@@ -3223,7 +3452,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 51,
+            "line": 65,
             "column": 5
           },
           "usages": [
@@ -3265,7 +3494,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 23,
+            "line": 37,
             "column": 5
           },
           "usages": [
@@ -3289,7 +3518,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 55,
+            "line": 69,
             "column": 5
           },
           "usages": [
@@ -3337,7 +3566,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 65,
+            "line": 79,
             "column": 5
           },
           "usages": [
@@ -3890,7 +4119,8 @@
         "packages/features/scene-models/src/scene/transform-scene-object-bounds.ts",
         "packages/features/scene-models/src/scene/use-cloud-placement-interaction.ts",
         "packages/features/scene-models/src/scene/use-cloud-placement-raycast.ts",
-        "packages/features/scene-models/src/ui/hint.tsx"
+        "packages/features/scene-models/src/ui/hint.tsx",
+        "packages/features/scene-models/src/ui/transform-toolbar.tsx"
       ],
       "slots": {
         "project": {
@@ -3898,7 +4128,7 @@
             {
               "name": "SceneModels",
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 29,
+              "line": 32,
               "column": 1
             }
           ],
@@ -3907,6 +4137,14 @@
               "name": "CloudPlacementHint",
               "file": "packages/features/scene-models/src/ui/hint.tsx",
               "line": 6,
+              "column": 1
+            }
+          ],
+          "toolbar": [
+            {
+              "name": "TransformToolbar",
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 12,
               "column": 1
             }
           ],
@@ -3927,6 +4165,30 @@
         }
       },
       "actions": [
+        {
+          "name": "createEditorActions.setSceneWidget",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 31,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 27,
+              "column": 24,
+              "expression": "setSceneWidget"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 38,
+              "column": 24,
+              "expression": "setSceneWidget"
+            }
+          ]
+        },
         {
           "name": "useCloudPlacement.cancel",
           "kind": "action",
@@ -3988,6 +4250,24 @@
           ]
         },
         {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 17,
+              "column": 30,
+              "expression": "useEditorActions"
+            }
+          ]
+        },
+        {
           "name": "useSceneObjectActionMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
@@ -4005,9 +4285,27 @@
             },
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 38,
+              "line": 41,
               "column": 18,
               "expression": "useSceneObjectActionMutation"
+            }
+          ]
+        },
+        {
+          "name": "useSceneObjectTransform",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
+            "line": 11,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/scene/scene.tsx",
+              "line": 42,
+              "column": 21,
+              "expression": "useSceneObjectTransform"
             }
           ]
         }
@@ -4037,7 +4335,7 @@
             },
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 32,
+              "line": 35,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -4045,6 +4343,12 @@
               "file": "packages/features/scene-models/src/ui/hint.tsx",
               "line": 9,
               "column": 19,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 13,
+              "column": 23,
               "expression": "useAuth()"
             }
           ]
@@ -4085,7 +4389,7 @@
             },
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 30,
+              "line": 33,
               "column": 17,
               "expression": "useSceneModels()"
             }
@@ -4104,7 +4408,7 @@
           "usages": [
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 33,
+              "line": 36,
               "column": 16,
               "expression": "useCameraState()"
             },
@@ -4112,6 +4416,12 @@
               "file": "packages/features/scene-models/src/ui/hint.tsx",
               "line": 8,
               "column": 16,
+              "expression": "useCameraState()"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 15,
+              "column": 26,
               "expression": "useCameraState()"
             }
           ]
@@ -4129,7 +4439,7 @@
           "usages": [
             {
               "file": "packages/features/scene-models/src/scene/scene.tsx",
-              "line": 34,
+              "line": 37,
               "column": 16,
               "expression": "useEditorTool()"
             },
@@ -4137,6 +4447,12 @@
               "file": "packages/features/scene-models/src/ui/hint.tsx",
               "line": 7,
               "column": 16,
+              "expression": "useEditorTool()"
+            },
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 16,
+              "column": 26,
               "expression": "useEditorTool()"
             }
           ]
@@ -4157,6 +4473,25 @@
               "line": 11,
               "column": 21,
               "expression": "useProjectId()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/ui/transform-toolbar.tsx",
+              "line": 14,
+              "column": 22,
+              "expression": "useSceneInteraction()"
             }
           ]
         }
@@ -4640,7 +4975,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 21,
+            "line": 35,
             "column": 5
           },
           "usages": [
@@ -4664,7 +4999,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 23,
+            "line": 37,
             "column": 5
           },
           "usages": [
@@ -4700,7 +5035,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 6,
+            "line": 10,
             "column": 1
           },
           "usages": [
@@ -5107,12 +5442,19 @@
       "entrypoint": null,
       "files": [
         "packages/scene-runtime/src/interaction/constants.ts",
+        "packages/scene-runtime/src/interaction/create-scene-widget.ts",
         "packages/scene-runtime/src/interaction/find-hovered-scene-object.ts",
         "packages/scene-runtime/src/interaction/find-interactive-scene-object.ts",
+        "packages/scene-runtime/src/interaction/has-transform-change.ts",
         "packages/scene-runtime/src/interaction/raycast-scene-at-pointer.ts",
+        "packages/scene-runtime/src/interaction/read-widget-transform.ts",
         "packages/scene-runtime/src/interaction/scene-hover.tsx",
+        "packages/scene-runtime/src/interaction/scene-object-interactor.tsx",
         "packages/scene-runtime/src/interaction/scene-object.tsx",
         "packages/scene-runtime/src/interaction/scene-select.tsx",
+        "packages/scene-runtime/src/interaction/sync-widget-pose.ts",
+        "packages/scene-runtime/src/interaction/widget-types.ts",
+        "packages/scene-runtime/src/interaction/widgets.tsx",
         "packages/scene-runtime/src/picking/raycast-placement-surfaces.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/constants.ts",
         "packages/scene-runtime/src/surface/adapters/3dgs-tile-webgpu/create-cloud-interaction-color-node.ts",
@@ -5186,6 +5528,12 @@
           "statePaths": [],
           "usages": [
             {
+              "file": "packages/scene-runtime/src/interaction/widgets.tsx",
+              "line": 21,
+              "column": 17,
+              "expression": "useEditorStoreApi()"
+            },
+            {
               "file": "packages/scene-runtime/src/viewport/trajectory-pose-provider.tsx",
               "line": 28,
               "column": 17,
@@ -5205,6 +5553,12 @@
           "statePaths": ["sceneInteraction"],
           "usages": [
             {
+              "file": "packages/scene-runtime/src/interaction/scene-object-interactor.tsx",
+              "line": 34,
+              "column": 22,
+              "expression": "useSceneInteraction()"
+            },
+            {
               "file": "packages/scene-runtime/src/interaction/scene-object.tsx",
               "line": 23,
               "column": 49,
@@ -5218,11 +5572,33 @@
           "package": "@camera-path/store",
           "definition": {
             "file": "packages/store/src/editor-store.ts",
-            "line": 7,
+            "line": 8,
             "column": 1
           },
-          "statePaths": ["playback.pathPosition"],
+          "statePaths": [
+            "camera.cameraMode",
+            "playback.pathPosition",
+            "tool.activeTool"
+          ],
           "usages": [
+            {
+              "file": "packages/scene-runtime/src/interaction/widgets.tsx",
+              "line": 42,
+              "column": 11,
+              "expression": "camera.cameraMode"
+            },
+            {
+              "file": "packages/scene-runtime/src/interaction/widgets.tsx",
+              "line": 43,
+              "column": 12,
+              "expression": "tool.activeTool"
+            },
+            {
+              "file": "packages/scene-runtime/src/interaction/widgets.tsx",
+              "line": 43,
+              "column": 40,
+              "expression": "tool.activeTool"
+            },
             {
               "file": "packages/scene-runtime/src/viewport/trajectory-pose-provider.tsx",
               "line": 37,
@@ -5388,6 +5764,7 @@
         "packages/types/src/path-position.ts",
         "packages/types/src/project.ts",
         "packages/types/src/scene-object-id.ts",
+        "packages/types/src/scene-object-transform.ts",
         "packages/types/src/scene-object-update.ts",
         "packages/types/src/timeline-track.ts",
         "packages/types/src/timeline-views.ts",

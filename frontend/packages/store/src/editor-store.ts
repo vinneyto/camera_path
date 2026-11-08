@@ -2,6 +2,7 @@ import type {
   CameraMode,
   PlaybackState,
   ToolState,
+  SceneWidgetMode,
 } from "@camera-path/types/editor-state";
 import { createStore, type StoreApi } from "zustand/vanilla";
 export interface EditorState {
@@ -11,6 +12,7 @@ export interface EditorState {
   sceneInteraction: {
     hoveredObjectId: string | null;
     selectedObjectId: string | null;
+    widget: SceneWidgetMode;
   };
 }
 export type EditorStoreApi = StoreApi<EditorState>;
@@ -20,6 +22,10 @@ export function createEditorStore(): EditorStoreApi {
     camera: { cameraMode: "orbit" },
     playback: { elapsed: 0, pathPosition: 0, playing: false },
     tool: { activeTool: null, pendingCloud: null },
-    sceneInteraction: { hoveredObjectId: null, selectedObjectId: null },
+    sceneInteraction: {
+      hoveredObjectId: null,
+      selectedObjectId: null,
+      widget: "position",
+    },
   }));
 }

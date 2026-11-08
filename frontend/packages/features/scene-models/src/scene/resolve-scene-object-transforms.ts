@@ -3,6 +3,7 @@ import type { SceneObject } from "@camera-path/types/api";
 
 export interface ResolvedSceneObjectTransform {
   matrix: Matrix4;
+  rotation: Quaternion;
   visible: boolean;
 }
 
@@ -34,6 +35,12 @@ export function resolveSceneObjectTransforms(objects: readonly SceneObject[]) {
       );
       resolved.set(entry.id, {
         matrix: parent ? parent.matrix.clone().multiply(local) : local,
+        rotation: parent
+          ? parent.rotation
+              .clone()
+              .multiply(new Quaternion(...entry.quaternion))
+              .normalize()
+          : new Quaternion(...entry.quaternion).normalize(),
         visible: entry.visible && (parent?.visible ?? true),
       });
     }

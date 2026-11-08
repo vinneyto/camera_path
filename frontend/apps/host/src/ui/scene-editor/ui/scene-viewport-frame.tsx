@@ -34,7 +34,7 @@ export function SceneViewportFrame({
         )}
         {available && (
           <div
-            className="absolute right-3 top-3"
+            className="absolute right-3 top-3 flex items-center gap-2"
             style={{ zIndex: FLOATING_UI_Z_INDEX_MIN }}
           >
             <Slot name="project.toolbar" />

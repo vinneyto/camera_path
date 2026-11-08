@@ -12,6 +12,8 @@ import {
   DEPTH_OF_FIELD_AUTOFOCUS_LAYER,
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
+  RENDER_PIPELINE_DECORATION_LAYER,
+  WIDGET_PICK_LAYER,
 } from "@camera-path/render-pipeline";
 import { configureWebGlViewport } from "./configure-webgl-viewport";
 
@@ -24,6 +26,7 @@ it("renders overlays and the grid alongside the scene, without exposing autofocu
     0,
     RENDER_PIPELINE_OVERLAY_LAYER,
     RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
+    RENDER_PIPELINE_DECORATION_LAYER,
   ]) {
     object.layers.set(layer);
     expect(camera.layers.test(object.layers)).toBe(true);
@@ -32,7 +35,7 @@ it("renders overlays and the grid alongside the scene, without exposing autofocu
   expect(camera.layers.test(object.layers)).toBe(false);
 });
 
-it("picks trajectory overlays and the grid while ignoring autofocus-only geometry", () => {
+it("picks scene/overlay surfaces while excluding decoration and private working geometry", () => {
   const camera = new PerspectiveCamera();
   const raycaster = new Raycaster();
   const geometry = new BoxGeometry(1, 1, 1);
@@ -51,8 +54,14 @@ it("picks trajectory overlays and the grid while ignoring autofocus-only geometr
       object.layers.set(layer);
       expect(raycaster.intersectObject(object).length).toBeGreaterThan(0);
     }
-    object.layers.set(DEPTH_OF_FIELD_AUTOFOCUS_LAYER);
-    expect(raycaster.intersectObject(object)).toEqual([]);
+    for (const layer of [
+      DEPTH_OF_FIELD_AUTOFOCUS_LAYER,
+      RENDER_PIPELINE_DECORATION_LAYER,
+      WIDGET_PICK_LAYER,
+    ]) {
+      object.layers.set(layer);
+      expect(raycaster.intersectObject(object)).toEqual([]);
+    }
   } finally {
     geometry.dispose();
     material.dispose();
