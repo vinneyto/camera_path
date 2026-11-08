@@ -50,7 +50,7 @@ export interface GaussianHighlightVolumeInstance {
 export interface GaussianCloudInstance {
   readonly bounds: SceneSurfaceBounds | null;
   readonly object: Object3D;
-  setHovered(hovered: boolean): void;
+  setInteractionState(hovered: boolean, selected: boolean): void;
   dispose(): void;
   getHit(intersection: Intersection<Object3D>, ray: Ray): SceneSurfaceHit;
 }

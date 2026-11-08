@@ -17,7 +17,6 @@ export function SceneViewport(props: SceneViewportProps) {
         <Canvas
           events={createRenderPipelineEvents}
           onCreated={configureWebGlViewport}
-          onPointerMissed={props.onScenePointerMissed}
           camera={{ far: 100, fov: 42, near: 0.01, position: [4, 3, 6] }}
           dpr={[1, 2]}
           gl={{ antialias: false }}

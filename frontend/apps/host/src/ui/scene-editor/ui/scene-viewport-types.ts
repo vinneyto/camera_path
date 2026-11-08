@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 export interface SceneViewportProps {
   bottomOverlayHeight?: number;
   onScenePointerLeave?: () => void;
-  onScenePointerMissed?: () => void;
 }
 export interface SceneViewportRenderContext {
   background: SceneSurfaceBackground;

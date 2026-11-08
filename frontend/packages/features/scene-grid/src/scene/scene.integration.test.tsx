@@ -1,7 +1,11 @@
 // @vitest-environment happy-dom
 import { createEditorActions } from "@camera-path/actions";
-import { configureInteractiveRaycasterLayers } from "@camera-path/render-pipeline";
+import {
+  configureInteractiveRaycasterLayers,
+  SELECTABLE,
+} from "@camera-path/render-pipeline";
 import { findHoveredSceneObject } from "@camera-path/scene-runtime/interaction/find-hovered-scene-object";
+import { findInteractiveSceneObject } from "@camera-path/scene-runtime/interaction/find-interactive-scene-object";
 import { SceneObject } from "@camera-path/scene-runtime/interaction/scene-object";
 import { raycastPlacementSurfaces } from "@camera-path/scene-runtime/picking/raycast-placement-surfaces";
 import {
@@ -106,6 +110,10 @@ it("lets rays reach a seat below the grid, enabling the grid only for placement"
     expect(
       findHoveredSceneObject(intersections())?.userData.sceneObjectID,
     ).toBe("chair");
+    expect(
+      findInteractiveSceneObject(intersections(), SELECTABLE)?.userData
+        .sceneObjectID,
+    ).toBe("chair");
     expect(raycastPlacementSurfaces(scene, raycaster)).toBeNull();
     for (const tool of ["anchor", "cloud"] as const) {
       await act(async () => actions.setActiveTool(tool));
@@ -118,6 +126,10 @@ it("lets rays reach a seat below the grid, enabling the grid only for placement"
       await act(async () => actions.setActiveTool(null));
       expect(
         findHoveredSceneObject(intersections())?.userData.sceneObjectID,
+      ).toBe("chair");
+      expect(
+        findInteractiveSceneObject(intersections(), SELECTABLE)?.userData
+          .sceneObjectID,
       ).toBe("chair");
       expect(raycastPlacementSurfaces(scene, raycaster)).toBeNull();
     }

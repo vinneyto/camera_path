@@ -43,6 +43,7 @@ export interface SceneSurfaceProps extends Omit<
   onSurfacePointerUp?: SceneSurfacePointerHandler;
   /** Lighten this cloud only, without changing its source or transform. */
   hovered?: boolean;
+  selected?: boolean;
   /** Controls R3F pointer events; the object remains available to scene raycasts. */
   raycastable?: boolean;
   /** Preload and report readiness without attaching the same Object3D twice. */

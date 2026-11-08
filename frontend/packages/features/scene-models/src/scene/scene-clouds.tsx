@@ -78,6 +78,7 @@ export function SceneClouds({
       worldMatrix={transforms.get(cloud.id)!.matrix}
       effectiveVisible={transforms.get(cloud.id)!.visible}
       hoverable={!preview}
+      selectable={!preview}
       resourceKey={resourceKey}
       raycastable={!preview && transforms.get(cloud.id)!.visible && interactive}
       onReady={preview ? undefined : (surface) => onReady(cloud.id, surface)}

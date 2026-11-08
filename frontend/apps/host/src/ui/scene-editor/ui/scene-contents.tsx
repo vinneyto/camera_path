@@ -18,6 +18,7 @@ import { useThree } from "@react-three/fiber";
 import { useState } from "react";
 import { frameSurface } from "./frame-surface";
 import { SceneHoverEffect } from "./scene-hover-effect";
+import { SceneSelectEffect } from "./scene-select-effect";
 import {
   SCENE_DIRECTIONAL_LIGHT_POSITION,
   SCENE_SHADOW_MAP_SIZE,
@@ -92,6 +93,7 @@ export function SceneContents({
       >
         <TrajectoryPoseProvider trajectory={trajectory}>
           <SceneHoverEffect />
+          <SceneSelectEffect />
           <Slot name="project.scene" />
           <ambientLight intensity={lighting.ambient} />
           <directionalLight

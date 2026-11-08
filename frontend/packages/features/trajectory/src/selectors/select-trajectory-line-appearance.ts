@@ -20,8 +20,8 @@ export function selectTrajectoryLineAppearance({
   let color: string = dark
     ? TRAJECTORY_LINE_COLORS.dark
     : TRAJECTORY_LINE_COLORS.light;
-  if (selected) color = TRAJECTORY_LINE_COLORS.selected;
   if (hovered) color = TRAJECTORY_LINE_COLORS.hovered;
+  if (selected) color = TRAJECTORY_LINE_COLORS.selected;
 
   return {
     color,

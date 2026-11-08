@@ -17,7 +17,10 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
     cloud: GaussianCloud,
     bounds: readonly [number, number, number, number, number, number],
     private readonly onDispose: () => void,
-    private readonly onHovered: (hovered: boolean) => void = () => undefined,
+    private readonly onInteractionState: (
+      hovered: boolean,
+      selected: boolean,
+    ) => void = () => undefined,
   ) {
     this.object = cloud;
     cloud.updateWorldMatrix(true, false);
@@ -34,13 +37,13 @@ export class TileGaussianCloudInstance implements GaussianCloudInstance {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    this.onHovered(false);
+    this.onInteractionState(false, false);
     this.object.dispose();
     this.onDispose();
   }
 
-  setHovered(hovered: boolean): void {
-    if (!this.disposed) this.onHovered(hovered);
+  setInteractionState(hovered: boolean, selected: boolean): void {
+    if (!this.disposed) this.onInteractionState(hovered, selected);
   }
 
   getHit(intersection: Intersection<Object3D>, ray: Ray): SceneSurfaceHit {

@@ -1,6 +1,6 @@
 export const TRAJECTORY_LINE_COLORS = {
   hovered: "#fb923c",
-  selected: "#f97316",
+  selected: "#fdba74",
   dark: "#e5e7eb",
   light: "#171717",
 } as const;

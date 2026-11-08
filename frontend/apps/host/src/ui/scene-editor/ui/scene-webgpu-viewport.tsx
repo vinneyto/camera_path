@@ -13,7 +13,6 @@ export function SceneWebGpuViewport(props: SceneViewportProps) {
       unavailableMessage="WebGPU is unavailable in this browser"
       renderScene={(context) => (
         <RenderPipelineCanvas
-          onPointerMissed={props.onScenePointerMissed}
           camera={{ far: 100, fov: 42, near: 0.01, position: [4, 3, 6] }}
           dpr={[1, 2]}
           flat
