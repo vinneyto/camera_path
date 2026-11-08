@@ -64,8 +64,18 @@ class SceneObjectRepository:
         transform: dict,
     ) -> SceneObjectRecord:
         objects = await self._list(session, project_id)
+        # Allocate in the same transaction as creation. Deletion/reordering never rewinds it.
+        number = await session.scalar(
+            update(ProjectRecord)
+            .where(ProjectRecord.id == project_id)
+            .values(scene_object_sequence=ProjectRecord.scene_object_sequence + 1)
+            .returning(ProjectRecord.scene_object_sequence)
+        )
+        if number is None:
+            raise ProjectNotFoundError(project_id)
         record = SceneObjectRecord(
             id=str(uuid4()),
+            name=f"Gaussians {number:02d}",
             project_id=project_id,
             library_asset_id=asset_id,
             library_asset_file_id=file_id,

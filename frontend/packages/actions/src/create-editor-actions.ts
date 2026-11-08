@@ -22,6 +22,26 @@ export function createEditorActions(store: EditorStoreApi) {
       return { sceneInteraction: { ...state.sceneInteraction, [field]: id } };
     });
   return {
+    clearRemovedSceneObjects: (ids: readonly string[]) => {
+      const removed = new Set(ids);
+      store.setState((state) => {
+        const interaction = state.sceneInteraction;
+        const clearHover =
+          interaction.hoveredObjectId !== null &&
+          removed.has(interaction.hoveredObjectId);
+        const clearSelection =
+          interaction.selectedObjectId !== null &&
+          removed.has(interaction.selectedObjectId);
+        if (!clearHover && !clearSelection) return state;
+        return {
+          sceneInteraction: {
+            ...interaction,
+            ...(clearHover ? { hoveredObjectId: null } : {}),
+            ...(clearSelection ? { selectedObjectId: null } : {}),
+          },
+        };
+      });
+    },
     finishObjectTransform: () =>
       store.setState((state) =>
         state.tool.activeTool === "object-transform"

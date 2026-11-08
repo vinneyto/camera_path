@@ -37,6 +37,7 @@
         "packages/actions/src/mutations/lidar/use-lidar-timeline.ts",
         "packages/actions/src/mutations/projects/use-create-project.ts",
         "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
+        "packages/actions/src/mutations/scene-models/use-scene-object-lifecycle.ts",
         "packages/actions/src/mutations/scene-models/use-scene-object-transform.ts",
         "packages/actions/src/mutations/speed-track/use-delete-speed-timeline.ts",
         "packages/actions/src/use-cloud-placement.ts",
@@ -207,12 +208,36 @@
           ]
         },
         {
-          "name": "createEditorActions.finishObjectTransform",
+          "name": "createEditorActions.clearRemovedSceneObjects",
           "kind": "action",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
             "line": 25,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
+              "line": 39,
+              "column": 9,
+              "expression": "actions.clearRemovedSceneObjects"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-lifecycle.ts",
+              "line": 15,
+              "column": 7,
+              "expression": "actions.clearRemovedSceneObjects"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.finishObjectTransform",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 45,
             "column": 5
           },
           "usages": [
@@ -248,7 +273,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 35,
+            "line": 55,
             "column": 5
           },
           "usages": [
@@ -272,7 +297,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 65,
+            "line": 85,
             "column": 5
           },
           "usages": [
@@ -290,7 +315,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 37,
+            "line": 57,
             "column": 5
           },
           "usages": [
@@ -320,7 +345,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 52,
+            "line": 72,
             "column": 5
           },
           "usages": [
@@ -350,7 +375,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 39,
+            "line": 59,
             "column": 5
           },
           "usages": [
@@ -368,7 +393,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 69,
+            "line": 89,
             "column": 5
           },
           "usages": [
@@ -386,7 +411,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 59,
+            "line": 79,
             "column": 5
           },
           "usages": [
@@ -710,13 +735,13 @@
           "usages": [
             {
               "file": "packages/actions/src/create-editor-actions.ts",
-              "line": 36,
+              "line": 56,
               "column": 7,
               "expression": "updateObject"
             },
             {
               "file": "packages/actions/src/create-editor-actions.ts",
-              "line": 38,
+              "line": 58,
               "column": 7,
               "expression": "updateObject"
             }
@@ -747,6 +772,18 @@
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
               "line": 19,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
+              "line": 23,
+              "column": 19,
+              "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-lifecycle.ts",
+              "line": 9,
               "column": 19,
               "expression": "useEditorActions"
             },
@@ -782,7 +819,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
-            "line": 19,
+            "line": 20,
             "column": 1
           },
           "usages": [
@@ -811,6 +848,24 @@
               "line": 9,
               "column": 17,
               "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneModels",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-scene-models.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/scene-models/use-scene-object-lifecycle.ts",
+              "line": 8,
+              "column": 31,
+              "expression": "useSceneModels()"
             }
           ]
         },
@@ -954,7 +1009,7 @@
             },
             {
               "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
-              "line": 20,
+              "line": 21,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             },
@@ -1628,7 +1683,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 35,
+            "line": 55,
             "column": 5
           },
           "usages": [
@@ -1658,7 +1713,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 37,
+            "line": 57,
             "column": 5
           },
           "usages": [
@@ -2287,7 +2342,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 39,
+            "line": 59,
             "column": 5
           },
           "usages": [
@@ -3452,7 +3507,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 65,
+            "line": 85,
             "column": 5
           },
           "usages": [
@@ -3494,7 +3549,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 37,
+            "line": 57,
             "column": 5
           },
           "usages": [
@@ -3518,7 +3573,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 69,
+            "line": 89,
             "column": 5
           },
           "usages": [
@@ -3566,7 +3621,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 79,
+            "line": 99,
             "column": 5
           },
           "usages": [
@@ -4109,6 +4164,7 @@
         "packages/features/scene-models/src/lib/merge-surface-bounds.ts",
         "packages/features/scene-models/src/lib/resolve-initial-scene-bounds.ts",
         "packages/features/scene-models/src/lib/update-loading-ring-angle.ts",
+        "packages/features/scene-models/src/model/scene-object-lifecycle-effect.tsx",
         "packages/features/scene-models/src/scene/cloud-loading-ring.tsx",
         "packages/features/scene-models/src/scene/cloud-scene-object.tsx",
         "packages/features/scene-models/src/scene/create-library-object-transform.ts",
@@ -4124,6 +4180,14 @@
       ],
       "slots": {
         "project": {
+          "root": [
+            {
+              "name": "SceneObjectLifecycleEffect",
+              "file": "packages/features/scene-models/src/model/scene-object-lifecycle-effect.tsx",
+              "line": 4,
+              "column": 1
+            }
+          ],
           "scene": [
             {
               "name": "SceneModels",
@@ -4171,7 +4235,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 31,
+            "line": 51,
             "column": 5
           },
           "usages": [
@@ -4273,7 +4337,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/scene-models/use-scene-object-actions.ts",
-            "line": 19,
+            "line": 20,
             "column": 1
           },
           "usages": [
@@ -4288,6 +4352,24 @@
               "line": 41,
               "column": 18,
               "expression": "useSceneObjectActionMutation"
+            }
+          ]
+        },
+        {
+          "name": "useSceneObjectLifecycle",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/scene-models/use-scene-object-lifecycle.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/scene-models/src/model/scene-object-lifecycle-effect.tsx",
+              "line": 5,
+              "column": 3,
+              "expression": "useSceneObjectLifecycle"
             }
           ]
         },
@@ -4975,7 +5057,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 35,
+            "line": 55,
             "column": 5
           },
           "usages": [
@@ -4999,7 +5081,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 37,
+            "line": 57,
             "column": 5
           },
           "usages": [
