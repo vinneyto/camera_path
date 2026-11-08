@@ -43,8 +43,7 @@ def test_scene_names_snapshot_legacy_labels_without_changing_identity_or_hierarc
                 (object_id, asset_id, parent_id, order),
             )
         before = connection.execute("SELECT * FROM scene_objects ORDER BY sort_order").fetchall()
-    command.upgrade(config, "head")
-    command.upgrade(config, "head")
+    command.upgrade(config, "20261108_0021")
     with sqlite3.connect(database) as connection:
         rows = connection.execute("SELECT * FROM scene_objects ORDER BY sort_order").fetchall()
         assert [row[:-1] for row in rows] == before
@@ -52,10 +51,21 @@ def test_scene_names_snapshot_legacy_labels_without_changing_identity_or_hierarc
         assert connection.execute(
             "SELECT id,revision,scene_object_sequence FROM projects ORDER BY id"
         ).fetchall() == [("other", 3, 0), ("p", 7, 9)]
+        # Simulate an instance created while the draft used generic numbered names.
+        connection.execute("UPDATE scene_objects SET name='Gaussians 01' WHERE id='parent'")
+    command.upgrade(config, "head")
+    command.upgrade(config, "head")
+    with sqlite3.connect(database) as connection:
+        assert connection.execute(
+            "SELECT name FROM scene_objects ORDER BY sort_order"
+        ).fetchall() == [("Chair.png 01",), ("Chair.png",), ("Gaussians 09",)]
+        assert connection.execute(
+            "SELECT scene_object_sequence FROM projects WHERE id='p'"
+        ).fetchone() == (9,)
         connection.execute("UPDATE library_assets SET name='Changed'")
         assert connection.execute(
             "SELECT name FROM scene_objects ORDER BY sort_order"
-        ).fetchall() == [("Chair.png",), ("Chair.png",), ("Gaussians 09",)]
+        ).fetchall() == [("Chair.png 01",), ("Chair.png",), ("Gaussians 09",)]
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
     with pytest.raises(RuntimeError, match="pre-migration backup"):
         command.downgrade(config, "20261107_0020")

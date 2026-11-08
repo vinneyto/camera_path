@@ -148,7 +148,7 @@ async def test_names_are_persistent_project_scoped_and_never_reused(scene):
     app, client, asset, url = scene
     first = (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()
     second = (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()
-    assert [first["name"], second["name"]] == ["Gaussians 01", "Gaussians 02"]
+    assert [first["name"], second["name"]] == [f"{asset['name']} 01", f"{asset['name']} 02"]
     assert first["id"] != second["id"] and first["id"] != asset["id"]
     async with app.state.project_repository.session_factory.begin() as session:
         source = await session.get(LibraryAssetRecord, asset["id"])
@@ -161,10 +161,10 @@ async def test_names_are_persistent_project_scoped_and_never_reused(scene):
     )
     await app.state.project_repository.close()
     third = (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()
-    assert third["name"] == "Gaussians 03"
+    assert third["name"] == "Renamed library asset 03"
     assert [item["name"] for item in (await client.get(url)).json()] == [
-        "Gaussians 01",
-        "Gaussians 03",
+        f"{asset['name']} 01",
+        "Renamed library asset 03",
     ]
     other = (await client.post("/api/v1/projects", json={"name": "Other"})).json()["id"]
     obj = (
@@ -174,12 +174,12 @@ async def test_names_are_persistent_project_scoped_and_never_reused(scene):
             data={"library_asset_id": asset["id"]},
         )
     ).json()
-    assert obj["name"] == "Gaussians 01"
+    assert obj["name"] == "Renamed library asset 01"
     await mutate(client, f"{url}/{first['id']}", "DELETE", expected=204)
     await mutate(client, f"{url}/{third['id']}", "DELETE", expected=204)
     assert (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()[
         "name"
-    ] == "Gaussians 04"
+    ] == "Renamed library asset 04"
 
 
 async def test_concurrent_creations_do_not_duplicate_or_consume_names_on_conflict(scene):
@@ -192,7 +192,7 @@ async def test_concurrent_creations_do_not_duplicate_or_consume_names_on_conflic
         ]
     )
     assert sorted(response.status_code for response in responses) == [201, 409]
-    assert (await client.get(url)).json()[0]["name"] == "Gaussians 01"
+    assert (await client.get(url)).json()[0]["name"] == f"{asset['name']} 01"
     assert (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()[
         "name"
-    ] == "Gaussians 02"
+    ] == f"{asset['name']} 02"

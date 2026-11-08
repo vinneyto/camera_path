@@ -51,7 +51,7 @@ def test_upload_download_defaults_instances_restart_and_delete(editor, fmt, data
         json={"library_asset_id": ready["id"], "position": [2, 0.3, -4]},
     ).json()
     assert first["id"] != second["id"]
-    assert [first["name"], second["name"]] == ["Gaussians 01", "Gaussians 02"]
+    assert [first["name"], second["name"]] == ["Fixture 01", "Fixture 02"]
     assert first["scale"] == [1.5, 1.5, 1.5] and first["library_asset_file_id"] == "main"
     assert second["position"] == [2, 0.3, -4]
     updated = p.mutate(
@@ -63,7 +63,7 @@ def test_upload_download_defaults_instances_restart_and_delete(editor, fmt, data
     other_object = other.mutate(
         "POST", "/scene-objects", 201, json={"library_asset_id": ready["id"]}
     ).json()
-    assert other_object["name"] == "Gaussians 01"
+    assert other_object["name"] == "Fixture 01"
     before = p.get("/scene-objects").json()
     b.stop()
     b.start()
@@ -74,7 +74,7 @@ def test_upload_download_defaults_instances_restart_and_delete(editor, fmt, data
     assert len(p.get("/scene-objects").json()) == 1
     assert len(other.get("/scene-objects").json()) == 1
     third = p.mutate("POST", "/scene-objects", 201, json={"library_asset_id": ready["id"]}).json()
-    assert third["name"] == "Gaussians 03"
+    assert third["name"] == "Fixture 03"
     b.request("DELETE", base, 204)
     assert p.get("/scene-objects").json() == other.get("/scene-objects").json() == []
     b.request("GET", ready["download_url"], 404, auth=False)

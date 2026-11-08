@@ -60,6 +60,7 @@ class SceneObjectRepository:
         project_id: str,
         asset_id: str,
         file_id: str,
+        asset_name: str,
         parent_id: str | None,
         transform: dict,
     ) -> SceneObjectRecord:
@@ -75,7 +76,7 @@ class SceneObjectRepository:
             raise ProjectNotFoundError(project_id)
         record = SceneObjectRecord(
             id=str(uuid4()),
-            name=f"Gaussians {number:02d}",
+            name=f"{asset_name} {number:02d}",
             project_id=project_id,
             library_asset_id=asset_id,
             library_asset_file_id=file_id,

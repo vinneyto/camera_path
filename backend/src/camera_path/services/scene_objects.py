@@ -156,6 +156,7 @@ class SceneObjectService:
                     project_id,
                     asset.id,
                     file.id,
+                    asset.name,
                     data.parent_id,
                     transform.model_dump(exclude_unset=True),
                 )
