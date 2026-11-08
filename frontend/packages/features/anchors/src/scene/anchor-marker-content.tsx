@@ -13,8 +13,11 @@ import {
   ANCHOR_MARKER_HIT_POSITION,
   ANCHOR_MARKER_HIT_RADIUS,
   ANCHOR_MARKER_HIT_SEGMENTS,
+  ANCHOR_SELECTION_MIDPOINT,
 } from "../constants";
 import { selectAnchorMarkerAppearance } from "../selectors/select-anchor-marker-appearance";
+import { AnchorSelectionCollider } from "./anchor-selection-collider";
+import { AnchorSelectionIndicator } from "./anchor-selection-indicator";
 
 export interface AnchorMarkerProps extends Omit<
   ThreeElements["group"],
@@ -24,6 +27,7 @@ export interface AnchorMarkerProps extends Omit<
   hovered?: boolean;
   selected?: boolean;
   dragging?: boolean;
+  selectable?: boolean;
 }
 
 export function AnchorMarkerContent({
@@ -31,6 +35,11 @@ export function AnchorMarkerContent({
   hovered = false,
   selected = false,
   dragging = false,
+  selectable = false,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   ...groupProps
 }: AnchorMarkerProps) {
   const axis =
@@ -45,12 +54,12 @@ export function AnchorMarkerContent({
   ];
 
   const interactive =
-    groupProps.onContextMenu !== undefined ||
-    groupProps.onPointerDown !== undefined;
+    groupProps.onContextMenu !== undefined || onPointerDown !== undefined;
   const appearance = selectAnchorMarkerAppearance({
     hovered,
     selected,
     dragging,
+    selectable,
   });
 
   return (
@@ -59,8 +68,28 @@ export function AnchorMarkerContent({
         highlighted={appearance.highlighted}
         position={surfaceOffset}
       />
+      {selectable && <AnchorSelectionCollider surfaceOffset={surfaceOffset} />}
+      {appearance.showSelectionIndicator && (
+        <AnchorSelectionIndicator
+          anchorId={anchor.id}
+          position={
+            surfaceOffset.map(
+              (component) => component * ANCHOR_SELECTION_MIDPOINT,
+            ) as [number, number, number]
+          }
+          selected={selected}
+          colorClass={appearance.selectionIndicatorClass}
+        />
+      )}
       {interactive && (
-        <mesh position={ANCHOR_MARKER_HIT_POSITION}>
+        <mesh
+          name="anchor-height-handle"
+          position={ANCHOR_MARKER_HIT_POSITION}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+        >
           <sphereGeometry
             args={[
               ANCHOR_MARKER_HIT_RADIUS,

@@ -18,6 +18,8 @@ it.each([
   { selected: "model", ending: "release" },
   { selected: null, ending: "cancel" },
   { selected: "model", ending: "cancel" },
+  { selected: "anchor:comment", ending: "release" },
+  { selected: "anchor:comment", ending: "cancel" },
 ])(
   "keeps selection $selected unchanged through an anchor drag and $ending",
   async ({ selected, ending }) => {
