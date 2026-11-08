@@ -13,11 +13,9 @@ import {
   ANCHOR_MARKER_HIT_POSITION,
   ANCHOR_MARKER_HIT_RADIUS,
   ANCHOR_MARKER_HIT_SEGMENTS,
-  ANCHOR_SELECTION_MIDPOINT,
 } from "../constants";
 import { selectAnchorMarkerAppearance } from "../selectors/select-anchor-marker-appearance";
 import { AnchorSelectionCollider } from "./anchor-selection-collider";
-import { AnchorSelectionIndicator } from "./anchor-selection-indicator";
 
 export interface AnchorMarkerProps extends Omit<
   ThreeElements["group"],
@@ -59,7 +57,6 @@ export function AnchorMarkerContent({
     hovered,
     selected,
     dragging,
-    selectable,
   });
 
   return (
@@ -69,19 +66,7 @@ export function AnchorMarkerContent({
         position={surfaceOffset}
       />
       {selectable && <AnchorSelectionCollider surfaceOffset={surfaceOffset} />}
-      {appearance.showSelectionIndicator && (
-        <AnchorSelectionIndicator
-          anchorId={anchor.id}
-          position={
-            surfaceOffset.map(
-              (component) => component * ANCHOR_SELECTION_MIDPOINT,
-            ) as [number, number, number]
-          }
-          selected={selected}
-          colorClass={appearance.selectionIndicatorClass}
-        />
-      )}
-      {interactive && (
+      {(interactive || selectable) && (
         <mesh
           name="anchor-height-handle"
           position={ANCHOR_MARKER_HIT_POSITION}

@@ -19,7 +19,7 @@ import {
 import { anchorObjectId } from "@camera-path/types/anchor-object-id";
 import type { Anchor, Vec3 } from "@camera-path/types/project";
 import { createRoot, extend, type RootState } from "@react-three/fiber";
-import { act, useEffect } from "react";
+import { act } from "react";
 import {
   BoxGeometry,
   CylinderGeometry,
@@ -35,38 +35,23 @@ import { afterEach, expect, it, vi } from "vitest";
 import { AnchorMarkerContent } from "./anchor-marker-content";
 import { useAnchorHeightEditing } from "./use-anchor-height-editing";
 
-const indicators = new Map<string, { selected: boolean; position: Vec3 }>();
 vi.mock("@react-three/drei", () => ({ Html: () => null }));
 vi.mock("@camera-path/scene-runtime/three/surface-target-ring", () => ({
   SurfaceTargetRing: () => null,
 }));
-vi.mock("./anchor-selection-indicator", () => ({
-  AnchorSelectionIndicator: (props: {
-    anchorId: string;
-    selected: boolean;
-    position: Vec3;
-  }) => {
-    useEffect(() => {
-      indicators.set(props.anchorId, props);
-      return () => {
-        indicators.delete(props.anchorId);
-      };
-    }, [props]);
-    return null;
-  },
-}));
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  indicators.clear();
 });
 
 function Interaction({
   anchors,
   onCommit,
+  canEdit,
 }: {
   anchors: Anchor[];
   onCommit: (id: string, lift: number) => Promise<void>;
+  canEdit: boolean;
 }) {
   const { activeTool } = useEditorTool();
   const { hoverObject, selectObject } = useEditorActions();
@@ -105,7 +90,7 @@ function Interaction({
                 height.preview?.anchorId === anchor.id &&
                 height.preview.dragging
               }
-              {...height.getAnchorInteractionProps(anchor)}
+              {...(canEdit ? height.getAnchorInteractionProps(anchor) : {})}
             />
           )}
         </SceneObject>
@@ -114,7 +99,7 @@ function Interaction({
   );
 }
 
-async function setup(anchors: Anchor[]) {
+async function setup(anchors: Anchor[], canEdit = true) {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   extend({
     BoxGeometry,
@@ -157,7 +142,11 @@ async function setup(anchors: Anchor[]) {
       root.render(
         <EditorStoreProvider store={store}>
           <EditorActionsProvider actions={actions}>
-            <Interaction anchors={items} onCommit={onCommit} />
+            <Interaction
+              anchors={items}
+              onCommit={onCommit}
+              canEdit={canEdit}
+            />
           </EditorActionsProvider>
         </EditorStoreProvider>,
       ),
@@ -207,7 +196,7 @@ const first: Anchor = {
   lift_axis: "world_up",
 };
 
-it("selects the cylinder through the shared picker, retains the indicator after pointer-out, switches anchors and deselects on empty space", async () => {
+it("hovers and selects the cylinder through the shared picker, switches anchors and deselects on empty space", async () => {
   const second = {
     ...first,
     id: "b",
@@ -220,12 +209,6 @@ it("selects the cylinder through the shared picker, retains the indicator after 
     expect(test.store.getState().sceneInteraction.hoveredObjectId).toBe(
       "anchor:a",
     );
-    expect(indicators.get("a")?.selected).toBe(false);
-    expect(
-      new Vector3(...indicators.get("a")!.position).distanceTo(
-        new Vector3(0, -1, 0),
-      ),
-    ).toBe(0);
     const collider = test.scene.getObjectByName(
       "anchor-selection-collider",
     ) as Mesh;
@@ -238,17 +221,17 @@ it("selects the cylinder through the shared picker, retains the indicator after 
     );
     expect(test.onCommit).not.toHaveBeenCalled();
     await test.pointer("pointerleave", [0, 0, 0]);
-    expect(indicators.get("a")?.selected).toBe(true);
+    expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
+      "anchor:a",
+    );
     await test.pointer("pointerdown", [1.5, 0, 0], { pointerType: "touch" });
     await test.pointer("pointerup", [1.5, 0, 0], { pointerType: "touch" });
     expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
       "anchor:b",
     );
-    expect(indicators.has("a")).toBe(false);
     await test.pointer("pointerdown", [2.5, 2.5, 0]);
     await test.pointer("pointerup", [2.5, 2.5, 0]);
     expect(test.store.getState().sceneInteraction.selectedObjectId).toBeNull();
-    expect(indicators.size).toBe(0);
   } finally {
     await test.unmount();
   }
@@ -265,8 +248,6 @@ it.each([null, "model", "anchor:a"])(
       expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
         selected,
       );
-      if (selected === "anchor:a")
-        expect(indicators.get("a")?.selected).toBe(true);
       await test.pointer("pointermove", [0, 1.6, 0], { buttons: 1 });
       await test.pointer("pointerup", [0, 1.6, 0]);
       expect(test.onCommit).toHaveBeenCalledExactlyOnceWith("a", 2.5);
@@ -274,6 +255,77 @@ it.each([null, "model", "anchor:a"])(
       expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
         selected,
       );
+    } finally {
+      await test.unmount();
+    }
+  },
+);
+
+it.each([
+  { pointerType: "mouse", canEdit: true },
+  { pointerType: "pen", canEdit: true },
+  { pointerType: "touch", canEdit: true },
+  { pointerType: "mouse", canEdit: false },
+])(
+  "selects the upper icon on $pointerType click without changing height (canEdit: $canEdit)",
+  async ({ pointerType, canEdit }) => {
+    const test = await setup([first], canEdit);
+    try {
+      await act(async () => test.actions.selectObject({ id: "model" }));
+      await test.pointer("pointerdown", [0, 1.1, 0], { pointerType });
+      expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
+        "model",
+      );
+      await test.pointer("pointerup", [0, 1.1, 0], { pointerType });
+      expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
+        "anchor:a",
+      );
+      expect(test.store.getState().tool.activeTool).toBeNull();
+      expect(test.onCommit).not.toHaveBeenCalled();
+    } finally {
+      await test.unmount();
+    }
+  },
+);
+
+it("tolerates a small pointer jitter when clicking the upper icon", async () => {
+  const test = await setup([first]);
+  try {
+    await test.pointer("pointerdown", [0, 1.1, 0]);
+    await test.pointer("pointermove", [0, 1.12, 0], { buttons: 1 });
+    await test.pointer("pointerup", [0, 1.12, 0]);
+    expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
+      "anchor:a",
+    );
+    expect(test.onCommit).not.toHaveBeenCalled();
+  } finally {
+    await test.unmount();
+  }
+});
+
+it.each(["return", "cancel", "distant-release"])(
+  "does not turn a height gesture into selection after %s",
+  async (ending) => {
+    const test = await setup([first]);
+    try {
+      await act(async () => test.actions.selectObject({ id: "model" }));
+      await test.pointer("pointerdown", [0, 1.1, 0]);
+      if (ending !== "distant-release")
+        await test.pointer("pointermove", [0, 1.6, 0], { buttons: 1 });
+      if (ending === "return") {
+        await test.pointer("pointermove", [0, 1.1, 0], { buttons: 1 });
+        await test.pointer("pointerup", [0, 1.1, 0]);
+      } else {
+        await test.pointer(
+          ending === "cancel" ? "pointercancel" : "pointerup",
+          [0, 1.6, 0],
+        );
+      }
+      expect(test.store.getState().sceneInteraction.selectedObjectId).toBe(
+        "model",
+      );
+      expect(test.store.getState().tool.activeTool).toBeNull();
+      expect(test.onCommit).not.toHaveBeenCalled();
     } finally {
       await test.unmount();
     }
@@ -305,7 +357,6 @@ it("respects the closest occluder and clears interaction when the anchor is remo
       hoveredObjectId: null,
       selectedObjectId: null,
     });
-    expect(indicators.size).toBe(0);
   } finally {
     test.scene.remove(blocker);
     blocker.geometry.dispose();
