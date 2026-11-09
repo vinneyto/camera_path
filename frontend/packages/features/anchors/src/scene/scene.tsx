@@ -115,10 +115,9 @@ export function AnchorsScene() {
               <SceneObject
                 key={anchor.id}
                 sceneObjectID={anchorObjectId(anchor.id)}
-                hoverable={canEdit && activeTool === null}
-                selectable={false}
+                hoverable={activeTool === null}
               >
-                {({ hovered }) => (
+                {({ hovered, selected }) => (
                   <AnchorMarker
                     anchor={
                       height.preview?.anchorId === anchor.id
@@ -130,11 +129,12 @@ export function AnchorsScene() {
                         : anchor
                     }
                     hovered={hovered}
+                    selectable={activeTool === null}
                     dragging={
                       height.preview?.anchorId === anchor.id &&
                       height.preview.dragging
                     }
-                    selected={height.selectedAnchorId === anchor.id}
+                    selected={selected}
                     {...(canEdit
                       ? height.getAnchorInteractionProps(anchor)
                       : {})}

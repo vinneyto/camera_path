@@ -1629,6 +1629,7 @@
         "packages/features/anchors/src/constants.ts",
         "packages/features/anchors/src/index.ts",
         "packages/features/anchors/src/lib/get-anchor-label.ts",
+        "packages/features/anchors/src/lib/get-anchor-selection-geometry.ts",
         "packages/features/anchors/src/lib/get-anchor-tool-modifier.ts",
         "packages/features/anchors/src/lib/get-world-y-axis-lift.ts",
         "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
@@ -1640,6 +1641,7 @@
         "packages/features/anchors/src/scene/anchor-marker.tsx",
         "packages/features/anchors/src/scene/anchor-placement-constants.ts",
         "packages/features/anchors/src/scene/anchor-placement-preview.tsx",
+        "packages/features/anchors/src/scene/anchor-selection-collider.tsx",
         "packages/features/anchors/src/scene/scene.tsx",
         "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
         "packages/features/anchors/src/scene/use-anchor-placement.ts",
@@ -1734,6 +1736,12 @@
               "line": 18,
               "column": 6,
               "expression": "select"
+            },
+            {
+              "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
+              "line": 178,
+              "column": 7,
+              "expression": "selectObject"
             }
           ]
         },
@@ -1794,6 +1802,12 @@
               "line": 10,
               "column": 18,
               "expression": "useEditorActions"
+            },
+            {
+              "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
+              "line": 59,
+              "column": 28,
+              "expression": "useEditorActions"
             }
           ]
         },
@@ -1815,7 +1829,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 49,
+              "line": 58,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             },
