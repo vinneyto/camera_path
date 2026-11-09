@@ -10,7 +10,8 @@ export const LIDAR_CAPTURE_INTERVAL_MS = 100;
 export const LIDAR_MIN_FACE_SIZE = 16;
 export const LIDAR_MAX_FACE_SIZE = 512;
 export const LIDAR_HIT_RADIUS = 0.01;
-export const LIDAR_HIT_SEGMENTS = 6;
+export const LIDAR_HIT_WIDTH_SEGMENTS = 16;
+export const LIDAR_HIT_HEIGHT_SEGMENTS = 12;
 export const LIDAR_HIT_RENDER_ORDER = 0;
 export const LIDAR_HIT_COLOR = 0x35f2a1;
 // Forward and up in sensor coordinates. Every image has a top-left origin.

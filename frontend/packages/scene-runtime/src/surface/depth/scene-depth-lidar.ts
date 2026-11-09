@@ -26,7 +26,8 @@ import {
   LIDAR_HIT_COLOR,
   LIDAR_HIT_RADIUS,
   LIDAR_HIT_RENDER_ORDER,
-  LIDAR_HIT_SEGMENTS,
+  LIDAR_HIT_WIDTH_SEGMENTS,
+  LIDAR_HIT_HEIGHT_SEGMENTS,
 } from "./constants";
 
 /** The same capture -> radial bins -> world-space hits lifecycle on both APIs.
@@ -48,9 +49,8 @@ export class SceneDepthLidar implements GaussianLidarInstance {
   private readonly texture;
   private readonly geometry = new SphereGeometry(
     LIDAR_HIT_RADIUS,
-    LIDAR_HIT_RENDER_ORDER,
-    LIDAR_HIT_SEGMENTS,
-    LIDAR_HIT_SEGMENTS,
+    LIDAR_HIT_WIDTH_SEGMENTS,
+    LIDAR_HIT_HEIGHT_SEGMENTS,
   );
   private readonly material = new MeshBasicMaterial({
     color: LIDAR_HIT_COLOR,
