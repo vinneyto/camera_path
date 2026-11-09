@@ -334,7 +334,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 72,
+              "line": 73,
               "column": 9,
               "expression": "actions.selectObject"
             }
@@ -478,19 +478,19 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 20,
+            "line": 21,
             "column": 3
           },
           "usages": [
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 20,
+              "line": 21,
               "column": 3,
               "expression": "onAccepted"
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 63,
+              "line": 64,
               "column": 7,
               "expression": "onAccepted"
             }
@@ -772,7 +772,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 34,
+              "line": 35,
               "column": 19,
               "expression": "useEditorActions"
             },
@@ -853,12 +853,12 @@
           ]
         },
         {
-          "name": "useListProjectGenerationJobs",
+          "name": "useProjectGenerationJobs",
           "kind": "api-hook",
           "package": "@camera-path/api",
           "definition": {
-            "file": "packages/api/src/client/generated/client.ts",
-            "line": 6806,
+            "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+            "line": 6,
             "column": 1
           },
           "usages": [
@@ -866,7 +866,7 @@
               "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
               "line": 16,
               "column": 16,
-              "expression": "useListProjectGenerationJobs(projectId, {\n    query: { refetchInterval: 5000 },\n  })"
+              "expression": "useProjectGenerationJobs(projectId)"
             }
           ]
         },
@@ -1004,7 +1004,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 32,
+              "line": 33,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             },
@@ -1105,6 +1105,7 @@
       "files": [
         "packages/api/src/client/orval-fetch.ts",
         "packages/api/src/config.ts",
+        "packages/api/src/constants.ts",
         "packages/api/src/identity/auth-provider.tsx",
         "packages/api/src/index.ts",
         "packages/api/src/project/index.ts",
@@ -1127,6 +1128,7 @@
         "packages/api/src/resources/use-library-catalog.ts",
         "packages/api/src/resources/use-lidar-timeline-resource.ts",
         "packages/api/src/resources/use-orientation-timeline.ts",
+        "packages/api/src/resources/use-project-generation-jobs.ts",
         "packages/api/src/resources/use-projects-catalog.ts",
         "packages/api/src/resources/use-scene-models.ts",
         "packages/api/src/resources/use-scene-points.ts",
@@ -1420,9 +1422,9 @@
           "usages": [
             {
               "file": "packages/api/src/resources/use-jobs-catalog.ts",
-              "line": 6,
+              "line": 7,
               "column": 10,
-              "expression": "useListJobs({ query: { refetchInterval: 5000 } })"
+              "expression": "useListJobs({ query: { refetchInterval: JOBS_POLL_INTERVAL_MS } })"
             }
           ]
         },
@@ -1441,6 +1443,24 @@
               "line": 4,
               "column": 17,
               "expression": "useListLibraryAssets()"
+            }
+          ]
+        },
+        {
+          "name": "useListProjectGenerationJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 6806,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+              "line": 7,
+              "column": 10,
+              "expression": "useListProjectGenerationJobs(useProjectId(id), {\n    query: { refetchInterval: JOBS_POLL_INTERVAL_MS },\n  })"
             }
           ]
         },
@@ -1602,6 +1622,12 @@
               "expression": "useProjectId(id)"
             },
             {
+              "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+              "line": 7,
+              "column": 39,
+              "expression": "useProjectId(id)"
+            },
+            {
               "file": "packages/api/src/resources/use-scene-models.ts",
               "line": 5,
               "column": 37,
@@ -1660,7 +1686,9 @@
         "packages/features/anchors/src/lib/get-world-y-axis-lift.ts",
         "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
         "packages/features/anchors/src/ports/use-active-editor-tool.tsx",
+        "packages/features/anchors/src/ports/use-generating-anchors.ts",
         "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+        "packages/features/anchors/src/scene/anchor-generation-indicator.tsx",
         "packages/features/anchors/src/scene/anchor-height-editing-overlay.tsx",
         "packages/features/anchors/src/scene/anchor-height-ruler.tsx",
         "packages/features/anchors/src/scene/anchor-marker-content.tsx",
@@ -1672,6 +1700,7 @@
         "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
         "packages/features/anchors/src/scene/use-anchor-placement.ts",
         "packages/features/anchors/src/selectors/select-anchor-marker-appearance.ts",
+        "packages/features/anchors/src/selectors/select-generating-anchor-ids.ts",
         "packages/features/anchors/src/ui/anchor-tool-shortcut.tsx",
         "packages/features/anchors/src/ui/hint.tsx",
         "packages/features/anchors/src/ui/status.tsx"
@@ -1682,7 +1711,7 @@
             {
               "name": "AnchorsScene",
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 29,
+              "line": 30,
               "column": 1
             }
           ],
@@ -1783,7 +1812,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 37,
+              "line": 39,
               "column": 15,
               "expression": "useAddAnchorMutation"
             }
@@ -1801,7 +1830,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 39,
+              "line": 41,
               "column": 20,
               "expression": "useDeleteAnchorMutation"
             }
@@ -1879,7 +1908,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 38,
+              "line": 40,
               "column": 18,
               "expression": "useUpdateAnchorMutation"
             }
@@ -1899,7 +1928,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 30,
+              "line": 31,
               "column": 17,
               "expression": "useAnchors()"
             },
@@ -1923,7 +1952,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 33,
+              "line": 35,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -1932,6 +1961,24 @@
               "line": 9,
               "column": 19,
               "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectGenerationJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-generating-anchors.ts",
+              "line": 8,
+              "column": 16,
+              "expression": "useProjectGenerationJobs(projectId)"
             }
           ]
         },
@@ -1954,7 +2001,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 32,
+              "line": 34,
               "column": 16,
               "expression": "useCameraState()"
             },
@@ -2000,6 +2047,25 @@
               "line": 7,
               "column": 16,
               "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 25,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-generating-anchors.ts",
+              "line": 7,
+              "column": 21,
+              "expression": "useProjectId()"
             }
           ]
         },
@@ -2572,7 +2638,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 25,
+            "line": 26,
             "column": 1
           },
           "usages": [
@@ -3196,7 +3262,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/resources/use-jobs-catalog.ts",
-            "line": 5,
+            "line": 6,
             "column": 1
           },
           "usages": [

@@ -2,9 +2,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProjectId } from "@camera-path/store";
+import { useProjectGenerationJobs } from "@camera-path/api/resources";
 
 import {
-  useListProjectGenerationJobs,
   getListSceneObjectsQueryKey,
   getListLibraryAssetsQueryKey,
 } from "@camera-path/api/client/generated/client";
@@ -13,9 +13,7 @@ import { invalidateProjectResource } from "@camera-path/api/project/invalidate-p
 export function useGenerationPlacementUpdates() {
   const projectId = useProjectId();
   const queryClient = useQueryClient();
-  const jobs = useListProjectGenerationJobs(projectId, {
-    query: { refetchInterval: 5000 },
-  });
+  const jobs = useProjectGenerationJobs(projectId);
   const signature = JSON.stringify(
     jobs.data?.status === 200
       ? jobs.data.data

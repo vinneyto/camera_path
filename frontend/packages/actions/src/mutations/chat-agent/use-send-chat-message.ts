@@ -10,6 +10,7 @@ import {
   getListSceneObjectsQueryKey,
   getListLibraryAssetsQueryKey,
   getListJobsQueryKey,
+  getListProjectGenerationJobsQueryKey,
 } from "@camera-path/api/client/generated/client";
 import { projectApi } from "@camera-path/api/project";
 import { invalidateProjectResource } from "@camera-path/api/project/invalidate-project-resource";
@@ -78,6 +79,7 @@ export function useSendChatMessage(explicitProjectId?: string) {
           getListSceneObjectsQueryKey(projectId),
           getListLibraryAssetsQueryKey(),
           getListJobsQueryKey(),
+          getListProjectGenerationJobsQueryKey(projectId),
         ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
       ]),
   });

@@ -16,6 +16,7 @@ import {
 } from "../constants";
 import { selectAnchorMarkerAppearance } from "../selectors/select-anchor-marker-appearance";
 import { AnchorSelectionCollider } from "./anchor-selection-collider";
+import { AnchorGenerationIndicator } from "./anchor-generation-indicator";
 
 export interface AnchorMarkerProps extends Omit<
   ThreeElements["group"],
@@ -26,6 +27,7 @@ export interface AnchorMarkerProps extends Omit<
   selected?: boolean;
   dragging?: boolean;
   selectable?: boolean;
+  generationPending?: boolean;
 }
 
 export function AnchorMarkerContent({
@@ -34,6 +36,7 @@ export function AnchorMarkerContent({
   selected = false,
   dragging = false,
   selectable = false,
+  generationPending = false,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -91,6 +94,7 @@ export function AnchorMarkerContent({
         zIndexRange={ANCHOR_ICON_Z_INDEX_RANGE}
       >
         <div className="relative size-0 select-none">
+          {generationPending && <AnchorGenerationIndicator />}
           <MapPin
             aria-hidden
             className={cn(
