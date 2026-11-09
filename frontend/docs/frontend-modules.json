@@ -2583,6 +2583,7 @@
         "packages/features/chat-agent/src/ports/use-chat-selection.ts",
         "packages/features/chat-agent/src/ui/anchor-reference-picker.tsx",
         "packages/features/chat-agent/src/ui/auto-growing-textarea.tsx",
+        "packages/features/chat-agent/src/ui/chat-image-attachments.tsx",
         "packages/features/chat-agent/src/ui/chat-image-input.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-code-block.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-link.tsx",

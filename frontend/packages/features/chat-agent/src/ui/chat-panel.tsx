@@ -13,6 +13,7 @@ import { AutoGrowingTextarea } from "@camera-path/feature-chat-agent/ui/auto-gro
 import { ChatMessage } from "@camera-path/feature-chat-agent/ui/chat-message";
 
 import { ChatImageInput } from "./chat-image-input";
+import { ChatImageAttachments } from "./chat-image-attachments";
 
 export interface ChatPanelProps {
   selection?: { id: string; name: string } | null;
@@ -86,11 +87,10 @@ export function ChatPanel({
               Selected: {selection.name}
             </p>
           )}
-          {composer.files && (
-            <ChatImageInput
+          {composer.files.length > 0 && (
+            <ChatImageAttachments
               files={composer.files}
               disabled={pending}
-              onAdd={composer.addFiles}
               onRemove={composer.removeFile}
             />
           )}
@@ -112,7 +112,12 @@ export function ChatPanel({
               placeholder="Create a smooth path from @A through @B…"
               value={message}
             />
-            <div className="flex justify-end px-1.5 pb-1.5">
+            <div className="flex items-center justify-end gap-1.5 px-1.5 pb-1.5">
+              <ChatImageInput
+                files={composer.files}
+                disabled={pending}
+                onAdd={composer.addFiles}
+              />
               <Button
                 aria-label="Send message"
                 disabled={pending || !message.trim()}
