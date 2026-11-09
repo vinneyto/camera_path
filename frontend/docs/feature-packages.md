@@ -216,7 +216,10 @@ Provider владеет базовыми scene passes и финальным `Ren
 зарегистрированные layers/effects в порядке `order` и выполняет рендер через `useFrame` с priority `1`.
 Создание/освобождение pipeline и базовых passes остаётся в одном layout effect.
 Конкретные Gaussian/LiDAR passes, worker и renderer-specific поведение остаются в `scene-runtime`
-и соответствующих адаптерах. Создание LiDAR sensor остаётся в renderer adapter. Ресурсы сенсора создаются и освобождаются в одном effect,
+и соответствующих адаптерах. Оба адаптера предоставляют `createDepthCapture`: шесть float32
+изображений view-Z всей сцены. Общий `SceneDepthLidar` переводит их в угловую текстуру
+дальности и инстансы попаданий. Фича передаёт позу и запускает общий update с priority `-1`;
+захват не зависит от главного Gaussian pass. Ресурсы сенсора создаются и освобождаются в одном effect,
 включая replay Strict Mode и смену разрешения.
 
 Общие viewport services предоставляют поверхность для picking, события OrbitControls,

@@ -1,3 +1,7 @@
+import { SceneDepthLidar } from "../../depth/scene-depth-lidar";
+import { getLidarFaceSize } from "../../depth/get-lidar-face-size";
+import { WebGpuSceneDepthCapture } from "./webgpu-scene-depth-capture";
+import type { TileDepthSource } from "./tile-depth-source";
 import {
   type GaussianCloud,
   type GaussianPass,
@@ -13,7 +17,6 @@ import {
   GAUSSIAN_PROCESSING_PROGRESS,
   GAUSSIAN_RAYCAST_SNAPSHOT_MAX_LEAVES,
   GAUSSIAN_RENDER_ORDER,
-  LIDAR_RENDER_ORDER,
 } from "./constants";
 import { PerspectiveCamera } from "three/webgpu";
 
@@ -28,8 +31,6 @@ import { LoggingGaussianBackend } from "@camera-path/scene-runtime/surface/adapt
 import { TileGaussianCloudInstance } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-cloud-instance";
 import { createCloudInteractionColorNode } from "./create-cloud-interaction-color-node";
 import { TileGaussianHighlightVolume } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-highlight-volume";
-import { TileGaussianLidar } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-gaussian-lidar";
-import { TileLidarFrameNode } from "@camera-path/scene-runtime/surface/adapters/3dgs-tile-webgpu/tile-lidar-frame-node";
 import { enableAdditionalObjectLayers } from "@camera-path/scene-runtime/surface/model/enable-additional-object-layers";
 import type {
   GaussianLidarInstance,
@@ -46,8 +47,8 @@ import type { GaussianCloudSource } from "@camera-path/scene-runtime/surface/mod
 
 export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   readonly container = null;
-  private readonly lidars = new Set<TileGaussianLidar>();
-  private unregisterLidarFrame: (() => void) | null = null;
+  private readonly lidars = new Set<SceneDepthLidar>();
+  private readonly depthSources = new Map<GaussianCloud, TileDepthSource>();
   private readonly loads = new Set<AbortController>();
   private readonly clouds = new Set<TileGaussianCloudInstance>();
   private depthEnabled = false;
@@ -117,7 +118,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
         phase: "processing",
       });
       cloud = await this.store.loadBuffer(
-        buffer,
+        buffer.slice(0),
         {
           name:
             options.name ??
@@ -153,6 +154,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
         this.store.getBounds(cloud),
         () => {
           this.clouds.delete(instance);
+          this.depthSources.delete(loadedCloud);
           if (this.clouds.size === 0 && this.loads.size === 0)
             this.disposePass();
         },
@@ -160,6 +162,14 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
           this.setCloudInteractionState(loadedCloud, hovered, selected),
       );
       this.clouds.add(instance);
+      this.depthSources.set(cloud, {
+        buffer,
+        options: {
+          name: cloud.name,
+          fileName: source.kind === "url" ? source.url : source.name,
+          format: source.kind === "url" ? source.format : undefined,
+        },
+      });
       options.onProgress?.({
         fraction: 1,
         loadedBytes: buffer.byteLength,
@@ -225,32 +235,26 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
     return volume;
   }
 
+  createDepthCapture(faceSize: number): WebGpuSceneDepthCapture {
+    if (this.disposed)
+      throw new Error("TileGaussianRenderingBackend is disposed");
+    return new WebGpuSceneDepthCapture(
+      this.pipeline.renderer,
+      faceSize,
+      this.depthSources,
+    );
+  }
+
   createLidar(settings: GaussianLidarSettings): GaussianLidarInstance {
     if (this.disposed)
       throw new Error("TileGaussianRenderingBackend is disposed");
-    const sensor = new TileGaussianLidar(
-      this.pipeline.renderer,
-      this.store,
+    const sensor = new SceneDepthLidar(
+      this.createDepthCapture(getLidarFaceSize(settings)),
       settings,
-      () => {
-        this.lidars.delete(sensor);
-        this.syncLidarFrame();
-      },
+      () => this.lidars.delete(sensor),
     );
     this.lidars.add(sensor);
-    this.syncLidarFrame();
     return sensor;
-  }
-
-  private syncLidarFrame(): void {
-    this.unregisterLidarFrame?.();
-    this.unregisterLidarFrame = null;
-    if (this.pass !== null && this.lidars.size > 0 && !this.disposed) {
-      this.unregisterLidarFrame = this.pipeline.registerLayer(
-        new TileLidarFrameNode(this.pass, this.lidars),
-        { order: LIDAR_RENDER_ORDER },
-      );
-    }
   }
 
   invalidate(): void {
@@ -296,9 +300,6 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
   }
 
   private disposePass(): void {
-    this.unregisterLidarFrame?.();
-    this.unregisterLidarFrame = null;
-    for (const sensor of this.lidars) sensor.hide();
     this.highlightVolume?.dispose();
     this.unregisterPass?.();
     this.unregisterPass = null;
@@ -347,7 +348,6 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       ...(this.depthEnabled ? { depth: pass.getTextureNode("depth").r } : {}),
       order: GAUSSIAN_RENDER_ORDER,
     });
-    this.syncLidarFrame();
     this.highlightVolume?.replacePass(pass);
     unregisterPreviousPass?.();
     previousPass?.dispose();
