@@ -350,6 +350,9 @@ deletes its camera keys. Mutations advance one shared project revision.
 ## Scene context and image attachments in chat
 
 Chat message bodies accept optional `selected_object_id` and `attachment_ids` (up to eight).
+The editor uses explicit `@label` / `@instance name` references in message text and does not send
+the current selection as hidden context. The agent resolves names against the project's anchors
+and scene instances. API clients may still supply a selection snapshot explicitly.
 The backend saves a project-validated selection snapshot with the user message; changing selection
 later does not retarget an earlier request. Original PNG/JPEG/WebP images (up to 20 MB each) are
 staged with `POST /api/v1/projects/{id}/chat/attachments`, uploaded to the returned URL, then validated

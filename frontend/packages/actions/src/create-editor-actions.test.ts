@@ -53,3 +53,28 @@ it("switches widget mode independently and releases only the transform tool", ()
   actions.finishObjectTransform();
   expect(store.getState().tool.activeTool).toBe("anchor");
 });
+
+it("adds named selections once and anchor references repeatedly without changing selection", () => {
+  const store = createEditorStore();
+  const other = createEditorStore();
+  const actions = createEditorActions(store);
+  actions.changeChatMessage("Replace");
+  actions.selectObject({ id: "model", name: "Chair 01" });
+  actions.selectObject({ id: "model", name: "Chair 01" });
+  actions.hoverObject({ id: "anchor:a" });
+  expect(store.getState().chatComposer.message).toBe("Replace @Chair 01 ");
+  actions.referenceChatObject("A");
+  actions.referenceChatObject("A");
+  expect(store.getState().sceneInteraction.selectedObjectId).toBe("model");
+  expect(store.getState().chatComposer.message).toBe(
+    "Replace @Chair 01 @A @A ",
+  );
+  actions.selectObject({ id: null, ifCurrentId: "other" });
+  expect(store.getState().sceneInteraction.selectedObjectId).toBe("model");
+  actions.selectObject({ id: null });
+  actions.selectObject({ id: "model", name: "Chair 01" });
+  expect(store.getState().chatComposer.message).toBe(
+    "Replace @Chair 01 @A @A @Chair 01 ",
+  );
+  expect(other.getState().chatComposer.message).toBe("");
+});

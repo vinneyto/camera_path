@@ -118,6 +118,8 @@ export function AnchorsScene() {
                 key={anchor.id}
                 sceneObjectID={anchorObjectId(anchor.id)}
                 hoverable={activeTool === null}
+                selectable={false}
+                clickable={activeTool === null}
               >
                 {({ hovered, selected }) => (
                   <AnchorMarker

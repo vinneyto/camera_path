@@ -1,5 +1,5 @@
 "use client";
-import { HOVERABLE, SELECTABLE } from "@camera-path/render-pipeline";
+import { CLICKABLE, HOVERABLE, SELECTABLE } from "@camera-path/render-pipeline";
 import { useSceneInteraction } from "@camera-path/store";
 import type { ThreeElements } from "@react-three/fiber";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
@@ -9,6 +9,7 @@ type SceneObjectProps = Omit<ThreeElements["group"], "children" | "ref"> & {
   sceneObjectID: string;
   hoverable?: boolean;
   selectable?: boolean;
+  clickable?: boolean;
   children: (state: { hovered: boolean; selected: boolean }) => ReactNode;
 };
 
@@ -16,6 +17,7 @@ export function SceneObject({
   sceneObjectID,
   hoverable = true,
   selectable = true,
+  clickable = false,
   children,
   ...props
 }: SceneObjectProps) {
@@ -27,6 +29,7 @@ export function SceneObject({
     const flags = [
       [HOVERABLE, hoverable],
       [SELECTABLE, selectable],
+      [CLICKABLE, clickable],
     ] as const;
     const previous = flags.map(([layer]) => object.layers.isEnabled(layer));
     for (const [layer, enabled] of flags) {
@@ -39,7 +42,7 @@ export function SceneObject({
         else object.layers.disable(layer);
       });
     };
-  }, [hoverable, selectable, props.layers]);
+  }, [hoverable, selectable, clickable, props.layers]);
   return (
     <group
       {...props}

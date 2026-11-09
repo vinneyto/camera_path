@@ -1,12 +1,13 @@
 "use client";
 import type { Anchor } from "@camera-path/types/project";
+import { useEditorActions } from "@camera-path/actions";
+import { useChatComposerState } from "@camera-path/store";
 import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
 
 import { CHAT_MAX_IMAGES, CHAT_MAX_IMAGE_BYTES } from "../constants";
 
 interface ChatComposerOptions {
   pending: boolean;
-  selectedObjectId?: string | null;
   onSend: (
     id: string,
     message: string,
@@ -16,15 +17,12 @@ interface ChatComposerOptions {
 }
 
 // Lives above the responsive panel so its draft and retry ID survive closing or resizing.
-export function useChatComposer({
-  pending,
-  onSend,
-  selectedObjectId = null,
-}: ChatComposerOptions) {
-  const [message, setMessage] = useState("");
+export function useChatComposer({ pending, onSend }: ChatComposerOptions) {
+  const { message } = useChatComposerState();
+  const { changeChatMessage, acceptChatMessage, referenceChatObject } =
+    useEditorActions();
   const [files, setFiles] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
-  const draftSelectionRef = useRef<string | null>(null);
   const draftIdRef = useRef<string | null>(null);
   const submittedTextRef = useRef<string | null>(null);
 
@@ -34,9 +32,8 @@ export function useChatComposer({
     if (!text || pending) return;
     const submittedMessage = message;
     const submittedFiles = files;
-    if (draftSelectionRef.current !== selectedObjectId)
+    if (submittedTextRef.current !== null && submittedTextRef.current !== text)
       draftIdRef.current = null;
-    draftSelectionRef.current = selectedObjectId;
     const messageId = draftIdRef.current ?? crypto.randomUUID();
     draftIdRef.current = messageId;
     submittedTextRef.current = text;
@@ -46,7 +43,7 @@ export function useChatComposer({
       () => {
         draftIdRef.current = null;
         submittedTextRef.current = null;
-        setMessage((current) => (current === submittedMessage ? "" : current));
+        acceptChatMessage(submittedMessage);
         setFiles((current) =>
           current.filter((file) => !submittedFiles.includes(file)),
         );
@@ -63,7 +60,7 @@ export function useChatComposer({
       draftIdRef.current = null;
       submittedTextRef.current = null;
     }
-    setMessage(nextMessage);
+    changeChatMessage(nextMessage);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -78,10 +75,7 @@ export function useChatComposer({
   }
 
   function insertAnchor(anchor: Anchor) {
-    setMessage(
-      (current) =>
-        `${current}${current && !current.endsWith(" ") ? " " : ""}@${anchor.label} `,
-    );
+    referenceChatObject(anchor.label);
   }
 
   function addFiles(next: File[]) {

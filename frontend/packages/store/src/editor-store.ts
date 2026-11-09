@@ -9,6 +9,7 @@ export interface EditorState {
   camera: { cameraMode: CameraMode };
   playback: PlaybackState;
   tool: ToolState;
+  chatComposer: { message: string };
   sceneInteraction: {
     hoveredObjectId: string | null;
     selectedObjectId: string | null;
@@ -22,6 +23,7 @@ export function createEditorStore(): EditorStoreApi {
     camera: { cameraMode: "orbit" },
     playback: { elapsed: 0, pathPosition: 0, playing: false },
     tool: { activeTool: null, pendingCloud: null },
+    chatComposer: { message: "" },
     sceneInteraction: {
       hoveredObjectId: null,
       selectedObjectId: null,

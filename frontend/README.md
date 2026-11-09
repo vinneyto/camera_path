@@ -97,8 +97,12 @@ npm test
 npm run build
 ```
 
-Click the Gaussian cloud to create a labeled path anchor. Insert the resulting anchor token into
-chat, ask the agent to build a spline or spiral, then click the rendered trajectory to open its
+Use the anchor placement tool to create a labeled path anchor. Click an anchor's invisible cylinder
+or upper pin to append `@label` to the chat draft without selecting the anchor; dragging the pin
+changes its height without inserting a mention. Selecting a model or trajectory appends `@name`
+once when selection changes. The draft is scoped to the project and survives closing the mobile
+chat. User messages use these explicit text references, without hidden current-selection context.
+Ask the agent to build a spline or spiral, then click the rendered trajectory to open its
 speed and camera-aim panels. Playback uses the compiled speed profile and camera direction track.
 
 ### Gaussian backend and file formats

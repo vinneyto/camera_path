@@ -16,7 +16,6 @@ import { ChatImageInput } from "./chat-image-input";
 import { ChatImageAttachments } from "./chat-image-attachments";
 
 export interface ChatPanelProps {
-  selection?: { id: string; name: string } | null;
   anchors: Anchor[];
   error: string | null;
   messages: ChatHistoryMessage[];
@@ -32,7 +31,6 @@ export function ChatPanel({
   pending,
   composer,
   headerAction,
-  selection,
 }: ChatPanelProps) {
   const { message, submit, changeMessage, handleKeyDown, insertAnchor } =
     composer;
@@ -79,14 +77,6 @@ export function ChatPanel({
           <fieldset disabled={pending}>
             <AnchorReferencePicker anchors={anchors} onSelect={insertAnchor} />
           </fieldset>
-          {selection && (
-            <p
-              className="truncate rounded border bg-muted/40 px-2 py-1 text-[10px]"
-              title={selection.name}
-            >
-              Selected: {selection.name}
-            </p>
-          )}
           {composer.files.length > 0 && (
             <ChatImageAttachments
               files={composer.files}

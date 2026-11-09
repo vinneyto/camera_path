@@ -56,6 +56,7 @@ export function inspectSource(
         "usePlaybackState",
         "useEditorTool",
         "useSceneInteraction",
+        "useChatComposerState",
         "useProjectId",
         "useAssetId",
         "useJobId",
