@@ -25,6 +25,7 @@ import {
   LIDAR_ERROR_RETRY_MS,
   LIDAR_HIT_COLOR,
   LIDAR_HIT_RADIUS,
+  LIDAR_HIT_RENDER_ORDER,
   LIDAR_HIT_SEGMENTS,
 } from "./constants";
 
@@ -47,11 +48,16 @@ export class SceneDepthLidar implements GaussianLidarInstance {
   private readonly texture;
   private readonly geometry = new SphereGeometry(
     LIDAR_HIT_RADIUS,
+    LIDAR_HIT_RENDER_ORDER,
     LIDAR_HIT_SEGMENTS,
     LIDAR_HIT_SEGMENTS,
   );
   private readonly material = new MeshBasicMaterial({
     color: LIDAR_HIT_COLOR,
+    // Spark is in Three's transparent queue. Opaque hits would be painted
+    // before it regardless of renderOrder. WebGPU also composites this queue
+    // after the Gaussian layer. Keep normal mesh depth testing enabled.
+    transparent: true,
     depthWrite: false,
   });
   private disposed = false;
@@ -93,6 +99,7 @@ export class SceneDepthLidar implements GaussianLidarInstance {
     );
     this.object.instanceMatrix.setUsage(DynamicDrawUsage);
     this.object.name = "LiDAR hits";
+    this.object.renderOrder = LIDAR_HIT_RENDER_ORDER;
     this.object.userData.excludeFromSceneDepth = true;
     this.object.userData.lidarDiagnostics = this.diagnostics;
     this.object.frustumCulled = false;
