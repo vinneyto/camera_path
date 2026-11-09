@@ -4,7 +4,7 @@ import json
 from collections.abc import AsyncIterator
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import StreamingResponse
 from openai import OpenAIError
 
@@ -1128,7 +1128,9 @@ async def save_user_message(
     response: Response,
     _guard: MutationGuard,
 ) -> ChatHistoryMessage:
-    project = await service.save_user_message(project_id, data.id, data.message)
+    project = await service.save_user_message(
+        project_id, data.id, data.message, data.selected_object_id, data.attachment_ids
+    )
     _with_revision(response, project)
     return next(message for message in project.chat_history if message.id == data.id)
 
@@ -1159,13 +1161,21 @@ async def clear_chat(project_id: str, service: ChatServiceDep, _guard: MutationG
 @authenticated
 async def create_chat_message(
     project_id: str,
+    request: Request,
     data: ChatMessage,
     agent: Agent,
     response: Response,
     _guard: MutationGuard,
 ) -> ChatResponse:
     try:
-        result = await agent.handle(project_id, data.message, data.id)
+        result = await agent.handle(
+            project_id,
+            data.message,
+            data.id,
+            data.selected_object_id,
+            data.attachment_ids,
+            request=request,
+        )
     except AgentUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except OpenAIError as error:
@@ -1198,12 +1208,15 @@ def _sse(event: str, data: Any) -> str:
 @authenticated
 async def stream_chat_message(
     project_id: str,
+    request: Request,
     data: ChatMessage,
     agent: Agent,
     service: ChatServiceDep,
     _guard: MutationGuard,
 ) -> StreamingResponse:
-    await service.save_user_message(project_id, data.id, data.message)
+    await service.save_user_message(
+        project_id, data.id, data.message, data.selected_object_id, data.attachment_ids
+    )
     try:
         agent.ensure_available()
     except AgentUnavailableError as error:
@@ -1211,7 +1224,14 @@ async def stream_chat_message(
 
     async def events() -> AsyncIterator[str]:
         try:
-            async for event in agent.handle_stream(project_id, data.message, data.id):
+            async for event in agent.handle_stream(
+                project_id,
+                data.message,
+                data.id,
+                data.selected_object_id,
+                data.attachment_ids,
+                request=request,
+            ):
                 if event["type"] == "result":
                     result = event["result"]
                     payload = ChatResponse(

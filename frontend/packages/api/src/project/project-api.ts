@@ -10,6 +10,7 @@ import type {
   CameraOrientationKeyframeCreate,
   CameraOrientationKeyframeUpdate,
   ChatResponse,
+  ChatMessage,
   DepthOfFieldKeyframeCreate,
   DepthOfFieldKeyframeUpdate,
 } from "@camera-path/types/api";
@@ -72,16 +73,24 @@ export const projectApi = {
   clearTrajectory: async (id: string) => {
     await api.clearTrajectory(id);
   },
-  saveUserMessage: async (id: string, messageId: string, message: string) =>
-    (await api.saveUserChatMessage(id, { id: messageId, message })).data,
+  saveUserMessage: async (
+    id: string,
+    messageId: string,
+    message: string,
+    context: Partial<ChatMessage> = {},
+  ) =>
+    (await api.saveUserChatMessage(id, { id: messageId, message, ...context }))
+      .data,
   chat: async (
     id: string,
     messageId: string,
     message: string,
+    context: Partial<ChatMessage> = {},
   ): Promise<ChatResponse> => {
     const response = await api.createChatMessage(id, {
       id: messageId,
       message,
+      ...context,
     });
     if (response.status !== 200) throw new Error("Could not send message");
     return response.data;

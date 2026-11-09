@@ -26,6 +26,7 @@
         "packages/actions/src/mutations/camera-orientation/use-delete-orientation-timeline.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-camera-orientation-keyframe.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
+        "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
         "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
         "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
@@ -333,7 +334,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 34,
+              "line": 72,
               "column": 9,
               "expression": "actions.selectObject"
             }
@@ -477,19 +478,19 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 13,
+            "line": 20,
             "column": 3
           },
           "usages": [
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 13,
+              "line": 20,
               "column": 3,
               "expression": "onAccepted"
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 27,
+              "line": 63,
               "column": 7,
               "expression": "onAccepted"
             }
@@ -771,7 +772,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 19,
+              "line": 34,
               "column": 19,
               "expression": "useEditorActions"
             },
@@ -848,6 +849,24 @@
               "line": 9,
               "column": 17,
               "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useListProjectGenerationJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 6806,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+              "line": 16,
+              "column": 16,
+              "expression": "useListProjectGenerationJobs(projectId, {\n    query: { refetchInterval: 5000 },\n  })"
             }
           ]
         },
@@ -978,8 +997,14 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
+              "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+              "line": 14,
+              "column": 21,
+              "expression": "useProjectId()"
+            },
+            {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 17,
+              "line": 32,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             },
@@ -1107,6 +1132,7 @@
         "packages/api/src/resources/use-scene-points.ts",
         "packages/api/src/resources/use-speed-timeline.ts",
         "packages/api/src/resources/use-trajectory-geometry.ts",
+        "packages/api/src/upload-chat-image.ts",
         "packages/api/src/upload-library-file.ts"
       ],
       "slots": {},
@@ -1118,7 +1144,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3399,
+            "line": 3400,
             "column": 1
           },
           "usages": [
@@ -1142,7 +1168,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8937,
+            "line": 9403,
             "column": 1
           },
           "usages": [
@@ -1166,7 +1192,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3763,
+            "line": 3764,
             "column": 1
           },
           "usages": [
@@ -1190,7 +1216,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 945,
+            "line": 946,
             "column": 1
           },
           "usages": [
@@ -1208,7 +1234,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1626,
+            "line": 1627,
             "column": 1
           },
           "usages": [
@@ -1226,7 +1252,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4864,
+            "line": 4865,
             "column": 1
           },
           "usages": [
@@ -1250,7 +1276,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5228,
+            "line": 5229,
             "column": 1
           },
           "usages": [
@@ -1274,7 +1300,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2538,
+            "line": 2539,
             "column": 1
           },
           "usages": [
@@ -1292,7 +1318,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6575,
+            "line": 7041,
             "column": 1
           },
           "usages": [
@@ -1316,7 +1342,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8806,
+            "line": 9272,
             "column": 1
           },
           "usages": [
@@ -1340,7 +1366,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2788,
+            "line": 2789,
             "column": 1
           },
           "usages": [
@@ -1364,7 +1390,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5968,
+            "line": 6313,
             "column": 1
           },
           "usages": [
@@ -1388,7 +1414,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 711,
+            "line": 712,
             "column": 1
           },
           "usages": [
@@ -1406,7 +1432,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1180,
+            "line": 1181,
             "column": 1
           },
           "usages": [
@@ -1424,7 +1450,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2180,
+            "line": 2181,
             "column": 1
           },
           "usages": [
@@ -1448,7 +1474,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7315,
+            "line": 7781,
             "column": 1
           },
           "usages": [
@@ -1466,7 +1492,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7812,
+            "line": 8278,
             "column": 1
           },
           "usages": [
@@ -2483,11 +2509,15 @@
       "root": "packages/features/chat-agent",
       "entrypoint": "packages/features/chat-agent/src/index.ts",
       "files": [
+        "packages/features/chat-agent/src/constants.ts",
+        "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
         "packages/features/chat-agent/src/index.ts",
         "packages/features/chat-agent/src/model/use-chat-composer.ts",
         "packages/features/chat-agent/src/ports/editor-only.tsx",
+        "packages/features/chat-agent/src/ports/use-chat-selection.ts",
         "packages/features/chat-agent/src/ui/anchor-reference-picker.tsx",
         "packages/features/chat-agent/src/ui/auto-growing-textarea.tsx",
+        "packages/features/chat-agent/src/ui/chat-image-input.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-code-block.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-link.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-table.tsx",
@@ -2499,11 +2529,19 @@
       ],
       "slots": {
         "project": {
+          "root": [
+            {
+              "name": "GenerationPlacementEffect",
+              "file": "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
+              "line": 3,
+              "column": 1
+            }
+          ],
           "sidebar": [
             {
               "name": "ChatSidebar",
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 9,
+              "line": 10,
               "column": 1
             }
           ]
@@ -2511,18 +2549,36 @@
       },
       "actions": [
         {
+          "name": "useGenerationPlacementUpdates",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+            "line": 13,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
+              "line": 4,
+              "column": 3,
+              "expression": "useGenerationPlacementUpdates"
+            }
+          ]
+        },
+        {
           "name": "useSendChatMessageMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 16,
+            "line": 25,
             "column": 1
           },
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 13,
+              "line": 15,
               "column": 20,
               "expression": "useSendChatMessageMutation"
             }
@@ -2541,8 +2597,14 @@
           },
           "usages": [
             {
+              "file": "packages/features/chat-agent/src/ports/use-chat-selection.ts",
+              "line": 7,
+              "column": 19,
+              "expression": "useAnchors()"
+            },
+            {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 11,
+              "line": 13,
               "column": 23,
               "expression": "useAnchors()"
             }
@@ -2566,7 +2628,7 @@
             },
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 10,
+              "line": 11,
               "column": 19,
               "expression": "useAuth()"
             }
@@ -2584,9 +2646,27 @@
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 12,
+              "line": 14,
               "column": 19,
               "expression": "useChatHistory()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneModels",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-scene-models.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ports/use-chat-selection.ts",
+              "line": 8,
+              "column": 18,
+              "expression": "useSceneModels()"
             }
           ]
         },
@@ -2603,9 +2683,28 @@
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 13,
+              "line": 15,
               "column": 47,
               "expression": "useProjectId()"
+            }
+          ]
+        },
+        {
+          "name": "useSceneInteraction",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-scene-interaction.ts",
+            "line": 3,
+            "column": 1
+          },
+          "statePaths": ["sceneInteraction"],
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ports/use-chat-selection.ts",
+              "line": 6,
+              "column": 32,
+              "expression": "useSceneInteraction()"
             }
           ]
         }
@@ -2951,6 +3050,7 @@
         "packages/features/job-details/src/index.ts",
         "packages/features/job-details/src/ui/job-details-page.tsx",
         "packages/features/job-details/src/ui/job-result-card.tsx",
+        "packages/features/job-details/src/ui/job-scene-placement.tsx",
         "packages/features/job-details/src/ui/job-source-image.tsx"
       ],
       "slots": {
@@ -2959,7 +3059,7 @@
             {
               "name": "JobDetailsPage",
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 10,
+              "line": 11,
               "column": 1
             }
           ]
@@ -2979,7 +3079,7 @@
           "usages": [
             {
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 11,
+              "line": 12,
               "column": 20,
               "expression": "useJobResource()"
             }

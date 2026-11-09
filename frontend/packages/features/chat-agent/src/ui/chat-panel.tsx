@@ -12,7 +12,10 @@ import { AnchorReferencePicker } from "@camera-path/feature-chat-agent/ui/anchor
 import { AutoGrowingTextarea } from "@camera-path/feature-chat-agent/ui/auto-growing-textarea";
 import { ChatMessage } from "@camera-path/feature-chat-agent/ui/chat-message";
 
+import { ChatImageInput } from "./chat-image-input";
+
 export interface ChatPanelProps {
+  selection?: { id: string; name: string } | null;
   anchors: Anchor[];
   error: string | null;
   messages: ChatHistoryMessage[];
@@ -28,6 +31,7 @@ export function ChatPanel({
   pending,
   composer,
   headerAction,
+  selection,
 }: ChatPanelProps) {
   const { message, submit, changeMessage, handleKeyDown, insertAnchor } =
     composer;
@@ -43,7 +47,7 @@ export function ChatPanel({
         <div>
           <h2 className="text-xs font-semibold">Trajectory agent</h2>
           <p className="text-[10px] text-muted-foreground">
-            Build and refine the current path
+            Build the scene and camera path
           </p>
         </div>
         {headerAction}
@@ -61,7 +65,7 @@ export function ChatPanel({
         {pending && (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-muted-foreground">
             <LoaderCircle className="size-3.5 animate-spin" /> Agent is editing
-            the trajectory…
+            the scene…
           </div>
         )}
         <div ref={endRef} />
@@ -74,6 +78,27 @@ export function ChatPanel({
           <fieldset disabled={pending}>
             <AnchorReferencePicker anchors={anchors} onSelect={insertAnchor} />
           </fieldset>
+          {selection && (
+            <p
+              className="truncate rounded border bg-muted/40 px-2 py-1 text-[10px]"
+              title={selection.name}
+            >
+              Selected: {selection.name}
+            </p>
+          )}
+          {composer.files && (
+            <ChatImageInput
+              files={composer.files}
+              disabled={pending}
+              onAdd={composer.addFiles}
+              onRemove={composer.removeFile}
+            />
+          )}
+          {composer.attachmentError && (
+            <p className="text-[10px] text-destructive">
+              {composer.attachmentError}
+            </p>
+          )}
           {error && (
             <p className="text-[10px] leading-4 text-destructive">{error}</p>
           )}

@@ -7,6 +7,7 @@
  */
 import type { JobError } from './jobError';
 import type { JobInput } from './jobInput';
+import type { JobScenePlacement } from './jobScenePlacement';
 import type { JobStatus } from './jobStatus';
 import type { LibraryAsset } from './libraryAsset';
 
@@ -20,6 +21,7 @@ export interface Job {
   input_asset?: LibraryAsset | null;
   /** Explicit job name or an automatic name saved at creation. */
   name: string | null;
+  scene_placement?: JobScenePlacement | null;
   started_at: string | null;
   status: JobStatus;
   type: string | null;

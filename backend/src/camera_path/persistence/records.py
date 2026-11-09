@@ -146,6 +146,8 @@ class JobRecord(Base):
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str | None] = mapped_column(Text)
+    scene_placement: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    request_key: Mapped[str | None] = mapped_column(Text, unique=True, index=True)
     type: Mapped[str | None] = mapped_column(Text)
     input: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     status: Mapped[JobStatus] = mapped_column(
@@ -558,6 +560,18 @@ class ChatMessageRecord(ProjectChildRecord, Base):
         enum_column(ChatRole, "ck_chat_messages_role"), nullable=False
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    context: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+
+
+class ChatAttachmentRecord(ProjectChildRecord, Base):
+    __tablename__ = "chat_attachments"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    asset_id: Mapped[str | None] = mapped_column(
+        ForeignKey("library_assets.id", ondelete="SET NULL"), index=True
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    format: Mapped[str] = mapped_column(Text, nullable=False)
+    ready: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class AuthChallengeRecord(Base):

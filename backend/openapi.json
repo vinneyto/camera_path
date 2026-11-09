@@ -743,8 +743,60 @@
         "title": "ChallengeResponse",
         "type": "object"
       },
+      "ChatAttachment": {
+        "properties": {
+          "format": {
+            "enum": [
+              "png",
+              "jpg",
+              "jpeg",
+              "webp"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "library_asset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Asset Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "url"
+        ],
+        "title": "ChatAttachment",
+        "type": "object"
+      },
       "ChatHistoryMessage": {
         "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/ChatAttachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "content": {
             "title": "Content",
             "type": "string"
@@ -760,6 +812,16 @@
             ],
             "title": "Role",
             "type": "string"
+          },
+          "selected_object": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -771,6 +833,14 @@
       },
       "ChatMessage": {
         "properties": {
+          "attachment_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Attachment Ids",
+            "type": "array"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -780,6 +850,18 @@
             "minLength": 1,
             "title": "Message",
             "type": "string"
+          },
+          "selected_object_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Object Id"
           }
         },
         "required": [
@@ -803,6 +885,40 @@
           "compiled"
         ],
         "title": "ChatResponse",
+        "type": "object"
+      },
+      "ChatSelection": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "anchor",
+              "model",
+              "scene_point",
+              "trajectory"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "scene_object_id": {
+            "title": "Scene Object Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_object_id",
+          "kind",
+          "resource_id",
+          "name"
+        ],
+        "title": "ChatSelection",
         "type": "object"
       },
       "CompiledCameraKeyframe": {
@@ -1498,6 +1614,16 @@
             "description": "Explicit job name or an automatic name saved at creation.",
             "title": "Name"
           },
+          "scene_placement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobScenePlacement"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "started_at": {
             "anyOf": [
               {
@@ -1650,6 +1776,55 @@
         "title": "JobResultSummary",
         "type": "object"
       },
+      "JobScenePlacement": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/Anchor"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "scene_object_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene Object Id"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "succeeded",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "anchor",
+          "status"
+        ],
+        "title": "JobScenePlacement",
+        "type": "object"
+      },
       "JobStatus": {
         "enum": [
           "draft",
@@ -1748,6 +1923,16 @@
               }
             ],
             "title": "Prompt"
+          },
+          "scene_placement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobScenePlacement"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "started_at": {
             "anyOf": [
@@ -7156,6 +7341,172 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/chat/attachments": {
+      "post": {
+        "description": "Stage an original chat image without publishing it in the library.",
+        "operationId": "createChatAttachmentUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryUploadCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryUpload"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Attachment",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/attachments/{attachment_id}/complete": {
+      "post": {
+        "description": "Validate a staged image and make it available to this project conversation.",
+        "operationId": "completeChatAttachmentUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatAttachment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete Attachment",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/attachments/{attachment_id}/content": {
+      "get": {
+        "description": "Read a validated original chat image by its project-scoped attachment ID.",
+        "operationId": "getChatAttachmentContent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attachment Content",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/chat/messages": {
       "get": {
         "description": "Return the complete chat history for the first API version.",
@@ -7507,6 +7858,54 @@
         "summary": "Save a user chat message",
         "tags": [
           "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/generation-jobs": {
+      "get": {
+        "description": "List generation jobs with durable scene-placement intents for this project.",
+        "operationId": "listProjectGenerationJobs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobSummary"
+                  },
+                  "title": "Response Listprojectgenerationjobs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Generation Jobs",
+        "tags": [
+          "Chat",
+          "Jobs"
         ]
       }
     },

@@ -110,6 +110,19 @@ class ResponsesHandler(BaseHTTPRequestHandler):
                 }
             ]
         )
+        if self.server.mode == "scene_tools":
+            completed = sum(item.get("type") == "function_call_output" for item in body["input"])
+            if completed < len(self.server.scene_tools):
+                name, arguments = self.server.scene_tools[completed]
+                output = [
+                    {
+                        "type": "function_call",
+                        "id": f"fc_{completed}",
+                        "call_id": f"call_{completed}",
+                        "name": name,
+                        "arguments": json.dumps(arguments),
+                    }
+                ]
         response = {
             "id": "resp_fixture",
             "object": "response",
@@ -153,6 +166,7 @@ class ResponsesServer(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", 0), ResponsesHandler)
         self.mode = "answer"
         self.requests = []
+        self.scene_tools = []
         self.thread = threading.Thread(target=self.serve_forever, daemon=True)
         self.thread.start()
 

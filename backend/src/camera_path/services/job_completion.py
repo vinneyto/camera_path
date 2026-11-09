@@ -19,6 +19,7 @@ from camera_path.persistence.records import (
     LibraryAssetFileRecord,
     LibraryAssetRecord,
 )
+from camera_path.services.anchor_replacement import apply_job_placement
 from camera_path.services.io import blocking_io
 from camera_path.services.job_completion_models import JobCompletionMessage
 from camera_path.services.library import LibraryService
@@ -254,6 +255,16 @@ class JobCompletionService:
                             ],
                         )
                     )
+                await session.flush()
+                if job.scene_placement:
+                    generated = await session.scalar(
+                        select(LibraryAssetRecord).where(
+                            LibraryAssetRecord.job_id == job.id,
+                            LibraryAssetRecord.job_position == 0,
+                        )
+                    )
+                    if generated is not None:
+                        await apply_job_placement(session, job, generated)
                 job.status = "succeeded"
                 job.generation_dispatch_pending = False
                 job.error = None

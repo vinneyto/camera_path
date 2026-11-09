@@ -347,6 +347,29 @@ quaternion.
 Deleting a referenced scene point returns `409` unless `?cascade=true` is supplied; cascade also
 deletes its camera keys. Mutations advance one shared project revision.
 
+## Scene context and image attachments in chat
+
+Chat message bodies accept optional `selected_object_id` and `attachment_ids` (up to eight).
+The backend saves a project-validated selection snapshot with the user message; changing selection
+later does not retarget an earlier request. Original PNG/JPEG/WebP images (up to 20 MB each) are
+staged with `POST /api/v1/projects/{id}/chat/attachments`, uploaded to the returned URL, then validated
+with `POST /api/v1/projects/{id}/chat/attachments/{attachment_id}/complete`. Staging does not publish
+the image in the library. The agent's `create_library_asset` tool publishes it explicitly.
+
+The agent can start image generation, inspect jobs/library/scene objects, calculate fitted TRS,
+place/update/delete scene instances, and replace an anchor atomically. Fit uses the stored model
+bbox, library rotation defaults and anchor height; quaternions use XYZW. `replace_anchor_id` in the
+agent's generation tool persists a replacement intent outside the worker input. Completion places
+the generated model and removes the unchanged anchor in the same transaction as asset import.
+Deleted/changed anchors or trajectory references skip placement and retain the generated asset.
+Job details show the placement outcome. `GET /api/v1/projects/{id}/generation-jobs` supplies scene
+refreshes after asynchronous completion. Failed generation preserves the anchor.
+
+`tests/test_chat_scene_assets.py` and `integration/tests/test_chat_assets.py` exercise these paths
+with a local Responses API fixture and worker result manifests. They require no real agent key.
+Live natural-language behavior still requires `OPENAI_API_KEY`; no key is needed merely to upload
+images or save selected-object context in chat.
+
 ## Streaming chat
 
 `POST /api/v1/projects/{id}/chat/messages/stream` accepts the same JSON body as the regular chat endpoint

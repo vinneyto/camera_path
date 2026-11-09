@@ -20,7 +20,9 @@ class ChatMessageRepository:
             .order_by(ChatMessageRecord.position)
         )
         return [
-            ChatHistoryMessage(id=item.id, role=item.role.value, content=item.content)
+            ChatHistoryMessage(
+                id=item.id, role=item.role.value, content=item.content, **(item.context or {})
+            )
             for item in records
         ]
 
@@ -36,6 +38,9 @@ class ChatMessageRepository:
                     position=position,
                     role=ChatRole(item.role),
                     content=item.content,
+                    context=item.model_dump(
+                        mode="json", include={"selected_object", "attachments"}
+                    ),
                 )
                 for position, item in enumerate(messages)
             ],

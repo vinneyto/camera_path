@@ -1,4 +1,5 @@
 "use client";
+import { JobScenePlacement } from "./job-scene-placement";
 
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
@@ -82,6 +83,7 @@ export function JobDetailsPage() {
               {job.type}
             </p>
           )}
+          <JobScenePlacement job={job} />
           {job.input && (
             <details className="rounded-lg border p-4 text-xs">
               <summary className="cursor-pointer font-medium">
