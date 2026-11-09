@@ -12,6 +12,10 @@ export const ANCHOR_SELECTION_MIN_HEIGHT = 0.08;
 export const ANCHOR_SELECTION_COLLAPSED_RADIUS = 0.18;
 export const ANCHOR_SELECTION_SEGMENTS = 12;
 export const ANCHOR_SELECTION_MIDPOINT = 0.5;
+export const ANCHOR_GENERATION_INDICATOR_CLASS =
+  "absolute bottom-7 left-0 flex size-4 -translate-x-1/2 items-center justify-center rounded-full border border-orange-400/60 bg-background/90 text-orange-400 shadow-sm";
+export const ANCHOR_GENERATION_SPINNER_CLASS =
+  "size-3 animate-spin motion-reduce:animate-none";
 
 export const ANCHOR_ICON_COLOR_CLASS = {
   normal: "fill-orange-500 text-orange-400",

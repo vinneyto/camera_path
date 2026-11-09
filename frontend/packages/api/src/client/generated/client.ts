@@ -39,6 +39,7 @@ import type {
   CameraTrackUpdate,
   ChallengeRequest,
   ChallengeResponse,
+  ChatAttachment,
   ChatHistoryMessage,
   ChatMessage,
   ChatResponse,
@@ -5890,6 +5891,350 @@ export const useClearProjectChat = <TError = void | ErrorResponse,
       return useMutation(getClearProjectChatMutationOptions(options), queryClient);
     }
 
+export type createChatAttachmentUploadResponse201 = {
+  data: LibraryUpload
+  status: 201
+}
+
+export type createChatAttachmentUploadResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createChatAttachmentUploadResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type createChatAttachmentUploadResponseSuccess = (createChatAttachmentUploadResponse201) & {
+  headers: Headers;
+};
+export type createChatAttachmentUploadResponseError = (createChatAttachmentUploadResponse401 | createChatAttachmentUploadResponse422) & {
+  headers: Headers;
+};
+
+export type createChatAttachmentUploadResponse = (createChatAttachmentUploadResponseSuccess | createChatAttachmentUploadResponseError)
+
+export const getCreateChatAttachmentUploadUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/chat/attachments`
+}
+
+/**
+ * Stage an original chat image without publishing it in the library.
+ * @summary Create Attachment
+ */
+export const createChatAttachmentUpload = async (projectId: string,
+    libraryUploadCreate: LibraryUploadCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createChatAttachmentUploadResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<createChatAttachmentUploadResponse>(getCreateChatAttachmentUploadUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(libraryUploadCreate)
+  }
+);}
+
+
+
+
+
+export const getCreateChatAttachmentUploadMutationKey = () => ['createChatAttachmentUpload'] as const;
+
+export const getCreateChatAttachmentUploadMutationOptions = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatAttachmentUpload>>, TError,CreateChatAttachmentUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createChatAttachmentUpload>>, TError,CreateChatAttachmentUploadMutationVariables, TContext> => {
+
+const mutationKey = getCreateChatAttachmentUploadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChatAttachmentUpload>>, CreateChatAttachmentUploadMutationVariables> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createChatAttachmentUpload(projectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateChatAttachmentUploadMutationResult = NonNullable<Awaited<ReturnType<typeof createChatAttachmentUpload>>>
+    export type CreateChatAttachmentUploadMutationBody = LibraryUploadCreate
+    export type CreateChatAttachmentUploadMutationError = void | HTTPValidationError
+    export type CreateChatAttachmentUploadMutationVariables = {projectId: string;data: LibraryUploadCreate}
+
+    /**
+ * @summary Create Attachment
+ */
+export const useCreateChatAttachmentUpload = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatAttachmentUpload>>, TError,CreateChatAttachmentUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createChatAttachmentUpload>>,
+        TError,
+        CreateChatAttachmentUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateChatAttachmentUploadMutationOptions(options), queryClient);
+    }
+
+export type completeChatAttachmentUploadResponse200 = {
+  data: ChatAttachment
+  status: 200
+}
+
+export type completeChatAttachmentUploadResponse401 = {
+  data: void
+  status: 401
+}
+
+export type completeChatAttachmentUploadResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type completeChatAttachmentUploadResponseSuccess = (completeChatAttachmentUploadResponse200) & {
+  headers: Headers;
+};
+export type completeChatAttachmentUploadResponseError = (completeChatAttachmentUploadResponse401 | completeChatAttachmentUploadResponse422) & {
+  headers: Headers;
+};
+
+export type completeChatAttachmentUploadResponse = (completeChatAttachmentUploadResponseSuccess | completeChatAttachmentUploadResponseError)
+
+export const getCompleteChatAttachmentUploadUrl = (projectId: string,
+    attachmentId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/chat/attachments/${attachmentId}/complete`
+}
+
+/**
+ * Validate a staged image and make it available to this project conversation.
+ * @summary Complete Attachment
+ */
+export const completeChatAttachmentUpload = async (projectId: string,
+    attachmentId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<completeChatAttachmentUploadResponse> => {
+
+  return orvalFetch<completeChatAttachmentUploadResponse>(getCompleteChatAttachmentUploadUrl(projectId,attachmentId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCompleteChatAttachmentUploadMutationKey = () => ['completeChatAttachmentUpload'] as const;
+
+export const getCompleteChatAttachmentUploadMutationOptions = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeChatAttachmentUpload>>, TError,CompleteChatAttachmentUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeChatAttachmentUpload>>, TError,CompleteChatAttachmentUploadMutationVariables, TContext> => {
+
+const mutationKey = getCompleteChatAttachmentUploadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeChatAttachmentUpload>>, CompleteChatAttachmentUploadMutationVariables> = (props) => {
+          const {projectId,attachmentId} = props ?? {};
+
+          return  completeChatAttachmentUpload(projectId,attachmentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteChatAttachmentUploadMutationResult = NonNullable<Awaited<ReturnType<typeof completeChatAttachmentUpload>>>
+
+    export type CompleteChatAttachmentUploadMutationError = void | HTTPValidationError
+    export type CompleteChatAttachmentUploadMutationVariables = {projectId: string;attachmentId: string}
+
+    /**
+ * @summary Complete Attachment
+ */
+export const useCompleteChatAttachmentUpload = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeChatAttachmentUpload>>, TError,CompleteChatAttachmentUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof completeChatAttachmentUpload>>,
+        TError,
+        CompleteChatAttachmentUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompleteChatAttachmentUploadMutationOptions(options), queryClient);
+    }
+
+export type getChatAttachmentContentResponse200 = {
+  data: void
+  status: 200
+}
+
+export type getChatAttachmentContentResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getChatAttachmentContentResponseSuccess = (getChatAttachmentContentResponse200) & {
+  headers: Headers;
+};
+export type getChatAttachmentContentResponseError = (getChatAttachmentContentResponse422) & {
+  headers: Headers;
+};
+
+export type getChatAttachmentContentResponse = (getChatAttachmentContentResponseSuccess | getChatAttachmentContentResponseError)
+
+export const getGetChatAttachmentContentUrl = (projectId: string,
+    attachmentId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/chat/attachments/${attachmentId}/content`
+}
+
+/**
+ * Read a validated original chat image by its project-scoped attachment ID.
+ * @summary Attachment Content
+ */
+export const getChatAttachmentContent = async (projectId: string,
+    attachmentId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getChatAttachmentContentResponse> => {
+
+  return orvalFetch<getChatAttachmentContentResponse>(getGetChatAttachmentContentUrl(projectId,attachmentId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChatAttachmentContentQueryKey = (projectId: string,
+    attachmentId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/chat/attachments/${attachmentId}/content`
+    ] as const;
+    }
+
+
+export const getGetChatAttachmentContentQueryOptions = <TData = Awaited<ReturnType<typeof getChatAttachmentContent>>, TError = HTTPValidationError>(projectId: string,
+    attachmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAttachmentContent>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChatAttachmentContentQueryKey(projectId,attachmentId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatAttachmentContent>>> = ({ signal }) => getChatAttachmentContent(projectId,attachmentId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined && attachmentId !== null && attachmentId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatAttachmentContent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChatAttachmentContentQueryResult = NonNullable<Awaited<ReturnType<typeof getChatAttachmentContent>>>
+export type GetChatAttachmentContentQueryError = HTTPValidationError
+
+
+export function useGetChatAttachmentContent<TData = Awaited<ReturnType<typeof getChatAttachmentContent>>, TError = HTTPValidationError>(
+ projectId: string,
+    attachmentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAttachmentContent>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatAttachmentContent>>,
+          TError,
+          Awaited<ReturnType<typeof getChatAttachmentContent>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatAttachmentContent<TData = Awaited<ReturnType<typeof getChatAttachmentContent>>, TError = HTTPValidationError>(
+ projectId: string,
+    attachmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAttachmentContent>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatAttachmentContent>>,
+          TError,
+          Awaited<ReturnType<typeof getChatAttachmentContent>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatAttachmentContent<TData = Awaited<ReturnType<typeof getChatAttachmentContent>>, TError = HTTPValidationError>(
+ projectId: string,
+    attachmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAttachmentContent>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Attachment Content
+ */
+
+export function useGetChatAttachmentContent<TData = Awaited<ReturnType<typeof getChatAttachmentContent>>, TError = HTTPValidationError>(
+ projectId: string,
+    attachmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAttachmentContent>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChatAttachmentContentQueryOptions(projectId,attachmentId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listChatMessagesResponse200 = {
   data: ChatHistoryMessage[]
   status: 200
@@ -6382,6 +6727,127 @@ export const useSaveUserChatMessage = <TError = void | ErrorResponse,
       > => {
       return useMutation(getSaveUserChatMessageMutationOptions(options), queryClient);
     }
+
+export type listProjectGenerationJobsResponse200 = {
+  data: JobSummary[]
+  status: 200
+}
+
+export type listProjectGenerationJobsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type listProjectGenerationJobsResponseSuccess = (listProjectGenerationJobsResponse200) & {
+  headers: Headers;
+};
+export type listProjectGenerationJobsResponseError = (listProjectGenerationJobsResponse422) & {
+  headers: Headers;
+};
+
+export type listProjectGenerationJobsResponse = (listProjectGenerationJobsResponseSuccess | listProjectGenerationJobsResponseError)
+
+export const getListProjectGenerationJobsUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/generation-jobs`
+}
+
+/**
+ * List generation jobs with durable scene-placement intents for this project.
+ * @summary List Generation Jobs
+ */
+export const listProjectGenerationJobs = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<listProjectGenerationJobsResponse> => {
+
+  return orvalFetch<listProjectGenerationJobsResponse>(getListProjectGenerationJobsUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectGenerationJobsQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/generation-jobs`
+    ] as const;
+    }
+
+
+export const getListProjectGenerationJobsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectGenerationJobsQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectGenerationJobs>>> = ({ signal }) => listProjectGenerationJobs(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProjectGenerationJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectGenerationJobs>>>
+export type ListProjectGenerationJobsQueryError = HTTPValidationError
+
+
+export function useListProjectGenerationJobs<TData = Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectGenerationJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectGenerationJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectGenerationJobs<TData = Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectGenerationJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectGenerationJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectGenerationJobs<TData = Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Generation Jobs
+ */
+
+export function useListProjectGenerationJobs<TData = Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectGenerationJobs>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProjectGenerationJobsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export type deleteSpeedTimelineResponse204 = {
   data: void

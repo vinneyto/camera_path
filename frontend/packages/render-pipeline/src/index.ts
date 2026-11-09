@@ -10,6 +10,7 @@ export { sortRenderPipelineIntersections } from "./sort-render-pipeline-intersec
 export {
   HOVERABLE,
   SELECTABLE,
+  CLICKABLE,
   WIDGET_PICK_LAYER,
 } from "./scene-interaction-layers";
 export {

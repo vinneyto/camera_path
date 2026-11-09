@@ -13,9 +13,14 @@ export function ChatSidebar() {
   const mutation = useSendChatMessageMutation(useProjectId());
   const composer = useChatComposer({
     pending: mutation.isPending,
-    onSend: async (id, message, onAccepted) => {
+    onSend: async (id, message, onAccepted, files) => {
       await mutation
-        .mutateAsync({ id, message, onAccepted })
+        .mutateAsync({
+          id,
+          message,
+          onAccepted,
+          files,
+        })
         .catch(() => undefined);
     },
   });

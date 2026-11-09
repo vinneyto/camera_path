@@ -7,24 +7,15 @@ import { useCallback } from "react";
 export function useHoveredAnchor() {
   const state = useSceneInteraction();
   const hover = useEditorActions().hoverObject;
-  const select = useEditorActions().selectObject;
   // These callbacks participate in scene effects and must retain their identity.
   const clearHoveredAnchor = useCallback(
     (id: string) => void hover({ id: null, ifCurrentId: anchorObjectId(id) }),
     [hover],
   );
-  const clearSelectedAnchor = useCallback(
-    (id: string) => void select({ id: null, ifCurrentId: anchorObjectId(id) }),
-    [select],
-  );
   return {
     hoveredAnchorId: state.hoveredObjectId?.startsWith("anchor:")
       ? state.hoveredObjectId.slice("anchor:".length)
       : null,
-    selectedAnchorId: state.selectedObjectId?.startsWith("anchor:")
-      ? state.selectedObjectId.slice("anchor:".length)
-      : null,
     clearHoveredAnchor,
-    clearSelectedAnchor,
   };
 }

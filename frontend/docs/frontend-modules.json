@@ -8,6 +8,7 @@
       "entrypoint": "packages/actions/src/index.ts",
       "files": [
         "packages/actions/src/actions-provider.tsx",
+        "packages/actions/src/append-chat-reference.ts",
         "packages/actions/src/create-editor-actions.ts",
         "packages/actions/src/deletions/api/use-clear-trajectory.ts",
         "packages/actions/src/deletions/api/use-delete-anchor.ts",
@@ -26,6 +27,7 @@
         "packages/actions/src/mutations/camera-orientation/use-delete-orientation-timeline.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-camera-orientation-keyframe.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
+        "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
         "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
         "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
@@ -108,6 +110,30 @@
               "line": 19,
               "column": 30,
               "expression": "Context"
+            }
+          ]
+        },
+        {
+          "name": "appendChatReference",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/append-chat-reference.ts",
+            "line": 1,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/create-editor-actions.ts",
+              "line": 28,
+              "column": 26,
+              "expression": "appendChatReference"
+            },
+            {
+              "file": "packages/actions/src/create-editor-actions.ts",
+              "line": 46,
+              "column": 20,
+              "expression": "appendChatReference"
             }
           ]
         },
@@ -213,7 +239,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 25,
+            "line": 49,
             "column": 5
           },
           "usages": [
@@ -237,7 +263,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 45,
+            "line": 69,
             "column": 5
           },
           "usages": [
@@ -273,7 +299,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 55,
+            "line": 79,
             "column": 5
           },
           "usages": [
@@ -297,7 +323,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 85,
+            "line": 109,
             "column": 5
           },
           "usages": [
@@ -315,7 +341,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 57,
+            "line": 81,
             "column": 5
           },
           "usages": [
@@ -333,7 +359,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 34,
+              "line": 73,
               "column": 9,
               "expression": "actions.selectObject"
             }
@@ -345,7 +371,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 72,
+            "line": 96,
             "column": 5
           },
           "usages": [
@@ -375,7 +401,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 59,
+            "line": 83,
             "column": 5
           },
           "usages": [
@@ -393,7 +419,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 89,
+            "line": 113,
             "column": 5
           },
           "usages": [
@@ -411,7 +437,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 79,
+            "line": 103,
             "column": 5
           },
           "usages": [
@@ -477,19 +503,19 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 13,
+            "line": 21,
             "column": 3
           },
           "usages": [
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 13,
+              "line": 21,
               "column": 3,
               "expression": "onAccepted"
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 27,
+              "line": 64,
               "column": 7,
               "expression": "onAccepted"
             }
@@ -729,19 +755,19 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 11,
+            "line": 12,
             "column": 9
           },
           "usages": [
             {
               "file": "packages/actions/src/create-editor-actions.ts",
-              "line": 56,
+              "line": 80,
               "column": 7,
               "expression": "updateObject"
             },
             {
               "file": "packages/actions/src/create-editor-actions.ts",
-              "line": 58,
+              "line": 82,
               "column": 7,
               "expression": "updateObject"
             }
@@ -771,7 +797,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 19,
+              "line": 35,
               "column": 19,
               "expression": "useEditorActions"
             },
@@ -848,6 +874,24 @@
               "line": 9,
               "column": 17,
               "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectGenerationJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+              "line": 16,
+              "column": 16,
+              "expression": "useProjectGenerationJobs(projectId)"
             }
           ]
         },
@@ -978,8 +1022,14 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
+              "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+              "line": 14,
+              "column": 21,
+              "expression": "useProjectId()"
+            },
+            {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 17,
+              "line": 33,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             },
@@ -1080,6 +1130,7 @@
       "files": [
         "packages/api/src/client/orval-fetch.ts",
         "packages/api/src/config.ts",
+        "packages/api/src/constants.ts",
         "packages/api/src/identity/auth-provider.tsx",
         "packages/api/src/index.ts",
         "packages/api/src/project/index.ts",
@@ -1102,11 +1153,13 @@
         "packages/api/src/resources/use-library-catalog.ts",
         "packages/api/src/resources/use-lidar-timeline-resource.ts",
         "packages/api/src/resources/use-orientation-timeline.ts",
+        "packages/api/src/resources/use-project-generation-jobs.ts",
         "packages/api/src/resources/use-projects-catalog.ts",
         "packages/api/src/resources/use-scene-models.ts",
         "packages/api/src/resources/use-scene-points.ts",
         "packages/api/src/resources/use-speed-timeline.ts",
         "packages/api/src/resources/use-trajectory-geometry.ts",
+        "packages/api/src/upload-chat-image.ts",
         "packages/api/src/upload-library-file.ts"
       ],
       "slots": {},
@@ -1118,7 +1171,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3399,
+            "line": 3400,
             "column": 1
           },
           "usages": [
@@ -1142,7 +1195,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8937,
+            "line": 9403,
             "column": 1
           },
           "usages": [
@@ -1166,7 +1219,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3763,
+            "line": 3764,
             "column": 1
           },
           "usages": [
@@ -1190,7 +1243,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 945,
+            "line": 946,
             "column": 1
           },
           "usages": [
@@ -1208,7 +1261,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1626,
+            "line": 1627,
             "column": 1
           },
           "usages": [
@@ -1226,7 +1279,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4864,
+            "line": 4865,
             "column": 1
           },
           "usages": [
@@ -1250,7 +1303,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5228,
+            "line": 5229,
             "column": 1
           },
           "usages": [
@@ -1274,7 +1327,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2538,
+            "line": 2539,
             "column": 1
           },
           "usages": [
@@ -1292,7 +1345,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6575,
+            "line": 7041,
             "column": 1
           },
           "usages": [
@@ -1316,7 +1369,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8806,
+            "line": 9272,
             "column": 1
           },
           "usages": [
@@ -1340,7 +1393,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2788,
+            "line": 2789,
             "column": 1
           },
           "usages": [
@@ -1364,7 +1417,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5968,
+            "line": 6313,
             "column": 1
           },
           "usages": [
@@ -1388,15 +1441,15 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 711,
+            "line": 712,
             "column": 1
           },
           "usages": [
             {
               "file": "packages/api/src/resources/use-jobs-catalog.ts",
-              "line": 6,
+              "line": 7,
               "column": 10,
-              "expression": "useListJobs({ query: { refetchInterval: 5000 } })"
+              "expression": "useListJobs({ query: { refetchInterval: JOBS_POLL_INTERVAL_MS } })"
             }
           ]
         },
@@ -1406,7 +1459,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1180,
+            "line": 1181,
             "column": 1
           },
           "usages": [
@@ -1419,12 +1472,30 @@
           ]
         },
         {
+          "name": "useListProjectGenerationJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 6806,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+              "line": 7,
+              "column": 10,
+              "expression": "useListProjectGenerationJobs(useProjectId(id), {\n    query: { refetchInterval: JOBS_POLL_INTERVAL_MS },\n  })"
+            }
+          ]
+        },
+        {
           "name": "useListProjects",
           "kind": "api-hook",
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2180,
+            "line": 2181,
             "column": 1
           },
           "usages": [
@@ -1448,7 +1519,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7315,
+            "line": 7781,
             "column": 1
           },
           "usages": [
@@ -1466,7 +1537,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7812,
+            "line": 8278,
             "column": 1
           },
           "usages": [
@@ -1576,6 +1647,12 @@
               "expression": "useProjectId(id)"
             },
             {
+              "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+              "line": 7,
+              "column": 39,
+              "expression": "useProjectId(id)"
+            },
+            {
               "file": "packages/api/src/resources/use-scene-models.ts",
               "line": 5,
               "column": 37,
@@ -1634,7 +1711,9 @@
         "packages/features/anchors/src/lib/get-world-y-axis-lift.ts",
         "packages/features/anchors/src/model/use-anchor-tool-shortcut.ts",
         "packages/features/anchors/src/ports/use-active-editor-tool.tsx",
+        "packages/features/anchors/src/ports/use-generating-anchors.ts",
         "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
+        "packages/features/anchors/src/scene/anchor-generation-indicator.tsx",
         "packages/features/anchors/src/scene/anchor-height-editing-overlay.tsx",
         "packages/features/anchors/src/scene/anchor-height-ruler.tsx",
         "packages/features/anchors/src/scene/anchor-marker-content.tsx",
@@ -1646,6 +1725,7 @@
         "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
         "packages/features/anchors/src/scene/use-anchor-placement.ts",
         "packages/features/anchors/src/selectors/select-anchor-marker-appearance.ts",
+        "packages/features/anchors/src/selectors/select-generating-anchor-ids.ts",
         "packages/features/anchors/src/ui/anchor-tool-shortcut.tsx",
         "packages/features/anchors/src/ui/hint.tsx",
         "packages/features/anchors/src/ui/status.tsx"
@@ -1656,7 +1736,7 @@
             {
               "name": "AnchorsScene",
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 29,
+              "line": 30,
               "column": 1
             }
           ],
@@ -1685,7 +1765,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 55,
+            "line": 79,
             "column": 5
           },
           "usages": [
@@ -1697,51 +1777,33 @@
             },
             {
               "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 13,
+              "line": 12,
               "column": 26,
               "expression": "hover"
             },
             {
               "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 14,
+              "line": 13,
               "column": 6,
               "expression": "hover"
             }
           ]
         },
         {
-          "name": "createEditorActions.selectObject",
+          "name": "createEditorActions.referenceChatObject",
           "kind": "action",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 57,
+            "line": 43,
             "column": 5
           },
           "usages": [
             {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 10,
-              "column": 18,
-              "expression": "useEditorActions().selectObject"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 17,
-              "column": 26,
-              "expression": "select"
-            },
-            {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 18,
-              "column": 6,
-              "expression": "select"
-            },
-            {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 178,
+              "line": 164,
               "column": 7,
-              "expression": "selectObject"
+              "expression": "referenceChatObject"
             }
           ]
         },
@@ -1757,7 +1819,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 37,
+              "line": 39,
               "column": 15,
               "expression": "useAddAnchorMutation"
             }
@@ -1775,7 +1837,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 39,
+              "line": 41,
               "column": 20,
               "expression": "useDeleteAnchorMutation"
             }
@@ -1798,15 +1860,9 @@
               "expression": "useEditorActions"
             },
             {
-              "file": "packages/features/anchors/src/ports/use-hovered-anchor.tsx",
-              "line": 10,
-              "column": 18,
-              "expression": "useEditorActions"
-            },
-            {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 59,
-              "column": 28,
+              "line": 53,
+              "column": 35,
               "expression": "useEditorActions"
             }
           ]
@@ -1829,7 +1885,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/use-anchor-height-editing.ts",
-              "line": 58,
+              "line": 52,
               "column": 25,
               "expression": "useSetActiveEditorTool"
             },
@@ -1853,7 +1909,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 38,
+              "line": 40,
               "column": 18,
               "expression": "useUpdateAnchorMutation"
             }
@@ -1873,7 +1929,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 30,
+              "line": 31,
               "column": 17,
               "expression": "useAnchors()"
             },
@@ -1897,7 +1953,7 @@
           "usages": [
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 33,
+              "line": 35,
               "column": 19,
               "expression": "useAuth()"
             },
@@ -1906,6 +1962,24 @@
               "line": 9,
               "column": 19,
               "expression": "useAuth()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectGenerationJobs",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-project-generation-jobs.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-generating-anchors.ts",
+              "line": 8,
+              "column": 16,
+              "expression": "useProjectGenerationJobs(projectId)"
             }
           ]
         },
@@ -1928,7 +2002,7 @@
             },
             {
               "file": "packages/features/anchors/src/scene/scene.tsx",
-              "line": 32,
+              "line": 34,
               "column": 16,
               "expression": "useCameraState()"
             },
@@ -1974,6 +2048,25 @@
               "line": 7,
               "column": 16,
               "expression": "useEditorTool()"
+            }
+          ]
+        },
+        {
+          "name": "useProjectId",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/resource-scope-provider.tsx",
+            "line": 25,
+            "column": 1
+          },
+          "statePaths": [],
+          "usages": [
+            {
+              "file": "packages/features/anchors/src/ports/use-generating-anchors.ts",
+              "line": 7,
+              "column": 21,
+              "expression": "useProjectId()"
             }
           ]
         },
@@ -2356,7 +2449,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 59,
+            "line": 83,
             "column": 5
           },
           "usages": [
@@ -2483,11 +2576,15 @@
       "root": "packages/features/chat-agent",
       "entrypoint": "packages/features/chat-agent/src/index.ts",
       "files": [
+        "packages/features/chat-agent/src/constants.ts",
+        "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
         "packages/features/chat-agent/src/index.ts",
         "packages/features/chat-agent/src/model/use-chat-composer.ts",
         "packages/features/chat-agent/src/ports/editor-only.tsx",
         "packages/features/chat-agent/src/ui/anchor-reference-picker.tsx",
         "packages/features/chat-agent/src/ui/auto-growing-textarea.tsx",
+        "packages/features/chat-agent/src/ui/chat-image-attachments.tsx",
+        "packages/features/chat-agent/src/ui/chat-image-input.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-code-block.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-link.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-table.tsx",
@@ -2499,6 +2596,14 @@
       ],
       "slots": {
         "project": {
+          "root": [
+            {
+              "name": "GenerationPlacementEffect",
+              "file": "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
+              "line": 3,
+              "column": 1
+            }
+          ],
           "sidebar": [
             {
               "name": "ChatSidebar",
@@ -2511,12 +2616,102 @@
       },
       "actions": [
         {
+          "name": "createEditorActions.acceptChatMessage",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 37,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/model/use-chat-composer.ts",
+              "line": 46,
+              "column": 9,
+              "expression": "acceptChatMessage"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.changeChatMessage",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 35,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/model/use-chat-composer.ts",
+              "line": 63,
+              "column": 5,
+              "expression": "changeChatMessage"
+            }
+          ]
+        },
+        {
+          "name": "createEditorActions.referenceChatObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 43,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/model/use-chat-composer.ts",
+              "line": 78,
+              "column": 5,
+              "expression": "referenceChatObject"
+            }
+          ]
+        },
+        {
+          "name": "useEditorActions",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/actions-provider.tsx",
+            "line": 14,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/model/use-chat-composer.ts",
+              "line": 23,
+              "column": 5,
+              "expression": "useEditorActions"
+            }
+          ]
+        },
+        {
+          "name": "useGenerationPlacementUpdates",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+            "line": 13,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
+              "line": 4,
+              "column": 3,
+              "expression": "useGenerationPlacementUpdates"
+            }
+          ]
+        },
+        {
           "name": "useSendChatMessageMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 16,
+            "line": 26,
             "column": 1
           },
           "usages": [
@@ -2587,6 +2782,25 @@
               "line": 12,
               "column": 19,
               "expression": "useChatHistory()"
+            }
+          ]
+        },
+        {
+          "name": "useChatComposerState",
+          "kind": "store-hook",
+          "package": "@camera-path/store",
+          "definition": {
+            "file": "packages/store/src/use-chat-composer-state.ts",
+            "line": 4,
+            "column": 1
+          },
+          "statePaths": ["chatComposer"],
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/model/use-chat-composer.ts",
+              "line": 21,
+              "column": 23,
+              "expression": "useChatComposerState()"
             }
           ]
         },
@@ -2951,6 +3165,7 @@
         "packages/features/job-details/src/index.ts",
         "packages/features/job-details/src/ui/job-details-page.tsx",
         "packages/features/job-details/src/ui/job-result-card.tsx",
+        "packages/features/job-details/src/ui/job-scene-placement.tsx",
         "packages/features/job-details/src/ui/job-source-image.tsx"
       ],
       "slots": {
@@ -2959,7 +3174,7 @@
             {
               "name": "JobDetailsPage",
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 10,
+              "line": 11,
               "column": 1
             }
           ]
@@ -2979,7 +3194,7 @@
           "usages": [
             {
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 11,
+              "line": 12,
               "column": 20,
               "expression": "useJobResource()"
             }
@@ -3096,7 +3311,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/resources/use-jobs-catalog.ts",
-            "line": 5,
+            "line": 6,
             "column": 1
           },
           "usages": [
@@ -3521,7 +3736,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 85,
+            "line": 109,
             "column": 5
           },
           "usages": [
@@ -3563,7 +3778,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 57,
+            "line": 81,
             "column": 5
           },
           "usages": [
@@ -3587,7 +3802,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 89,
+            "line": 113,
             "column": 5
           },
           "usages": [
@@ -3635,7 +3850,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 99,
+            "line": 123,
             "column": 5
           },
           "usages": [
@@ -4249,7 +4464,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 51,
+            "line": 75,
             "column": 5
           },
           "usages": [
@@ -5071,7 +5286,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 55,
+            "line": 79,
             "column": 5
           },
           "usages": [
@@ -5090,12 +5305,30 @@
           ]
         },
         {
+          "name": "createEditorActions.referenceChatObject",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/create-editor-actions.ts",
+            "line": 43,
+            "column": 5
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
+              "line": 25,
+              "column": 21,
+              "expression": "referenceChatObject"
+            }
+          ]
+        },
+        {
           "name": "createEditorActions.selectObject",
           "kind": "action",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 57,
+            "line": 81,
             "column": 5
           },
           "usages": [
@@ -5119,8 +5352,8 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
-              "line": 13,
-              "column": 25,
+              "line": 32,
+              "column": 9,
               "expression": "selectObject"
             }
           ]
@@ -5131,7 +5364,7 @@
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/create-editor-actions.ts",
-            "line": 10,
+            "line": 11,
             "column": 1
           },
           "usages": [
@@ -5257,8 +5490,8 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
-              "line": 7,
-              "column": 28,
+              "line": 11,
+              "column": 49,
               "expression": "useEditorActions"
             }
           ]
@@ -5284,6 +5517,24 @@
       ],
       "selectors": [
         {
+          "name": "useAnchors",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-anchors.ts",
+            "line": 5,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
+              "line": 13,
+              "column": 19,
+              "expression": "useAnchors()"
+            }
+          ]
+        },
+        {
           "name": "useAuth",
           "kind": "api-hook",
           "package": "@camera-path/api",
@@ -5302,6 +5553,12 @@
             {
               "file": "apps/host/src/providers/user-settings-provider.tsx",
               "line": 17,
+              "column": 23,
+              "expression": "useAuth()"
+            },
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
+              "line": 12,
               "column": 23,
               "expression": "useAuth()"
             }
@@ -5368,6 +5625,24 @@
           ]
         },
         {
+          "name": "useSceneModels",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-scene-models.ts",
+            "line": 4,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
+              "line": 14,
+              "column": 18,
+              "expression": "useSceneModels()"
+            }
+          ]
+        },
+        {
           "name": "useCameraState",
           "kind": "store-hook",
           "package": "@camera-path/store",
@@ -5392,7 +5667,7 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
-              "line": 8,
+              "line": 15,
               "column": 26,
               "expression": "useCameraState()"
             }
@@ -5417,7 +5692,7 @@
             },
             {
               "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
-              "line": 9,
+              "line": 16,
               "column": 26,
               "expression": "useEditorTool()"
             }
@@ -5656,7 +5931,7 @@
             },
             {
               "file": "packages/scene-runtime/src/interaction/scene-object.tsx",
-              "line": 23,
+              "line": 25,
               "column": 49,
               "expression": "useSceneInteraction()"
             }
@@ -5732,6 +6007,7 @@
         "packages/store/src/resource-scope-provider.tsx",
         "packages/store/src/store-provider.tsx",
         "packages/store/src/use-camera-state.ts",
+        "packages/store/src/use-chat-composer-state.ts",
         "packages/store/src/use-editor-tool.ts",
         "packages/store/src/use-playback-state.ts",
         "packages/store/src/use-scene-interaction.ts",
@@ -5770,13 +6046,25 @@
             "line": 21,
             "column": 1
           },
-          "statePaths": ["camera", "playback", "sceneInteraction", "tool"],
+          "statePaths": [
+            "camera",
+            "chatComposer",
+            "playback",
+            "sceneInteraction",
+            "tool"
+          ],
           "usages": [
             {
               "file": "packages/store/src/use-camera-state.ts",
               "line": 4,
               "column": 10,
               "expression": "useEditorStore((s) => s.camera)"
+            },
+            {
+              "file": "packages/store/src/use-chat-composer-state.ts",
+              "line": 5,
+              "column": 10,
+              "expression": "useEditorStore((state) => state.chatComposer)"
             },
             {
               "file": "packages/store/src/use-editor-tool.ts",

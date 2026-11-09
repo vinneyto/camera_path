@@ -3,7 +3,6 @@ import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 
 import { useEditorActions, useSetActiveEditorTool } from "@camera-path/actions";
-import { anchorObjectId } from "@camera-path/types/anchor-object-id";
 import type { Anchor } from "@camera-path/types/project";
 import { useActiveEditorTool } from "../ports/use-active-editor-tool";
 import { useHoveredAnchor } from "../ports/use-hovered-anchor";
@@ -49,14 +48,9 @@ export function useAnchorHeightEditing({
   onCommit,
 }: UseAnchorHeightEditingOptions) {
   const activeTool = useActiveEditorTool();
-  const {
-    clearHoveredAnchor,
-    hoveredAnchorId,
-    selectedAnchorId,
-    clearSelectedAnchor,
-  } = useHoveredAnchor();
+  const { clearHoveredAnchor, hoveredAnchorId } = useHoveredAnchor();
   const setActiveTool = useSetActiveEditorTool();
-  const { selectObject } = useEditorActions();
+  const { referenceChatObject } = useEditorActions();
   const dragRef = useRef<AnchorHeightDrag | null>(null);
   const [preview, setPreview] = useState<AnchorHeightPreview | null>(null);
 
@@ -113,14 +107,6 @@ export function useAnchorHeightEditing({
     }
   }, [anchors, clearHoveredAnchor, hoveredAnchorId]);
 
-  useEffect(() => {
-    if (
-      selectedAnchorId !== null &&
-      !anchors.some((anchor) => anchor.id === selectedAnchorId)
-    )
-      clearSelectedAnchor(selectedAnchorId);
-  }, [anchors, selectedAnchorId, clearSelectedAnchor]);
-
   function handlePointerDown(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
     if (activeTool !== null || event.button !== POINTER_BUTTON.primary) return;
     event.stopPropagation();
@@ -175,7 +161,7 @@ export function useAnchorHeightEditing({
     setActiveTool(null);
     if (!hasDragged(drag, event)) {
       setPreview(null);
-      selectObject({ id: anchorObjectId(anchor.id) });
+      referenceChatObject(anchor.label);
       return;
     }
     const lift = Number(drag.lift.toFixed(ANCHOR_TRANSFORM_PRECISION));
@@ -218,7 +204,6 @@ export function useAnchorHeightEditing({
     activeAnchor,
     getAnchorInteractionProps,
     hoveredAnchorId,
-    selectedAnchorId,
     preview,
   };
 }

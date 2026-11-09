@@ -17,6 +17,7 @@ import type { Anchor, Vec3 } from "@camera-path/types/project";
 import { useEffect } from "react";
 import { getAnchorLabel } from "../lib/get-anchor-label";
 import { useActiveEditorTool } from "../ports/use-active-editor-tool";
+import { useGeneratingAnchors } from "../ports/use-generating-anchors";
 import { AnchorToolShortcut } from "../ui/anchor-tool-shortcut";
 import { AnchorHeightEditingOverlay } from "./anchor-height-editing-overlay";
 import { AnchorMarker } from "./anchor-marker";
@@ -29,6 +30,7 @@ const EMPTY: Anchor[] = [];
 export function AnchorsScene() {
   const query = useAnchors();
   const items = query.data?.data ?? EMPTY;
+  const generatingAnchors = useGeneratingAnchors();
   const mode = useCameraState().cameraMode;
   const canEdit = useAuth().canEdit;
   const activeTool = useActiveEditorTool();
@@ -116,9 +118,12 @@ export function AnchorsScene() {
                 key={anchor.id}
                 sceneObjectID={anchorObjectId(anchor.id)}
                 hoverable={activeTool === null}
+                selectable={false}
+                clickable={activeTool === null}
               >
                 {({ hovered, selected }) => (
                   <AnchorMarker
+                    generationPending={generatingAnchors.has(anchor.id)}
                     anchor={
                       height.preview?.anchorId === anchor.id
                         ? {

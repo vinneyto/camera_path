@@ -7,6 +7,7 @@
  */
 import type { JobError } from './jobError';
 import type { JobResultSummary } from './jobResultSummary';
+import type { JobScenePlacement } from './jobScenePlacement';
 import type { JobStatus } from './jobStatus';
 
 export interface JobSummary {
@@ -21,6 +22,7 @@ export interface JobSummary {
   /** Explicit job name or an automatic name saved at creation. */
   name: string | null;
   prompt: string | null;
+  scene_placement?: JobScenePlacement | null;
   started_at: string | null;
   status: JobStatus;
   type: string | null;

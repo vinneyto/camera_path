@@ -163,7 +163,13 @@ async def test_chat_requires_api_key(app) -> None:
         assert "OPENAI_API_KEY" in response.json()["detail"]
         persisted = (await client.get(f"/projects/{project['id']}")).json()
         assert persisted["chat_history"] == [
-            {"id": "message-1", "role": "user", "content": "Create a path"}
+            {
+                "id": "message-1",
+                "role": "user",
+                "content": "Create a path",
+                "selected_object": None,
+                "attachments": [],
+            }
         ]
 
 
@@ -180,7 +186,13 @@ async def test_saving_user_message_is_idempotent(app) -> None:
         assert first.json()["revision"] == 1
         assert second.json()["revision"] == 1
         assert second.json()["chat_history"] == [
-            {"id": "message-1", "role": "user", "content": "Create a path"}
+            {
+                "id": "message-1",
+                "role": "user",
+                "content": "Create a path",
+                "selected_object": None,
+                "attachments": [],
+            }
         ]
 
         conflict = await client.post(
@@ -457,7 +469,15 @@ async def test_chat_stream_uses_sse_delta_and_result_events(app) -> None:
         def ensure_available(self) -> None:
             pass
 
-        async def handle_stream(self, project_id: str, message: str, message_id: str):
+        async def handle_stream(
+            self,
+            project_id: str,
+            message: str,
+            message_id: str,
+            selected_object_id=None,
+            attachment_ids=None,
+            request=None,
+        ):
             assert project_id == project.id
             assert message == "Say hello"
             assert message_id == "message-1"

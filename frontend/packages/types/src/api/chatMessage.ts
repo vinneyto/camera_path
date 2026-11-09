@@ -7,10 +7,13 @@
  */
 
 export interface ChatMessage {
+  /** @maxItems 8 */
+  attachment_ids?: string[];
   id?: string;
   /**
      * @minLength 1
      * @maxLength 10000
      */
   message: string;
+  selected_object_id?: string | null;
 }

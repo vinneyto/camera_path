@@ -14,6 +14,7 @@ from scalar_fastapi import get_scalar_api_reference
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from camera_path.agent import TrajectoryAgent
+from camera_path.agent.scene_tools import SceneAgentTools
 from camera_path.composition import API_PREFIX, with_infrastructure
 from camera_path.config import Settings
 from camera_path.repositories import (
@@ -27,6 +28,7 @@ from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.repositories.user_settings import UserSettingsRepository
 from camera_path.routers.api import router as business_router
 from camera_path.routers.auth import router as auth_router
+from camera_path.routers.chat_attachments import router as chat_attachment_router
 from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.routers.jobs import router as jobs_router
 from camera_path.routers.library import router as library_router
@@ -168,13 +170,21 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     scene_point_service = ScenePointService(project_repository)
     trajectory_service = TrajectoryService(project_repository, configured.compile_tolerance)
     timeline_service = TimelineService(project_repository)
-    chat_service = ChatService(project_repository)
+    chat_service = ChatService(project_repository, library_service)
+    job_service = JobService(library_service, generation_enabled=generation is not None)
     agent = TrajectoryAgent(
         project_repository,
         trajectory_service,
         chat_service,
         configured.openai_model,
         configured.openai_api_key.get_secret_value() if configured.openai_api_key else None,
+        scene_tools=SceneAgentTools(
+            project_repository,
+            library_service,
+            job_service,
+            scene_object_service,
+            chat_service.attachments,
+        ),
     )
 
     @asynccontextmanager
@@ -251,9 +261,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             content=_error_content(request, "storage_unavailable", "Library storage unavailable"),
         )
 
-    application.state.job_service = JobService(
-        library_service, generation_enabled=generation is not None
-    )
+    application.state.job_service = job_service
     application.state.library_service = library_service
     application.state.scene_object_service = scene_object_service
     application.state.project_repository = project_repository
@@ -378,6 +386,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     application.include_router(resource_router, prefix=API_PREFIX)
     application.include_router(auth_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
+    application.include_router(chat_attachment_router, prefix=API_PREFIX)
     application.include_router(jobs_router, prefix=API_PREFIX)
     application.include_router(scene_object_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)

@@ -10,6 +10,7 @@ export { useJobResource } from "./use-job-resource";
 export { useLidarTimelineResource } from "./use-lidar-timeline-resource";
 export { useOrientationTimeline } from "./use-orientation-timeline";
 export { useProjectsCatalog } from "./use-projects-catalog";
+export { useProjectGenerationJobs } from "./use-project-generation-jobs";
 export { useSceneModels } from "./use-scene-models";
 export { useScenePoints } from "./use-scene-points";
 export { useSpeedTimeline } from "./use-speed-timeline";

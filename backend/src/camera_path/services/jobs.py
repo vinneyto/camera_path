@@ -1,7 +1,7 @@
 """One persisted job model, with server-validated input selected by job type."""
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import Request
@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
 
+from camera_path.models import Anchor
 from camera_path.persistence.enums import JobStatus
 from camera_path.persistence.records import JobRecord, LibraryAssetRecord
 from camera_path.services.generation_models import GenerationRequest
@@ -38,6 +39,14 @@ class JobError(BaseModel):
     message: str
 
 
+class JobScenePlacement(BaseModel):
+    project_id: str
+    anchor: Anchor
+    status: Literal["pending", "succeeded", "skipped"]
+    scene_object_id: str | None = None
+    reason: str | None = None
+
+
 class JobFields(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -52,6 +61,7 @@ class JobFields(BaseModel):
     created_at: datetime | None
     started_at: datetime | None
     completed_at: datetime | None
+    scene_placement: JobScenePlacement | None = None
 
     @field_validator("created_at", "started_at", "completed_at")
     @classmethod
@@ -86,7 +96,14 @@ class JobService:
         self.sessions = library.repository.sessions
         self.generation_enabled = generation_enabled
 
-    async def create(self, data: JobCreate, request: Request | None = None) -> Job:
+    async def create(
+        self,
+        data: JobCreate,
+        request: Request | None = None,
+        *,
+        scene_placement=None,
+        request_key=None,
+    ) -> Job:
         validate_job_input(data.type, data.input)
         job_id = str(uuid4())
         if data.start:
@@ -101,6 +118,8 @@ class JobService:
                 raise LibraryError("generation_request_too_large", 422)
         job = JobRecord(
             id=job_id,
+            scene_placement=scene_placement,
+            request_key=request_key,
             type=data.type,
             input=data.input,
             status=JobStatus.QUEUED if data.start else JobStatus.DRAFT,
@@ -135,10 +154,15 @@ class JobService:
         async with self.sessions() as session:
             return await session.scalar(select(JobRecord.status).where(JobRecord.id == job_id))
 
-    async def list(self) -> list[JobSummary]:
+    async def list(self, project_id: str | None = None) -> list[JobSummary]:
         async with self.sessions() as session:
             jobs = await session.scalars(
                 select(JobRecord)
+                .where(
+                    JobRecord.scene_placement["project_id"].as_string() == project_id
+                    if project_id is not None
+                    else True
+                )
                 .options(
                     selectinload(JobRecord.assets)
                     .load_only(LibraryAssetRecord.id, LibraryAssetRecord.name)
@@ -157,7 +181,7 @@ class JobService:
                 for job in jobs
             ]
 
-    async def get(self, job_id: str, request: Request) -> Job:
+    async def get(self, job_id: str, request: Request | None = None) -> Job:
         try:
             job_id = canonical_uuid(job_id)
         except ValueError as error:
@@ -181,6 +205,10 @@ class JobService:
             return Job(
                 **JobFields.model_validate(job).model_dump(),
                 input=job.input,
-                input_asset=await self.library._model(image, request) if image else None,
-                assets=[await self.library._model(asset, request) for asset in job.assets],
+                input_asset=await self.library._model(image, request)
+                if image and request
+                else None,
+                assets=[await self.library._model(asset, request) for asset in job.assets]
+                if request
+                else [],
             )
