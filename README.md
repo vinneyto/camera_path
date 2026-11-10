@@ -113,10 +113,11 @@ camera's visible LOD selection. That independent store increases memory use;
 its input buffers are retained until the cloud is removed. Captures that exceed
 the device budget or have incomplete Gaussian output cannot produce partial hits.
 
-The common owner captures at most 10 times per second, reads the float faces
+The common owner captures at most 20 times per second, reads the float faces
 back to the CPU, and reconstructs world-space instanced hit spheres with a
-0.01 m radius. One capture runs at a time, preserving its own pose until the
-readback completes. Hits do not participate in picking, autofocus or depth capture.
+0.01 m radius and 50% opacity. One capture runs at a time, preserving its own pose
+until the readback completes. Hits do not participate in picking, autofocus or
+depth capture.
 This CPU readback is deliberate and may limit performance on large scenes.
 
 Configuration is exposed through GET/PATCH/DELETE

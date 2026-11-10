@@ -42,7 +42,8 @@ it("queues hit spheres after Spark, independently of distance, while respecting 
       lidar.object,
     ]);
   }
-  expect(hitMaterial.opacity).toBe(1);
+  expect(hitMaterial.transparent).toBe(true);
+  expect(hitMaterial.opacity).toBe(0.5);
   expect(hitMaterial.depthTest).toBe(true);
   expect(hitMaterial.depthWrite).toBe(false);
   lidar.dispose();

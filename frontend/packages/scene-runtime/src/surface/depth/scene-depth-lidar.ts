@@ -24,6 +24,7 @@ import {
   LIDAR_CAPTURE_INTERVAL_MS,
   LIDAR_ERROR_RETRY_MS,
   LIDAR_HIT_COLOR,
+  LIDAR_HIT_OPACITY,
   LIDAR_HIT_RADIUS,
   LIDAR_HIT_RENDER_ORDER,
   LIDAR_HIT_WIDTH_SEGMENTS,
@@ -54,6 +55,7 @@ export class SceneDepthLidar implements GaussianLidarInstance {
   );
   private readonly material = new MeshBasicMaterial({
     color: LIDAR_HIT_COLOR,
+    opacity: LIDAR_HIT_OPACITY,
     // Spark is in Three's transparent queue. Opaque hits would be painted
     // before it regardless of renderOrder. WebGPU also composites this queue
     // after the Gaussian layer. Keep normal mesh depth testing enabled.

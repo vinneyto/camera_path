@@ -97,3 +97,40 @@ it("does not finish failed readback batches until sibling GPU copies have settle
   await batch;
   expect(rejected).toBe(true);
 });
+
+it("limits completed scans to 20 Hz with no extra 100 ms delay", async () => {
+  const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+  const capture = {
+    capture: vi.fn().mockResolvedValue({
+      faces: Array.from({ length: 6 }, () => new Float32Array([2])),
+      size: 1,
+    }),
+    dispose: vi.fn(),
+  };
+  const lidar = new SceneDepthLidar(capture, {
+    horizontalResolution: 4,
+    verticalResolution: 1,
+    verticalFovDegrees: 60,
+  });
+  const scene = new Scene();
+  try {
+    lidar.setPose(new Camera());
+    lidar.update(scene);
+    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(1));
+    clock.mockReturnValue(49);
+    lidar.update(scene);
+    expect(capture.capture).toHaveBeenCalledTimes(1);
+    clock.mockReturnValue(50);
+    lidar.update(scene);
+    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(2));
+    clock.mockReturnValue(99);
+    lidar.update(scene);
+    expect(capture.capture).toHaveBeenCalledTimes(2);
+    clock.mockReturnValue(100);
+    lidar.update(scene);
+    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(3));
+  } finally {
+    lidar.dispose();
+    clock.mockRestore();
+  }
+});
