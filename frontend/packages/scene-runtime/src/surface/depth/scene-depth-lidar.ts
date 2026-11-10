@@ -4,7 +4,7 @@ import {
   FloatType,
   InstancedMesh,
   Matrix4,
-  MeshBasicMaterial,
+  MeshLambertMaterial,
   NearestFilter,
   NoColorSpace,
   RedFormat,
@@ -53,7 +53,7 @@ export class SceneDepthLidar implements GaussianLidarInstance {
     LIDAR_HIT_WIDTH_SEGMENTS,
     LIDAR_HIT_HEIGHT_SEGMENTS,
   );
-  private readonly material = new MeshBasicMaterial({
+  private readonly material = new MeshLambertMaterial({
     color: LIDAR_HIT_COLOR,
     opacity: LIDAR_HIT_OPACITY,
     // Spark is in Three's transparent queue. Opaque hits would be painted

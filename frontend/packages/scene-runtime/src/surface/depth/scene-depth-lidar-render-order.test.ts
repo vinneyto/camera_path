@@ -1,4 +1,10 @@
-import { Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial } from "three";
+import {
+  Mesh,
+  MeshBasicMaterial,
+  PlaneGeometry,
+  ShaderMaterial,
+  type Material,
+} from "three";
 import { WebGLRenderList } from "three/src/renderers/webgl/WebGLRenderLists.js";
 import { WebGLProperties } from "three/src/renderers/webgl/WebGLProperties.js";
 import { expect, it, vi } from "vitest";
@@ -19,7 +25,7 @@ it("queues hit spheres after Spark, independently of distance, while respecting 
   spark.renderOrder = SPARK_RENDER_ORDER;
   const opaqueMaterial = new MeshBasicMaterial();
   const opaque = new Mesh(geometry, opaqueMaterial);
-  const hitMaterial = lidar.object.material as MeshBasicMaterial;
+  const hitMaterial = lidar.object.material as Material;
 
   for (const distance of [-100, 100]) {
     const list = new WebGLRenderList(new WebGLProperties());
