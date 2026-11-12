@@ -99,7 +99,9 @@ export class TileGpuLidarView implements GpuLidarView {
       color: LIDAR_HIT_COLOR,
       opacity: LIDAR_HIT_OPACITY,
       transparent: true,
-      depthWrite: false,
+      // The WebGPU compositor reads this pass's depth separately from opaque depth.
+      // Publish the analytic sphere surface so visible hits survive that comparison.
+      depthWrite: true,
     });
     const pixel = vec2(
       instanceIndex.mod(uint(width)),
