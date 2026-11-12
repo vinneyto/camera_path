@@ -56,6 +56,10 @@ export interface GaussianCloudInstance {
 }
 
 export interface GaussianRenderingBackend {
+  /** Caller owns an isolated six-face float32 scene-depth capture. */
+  createDepthCapture?(
+    faceSize: number,
+  ): import("../depth/scene-depth-capture").SceneDepthCapture;
   createLidar?(
     settings: import("@camera-path/scene-runtime/surface/model/gaussian-lidar").GaussianLidarSettings,
   ): import("@camera-path/scene-runtime/surface/model/gaussian-lidar").GaussianLidarInstance;

@@ -196,3 +196,65 @@ async def test_concurrent_creations_do_not_duplicate_or_consume_names_on_conflic
     assert (await mutate(client, url, data={"library_asset_id": asset["id"]})).json()[
         "name"
     ] == f"{asset['name']} 02"
+
+
+@pytest.mark.parametrize("kind", ["cube", "sphere", "cone"])
+async def test_primitive_parameters_persist_with_mixed_hierarchy(scene, kind):
+    import json
+
+    app, client, asset, url = scene
+    parent = (
+        await mutate(
+            client,
+            url,
+            data={
+                "primitive": json.dumps({"type": kind, "color": "#ff8020"}),
+                "position": [2, 3, 4],
+                "scale": [2, 3, 4],
+            },
+        )
+    ).json()
+    assert parent["name"] == f"{kind.capitalize()} 01"
+    assert parent["library_asset_id"] is parent["library_asset_file_id"] is None
+    assert parent["format"] is parent["download_url"] is None
+    assert json.loads(parent["primitive"]) == {"type": kind, "color": "#ff8020"}
+    child = (
+        await mutate(
+            client,
+            url,
+            data={
+                "library_asset_id": asset["id"],
+                "parent_id": parent["id"],
+            },
+        )
+    ).json()
+    assert child["primitive"] is None
+    await app.state.project_repository.close()
+    assert (await client.get(url)).json() == [parent, child]
+    await mutate(client, f"{url}/{parent['id']}", "PATCH", {"position": [5, 6, 7]}, 200)
+    await mutate(client, f"{url}/{parent['id']}", "DELETE", expected=409)
+    await mutate(client, f"{url}/{child['id']}", "DELETE", expected=204)
+    await mutate(client, f"{url}/{parent['id']}", "DELETE", expected=204)
+    assert (await client.get(url)).json() == []
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"primitive": "not json"},
+        {"primitive": "{}"},
+        {"primitive": '{"type":"cylinder"}'},
+        {"primitive": '{"type":"cube","vertices":[1,2,3]}'},
+        {"primitive": '{"type":"cube","color":"red"}'},
+        {"primitive": {"type": "cube"}},
+        {"primitive": '{"type":"cube"}', "library_asset_id": "asset"},
+        {"primitive": '{"type":"cube"}', "library_asset_file_id": "main"},
+        {"primitive": '{"type":"cube"}', "scale": [0, 1, 1]},
+    ],
+)
+async def test_invalid_primitive_does_not_advance_revision_or_number(scene, payload):
+    _, client, _, url = scene
+    await mutate(client, url, data=payload, expected=422)
+    created = (await mutate(client, url, data={"primitive": '{"type":"cube"}'})).json()
+    assert created["name"] == "Cube 01"

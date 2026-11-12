@@ -8,9 +8,10 @@
 
 export interface SceneObjectCreate {
   library_asset_file_id?: string | null;
-  library_asset_id: string;
+  library_asset_id?: string | null;
   parent_id?: string | null;
   position?: [number, number, number] | null;
+  primitive?: string | null;
   quaternion?: [number, number, number, number] | null;
   scale?: [number, number, number] | null;
 }

@@ -14,7 +14,10 @@ import type { SceneObject } from "@camera-path/types/api";
 import { CloudLoadingRing } from "./cloud-loading-ring";
 import { transformSceneObjectBounds } from "./transform-scene-object-bounds";
 
-interface CloudSceneObjectProps extends Omit<SceneSurfaceProps, "source"> {
+export interface CloudSceneObjectProps extends Omit<
+  SceneSurfaceProps,
+  "source"
+> {
   cloud: SceneObject;
   worldMatrix: Matrix4;
   parentMatrix: Matrix4;
@@ -44,14 +47,15 @@ export function CloudSceneObject({
   ...props
 }: CloudSceneObjectProps) {
   // Source identity is consumed by the resource lease effect.
-  const source = useMemo(
-    () => ({
+  const source = useMemo(() => {
+    if (!cloud.download_url || !cloud.format)
+      throw new Error("Missing library model source");
+    return {
       kind: "url" as const,
       url: cloud.download_url,
       format: cloud.format,
-    }),
-    [cloud.download_url, cloud.format],
-  );
+    };
+  }, [cloud.download_url, cloud.format]);
   const initialWorldMatrix = worldMatrix.toArray();
   const [bounds, setBounds] = useState<SceneSurfaceBounds | null>(null);
   const [load, setLoad] = useState<{

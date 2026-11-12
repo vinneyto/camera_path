@@ -8,11 +8,11 @@
 import type { SceneObjectFormat } from './sceneObjectFormat';
 
 export interface SceneObject {
-  download_url: string;
+  download_url: string | null;
   format: SceneObjectFormat;
   id: string;
-  library_asset_file_id: string;
-  library_asset_id: string;
+  library_asset_file_id: string | null;
+  library_asset_id: string | null;
   name: string;
   parent_id: string | null;
   /**
@@ -20,6 +20,7 @@ export interface SceneObject {
      * @maxItems 3
      */
   position: [number, number, number];
+  primitive?: string | null;
   project_id: string;
   /**
      * @minItems 4

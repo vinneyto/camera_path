@@ -1,3 +1,8 @@
+import { SparkGpuLidarView } from "./spark-gpu-lidar-view";
+import type { GaussianLidarSettings } from "../../model/gaussian-lidar";
+import { SceneDepthLidar } from "../../depth/scene-depth-lidar";
+import { getLidarFaceSize } from "../../depth/get-lidar-face-size";
+import { SparkSceneDepthCapture } from "./spark-scene-depth-capture";
 import { SparkRenderer, SplatMesh } from "@sparkjsdev/spark";
 import { Color, SRGBColorSpace, WebGLRenderer } from "three";
 import { SPARK_RENDER_ORDER } from "./constants";
@@ -22,6 +27,7 @@ export interface SparkGaussianRenderingBackendOptions {
 
 export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   readonly container: SparkRenderer;
+  private readonly lidars = new Set<SceneDepthLidar>();
   private readonly clouds = new Set<SparkGaussianCloudInstance>();
   private disposed = false;
   private readonly previousAlpha: number;
@@ -110,6 +116,24 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
     );
   }
 
+  createDepthCapture(faceSize: number): SparkSceneDepthCapture {
+    if (this.disposed)
+      throw new Error("SparkGaussianRenderingBackend is disposed");
+    return new SparkSceneDepthCapture(this.renderer, faceSize);
+  }
+
+  createLidar(settings: GaussianLidarSettings): SceneDepthLidar {
+    if (this.disposed)
+      throw new Error("SparkGaussianRenderingBackend is disposed");
+    const sensor = new SceneDepthLidar(
+      this.createDepthCapture(getLidarFaceSize(settings)),
+      new SparkGpuLidarView(this.renderer, settings),
+      () => this.lidars.delete(sensor),
+    );
+    this.lidars.add(sensor);
+    return sensor;
+  }
+
   invalidate(): void {}
 
   isDepthEnabled(): boolean {
@@ -127,6 +151,7 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    for (const sensor of [...this.lidars]) sensor.dispose();
     for (const cloud of [...this.clouds]) cloud.dispose();
     this.container.dispose();
     this.renderer.setClearColor(this.previousColor, this.previousAlpha);

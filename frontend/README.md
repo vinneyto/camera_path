@@ -19,6 +19,23 @@ providers, the full feature/slot map and review entrypoints.
 - `trajectory-math` contains pure geometry and motion functions; `scene-runtime` contains renderer
   adapters and neutral viewport services; `ui-kit` contains shared UI and theme.
 
+## LiDAR data path
+
+Both viewport renderers capture six floating-point depth faces at the trajectory sensor pose.
+Depth merging and angular sampling stay on the GPU; the shared `SceneDepthLidar` only schedules
+scans and passes a pose matrix. The resulting R32F range texture uses zero for misses, with
+integer texel (0,0) representing the highest-elevation, first-azimuth bin.
+
+Instanced analytic spheres fetch their centers from this texture in the shader. Each sphere
+uses four vertices, ray/sphere intersection, surface lighting and fragment depth; there are
+no per-hit JavaScript calculations or instance-matrix uploads. Scans run at most 20 Hz, and
+GPU completion fences prevent more than one scan from being queued at a time.
+
+`capture()` and `readRanges()` are explicit diagnostic/export readbacks. Live visualization
+uses `render()` and never invokes them. Spark still performs its own Gaussian-sort readback;
+the WebGPU Gaussian library can read a small status counter. These internal operations do not
+transfer LiDAR depth or hit positions to the CPU.
+
 ## Run
 
 The project viewport defaults to Spark/WebGL. To use Three.js WebGPU and `3dgs-tile-webgpu`,

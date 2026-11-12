@@ -10,6 +10,7 @@ from camera_path.repositories.library import LibraryRepository
 from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.services.library_storage import LibraryStorage
 from camera_path.services.revisions import advance_project_revision
+from camera_path.services.scene_primitives import PrimitiveJson, ScenePrimitive
 from camera_path.services.scene_transforms import (
     normalize_quaternion,
     quaternion_from_euler_xyz,
@@ -29,27 +30,37 @@ class SceneObject(BaseModel):
     id: str
     project_id: str
     parent_id: str | None
-    library_asset_id: str
-    library_asset_file_id: str
+    library_asset_id: str | None
+    library_asset_file_id: str | None
+    primitive: PrimitiveJson | None = None
     sort_order: int
     visible: bool
     position: Vec3
     quaternion: Quaternion
     scale: Scale3
     name: str
-    format: Literal["ply", "sog"]
-    download_url: str
+    format: Literal["ply", "sog"] | None
+    download_url: str | None
 
 
 class SceneObjectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    library_asset_id: str
+    library_asset_id: str | None = None
     library_asset_file_id: str | None = None
+    primitive: PrimitiveJson | None = None
     parent_id: str | None = None
     # Omitted transforms snapshot library defaults. Explicit values are canonical local TRS.
     position: Vec3 | None = None
     quaternion: Quaternion | None = None
     scale: Scale3 | None = None
+
+    @model_validator(mode="after")
+    def require_source(self):
+        if (self.library_asset_id is None) == (self.primitive is None):
+            raise ValueError("Specify exactly one of library_asset_id and primitive")
+        if self.primitive is not None and self.library_asset_file_id is not None:
+            raise ValueError("A primitive cannot reference a library asset file")
+        return self
 
 
 class SceneObjectUpdate(BaseModel):
@@ -78,25 +89,28 @@ class SceneObjectService:
         self.repository, self.library, self.storage = repository, library, storage
 
     async def _model(self, record: SceneObjectRecord, request: Request) -> SceneObject:
-        asset = await self.library.get(record.library_asset_id)
-        if asset is None:
-            raise HTTPException(404, "Library asset not found")
-        file = next((file for file in asset.files if file.id == record.library_asset_file_id), None)
-        if file is None:
-            raise HTTPException(404, "Library asset file not found")
-        url = await (
-            self.storage.download_url(asset.id, file.object_key, request)
-            if file.is_primary
-            else self.storage.file_download_url(asset.id, file.id, file.object_key, request)
-        )
+        file, url = None, None
+        if record.library_asset_id is not None:
+            asset = await self.library.get(record.library_asset_id)
+            if asset is None:
+                raise HTTPException(404, "Library asset not found")
+            file = next((f for f in asset.files if f.id == record.library_asset_file_id), None)
+            if file is None:
+                raise HTTPException(404, "Library asset file not found")
+            url = await (
+                self.storage.download_url(asset.id, file.object_key, request)
+                if file.is_primary
+                else self.storage.file_download_url(asset.id, file.id, file.object_key, request)
+            )
         return SceneObject(
             id=record.id,
             project_id=record.project_id,
             parent_id=record.parent_id,
-            library_asset_id=asset.id,
-            library_asset_file_id=file.id,
+            library_asset_id=record.library_asset_id,
+            library_asset_file_id=record.library_asset_file_id,
+            primitive=record.primitive,
             name=record.name,
-            format=file.format,
+            format=file.format if file else None,
             sort_order=record.sort_order,
             visible=record.visible,
             download_url=url,
@@ -114,51 +128,60 @@ class SceneObjectService:
     ) -> tuple[SceneObject, int]:
         try:
             async with self.repository.sessions.begin() as session:
-                asset = await session.get(
-                    LibraryAssetRecord, data.library_asset_id, with_for_update=True
-                )
-                if asset is None or asset.status != "ready":
-                    raise KeyError("Library asset not found or not ready")
-                file = next(
-                    (
-                        f
-                        for f in asset.files
-                        if (
-                            f.id == data.library_asset_file_id
-                            if data.library_asset_file_id is not None
-                            else f.is_primary
-                        )
-                    ),
-                    None,
-                )
-                if file is None:
-                    raise KeyError("Library asset file not found in this asset")
-                if file.format not in {"ply", "sog"}:
-                    raise ValueError("Only PLY and SOG assets can be placed in a scene")
-                quaternion = data.quaternion or quaternion_from_euler_xyz(
-                    tuple(getattr(asset, f"default_rotation_{axis}_deg") for axis in "xyz")
-                )
-                scale = data.scale or (asset.default_scale,) * 3
-                position = (
-                    data.position
-                    if data.position is not None
-                    else transformed_offset(
-                        quaternion,
-                        scale,
-                        tuple(getattr(asset, f"default_offset_{axis}") for axis in "xyz"),
+                if data.primitive is not None:
+                    primitive = ScenePrimitive.model_validate_json(data.primitive)
+                    asset_id, file_id, name = None, None, primitive.type.capitalize()
+                    position = data.position or (0, 0, 0)
+                    quaternion = data.quaternion or (0, 0, 0, 1)
+                    scale = data.scale or (1, 1, 1)
+                else:
+                    asset = await session.get(
+                        LibraryAssetRecord, data.library_asset_id, with_for_update=True
                     )
-                )
+                    if asset is None or asset.status != "ready":
+                        raise KeyError("Library asset not found or not ready")
+                    file = next(
+                        (
+                            f
+                            for f in asset.files
+                            if (
+                                f.id == data.library_asset_file_id
+                                if data.library_asset_file_id is not None
+                                else f.is_primary
+                            )
+                        ),
+                        None,
+                    )
+                    if file is None:
+                        raise KeyError("Library asset file not found in this asset")
+                    if file.format not in {"ply", "sog"}:
+                        raise ValueError("Only PLY and SOG assets can be placed in a scene")
+                    quaternion = data.quaternion or quaternion_from_euler_xyz(
+                        tuple(getattr(asset, f"default_rotation_{axis}_deg") for axis in "xyz")
+                    )
+                    scale = data.scale or (asset.default_scale,) * 3
+                    position = (
+                        data.position
+                        if data.position is not None
+                        else transformed_offset(
+                            quaternion,
+                            scale,
+                            tuple(getattr(asset, f"default_offset_{axis}") for axis in "xyz"),
+                        )
+                    )
+                    asset_id, file_id, name = asset.id, file.id, asset.name
                 # Revalidate computed defaults too (overflow/non-finite defaults must roll back).
                 transform = SceneObjectUpdate(position=position, quaternion=quaternion, scale=scale)
                 revision = await advance_project_revision(session, project_id, expected)
                 record = await self.repository.add(
                     session,
                     project_id,
-                    asset.id,
-                    file.id,
-                    asset.name,
+                    asset_id,
+                    file_id,
+                    name,
                     data.parent_id,
                     transform.model_dump(exclude_unset=True),
+                    primitive=data.primitive,
                 )
         except KeyError as error:
             raise HTTPException(404, str(error)) from error

@@ -80,7 +80,7 @@ SQLite recovery and local access to the S3 library.
 
 ## Experimental LiDAR timeline
 
-Select a trajectory, open **Add effect → LiDAR**, then edit **Vertical angle (°)**,
+Select a trajectory, choose **LiDAR: Add** in the command palette, then edit **Vertical angle (°)**,
 **Azimuth samples**, and **Elevation samples** in its controls. Apply saves the
 configuration to the project. The timeline has exactly one presence marker at
 position zero; removing that marker disables the sensor. Settings are static for
@@ -93,26 +93,39 @@ The origin and basis follow the evaluated trajectory camera (+X right, +Y up,
 −Z forward), including aim and orientation tracks. Hit spheres are visible both
 in trajectory overview and in camera playback, regardless of inspector selection.
 
-The WebGPU adapter owns a second `GaussianPass` with an angular Jacobian and
-`dataMode: "external"`. It reads the same active Gaussian selection as the main
-view. It does **not** request an independent backend camera, mipmap selection or
-spherical frustum. Coverage outside the main view can therefore be missing or
-coarse. Enable WebGPU in **Profile & settings** to use LiDAR.
+Both WebGL/Spark and WebGPU use the same scene-depth capture contract: six
+90° float32 views from the sensor pose, sampled into an angular `R32F` range
+texture. Face resolution follows the azimuth sample count (128 × 128 per face
+at the defaults). Face view-Z is converted to radial meters along each bin's
+ray. Nearest sampling preserves misses and depth discontinuities; `Infinity`
+means no return, over a 0.01–10,000 m range. Grid, overlays, helper objects,
+transparent meshes and meshes with depth writing disabled are excluded.
 
-An internal transparent pipeline node depends on the managed main Gaussian pass,
-then renders the sensor pass and dispatches GPU hit reconstruction before the
-transparent scene stage. Ranges use float32 scene units (meters in a metric
-scene), weighted by alpha with a 0.95 coverage threshold, over 0.01–10,000 m.
-`Infinity` means no return; no validity texture or per-frame CPU readback is used.
-The GPU buffer drives instanced spheres with a 0.025 m radius. No-return instances
-collapse to zero size. Hits do not participate in picking or autofocus.
+The surface rule follows Spark's render-cube-depth example: source Gaussian
+opacity must exceed 0.1; surviving Gaussians have opaque two-sigma footprints,
+with no added screen-space blur. Ordinary opaque meshes contribute their own
+depth and occlude Gaussians (and vice versa). This is an approximate Gaussian
+surface, rather than accumulated-opacity depth or a physical LiDAR simulation.
+
+Spark uses its public custom-shader API and borrowed source textures. WebGPU
+uses a separate full-source store, so the sensor does not inherit the editor
+camera's visible LOD selection. That independent store increases memory use;
+its input buffers are retained until the cloud is removed. Captures that exceed
+the device budget or have incomplete Gaussian output cannot produce partial hits.
+
+The common owner captures at most 20 times per second, reads the float faces
+back to the CPU, and reconstructs world-space instanced hit spheres with a
+0.01 m radius and 50% opacity. One capture runs at a time, preserving its own pose
+until the readback completes. Hits do not participate in picking, autofocus or
+depth capture.
+This CPU readback is deliberate and may limit performance on large scenes.
 
 Configuration is exposed through GET/PATCH/DELETE
 `/api/v1/projects/{project_id}/camera/lidar`, with the usual editor authorization
 and project ETags on mutations. Existing projects start without a sensor.
 Alembic migration `20261011_0012` adds its normalized singleton record. Deletion,
 configuration changes, unmount and backend replacement release pass, texture,
-compute, geometry and material resources. The Spark example has no LiDAR support.
+compute, geometry and material resources, after pending GPU readbacks settle.
 
 ## SIFT detection lab
 

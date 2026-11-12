@@ -48,7 +48,9 @@ async function setup() {
           asset_ids: string[];
         };
         saved = saved.filter(
-          (object) => !assets.includes(object.library_asset_id),
+          (object) =>
+            object.library_asset_id === null ||
+            !assets.includes(object.library_asset_id),
         );
         return new Response(null, { status: 204 });
       }

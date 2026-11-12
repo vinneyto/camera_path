@@ -185,10 +185,19 @@ localStorage. The same proxy works locally and on Vercel; only its server-side b
 
 ### Scene objects
 
-`scene_objects` stores project-owned instances of ready library files. Each object has
+`scene_objects` stores project-owned library instances or client-rendered primitives. Each object has
 `parent_id`, local `position: [x,y,z]`, normalized `quaternion: [x,y,z,w]`, positive
 `scale: [x,y,z]`, `library_asset_id`, `library_asset_file_id`, `sort_order` and `visible`.
 The client composes world matrices and inherited visibility from the hierarchy.
+
+A primitive has a nullable TEXT `primitive` containing a validated JSON string, for example
+`{"type":"sphere","color":"#60a5fa"}`. Supported types are `cube`, `sphere` and `cone`;
+unknown fields and invalid RGB hex colors are rejected. Exactly one source is required:
+`primitive`, or a library asset/file reference. Primitive instances have null library IDs,
+format and download URL. No geometry or generated model file is stored on the server.
+The client builds centered unit geometry (cube sides 1, sphere diameter 1, cone diameter/height 1
+with its tip along +Y). Existing local TRS defines its placement and dimensions; omitted primitive
+transforms are identity. The agent's `create_scene_primitive` tool uses this same creation path.
 
 Use `GET/POST /api/v1/projects/{id}/scene-objects` and
 `PATCH/DELETE /api/v1/projects/{id}/scene-objects/{object_id}`. Creation defaults to the
