@@ -7,9 +7,10 @@ import {
   NearestFilter,
   NoColorSpace,
   RedFormat,
+  RGFormat,
   RenderTarget,
   PerspectiveCamera,
-  StorageBufferAttribute,
+  QuadMesh,
   Vector4,
   Scene,
   type Matrix4,
@@ -25,7 +26,7 @@ import { SceneDepthMaterials } from "../../depth/scene-depth-materials";
 import type { SceneDepthCapture } from "../../depth/scene-depth-capture";
 import { createWebGpuDepthMaterial } from "./create-webgpu-depth-material";
 import { configureTileDepthPass } from "./configure-tile-depth-pass";
-import { createTileDepthReadback } from "./create-tile-depth-readback";
+import { createTileDepthMergeMaterial } from "./create-tile-depth-merge-material";
 import type { TileDepthSources } from "./tile-depth-source";
 import type { GaussianCloud } from "3dgs-tile-webgpu";
 
@@ -40,8 +41,9 @@ export class WebGpuSceneDepthCapture implements SceneDepthCapture {
     createWebGpuDepthMaterial,
   );
   private readonly target;
-  private readonly output;
-  private readonly readback;
+  private readonly faces;
+  private readonly merge;
+  private readonly quad;
   private disposed = false;
   constructor(
     private readonly renderer: WebGPURenderer,
@@ -71,15 +73,15 @@ export class WebGpuSceneDepthCapture implements SceneDepthCapture {
       generateMipmaps: false,
       depthBuffer: true,
     });
-    this.output = Array.from({ length: 6 }, () => {
-      const output = new StorageBufferAttribute(size * size + 1, 1);
-      return output;
+    this.faces = Array.from({ length: 6 }, () => {
+      const face = this.target.clone();
+      face.texture.format = RGFormat;
+      return face;
     });
-    this.readback = this.output.map((output) =>
-      createTileDepthReadback(this.pass, output, size),
-    );
+    this.merge = createTileDepthMergeMaterial(this.pass, this.target.texture);
+    this.quad = new QuadMesh(this.merge.material);
   }
-  async capture(scene: Scene, matrix: Matrix4) {
+  async render(scene: Scene, matrix: Matrix4) {
     if (this.disposed) return null;
     // Establish device capabilities before asking the worker to pack full sources.
     this.pass.render();
@@ -125,41 +127,56 @@ export class WebGpuSceneDepthCapture implements SceneDepthCapture {
         );
       }
     }
-    // Encode all faces before yielding, so animation cannot move geometry
-    // halfway through a scan. Each readback owns its destination buffer.
-    const pending = createDepthCameras(matrix).map((camera, face) => {
-      this.camera.copy(camera);
-      this.camera.updateMatrixWorld(true);
-      const meshPixels = this.draw(scene);
-      this.pass.render();
-      this.renderer.compute(this.readback[face]);
-      return Promise.all([
-        meshPixels,
-        this.renderer.getArrayBufferAsync(this.output[face]),
-      ]);
+    this.merge.hasSplats.value = this.store.count > 0 ? 1 : 0;
+    // Each merged face is encoded on the GPU before the shared pass advances.
+    this.draw(() => {
+      for (const [face, camera] of createDepthCameras(matrix).entries()) {
+        this.camera.copy(camera);
+        this.camera.updateMatrixWorld(true);
+        this.renderer.setRenderTarget(this.target);
+        this.materials.draw(scene, () =>
+          this.renderer.render(scene, this.camera),
+        );
+        this.pass.render();
+        this.renderer.setRenderTarget(this.faces[face]);
+        this.quad.render(this.renderer);
+      }
     });
-    const captured = await settleDepthReadbacks(pending);
-    if (this.disposed) return null;
     const status = this.pass.getOutputStatus();
     if (status.error) throw new Error(status.error);
-    const faces: Float32Array[] = [];
-    for (const [pixels, splatBuffer] of captured) {
-      const splats = new Float32Array(splatBuffer),
-        meshes = pixels as Float32Array;
-      // Incomplete/overflowed Gaussian output must never look like a mesh-only scan.
-      if (this.store.count > 0 && splats[this.size * this.size] !== 1)
-        return null;
-      const result = new Float32Array(this.size * this.size);
-      for (let i = 0; i < result.length; i++) {
-        const a = meshes[i],
-          b = splats[i];
-        result[i] = a > 0 && b > 0 ? Math.min(a, b) : Math.max(a, b);
-      }
-      faces.push(result);
-    }
-    return { faces, size: this.size };
+    return {
+      faces: this.faces.map((target) => target.texture),
+      size: this.size,
+      origin: "top-left" as const,
+      readyInGreen: true,
+    };
   }
-  private draw(scene: Scene) {
+  async capture(scene: Scene, matrix: Matrix4) {
+    if (!(await this.render(scene, matrix))) return null;
+    const faces = await settleDepthReadbacks(
+      this.faces.map(
+        async (target) =>
+          (await this.renderer.readRenderTargetPixelsAsync(
+            target,
+            0,
+            0,
+            this.size,
+            this.size,
+          )) as Float32Array,
+      ),
+    );
+    if (faces.some((face) => face[1] !== 1)) return null;
+    return {
+      faces: faces.map((face) =>
+        Float32Array.from(
+          { length: this.size * this.size },
+          (_, i) => face[i * 2],
+        ),
+      ),
+      size: this.size,
+    };
+  }
+  private draw(draw: () => void) {
     const renderer = this.renderer;
     const target = renderer.getRenderTarget(),
       face = renderer.getActiveCubeFace(),
@@ -174,15 +191,7 @@ export class WebGpuSceneDepthCapture implements SceneDepthCapture {
       renderer.autoClear = true;
       renderer.setClearColor(0, 0);
       renderer.setScissorTest(false);
-      renderer.setRenderTarget(this.target);
-      this.materials.draw(scene, () => renderer.render(scene, this.camera));
-      return renderer.readRenderTargetPixelsAsync(
-        this.target,
-        0,
-        0,
-        this.size,
-        this.size,
-      );
+      draw();
     } finally {
       renderer.setRenderTarget(target, face, mip);
       renderer.setClearColor(color, alpha);
@@ -198,8 +207,8 @@ export class WebGpuSceneDepthCapture implements SceneDepthCapture {
     this.pass.dispose();
     this.store.dispose();
     this.target.dispose();
-    for (const readback of this.readback) readback.dispose();
+    this.merge.material.dispose();
+    for (const target of this.faces) target.dispose();
     this.materials.dispose();
-    for (const output of this.output) output.dispose();
   }
 }

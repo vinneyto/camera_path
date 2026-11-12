@@ -75,7 +75,7 @@ export class SparkSceneDepthCapture implements SceneDepthCapture {
         }),
     );
   }
-  async capture(scene: Scene, matrix: Matrix4) {
+  async render(scene: Scene, matrix: Matrix4) {
     if (this.disposed) return null;
     scene.updateMatrixWorld(true);
     const sources = new Set<SplatMesh>();
@@ -142,6 +142,14 @@ export class SparkSceneDepthCapture implements SceneDepthCapture {
         this.spark.render(this.scene, camera);
       }),
     );
+    return {
+      faces: this.targets.map((target) => target.texture),
+      size: this.size,
+      origin: "bottom-left" as const,
+    };
+  }
+  async capture(scene: Scene, matrix: Matrix4) {
+    if (!(await this.render(scene, matrix))) return null;
     const faces = await settleDepthReadbacks(
       this.targets.map(async (target) => {
         const pixels = new Float32Array(this.size * this.size);

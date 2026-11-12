@@ -1,5 +1,6 @@
 import type { StorageInstancedBufferAttribute, Texture } from "three/webgpu";
 export interface LidarRangesGpuView {
+  /** Integer texel (0,0) is the highest-elevation, first-azimuth bin. */
   readonly texture: Texture;
   readonly width: number;
   readonly height: number;

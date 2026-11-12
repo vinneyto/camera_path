@@ -1,3 +1,4 @@
+import { SparkGpuLidarView } from "./spark-gpu-lidar-view";
 import type { GaussianLidarSettings } from "../../model/gaussian-lidar";
 import { SceneDepthLidar } from "../../depth/scene-depth-lidar";
 import { getLidarFaceSize } from "../../depth/get-lidar-face-size";
@@ -126,7 +127,7 @@ export class SparkGaussianRenderingBackend implements GaussianRenderingBackend {
       throw new Error("SparkGaussianRenderingBackend is disposed");
     const sensor = new SceneDepthLidar(
       this.createDepthCapture(getLidarFaceSize(settings)),
-      settings,
+      new SparkGpuLidarView(this.renderer, settings),
       () => this.lidars.delete(sensor),
     );
     this.lidars.add(sensor);

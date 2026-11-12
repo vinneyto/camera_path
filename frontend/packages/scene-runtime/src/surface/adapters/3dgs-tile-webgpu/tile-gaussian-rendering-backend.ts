@@ -1,3 +1,4 @@
+import { TileGpuLidarView } from "./tile-gpu-lidar-view";
 import { SceneDepthLidar } from "../../depth/scene-depth-lidar";
 import { getLidarFaceSize } from "../../depth/get-lidar-face-size";
 import { WebGpuSceneDepthCapture } from "./webgpu-scene-depth-capture";
@@ -250,7 +251,7 @@ export class TileGaussianRenderingBackend implements GaussianRenderingBackend {
       throw new Error("TileGaussianRenderingBackend is disposed");
     const sensor = new SceneDepthLidar(
       this.createDepthCapture(getLidarFaceSize(settings)),
-      settings,
+      new TileGpuLidarView(this.pipeline.renderer, settings),
       () => this.lidars.delete(sensor),
     );
     this.lidars.add(sensor);

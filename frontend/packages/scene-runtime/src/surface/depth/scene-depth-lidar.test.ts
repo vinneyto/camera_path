@@ -1,95 +1,136 @@
-import { Camera, Matrix4, Scene } from "three";
+import { Camera, Matrix4, Mesh, Scene, Texture } from "three";
 import { expect, it, vi } from "vitest";
 import { SceneDepthLidar } from "./scene-depth-lidar";
-import type { SceneDepthCube } from "./scene-depth-capture";
+import type { SceneDepthGpuCube } from "./scene-depth-capture";
+const cube: SceneDepthGpuCube = {
+  faces: Array.from({ length: 6 }, () => new Texture()),
+  size: 1,
+  origin: "top-left",
+};
+function view() {
+  return {
+    object: new Mesh(),
+    ranges: {
+      texture: new Texture(),
+      width: 4,
+      height: 1,
+      units: "meters" as const,
+      format: "r32float" as const,
+      invalidValue: 0,
+    },
+    draw: vi
+      .fn<(_cube: SceneDepthGpuCube, _pose: Matrix4) => Promise<void>>()
+      .mockResolvedValue(undefined),
+    dispose: vi.fn(),
+  };
+}
 
-it("shares pose-snapshot, throttling, hit placement and disposal across adapters", async () => {
-  let finish!: (value: SceneDepthCube) => void;
+it("shares pose snapshots and scheduling while never reading depth back or uploading instance matrices", async () => {
+  let finish!: (value: SceneDepthGpuCube) => void;
   const capture = {
-    capture: vi.fn(
+    render: vi.fn(
       () =>
-        new Promise<SceneDepthCube>((resolve) => {
+        new Promise<SceneDepthGpuCube>((resolve) => {
           finish = resolve;
         }),
     ),
+    capture: vi.fn(),
     dispose: vi.fn(),
   };
-  const released = vi.fn(),
+  const presentation = view(),
+    released = vi.fn(),
     scene = new Scene(),
     camera = new Camera();
   camera.position.set(10, 2, 3);
   camera.updateMatrixWorld();
-  const lidar = new SceneDepthLidar(
-    capture,
-    { horizontalResolution: 4, verticalResolution: 1, verticalFovDegrees: 60 },
-    released,
-  );
+  const lidar = new SceneDepthLidar(capture, presentation, released);
   lidar.update(scene);
-  expect(capture.capture).not.toHaveBeenCalled();
+  expect(capture.render).not.toHaveBeenCalled();
   lidar.setPose(camera);
   lidar.update(scene);
   lidar.update(scene);
-  expect(capture.capture).toHaveBeenCalledOnce();
-  camera.position.set(20, 2, 3);
+  expect(capture.render).toHaveBeenCalledOnce();
+  camera.position.x = 20;
   lidar.setPose(camera);
-  finish({
-    faces: Array.from({ length: 6 }, () => new Float32Array([2])),
-    size: 1,
-  });
+  finish(cube);
   await vi.waitFor(() => expect(lidar.object.visible).toBe(true));
-  const hit = new Matrix4();
-  lidar.object.getMatrixAt(0, hit);
-  expect(hit.elements[12]).toBeCloseTo(8); // Original pose, not the later 20m pose.
-  expect(lidar.ranges.invalidValue).toBe(Infinity);
-  expect(lidar.ranges.texture.image.width).toBe(4);
-  expect(lidar.object.count).toBe(4);
+  expect(presentation.draw).toHaveBeenCalledOnce();
+  expect(presentation.draw.mock.calls[0][0]).toBe(cube);
+  expect((presentation.draw.mock.calls[0][1] as Matrix4).elements[12]).toBe(10);
+  expect(capture.capture).not.toHaveBeenCalled();
+  expect("instanceMatrix" in lidar.object).toBe(false);
   lidar.dispose();
   lidar.dispose();
   expect(capture.dispose).toHaveBeenCalledOnce();
+  expect(presentation.dispose).toHaveBeenCalledOnce();
   expect(released).toHaveBeenCalledOnce();
 });
-it("waits for an outstanding capture before releasing GPU resources and ignores its stale result", async () => {
-  let finish!: (value: SceneDepthCube) => void;
+it("waits for an outstanding capture and ignores its result after disposal", async () => {
+  let finish!: (value: SceneDepthGpuCube) => void;
   const capture = {
-    capture: vi.fn(
-      () =>
-        new Promise<SceneDepthCube>((resolve) => {
-          finish = resolve;
-        }),
-    ),
-    dispose: vi.fn(),
-  };
-  const lidar = new SceneDepthLidar(capture, {
-    horizontalResolution: 4,
-    verticalResolution: 1,
-    verticalFovDegrees: 60,
-  });
+      render: vi.fn(
+        () =>
+          new Promise<SceneDepthGpuCube>((resolve) => {
+            finish = resolve;
+          }),
+      ),
+      capture: vi.fn(),
+      dispose: vi.fn(),
+    },
+    presentation = view();
+  const lidar = new SceneDepthLidar(capture, presentation);
   lidar.setPose(new Camera());
   lidar.update(new Scene());
   lidar.dispose();
   expect(capture.dispose).not.toHaveBeenCalled();
-  finish({
-    faces: Array.from({ length: 6 }, () => new Float32Array([2])),
-    size: 1,
-  });
+  finish(cube);
   await vi.waitFor(() => expect(capture.dispose).toHaveBeenCalledOnce());
+  expect(presentation.draw).not.toHaveBeenCalled();
   expect(lidar.diagnostics.captures).toBe(0);
 });
-
-it("does not finish failed readback batches until sibling GPU copies have settled", async () => {
+it("limits completed GPU submissions to 20 Hz", async () => {
+  const clock = vi.spyOn(performance, "now").mockReturnValue(0),
+    capture = {
+      render: vi.fn().mockResolvedValue(cube),
+      capture: vi.fn(),
+      dispose: vi.fn(),
+    },
+    lidar = new SceneDepthLidar(capture, view()),
+    scene = new Scene();
+  try {
+    lidar.setPose(new Camera());
+    lidar.update(scene);
+    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(1));
+    clock.mockReturnValue(49);
+    lidar.update(scene);
+    expect(capture.render).toHaveBeenCalledTimes(1);
+    clock.mockReturnValue(50);
+    lidar.update(scene);
+    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(2));
+    clock.mockReturnValue(99);
+    lidar.update(scene);
+    expect(capture.render).toHaveBeenCalledTimes(2);
+    clock.mockReturnValue(100);
+    lidar.update(scene);
+    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(3));
+  } finally {
+    lidar.dispose();
+    clock.mockRestore();
+  }
+});
+it("keeps export readback resources alive until sibling copies settle", async () => {
   const { settleDepthReadbacks } = await import("./settle-depth-readbacks");
-  let finish!: (value: number) => void;
+  let finish!: (n: number) => void;
   const sibling = new Promise<number>((resolve) => {
     finish = resolve;
   });
   let rejected = false;
-  const error = new Error("GPU readback failed");
-  const batch = settleDepthReadbacks([Promise.reject(error), sibling]).catch(
-    (reason) => {
-      rejected = true;
-      expect(reason).toBe(error);
-    },
-  );
+  const batch = settleDepthReadbacks([
+    Promise.reject(new Error("read failed")),
+    sibling,
+  ]).catch(() => {
+    rejected = true;
+  });
   await Promise.resolve();
   await Promise.resolve();
   expect(rejected).toBe(false);
@@ -98,39 +139,37 @@ it("does not finish failed readback batches until sibling GPU copies have settle
   expect(rejected).toBe(true);
 });
 
-it("limits completed scans to 20 Hz with no extra 100 ms delay", async () => {
+it("does not enqueue another scan or dispose targets until the GPU completion fence resolves", async () => {
   const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+  let complete!: () => void;
+  const presentation = view();
+  presentation.draw.mockImplementation(
+    () =>
+      new Promise<void>((resolve) => {
+        complete = resolve;
+      }),
+  );
   const capture = {
-    capture: vi.fn().mockResolvedValue({
-      faces: Array.from({ length: 6 }, () => new Float32Array([2])),
-      size: 1,
-    }),
-    dispose: vi.fn(),
-  };
-  const lidar = new SceneDepthLidar(capture, {
-    horizontalResolution: 4,
-    verticalResolution: 1,
-    verticalFovDegrees: 60,
-  });
-  const scene = new Scene();
+      render: vi.fn().mockResolvedValue(cube),
+      capture: vi.fn(),
+      dispose: vi.fn(),
+    },
+    lidar = new SceneDepthLidar(capture, presentation),
+    scene = new Scene();
   try {
     lidar.setPose(new Camera());
     lidar.update(scene);
-    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(1));
-    clock.mockReturnValue(49);
+    await vi.waitFor(() => expect(presentation.draw).toHaveBeenCalledOnce());
+    clock.mockReturnValue(500);
     lidar.update(scene);
-    expect(capture.capture).toHaveBeenCalledTimes(1);
-    clock.mockReturnValue(50);
-    lidar.update(scene);
-    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(2));
-    clock.mockReturnValue(99);
-    lidar.update(scene);
-    expect(capture.capture).toHaveBeenCalledTimes(2);
-    clock.mockReturnValue(100);
-    lidar.update(scene);
-    await vi.waitFor(() => expect(lidar.diagnostics.captures).toBe(3));
-  } finally {
+    expect(capture.render).toHaveBeenCalledOnce();
     lidar.dispose();
+    expect(presentation.dispose).not.toHaveBeenCalled();
+    expect(capture.dispose).not.toHaveBeenCalled();
+    complete();
+    await vi.waitFor(() => expect(presentation.dispose).toHaveBeenCalledOnce());
+    expect(capture.dispose).toHaveBeenCalledOnce();
+  } finally {
     clock.mockRestore();
   }
 });
