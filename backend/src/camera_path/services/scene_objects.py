@@ -124,7 +124,13 @@ class SceneObjectService:
         return [await self._model(record, request) for record in records], revision
 
     async def add(
-        self, project_id: str, data: SceneObjectCreate, expected: int, request: Request
+        self,
+        project_id: str,
+        data: SceneObjectCreate,
+        expected: int,
+        request: Request,
+        *,
+        on_commit=None,
     ) -> tuple[SceneObject, int]:
         try:
             async with self.repository.sessions.begin() as session:
@@ -183,6 +189,8 @@ class SceneObjectService:
                     transform.model_dump(exclude_unset=True),
                     primitive=data.primitive,
                 )
+                if on_commit is not None:
+                    await on_commit(session, record)
         except KeyError as error:
             raise HTTPException(404, str(error)) from error
         except ValueError as error:
@@ -196,6 +204,8 @@ class SceneObjectService:
         data: SceneObjectUpdate,
         expected: int,
         request: Request,
+        *,
+        on_commit=None,
     ) -> tuple[SceneObject, int]:
         try:
             async with self.repository.sessions.begin() as session:
@@ -203,17 +213,23 @@ class SceneObjectService:
                 record = await self.repository.update(
                     session, project_id, object_id, data.model_dump(exclude_unset=True)
                 )
+                if on_commit is not None:
+                    await on_commit(session, record)
         except KeyError as error:
             raise HTTPException(404, str(error)) from error
         except ValueError as error:
             raise HTTPException(422, str(error)) from error
         return await self._model(record, request), revision
 
-    async def remove(self, project_id: str, object_id: str, expected: int) -> int:
+    async def remove(
+        self, project_id: str, object_id: str, expected: int, *, on_commit=None
+    ) -> int:
         try:
             async with self.repository.sessions.begin() as session:
                 revision = await advance_project_revision(session, project_id, expected)
                 await self.repository.remove(session, project_id, object_id)
+                if on_commit is not None:
+                    await on_commit(session, None)
             return revision
         except KeyError as error:
             raise HTTPException(404, str(error)) from error

@@ -106,6 +106,22 @@ it("preserves SSE streaming without reading/buffering the upstream stream", asyn
   expect(await response.text()).toContain('"Hello"');
 });
 
+it("forwards the pipeline SSE replay cursor on reconnect", async () => {
+  fetchMock.mockResolvedValue(
+    new Response("event: snapshot\ndata: []\n\n", {
+      headers: { "Content-Type": "text/event-stream" },
+    }),
+  );
+  const response = await proxyApiRequest(
+    new NextRequest(`${origin}/api/v1/projects/p/pipelines/events`, {
+      headers: { "Last-Event-ID": "17", cookie: "camera-path-session=token" },
+    }),
+  );
+  const [, options] = fetchMock.mock.calls[0] as [URL, RequestInit];
+  expect(new Headers(options.headers).get("Last-Event-ID")).toBe("17");
+  expect(response.headers.get("content-type")).toBe("text/event-stream");
+});
+
 it("routes local content URLs through the proxy and leaves signed S3 URLs direct", async () => {
   fetchMock.mockResolvedValue(
     Response.json([

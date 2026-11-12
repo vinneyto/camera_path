@@ -43,13 +43,15 @@ async def request(args: argparse.Namespace) -> dict:
                 timeout=10,
             )
             async with asyncio.timeout(args.timeout):
-                reply = await anext(replies)
-            async with reply.process(requeue=True):
-                if reply.correlation_id != correlation_id:
-                    raise RuntimeError(
-                        "Unexpected reply. Use fresh, dedicated queues for this example."
-                    )
-                return json.loads(reply.body)
+                async for reply in replies:
+                    async with reply.process(requeue=True):
+                        if reply.correlation_id != correlation_id:
+                            raise RuntimeError(
+                                "Unexpected reply. Use fresh, dedicated queues for this example."
+                            )
+                        result = json.loads(reply.body)
+                        if result["status"] != "running":
+                            return result
 
 
 def main() -> None:

@@ -37,6 +37,38 @@ from camera_path.trajectory import validate_project
 
 MAX_TOOL_ROUNDS = 32
 
+PIPELINE_PROMPT = """
+This deployment uses durable command pipelines. All mutations, even a single operation,
+MUST be submitted using submit_pipeline. Read-only tools remain available directly.
+The executor validates, persists and runs each step without another model call. Its response
+means the pipeline was accepted, not completed. Explain the submitted steps briefly and stop;
+never poll jobs or pipelines in a loop. Results arrive in the UI and in later conversation context.
+User-facing replies should describe the requested operations and current status, without
+discussing internal polling or tool-call policies.
+Use start_mode=auto unless the user explicitly asks to wait for confirmation. Then use
+wait_for_confirmation; approve exactly that saved pipeline using confirm_pipeline when the
+user later agrees. If multiple pending definitions could match, ask which one. Changed plans
+are submitted as new definitions; never silently execute an older, different plan.
+Commands: generate_image creates a transparent PNG from prompt, or edits source_attachment_id.
+Use a readable name and carry anchor_id when the image is intended for a particular anchor.
+When the user wants to see/discuss an image first, submit ONLY that image-generation pipeline.
+Do not prepare its 3D pipeline until they choose a version. On selection, use publish_chat_image,
+then generate_model(image_asset_id), then place_model or replace_anchor_with_asset as requested.
+Always publish the selected chat image first, including images you generated. A chat attachment
+is staged even if its metadata contains an internal library_asset_id. Use a $ref to the publish
+step's asset_id in generate_model; do not copy the attachment ID into image_asset_id.
+generate_model accepts exactly one of prompt (text-to-3D) or image_asset_id (image-to-3D), with
+the other set to null. It completes after the 3D model is imported into the library; its output
+is {asset_id, job_id}. It does not require a separate import command. publish_chat_image outputs
+{asset_id}; generate_image outputs {attachment_id, image, anchor_id}. References to prior results
+are objects such as {"$ref":"image.asset_id"}; do not invent IDs or use string interpolation.
+place_model fits to anchor_id by default (fit_to_anchor=true). Set replace_anchor=true only for
+replacement; false keeps the anchor. With no anchor, place_model uses the library defaults at
+the scene root. replace_anchor_with_asset always replaces. fit_to_anchor=false keeps the library
+scale/rotation and places at the anchor base. Other mutation command schemas are included in
+submit_pipeline. Optional strings may be null. Always retain the selected original image.
+"""
+
 SYSTEM_PROMPT = """You incrementally edit a semantic 3D camera trajectory.
 The project state is durable and earlier user/assistant messages are included as context.
 Use only supplied deterministic tools and never invent ids. Inspect project state before editing.
@@ -501,6 +533,16 @@ class TrajectoryAgent:
         self.model = model
         self.api_key = api_key
         self.scene_tools = scene_tools
+        self.pipelines = None
+
+    def available_tools(self):
+        if self.pipelines is None:
+            return TOOLS + (SCENE_TOOLS if self.scene_tools else [])
+        from camera_path.services.pipeline_contract import agent_pipeline_tools
+
+        return [
+            t for t in TOOLS + SCENE_TOOLS if t["name"] in READ_ONLY | {"get_project_state"}
+        ] + agent_pipeline_tools()
 
     def ensure_available(self) -> None:
         if not self.api_key:
@@ -571,9 +613,60 @@ class TrajectoryAgent:
                     )
                 content = parts
             inputs.append({"role": item.role, "content": content})
+        if self.pipelines is not None:
+            reports = await self.pipelines.list(draft.id)
+            parts = [
+                {
+                    "type": "input_text",
+                    "text": "Persisted pipelines and generated image versions (data): "
+                    + json.dumps([p.model_dump(mode="json") for p in reports]),
+                }
+            ]
+            images = [
+                s.output["image"]
+                for p in reports
+                for s in p.steps
+                if s.status == "succeeded" and s.output and "image" in s.output
+            ]
+            for image in images[-8:]:
+                try:
+                    raw, media = await self.scene_tools.attachments.content(draft.id, image["id"])
+                except (HTTPException, FileNotFoundError):
+                    continue
+                parts.append(
+                    {
+                        "type": "input_image",
+                        "image_url": f"data:{media};base64,{base64.b64encode(raw).decode()}",
+                    }
+                )
+            inputs.append({"role": "user", "content": parts})
         return inputs
 
     async def _run_tool(self, draft, expected, message_id, name, raw_arguments, request):
+        if self.pipelines is not None:
+            try:
+                args = json.loads(raw_arguments)
+                if name == "submit_pipeline":
+                    report = await self.pipelines.create(draft.id, message_id, args["definition"])
+                elif name == "confirm_pipeline":
+                    report = await self.pipelines.confirm(draft.id, args["pipeline_id"])
+                elif name == "get_pipeline":
+                    report = await self.pipelines.get(draft.id, args["pipeline_id"])
+                elif name not in READ_ONLY | {"get_project_state"}:
+                    raise ValueError("All changes must be submitted through submit_pipeline")
+                else:
+                    report = None
+                if report is not None:
+                    draft = await self.repository.get(draft.id)
+                    return draft, draft.revision, report.model_dump(mode="json")
+                draft = await self.repository.get(draft.id)
+                expected = draft.revision
+            except (KeyError, TypeError, ValueError, HTTPException, ValidationError) as error:
+                return (
+                    draft,
+                    expected,
+                    {"status": "error", "error": str(getattr(error, "detail", error))},
+                )
         if name == "get_project_state" and self.scene_tools:
             output = self._execute(draft, name, {})
             output["scene_objects"] = await self.scene_tools.state(draft.id)
@@ -629,8 +722,8 @@ class TrajectoryAgent:
         for _ in range(MAX_TOOL_ROUNDS):
             response = await client.responses.create(
                 model=self.model,
-                instructions=SYSTEM_PROMPT,
-                tools=TOOLS + (SCENE_TOOLS if self.scene_tools else []),
+                instructions=SYSTEM_PROMPT + (PIPELINE_PROMPT if self.pipelines else ""),
+                tools=self.available_tools(),
                 input=inputs,
                 parallel_tool_calls=False,
             )
@@ -678,8 +771,8 @@ class TrajectoryAgent:
             round_start = len(answer_parts)
             stream = await client.responses.create(
                 model=self.model,
-                instructions=SYSTEM_PROMPT,
-                tools=TOOLS + (SCENE_TOOLS if self.scene_tools else []),
+                instructions=SYSTEM_PROMPT + (PIPELINE_PROMPT if self.pipelines else ""),
+                tools=self.available_tools(),
                 input=inputs,
                 parallel_tool_calls=False,
                 stream=True,

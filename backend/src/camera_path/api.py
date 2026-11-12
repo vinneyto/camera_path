@@ -32,6 +32,7 @@ from camera_path.routers.chat_attachments import router as chat_attachment_route
 from camera_path.routers.dependencies import PreconditionRequiredError
 from camera_path.routers.jobs import router as jobs_router
 from camera_path.routers.library import router as library_router
+from camera_path.routers.pipelines import router as pipeline_router
 from camera_path.routers.profile import router as profile_router
 from camera_path.routers.resources import router as resource_router
 from camera_path.routers.scene_objects import router as scene_object_router
@@ -46,6 +47,7 @@ from camera_path.services import (
 )
 from camera_path.services.app_dependencies import AppDependencies
 from camera_path.services.auth import AuthService
+from camera_path.services.chat_image_generation import ChatImageGeneration
 from camera_path.services.generation_integration import GenerationIntegration
 from camera_path.services.generation_models import GENERATION_SOURCE
 from camera_path.services.job_completion import JobCompletionService
@@ -54,6 +56,8 @@ from camera_path.services.jobs import JobService
 from camera_path.services.library import LibraryService
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorageError
+from camera_path.services.pipeline_executor import PipelineExecutor
+from camera_path.services.pipelines import PipelineService
 from camera_path.services.scene_objects import SceneObjectService
 from camera_path.services.user_settings import UserSettingsService
 from camera_path.trajectory import GeometryError
@@ -186,6 +190,16 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             chat_service.attachments,
         ),
     )
+    pipeline_service = PipelineService(project_repository)
+    pipeline_executor = PipelineExecutor(
+        pipeline_service,
+        trajectory_service,
+        agent.scene_tools,
+        ChatImageGeneration(chat_service.attachments, agent.api_key, configured.openai_image_model),
+    )
+    agent.pipelines = pipeline_service
+    if generation is not None:
+        generation.pipelines = pipeline_service
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -203,6 +217,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
                 for worker in (consumer, generation_consumer)
                 if worker is not None
             ]
+            tasks.append(asyncio.create_task(pipeline_executor.run()))
             if generation is not None:
                 tasks.append(asyncio.create_task(generation.dispatch()))
             try:
@@ -243,6 +258,20 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         ],
     )
     application.state.project_service = project_service
+    application.state.pipeline_service = pipeline_service
+    application.state.pipeline_executor = pipeline_executor
+    pipeline_executor.request = Request(
+        {
+            "type": "http",
+            "app": application,
+            "router": application.router,
+            "scheme": "http",
+            "server": ("localhost", 80),
+            "path": "/",
+            "root_path": "",
+            "headers": [],
+        }
+    )
     application.state.message_queue = message_queue
     application.state.job_completion_service = importer
     application.state.job_completion_consumer = consumer
@@ -388,6 +417,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     application.include_router(library_router, prefix=API_PREFIX)
     application.include_router(chat_attachment_router, prefix=API_PREFIX)
     application.include_router(jobs_router, prefix=API_PREFIX)
+    application.include_router(pipeline_router, prefix=API_PREFIX)
     application.include_router(scene_object_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)
     application.include_router(business_router, include_in_schema=False)

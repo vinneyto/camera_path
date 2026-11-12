@@ -55,6 +55,7 @@ class GenerationIntegration:
         self.source = source
         self.sessions = importer.sessions
         self.default_rotation_deg = default_rotation_deg
+        self.pipelines = None
 
     async def dispatch(self) -> None:
         while True:
@@ -120,6 +121,19 @@ class GenerationIntegration:
             job_input = job.input
             job_name = job.name
 
+        if event.status == "running":
+            async with self.sessions.begin() as session:
+                await session.execute(
+                    update(JobRecord)
+                    .where(
+                        JobRecord.id == event.job_id,
+                        JobRecord.status == JobStatus.QUEUED,
+                    )
+                    .values(status=JobStatus.RUNNING, started_at=datetime.now(UTC))
+                )
+            if self.pipelines is not None:
+                await self.pipelines.job_phase(event.job_id, "generating")
+            return event.job_id
         if event.error is not None:
             await self._fail(event.job_id, event.error)
         else:
@@ -130,6 +144,8 @@ class GenerationIntegration:
                 message = await blocking_io(lambda: self._completion(event, worker_input, name))
             except ValueError as error:
                 raise LibraryError("invalid_generation_result", 422) from error
+            if self.pipelines is not None:
+                await self.pipelines.job_phase(event.job_id, "importing")
             await self.importer.register(message, default_rotation_deg=self.default_rotation_deg)
         return event.job_id
 

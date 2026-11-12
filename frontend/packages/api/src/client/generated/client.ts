@@ -65,6 +65,8 @@ import type {
   MotionProfile,
   MotionProfileUpdate,
   OrientationTimeline,
+  Pipeline,
+  PipelineCreate,
   ProjectCreate,
   ProjectMetadata,
   ProjectUpdate,
@@ -7587,6 +7589,592 @@ export const useUpdateSpeedKeyframe = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateSpeedKeyframeMutationOptions(options), queryClient);
+    }
+
+export type listProjectPipelinesResponse200 = {
+  data: Pipeline[]
+  status: 200
+}
+
+export type listProjectPipelinesResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type listProjectPipelinesResponseSuccess = (listProjectPipelinesResponse200) & {
+  headers: Headers;
+};
+export type listProjectPipelinesResponseError = (listProjectPipelinesResponse422) & {
+  headers: Headers;
+};
+
+export type listProjectPipelinesResponse = (listProjectPipelinesResponseSuccess | listProjectPipelinesResponseError)
+
+export const getListProjectPipelinesUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/pipelines`
+}
+
+/**
+ * List saved command definitions and complete execution reports for this project.
+ * @summary List Pipelines
+ */
+export const listProjectPipelines = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<listProjectPipelinesResponse> => {
+
+  return orvalFetch<listProjectPipelinesResponse>(getListProjectPipelinesUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectPipelinesQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/pipelines`
+    ] as const;
+    }
+
+
+export const getListProjectPipelinesQueryOptions = <TData = Awaited<ReturnType<typeof listProjectPipelines>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectPipelines>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectPipelinesQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectPipelines>>> = ({ signal }) => listProjectPipelines(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectPipelines>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProjectPipelinesQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectPipelines>>>
+export type ListProjectPipelinesQueryError = HTTPValidationError
+
+
+export function useListProjectPipelines<TData = Awaited<ReturnType<typeof listProjectPipelines>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectPipelines>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectPipelines>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectPipelines>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectPipelines<TData = Awaited<ReturnType<typeof listProjectPipelines>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectPipelines>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectPipelines>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectPipelines>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectPipelines<TData = Awaited<ReturnType<typeof listProjectPipelines>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectPipelines>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Pipelines
+ */
+
+export function useListProjectPipelines<TData = Awaited<ReturnType<typeof listProjectPipelines>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectPipelines>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProjectPipelinesQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createProjectPipelineResponse201 = {
+  data: Pipeline
+  status: 201
+}
+
+export type createProjectPipelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createProjectPipelineResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type createProjectPipelineResponseSuccess = (createProjectPipelineResponse201) & {
+  headers: Headers;
+};
+export type createProjectPipelineResponseError = (createProjectPipelineResponse401 | createProjectPipelineResponse422) & {
+  headers: Headers;
+};
+
+export type createProjectPipelineResponse = (createProjectPipelineResponseSuccess | createProjectPipelineResponseError)
+
+export const getCreateProjectPipelineUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/pipelines`
+}
+
+/**
+ * Validate and save an immutable command pipeline; auto mode queues execution immediately.
+ * @summary Create Pipeline
+ */
+export const createProjectPipeline = async (projectId: string,
+    pipelineCreate: PipelineCreate, options?: Parameters<typeof orvalFetch>[1]): Promise<createProjectPipelineResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<createProjectPipelineResponse>(getCreateProjectPipelineUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pipelineCreate)
+  }
+);}
+
+
+
+
+
+export const getCreateProjectPipelineMutationKey = () => ['createProjectPipeline'] as const;
+
+export const getCreateProjectPipelineMutationOptions = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectPipeline>>, TError,CreateProjectPipelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectPipeline>>, TError,CreateProjectPipelineMutationVariables, TContext> => {
+
+const mutationKey = getCreateProjectPipelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectPipeline>>, CreateProjectPipelineMutationVariables> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createProjectPipeline(projectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectPipelineMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectPipeline>>>
+    export type CreateProjectPipelineMutationBody = PipelineCreate
+    export type CreateProjectPipelineMutationError = void | HTTPValidationError
+    export type CreateProjectPipelineMutationVariables = {projectId: string;data: PipelineCreate}
+
+    /**
+ * @summary Create Pipeline
+ */
+export const useCreateProjectPipeline = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectPipeline>>, TError,CreateProjectPipelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectPipeline>>,
+        TError,
+        CreateProjectPipelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateProjectPipelineMutationOptions(options), queryClient);
+    }
+
+export type streamPipelineEventsResponse200 = {
+  data: void
+  status: 200
+}
+
+export type streamPipelineEventsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type streamPipelineEventsResponseSuccess = (streamPipelineEventsResponse200) & {
+  headers: Headers;
+};
+export type streamPipelineEventsResponseError = (streamPipelineEventsResponse422) & {
+  headers: Headers;
+};
+
+export type streamPipelineEventsResponse = (streamPipelineEventsResponseSuccess | streamPipelineEventsResponseError)
+
+export const getStreamPipelineEventsUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/pipelines/events`
+}
+
+/**
+ * SSE snapshot followed by durable pipeline/step events. Supports Last-Event-ID.
+ * @summary Pipeline Events
+ */
+export const streamPipelineEvents = async (projectId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<streamPipelineEventsResponse> => {
+
+  return orvalFetch<streamPipelineEventsResponse>(getStreamPipelineEventsUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamPipelineEventsQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/pipelines/events`
+    ] as const;
+    }
+
+
+export const getStreamPipelineEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamPipelineEvents>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamPipelineEvents>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamPipelineEventsQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamPipelineEvents>>> = ({ signal }) => streamPipelineEvents(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamPipelineEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StreamPipelineEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamPipelineEvents>>>
+export type StreamPipelineEventsQueryError = HTTPValidationError
+
+
+export function useStreamPipelineEvents<TData = Awaited<ReturnType<typeof streamPipelineEvents>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamPipelineEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamPipelineEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamPipelineEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamPipelineEvents<TData = Awaited<ReturnType<typeof streamPipelineEvents>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamPipelineEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamPipelineEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamPipelineEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamPipelineEvents<TData = Awaited<ReturnType<typeof streamPipelineEvents>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamPipelineEvents>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Pipeline Events
+ */
+
+export function useStreamPipelineEvents<TData = Awaited<ReturnType<typeof streamPipelineEvents>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamPipelineEvents>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStreamPipelineEventsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getProjectPipelineResponse200 = {
+  data: Pipeline
+  status: 200
+}
+
+export type getProjectPipelineResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getProjectPipelineResponseSuccess = (getProjectPipelineResponse200) & {
+  headers: Headers;
+};
+export type getProjectPipelineResponseError = (getProjectPipelineResponse422) & {
+  headers: Headers;
+};
+
+export type getProjectPipelineResponse = (getProjectPipelineResponseSuccess | getProjectPipelineResponseError)
+
+export const getGetProjectPipelineUrl = (projectId: string,
+    pipelineId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/pipelines/${pipelineId}`
+}
+
+/**
+ * Read a project-scoped pipeline definition, resolved inputs, results and errors.
+ * @summary Get Pipeline
+ */
+export const getProjectPipeline = async (projectId: string,
+    pipelineId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getProjectPipelineResponse> => {
+
+  return orvalFetch<getProjectPipelineResponse>(getGetProjectPipelineUrl(projectId,pipelineId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProjectPipelineQueryKey = (projectId: string,
+    pipelineId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/pipelines/${pipelineId}`
+    ] as const;
+    }
+
+
+export const getGetProjectPipelineQueryOptions = <TData = Awaited<ReturnType<typeof getProjectPipeline>>, TError = HTTPValidationError>(projectId: string,
+    pipelineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectPipeline>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectPipelineQueryKey(projectId,pipelineId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectPipeline>>> = ({ signal }) => getProjectPipeline(projectId,pipelineId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined && pipelineId !== null && pipelineId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectPipeline>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProjectPipelineQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectPipeline>>>
+export type GetProjectPipelineQueryError = HTTPValidationError
+
+
+export function useGetProjectPipeline<TData = Awaited<ReturnType<typeof getProjectPipeline>>, TError = HTTPValidationError>(
+ projectId: string,
+    pipelineId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectPipeline>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectPipeline>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectPipeline>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProjectPipeline<TData = Awaited<ReturnType<typeof getProjectPipeline>>, TError = HTTPValidationError>(
+ projectId: string,
+    pipelineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectPipeline>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectPipeline>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectPipeline>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProjectPipeline<TData = Awaited<ReturnType<typeof getProjectPipeline>>, TError = HTTPValidationError>(
+ projectId: string,
+    pipelineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectPipeline>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Pipeline
+ */
+
+export function useGetProjectPipeline<TData = Awaited<ReturnType<typeof getProjectPipeline>>, TError = HTTPValidationError>(
+ projectId: string,
+    pipelineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectPipeline>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProjectPipelineQueryOptions(projectId,pipelineId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type confirmProjectPipelineResponse200 = {
+  data: Pipeline
+  status: 200
+}
+
+export type confirmProjectPipelineResponse401 = {
+  data: void
+  status: 401
+}
+
+export type confirmProjectPipelineResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type confirmProjectPipelineResponseSuccess = (confirmProjectPipelineResponse200) & {
+  headers: Headers;
+};
+export type confirmProjectPipelineResponseError = (confirmProjectPipelineResponse401 | confirmProjectPipelineResponse422) & {
+  headers: Headers;
+};
+
+export type confirmProjectPipelineResponse = (confirmProjectPipelineResponseSuccess | confirmProjectPipelineResponseError)
+
+export const getConfirmProjectPipelineUrl = (projectId: string,
+    pipelineId: string,) => {
+
+
+
+
+  return `/api/v1/projects/${projectId}/pipelines/${pipelineId}/confirm`
+}
+
+/**
+ * Queue the exact pending definition once; repeated confirmation is idempotent.
+ * @summary Confirm Pipeline
+ */
+export const confirmProjectPipeline = async (projectId: string,
+    pipelineId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<confirmProjectPipelineResponse> => {
+
+  return orvalFetch<confirmProjectPipelineResponse>(getConfirmProjectPipelineUrl(projectId,pipelineId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getConfirmProjectPipelineMutationKey = () => ['confirmProjectPipeline'] as const;
+
+export const getConfirmProjectPipelineMutationOptions = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmProjectPipeline>>, TError,ConfirmProjectPipelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmProjectPipeline>>, TError,ConfirmProjectPipelineMutationVariables, TContext> => {
+
+const mutationKey = getConfirmProjectPipelineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmProjectPipeline>>, ConfirmProjectPipelineMutationVariables> = (props) => {
+          const {projectId,pipelineId} = props ?? {};
+
+          return  confirmProjectPipeline(projectId,pipelineId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmProjectPipelineMutationResult = NonNullable<Awaited<ReturnType<typeof confirmProjectPipeline>>>
+
+    export type ConfirmProjectPipelineMutationError = void | HTTPValidationError
+    export type ConfirmProjectPipelineMutationVariables = {projectId: string;pipelineId: string}
+
+    /**
+ * @summary Confirm Pipeline
+ */
+export const useConfirmProjectPipeline = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmProjectPipeline>>, TError,ConfirmProjectPipelineMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof confirmProjectPipeline>>,
+        TError,
+        ConfirmProjectPipelineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfirmProjectPipelineMutationOptions(options), queryClient);
     }
 
 export type resetProjectResponse200 = {

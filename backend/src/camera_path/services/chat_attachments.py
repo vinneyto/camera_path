@@ -38,13 +38,13 @@ class ChatAttachments:
         return record
 
     @staticmethod
-    def model(record):
+    def model(record, *, published=False):
         return ChatAttachment(
             id=record.id,
             name=record.name,
             format=record.format,
             url=f"/api/v1/projects/{record.project_id}/chat/attachments/{record.id}/content",
-            library_asset_id=record.asset_id,
+            library_asset_id=record.asset_id if published else None,
         )
 
     async def complete(self, project_id, attachment_id):
@@ -62,7 +62,7 @@ class ChatAttachments:
                     raise HTTPException(422, "Uploaded image is missing, incomplete or invalid")
                 await blocking_io(lambda: self.library._validate_image(asset))
                 record.ready = True
-        return self.model(record)
+        return self.model(record, published=asset.status == "ready")
 
     async def describe(self, project_id, ids):
         if len(set(ids)) != len(ids):

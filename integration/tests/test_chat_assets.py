@@ -5,6 +5,7 @@ import json
 
 from test_generation import completion, configure
 from test_job_completion import wait_job
+from test_pipelines import wait_pipeline
 
 PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVR4nGP8zwAFTDAGEgsAHVsBBeg3qMUAAAAASUVORK5CYII="
@@ -31,13 +32,32 @@ def test_chat_image_job_replaces_selected_anchor_after_restart(dev_backend):
     assert b.request("GET", "/api/v1/library").json() == []
     b.llm.mode = "scene_tools"
     b.llm.scene_tools = [
-        ("create_library_asset", {"attachment_id": image["id"]}),
         (
-            "start_image_generation",
+            "submit_pipeline",
             {
-                "image_asset_id": image["id"],
-                "replace_anchor_id": anchor["id"],
-                "name": None,
+                "definition": {
+                    "title": "Generate and replace",
+                    "steps": [
+                        {
+                            "id": "image",
+                            "command": "publish_chat_image",
+                            "input": {"attachment_id": image["id"]},
+                        },
+                        {
+                            "id": "model",
+                            "command": "generate_model",
+                            "input": {"image_asset_id": {"$ref": "image.asset_id"}},
+                        },
+                        {
+                            "id": "place",
+                            "command": "replace_anchor_with_asset",
+                            "input": {
+                                "anchor_id": anchor["id"],
+                                "library_asset_id": {"$ref": "model.asset_id"},
+                            },
+                        },
+                    ],
+                }
             },
         ),
     ]
@@ -56,6 +76,7 @@ def test_chat_image_job_replaces_selected_anchor_after_restart(dev_backend):
     assert history[0]["selected_object"]["resource_id"] == anchor["id"]
     assert history[0]["attachments"][0]["name"] == "chair.png"
     assert b.llm.requests[0]["input"][0]["content"][1]["type"] == "input_image"
+    pipeline = wait_pipeline(p, waiting=True)
     jobs = p.get("/generation-jobs").json()
     assert len(jobs) == 1 and jobs[0]["scene_placement"]["status"] == "pending"
     job = jobs[0]
@@ -68,6 +89,8 @@ def test_chat_image_job_replaces_selected_anchor_after_restart(dev_backend):
     b.start()
     b.broker.publish(b.env["CAMERA_PATH_GENERATION_RESULT_QUEUE"], result)
     finished = wait_job(b, job["id"])
+    assert wait_pipeline(p, pipeline["id"])["status"] == "succeeded"
+    finished = b.request("GET", f"/api/v1/jobs/{job['id']}").json()
     assert finished["status"] == "succeeded"
     assert finished["scene_placement"]["status"] == "succeeded"
     assert p.get("/anchors").json() == []

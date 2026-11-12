@@ -4,14 +4,21 @@ import { Bot, UserRound } from "lucide-react";
 import { ChatMarkdown } from "@camera-path/feature-chat-agent/ui/chat-markdown";
 import type { ChatHistoryMessage } from "@camera-path/types/project";
 import { cn } from "@camera-path/ui-kit/lib/cn";
+import type { ChatAttachment } from "@camera-path/types/api";
+import { ChatImage } from "./chat-image";
 
 export function ChatMessage({
   content,
   role,
   selected_object,
   attachments,
+  onContinue,
+  disabled,
 }: Pick<ChatHistoryMessage, "content" | "role" | "id"> &
-  Partial<Pick<ChatHistoryMessage, "selected_object" | "attachments">>) {
+  Partial<Pick<ChatHistoryMessage, "selected_object" | "attachments">> & {
+    onContinue?: (image: ChatAttachment, anchorId?: string | null) => void;
+    disabled?: boolean;
+  }) {
   const Icon = role === "assistant" ? Bot : UserRound;
   return (
     <div
@@ -27,15 +34,12 @@ export function ChatMessage({
           </p>
         )}
         {attachments?.map((image) => (
-          <a
+          <ChatImage
             key={image.id}
-            href={image.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mb-1 block truncate text-[10px] underline"
-          >
-            {image.name}
-          </a>
+            image={image}
+            disabled={disabled}
+            onContinue={onContinue ? () => onContinue(image) : undefined}
+          />
         ))}
         {role === "assistant" ? (
           <ChatMarkdown content={content} />

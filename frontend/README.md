@@ -93,6 +93,11 @@ The proxy keeps JWTs in HttpOnly cookies, validates Origin on writes, forwards r
 streams binary local uploads/downloads and SSE for chat and jobs, and rewrites local content URLs to itself.
 Signed S3 URLs stay direct browser transfers. Production cookies require HTTPS.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
+Generated/edited chat images use `CAMERA_PATH_OPENAI_IMAGE_MODEL` on the backend. The chat renders
+persisted command pipelines (including single actions), step states and generated image versions.
+SSE delivers each completed step and restores current state on reconnect. Pipelines start
+automatically unless the user asks to wait; pending definitions can be confirmed in chat or with
+the card button. Each card can copy its definition or full execution JSON for debugging.
 
 Orval generates the API client and TanStack Query hooks from `backend/openapi.json` under
 `packages/api/src/client/generated` and the DTO types under `packages/types/src/api`.

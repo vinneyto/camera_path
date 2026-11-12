@@ -8,16 +8,28 @@ from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.services.anchor_asset_fit import fit_asset_to_anchor
 from camera_path.services.library_metadata import BoundingBox
 from camera_path.services.revisions import advance_project_revision
+from camera_path.services.scene_objects import SceneObjectUpdate
+from camera_path.services.scene_transforms import quaternion_from_euler_xyz
 
 
-async def replace_anchor(session, project_id, anchor_id, asset, expected=None, snapshot=None):
+async def replace_anchor(
+    session,
+    project_id,
+    anchor_id,
+    asset,
+    expected=None,
+    snapshot=None,
+    *,
+    fit_to_anchor=True,
+    remove_anchor=True,
+):
     anchors = await AnchorRepository(session).list(project_id)
     anchor = anchors.get(anchor_id)
     if anchor is None:
         raise ValueError("Anchor no longer exists")
     if snapshot is not None and anchor.model_dump(mode="json") != snapshot:
         raise ValueError("Anchor changed while generation was running")
-    if await session.scalar(
+    if remove_anchor and await session.scalar(
         select(SegmentAnchorRecord.anchor_id)
         .where(SegmentAnchorRecord.anchor_id == anchor_id)
         .limit(1)
@@ -25,10 +37,20 @@ async def replace_anchor(session, project_id, anchor_id, asset, expected=None, s
         raise ValueError("Anchor is referenced by a trajectory; remove that reference first")
     if asset.status != "ready" or asset.format not in {"ply", "sog"}:
         raise ValueError("Only ready 3DGS assets can replace anchors")
-    transform = fit_asset_to_anchor(
-        anchor,
-        BoundingBox.model_validate(asset.bbox) if asset.bbox else None,
-        tuple(getattr(asset, f"default_rotation_{a}_deg") for a in "xyz"),
+    transform = (
+        fit_asset_to_anchor(
+            anchor,
+            BoundingBox.model_validate(asset.bbox) if asset.bbox else None,
+            tuple(getattr(asset, f"default_rotation_{a}_deg") for a in "xyz"),
+        )
+        if fit_to_anchor
+        else SceneObjectUpdate(
+            position=anchor.surface_position,
+            quaternion=quaternion_from_euler_xyz(
+                tuple(getattr(asset, f"default_rotation_{a}_deg") for a in "xyz")
+            ),
+            scale=(asset.default_scale,) * 3,
+        )
     )
     if expected is None:
         expected = await session.scalar(
@@ -45,13 +67,16 @@ async def replace_anchor(session, project_id, anchor_id, asset, expected=None, s
         None,
         transform.model_dump(exclude_unset=True),
     )
-    del anchors[anchor_id]
-    await AnchorRepository(session).replace(project_id, anchors)
+    if remove_anchor:
+        del anchors[anchor_id]
+        await AnchorRepository(session).replace(project_id, anchors)
     return record
 
 
 async def apply_job_placement(session, job, asset):
     intent = job.scene_placement
+    if intent and intent.get("pipeline_id"):
+        return
     if not intent or intent.get("status") != "pending":
         return
     try:
