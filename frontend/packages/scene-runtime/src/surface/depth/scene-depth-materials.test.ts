@@ -28,7 +28,7 @@ it("restores materials on errors and excludes overlays, helpers and transparency
       expect(opaque.material).toBe(depth);
       expect(transparent.visible).toBe(true);
       expect(transparent.material.visible).toBe(false);
-      expect(decoration.material.visible).toBe(false);
+      expect(decoration.material).toBe(material);
       expect(noDepth.material.visible).toBe(false);
       expect(scene.overrideMaterial).toBe(null);
       throw new Error("draw failed");

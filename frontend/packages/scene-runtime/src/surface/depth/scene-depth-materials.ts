@@ -20,6 +20,10 @@ export class SceneDepthMaterials {
       scene.background = null;
       scene.overrideMaterial = null;
       scene.traverse((object) => {
+        // Depth cameras see only the scene layer. Do not replace overlay materials:
+        // TransformControls updates its handles' material colors in updateMatrixWorld,
+        // even when the camera's layers exclude those handles from drawing.
+        if (!object.layers.isEnabled(RENDER_PIPELINE_SCENE_LAYER)) return;
         if (!("material" in object)) return;
         const renderable = object as Object3D & {
           material: Material | Material[];
@@ -27,9 +31,7 @@ export class SceneDepthMaterials {
         const original = renderable.material;
         saved.push({ object: renderable, material: original });
         const eligible =
-          object instanceof Mesh &&
-          object.layers.isEnabled(RENDER_PIPELINE_SCENE_LAYER) &&
-          !object.userData.excludeFromSceneDepth;
+          object instanceof Mesh && !object.userData.excludeFromSceneDepth;
         const replace = (material: Material) => {
           if (!eligible || !isDepthMeshMaterial(material)) return this.hidden;
           let depth = this.cache.get(material);

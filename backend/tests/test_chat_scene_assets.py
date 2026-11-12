@@ -351,3 +351,48 @@ async def test_failed_generation_preserves_anchor_and_original_image(scene, tmp_
     assert (await tools.job(job["id"]))["status"] == "failed"
     assert (await tools.job(job["id"]))["assets"] == []
     assert len(await app.state.library_service.repository.list_ready()) == 1
+
+
+async def test_agent_creates_moves_and_deletes_primitives_without_library_or_provider(scene):
+    app, client, project, request = scene
+    tools = app.state.trajectory_agent.scene_tools
+    for index, kind in enumerate(("cube", "sphere", "cone"), start=1):
+        draft = await app.state.project_repository.get(project["id"])
+        obj = await tools.execute(
+            draft,
+            "primitives",
+            "create_scene_primitive",
+            {
+                "type": kind,
+                "color": "#336699",
+                "parent_id": None,
+                "position": [index, 0, 0],
+                "quaternion": [0, 0, 0, 1],
+                "scale": [2, 1, 3],
+            },
+            request,
+        )
+        assert obj["name"] == f"{kind.capitalize()} {index:02d}"
+        assert json.loads(obj["primitive"]) == {"type": kind, "color": "#336699"}
+        assert obj["library_asset_id"] is None
+    state = await tools.state(project["id"])
+    assert [item["primitive"]["type"] for item in state] == ["cube", "sphere", "cone"]
+    assert await app.state.library_service.repository.list_ready() == []
+    draft = await app.state.project_repository.get(project["id"])
+    moved = await tools.execute(
+        draft,
+        "primitives",
+        "update_scene_object",
+        {
+            "id": obj["id"],
+            "position": [8, 9, 10],
+            "quaternion": None,
+            "scale": None,
+        },
+        request,
+    )
+    assert moved["position"] == [8, 9, 10]
+    draft = await app.state.project_repository.get(project["id"])
+    await tools.execute(draft, "primitives", "delete_scene_object", {"id": obj["id"]}, request)
+    response = await client.get(f"/api/v1/projects/{project['id']}/scene-objects")
+    assert len(response.json()) == 2

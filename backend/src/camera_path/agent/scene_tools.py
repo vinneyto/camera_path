@@ -12,6 +12,7 @@ from camera_path.services.anchors import AnchorService
 from camera_path.services.jobs import JobCreate
 from camera_path.services.library_metadata import BoundingBox
 from camera_path.services.scene_objects import SceneObjectCreate, SceneObjectUpdate
+from camera_path.services.scene_primitives import ScenePrimitive
 
 
 def tool(name, description, properties):
@@ -84,6 +85,23 @@ SCENE_TOOLS = [
         {"library_asset_id": ID, "position": VECTOR, "quaternion": QUATERNION, "scale": VECTOR},
     ),
     tool(
+        "create_scene_primitive",
+        (
+            "Place a client-rendered cube, sphere or cone. All have unit size, centered at "
+            "the local origin: cube sides 1, sphere diameter 1, cone diameter/height 1 (tip +Y). "
+            "Use local TRS for dimensions and placement; quaternion order is XYZW. "
+            "Color is an optional #RRGGBB string. Null parent_id places it at the scene root."
+        ),
+        {
+            "type": {"type": "string", "enum": ["cube", "sphere", "cone"]},
+            "color": {"type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$"},
+            "parent_id": OPTIONAL_ID,
+            "position": VECTOR,
+            "quaternion": QUATERNION,
+            "scale": VECTOR,
+        },
+    ),
+    tool(
         "update_scene_object",
         (
             "Move, rotate or scale an existing scene instance by its instance ID. Null "
@@ -135,6 +153,7 @@ class SceneAgentTools:
                 "id": r.id,
                 "name": r.name,
                 "library_asset_id": r.library_asset_id,
+                "primitive": json.loads(r.primitive) if r.primitive is not None else None,
                 "parent_id": r.parent_id,
                 "visible": r.visible,
                 **{
@@ -235,6 +254,16 @@ class SceneAgentTools:
                     session, draft.id, anchor.id, locked_asset, draft.revision
                 )
             return {"scene_object_id": record.id, "removed_anchor_id": anchor.id}
+        if name == "create_scene_primitive":
+            primitive = ScenePrimitive(
+                **{key: args[key] for key in ("type", "color") if args.get(key) is not None}
+            )
+            data = SceneObjectCreate(
+                primitive=primitive.model_dump_json(),
+                **{key: args[key] for key in ("parent_id", "position", "quaternion", "scale")},
+            )
+            obj, _ = await self.scene_objects.add(draft.id, data, draft.revision, request)
+            return obj.model_dump(mode="json")
         if name == "create_scene_object":
             obj, _ = await self.scene_objects.add(
                 draft.id, SceneObjectCreate(**args), draft.revision, request

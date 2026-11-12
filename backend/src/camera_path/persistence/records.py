@@ -217,6 +217,12 @@ class SceneObjectRecord(Base):
         ),
         CheckConstraint("parent_id IS NULL OR parent_id != id", name="ck_scene_objects_parent"),
         CheckConstraint(
+            "(primitive IS NOT NULL AND library_asset_id IS NULL AND library_asset_file_id IS NULL)"
+            " OR (primitive IS NULL AND library_asset_id IS NOT NULL"
+            " AND library_asset_file_id IS NOT NULL)",
+            name="ck_scene_objects_source",
+        ),
+        CheckConstraint(
             "scale_x > 0 AND scale_y > 0 AND scale_z > 0", name="ck_scene_objects_scale"
         ),
         Index("ix_scene_objects_parent", "project_id", "parent_id"),
@@ -228,10 +234,11 @@ class SceneObjectRecord(Base):
         ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     parent_id: Mapped[str | None] = mapped_column(Text)
-    library_asset_id: Mapped[str] = mapped_column(
-        ForeignKey("library_assets.id", ondelete="RESTRICT"), nullable=False, index=True
+    library_asset_id: Mapped[str | None] = mapped_column(
+        ForeignKey("library_assets.id", ondelete="RESTRICT"), index=True
     )
-    library_asset_file_id: Mapped[str] = mapped_column(Text, nullable=False)
+    library_asset_file_id: Mapped[str | None] = mapped_column(Text)
+    primitive: Mapped[str | None] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
     visible: Mapped[bool] = mapped_column(nullable=False, default=True)
     position_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)

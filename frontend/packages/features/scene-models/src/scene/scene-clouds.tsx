@@ -9,6 +9,8 @@ import type { PlacementPreview } from "@camera-path/feature-scene-models/scene/u
 import type { SceneSurfaceProps } from "@camera-path/scene-runtime/surface/model/scene-surface-types";
 import type { SceneObject } from "@camera-path/types/api";
 
+import { PrimitiveSceneObject } from "./primitive-scene-object";
+
 interface SceneCloudsProps {
   transformInteraction?: SceneObjectTransformInteraction;
   transformEditable?: boolean;
@@ -89,30 +91,37 @@ export function SceneClouds({
   }
   // A resource keeps one React/R3F owner throughout preview -> saved cloud.
   // Mounting a second primitive for the same object loses R3F pointer registration.
-  return entries.map(({ cloud, resourceKey, preview }) => (
-    <CloudSceneObject
-      key={resourceKey ?? cloud.id}
-      cloud={cloud}
-      worldMatrix={transforms.get(cloud.id)!.matrix}
-      parentMatrix={
-        cloud.parent_id ? transforms.get(cloud.parent_id)!.matrix : ROOT_MATRIX
-      }
-      parentRotation={
-        cloud.parent_id
-          ? transforms.get(cloud.parent_id)!.rotation
-          : ROOT_ROTATION
-      }
-      transformInteraction={transformInteraction}
-      transformEditable={!preview && transformEditable}
-      effectiveVisible={transforms.get(cloud.id)!.visible}
-      hoverable={!preview}
-      selectable={!preview}
-      resourceKey={resourceKey}
-      raycastable={!preview && transforms.get(cloud.id)!.visible && interactive}
-      onReady={preview ? undefined : (surface) => onReady(cloud.id, surface)}
-      onLoading={preview ? undefined : () => onLoading(cloud.id)}
-      onError={preview ? undefined : (error) => onError(cloud.id, error)}
-      {...(preview ? {} : surfaceEvents)}
-    />
-  ));
+  return entries.map(({ cloud, resourceKey, preview }) => {
+    const Component = cloud.primitive ? PrimitiveSceneObject : CloudSceneObject;
+    return (
+      <Component
+        key={resourceKey ?? cloud.id}
+        cloud={cloud}
+        worldMatrix={transforms.get(cloud.id)!.matrix}
+        parentMatrix={
+          cloud.parent_id
+            ? transforms.get(cloud.parent_id)!.matrix
+            : ROOT_MATRIX
+        }
+        parentRotation={
+          cloud.parent_id
+            ? transforms.get(cloud.parent_id)!.rotation
+            : ROOT_ROTATION
+        }
+        transformInteraction={transformInteraction}
+        transformEditable={!preview && transformEditable}
+        effectiveVisible={transforms.get(cloud.id)!.visible}
+        hoverable={!preview}
+        selectable={!preview}
+        resourceKey={resourceKey}
+        raycastable={
+          !preview && transforms.get(cloud.id)!.visible && interactive
+        }
+        onReady={preview ? undefined : (surface) => onReady(cloud.id, surface)}
+        onLoading={preview ? undefined : () => onLoading(cloud.id)}
+        onError={preview ? undefined : (error) => onError(cloud.id, error)}
+        {...(preview ? {} : surfaceEvents)}
+      />
+    );
+  });
 }

@@ -143,3 +143,113 @@ it("previews a parent's local transform on its descendants without reloading mod
     vi.unstubAllGlobals();
   }
 });
+
+it("renders persistent primitives with mesh picking, world bounds, mixed hierarchy and disposal", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  extend({ Group });
+  const backend = {
+    container: null,
+    createCloud: vi.fn(),
+    invalidate: vi.fn(),
+    dispose: vi.fn(),
+  } as unknown as GaussianRenderingBackend;
+  const objects = ["cube", "sphere", "cone"].map(
+    (type, index) =>
+      ({
+        id: type,
+        parent_id: index === 0 ? null : "cube",
+        primitive: JSON.stringify({ type, color: "#336699" }),
+        position: index === 0 ? [2, 0, 0] : [index, 0, 0],
+        quaternion: [0, 0, 0, 1],
+        scale: index === 0 ? [2, 3, 4] : [1, 1, 1],
+        visible: true,
+        library_asset_id: null,
+        library_asset_file_id: null,
+        format: null,
+        download_url: null,
+      }) as SceneObject,
+  );
+  const scene = new Scene(),
+    canvas = document.createElement("canvas"),
+    root = createRoot(canvas);
+  const ready = vi.fn(),
+    error = vi.fn();
+  await root.configure({
+    scene,
+    frameloop: "never",
+    size: { width: 100, height: 100, top: 0, left: 0 },
+    gl: {
+      render: vi.fn(),
+      setSize: vi.fn(),
+      setPixelRatio: vi.fn(),
+      domElement: canvas,
+    } as unknown as WebGLRenderer,
+  });
+  const store = createEditorStore();
+  async function render(clouds: SceneObject[]) {
+    await act(async () =>
+      root.render(
+        <EditorStoreProvider store={store}>
+          <SceneSurfaceProvider backend={backend}>
+            <SceneClouds
+              clouds={clouds}
+              preview={null}
+              placed={null}
+              resourceKeyForCloud={() => undefined}
+              interactive
+              surfaceEvents={{}}
+              onReady={ready}
+              onError={error}
+              onLoading={vi.fn()}
+            />
+          </SceneSurfaceProvider>
+        </EditorStoreProvider>,
+      ),
+    );
+    scene.updateMatrixWorld(true);
+  }
+  try {
+    await render(objects);
+    const cube = scene.getObjectByName("cube")! as import("three").Mesh;
+    const sphere = scene.getObjectByName("sphere")! as import("three").Mesh;
+    const cone = scene.getObjectByName("cone")! as import("three").Mesh;
+    expect(cube.geometry.type).toBe("BoxGeometry");
+    expect(sphere.geometry.type).toBe("SphereGeometry");
+    expect(cone.geometry.type).toBe("ConeGeometry");
+    expect(sphere.getWorldPosition(new Vector3()).toArray()).toEqual([4, 0, 0]);
+    expect(cone.getWorldPosition(new Vector3()).toArray()).toEqual([6, 0, 0]);
+    expect(cube.parent!.parent!.userData.sceneObjectID).toBe("cube");
+    const { Raycaster } = await import("three");
+    const ray = new Raycaster(new Vector3(2, 0, 10), new Vector3(0, 0, -1));
+    expect(ray.intersectObject(cube)[0].distance).toBeCloseTo(8);
+    expect(
+      ready.mock.calls.some(
+        ([id, { bounds }]) =>
+          id === "cube" && bounds.min[0] === 1 && bounds.max[0] === 3,
+      ),
+    ).toBe(true);
+    const geometryDisposed = vi.fn(),
+      materialDisposed = vi.fn();
+    cube.geometry.addEventListener("dispose", geometryDisposed);
+    (cube.material as import("three").Material).addEventListener(
+      "dispose",
+      materialDisposed,
+    );
+    await render(
+      objects.map((object) =>
+        object.id === "cube" ? { ...object, position: [5, 0, 0] } : object,
+      ),
+    );
+    expect(scene.getObjectByName("cube")).toBe(cube);
+    expect(sphere.getWorldPosition(new Vector3()).toArray()).toEqual([7, 0, 0]);
+    expect(geometryDisposed).not.toHaveBeenCalled();
+    await render([]);
+    expect(geometryDisposed).toHaveBeenCalledOnce();
+    expect(materialDisposed).toHaveBeenCalledOnce();
+    expect(backend.createCloud).not.toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+  } finally {
+    await act(async () => root.unmount());
+    vi.unstubAllGlobals();
+  }
+});

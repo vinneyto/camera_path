@@ -58,11 +58,12 @@ class SceneObjectRepository:
         self,
         session: AsyncSession,
         project_id: str,
-        asset_id: str,
-        file_id: str,
+        asset_id: str | None,
+        file_id: str | None,
         asset_name: str,
         parent_id: str | None,
         transform: dict,
+        primitive: str | None = None,
     ) -> SceneObjectRecord:
         objects = await self._list(session, project_id)
         # Allocate in the same transaction as creation. Deletion/reordering never rewinds it.
@@ -80,6 +81,7 @@ class SceneObjectRepository:
             project_id=project_id,
             library_asset_id=asset_id,
             library_asset_file_id=file_id,
+            primitive=primitive,
             parent_id=parent_id,
             sort_order=len(objects),
             visible=True,
