@@ -37,7 +37,7 @@ class GenerationError(MessageModel):
 class GenerationResult(MessageModel):
     schema_version: Version
     job_id: str
-    status: Literal["succeeded", "failed"]
+    status: Literal["running", "succeeded", "failed"]
     result_path: str | None = None
     error: GenerationError | None = None
 
@@ -52,6 +52,9 @@ class GenerationResult(MessageModel):
         if self.status == "succeeded":
             if self.result_path != f"{self.job_id}/result.json" or self.error is not None:
                 raise ValueError("Expected a result manifest for this job")
+        elif self.status == "running":
+            if self.result_path is not None or self.error is not None:
+                raise ValueError("Running progress cannot contain a result or error")
         elif self.result_path is not None or self.error is None:
             raise ValueError("Expected a generation error")
         return self

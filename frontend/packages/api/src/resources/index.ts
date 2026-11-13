@@ -1,6 +1,7 @@
 export { useAimTimeline } from "./use-aim-timeline";
 export { useAnchors } from "./use-anchors";
 export { useChatHistory } from "./use-chat-history";
+export { usePipelines } from "./use-pipelines";
 export { useCompiledTrajectoryResource } from "./use-compiled-trajectory-resource";
 export { useDepthOfFieldTimeline } from "./use-depth-of-field-timeline";
 export { useLibraryAssetResource } from "./use-library-asset-resource";

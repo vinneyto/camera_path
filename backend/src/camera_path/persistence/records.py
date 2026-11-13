@@ -581,6 +581,31 @@ class ChatAttachmentRecord(ProjectChildRecord, Base):
     ready: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
+class PipelineRecord(ProjectChildRecord, Base):
+    __tablename__ = "command_pipelines"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    message_id: Mapped[str] = mapped_column(Text, nullable=False)
+    request_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    definition: Mapped[dict] = mapped_column(JSON, nullable=False)
+    steps: Mapped[list] = mapped_column(JSON, nullable=False)
+    context: Mapped[dict] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    lease_owner: Mapped[str | None] = mapped_column(Text)
+    lease_until: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+
+
+class PipelineEventRecord(ProjectChildRecord, Base):
+    __tablename__ = "pipeline_events"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    pipeline_id: Mapped[str] = mapped_column(
+        ForeignKey("command_pipelines.id", ondelete="CASCADE"), nullable=False
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
 class AuthChallengeRecord(Base):
     __tablename__ = "auth_challenges"
     id: Mapped[str] = mapped_column(Text, primary_key=True)

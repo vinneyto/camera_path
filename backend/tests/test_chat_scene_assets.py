@@ -120,14 +120,27 @@ async def test_attachment_publication_and_agent_context_without_provider(scene, 
                     output=[
                         SimpleNamespace(
                             type="function_call",
-                            name="create_library_asset",
-                            arguments=json.dumps({"attachment_id": image["id"]}),
+                            name="submit_pipeline",
+                            arguments=json.dumps(
+                                {
+                                    "definition": {
+                                        "title": "Publish original image",
+                                        "steps": [
+                                            {
+                                                "id": "image",
+                                                "command": "publish_chat_image",
+                                                "input": {"attachment_id": image["id"]},
+                                            }
+                                        ],
+                                    }
+                                }
+                            ),
                             call_id="call1",
                         )
                     ],
                     output_text="",
                 )
-            return SimpleNamespace(output=[], output_text="Image added to the library")
+            return SimpleNamespace(output=[], output_text="Image publication queued")
 
     monkeypatch.setattr(
         "camera_path.agent.trajectory_agent.AsyncOpenAI",
@@ -138,9 +151,13 @@ async def test_attachment_publication_and_agent_context_without_provider(scene, 
     result = await agent.handle(
         project["id"], "save this image", "m1", f"anchor:{anchor_id}", [image["id"]], request
     )
-    assert result.answer == "Image added to the library"
+    assert result.answer == "Image publication queued"
     assert calls[0]["input"][0]["content"][1]["type"] == "input_image"
     assert "anchor:" + anchor_id in calls[0]["input"][0]["content"][0]["text"]
+    pipelines = await app.state.pipeline_service.list(project["id"])
+    assert len(pipelines) == 1
+    assert await app.state.library_service.repository.list_ready() == []
+    await app.state.pipeline_executor.process(pipelines[0].id)
     assert len(await app.state.library_service.repository.list_ready()) == 1
     draft = await app.state.project_repository.get(project["id"])
     tools = agent.scene_tools

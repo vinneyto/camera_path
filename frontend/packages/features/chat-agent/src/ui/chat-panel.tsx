@@ -10,7 +10,8 @@ import { Button } from "@camera-path/ui-kit";
 
 import { AnchorReferencePicker } from "@camera-path/feature-chat-agent/ui/anchor-reference-picker";
 import { AutoGrowingTextarea } from "@camera-path/feature-chat-agent/ui/auto-growing-textarea";
-import { ChatMessage } from "@camera-path/feature-chat-agent/ui/chat-message";
+import { ChatMessageGroup } from "./chat-message-group";
+import type { ChatAttachment, Pipeline } from "@camera-path/types/api";
 
 import { ChatImageInput } from "./chat-image-input";
 import { ChatImageAttachments } from "./chat-image-attachments";
@@ -22,6 +23,9 @@ export interface ChatPanelProps {
   pending: boolean;
   composer: ReturnType<typeof useChatComposer>;
   headerAction?: ReactNode;
+  pipelines?: Pipeline[];
+  onConfirm?: (id: string) => void;
+  onContinue?: (image: ChatAttachment, anchorId?: string | null) => void;
 }
 
 export function ChatPanel({
@@ -31,6 +35,9 @@ export function ChatPanel({
   pending,
   composer,
   headerAction,
+  pipelines = [],
+  onConfirm,
+  onContinue,
 }: ChatPanelProps) {
   const { message, submit, changeMessage, handleKeyDown, insertAnchor } =
     composer;
@@ -59,7 +66,14 @@ export function ChatPanel({
           </div>
         )}
         {messages.map((item) => (
-          <ChatMessage {...item} key={item.id} />
+          <ChatMessageGroup
+            key={item.id}
+            message={item}
+            pipelines={pipelines.filter((p) => p.message_id === item.id)}
+            onConfirm={onConfirm}
+            onContinue={onContinue}
+            disabled={pending}
+          />
         ))}
         {pending && (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-muted-foreground">

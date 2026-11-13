@@ -21,6 +21,7 @@ interface SendChatMessageVariables {
   onAccepted: () => void;
   files?: File[];
   selectedObjectId?: string | null;
+  attachmentIds?: string[];
 }
 
 export function useSendChatMessage(explicitProjectId?: string) {
@@ -40,6 +41,7 @@ export function useSendChatMessage(explicitProjectId?: string) {
       onAccepted,
       files = [],
       selectedObjectId = null,
+      attachmentIds = [],
     }: SendChatMessageVariables) => {
       const attachments = [];
       for (const file of files) {
@@ -58,7 +60,7 @@ export function useSendChatMessage(explicitProjectId?: string) {
       }
       const context = {
         selected_object_id: selectedObjectId,
-        attachment_ids: attachments.map((a) => a.id),
+        attachment_ids: [...attachmentIds, ...attachments.map((a) => a.id)],
       };
       await projectApi.saveUserMessage(projectId, id, message, context);
       onAccepted();

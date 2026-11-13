@@ -27,7 +27,9 @@
         "packages/actions/src/mutations/camera-orientation/use-delete-orientation-timeline.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-camera-orientation-keyframe.ts",
         "packages/actions/src/mutations/camera-orientation/use-update-default-camera-orientation.ts",
+        "packages/actions/src/mutations/chat-agent/use-confirm-pipeline.ts",
         "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
+        "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
         "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
         "packages/actions/src/mutations/depth-of-field/use-add-depth-of-field-keyframe.ts",
         "packages/actions/src/mutations/depth-of-field/use-create-depth-of-field-timeline.ts",
@@ -359,7 +361,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 73,
+              "line": 75,
               "column": 9,
               "expression": "actions.selectObject"
             }
@@ -498,6 +500,30 @@
           ]
         },
         {
+          "name": "merge",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+            "line": 32,
+            "column": 11
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+              "line": 53,
+              "column": 9,
+              "expression": "merge"
+            },
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+              "line": 57,
+              "column": 9,
+              "expression": "merge"
+            }
+          ]
+        },
+        {
           "name": "onAccepted",
           "kind": "action",
           "package": "@camera-path/actions",
@@ -515,7 +541,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 64,
+              "line": 66,
               "column": 7,
               "expression": "onAccepted"
             }
@@ -596,6 +622,30 @@
               "line": 73,
               "column": 26,
               "expression": "readEditorSettings"
+            }
+          ]
+        },
+        {
+          "name": "refresh",
+          "kind": "action",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+            "line": 21,
+            "column": 11
+          },
+          "usages": [
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+              "line": 54,
+              "column": 9,
+              "expression": "refresh"
+            },
+            {
+              "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+              "line": 60,
+              "column": 11,
+              "expression": "refresh"
             }
           ]
         },
@@ -797,7 +847,7 @@
             },
             {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 35,
+              "line": 36,
               "column": 19,
               "expression": "useEditorActions"
             },
@@ -1022,14 +1072,26 @@
               "expression": "useProjectId(explicitProjectId)"
             },
             {
+              "file": "packages/actions/src/mutations/chat-agent/use-confirm-pipeline.ts",
+              "line": 10,
+              "column": 21,
+              "expression": "useProjectId()"
+            },
+            {
               "file": "packages/actions/src/mutations/chat-agent/use-generation-placement-updates.ts",
               "line": 14,
               "column": 21,
               "expression": "useProjectId()"
             },
             {
+              "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+              "line": 17,
+              "column": 21,
+              "expression": "useProjectId()"
+            },
+            {
               "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-              "line": 33,
+              "line": 34,
               "column": 21,
               "expression": "useProjectId(explicitProjectId)"
             },
@@ -1133,6 +1195,7 @@
         "packages/api/src/constants.ts",
         "packages/api/src/identity/auth-provider.tsx",
         "packages/api/src/index.ts",
+        "packages/api/src/merge-pipeline-response.ts",
         "packages/api/src/project/index.ts",
         "packages/api/src/project/invalidate-project-resource.ts",
         "packages/api/src/project/project-api.ts",
@@ -1153,12 +1216,14 @@
         "packages/api/src/resources/use-library-catalog.ts",
         "packages/api/src/resources/use-lidar-timeline-resource.ts",
         "packages/api/src/resources/use-orientation-timeline.ts",
+        "packages/api/src/resources/use-pipelines.ts",
         "packages/api/src/resources/use-project-generation-jobs.ts",
         "packages/api/src/resources/use-projects-catalog.ts",
         "packages/api/src/resources/use-scene-models.ts",
         "packages/api/src/resources/use-scene-points.ts",
         "packages/api/src/resources/use-speed-timeline.ts",
         "packages/api/src/resources/use-trajectory-geometry.ts",
+        "packages/api/src/subscribe-pipelines.ts",
         "packages/api/src/upload-chat-image.ts",
         "packages/api/src/upload-library-file.ts"
       ],
@@ -1171,7 +1236,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3400,
+            "line": 3402,
             "column": 1
           },
           "usages": [
@@ -1195,7 +1260,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 9403,
+            "line": 9991,
             "column": 1
           },
           "usages": [
@@ -1219,7 +1284,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3764,
+            "line": 3766,
             "column": 1
           },
           "usages": [
@@ -1243,7 +1308,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 946,
+            "line": 948,
             "column": 1
           },
           "usages": [
@@ -1261,7 +1326,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1627,
+            "line": 1629,
             "column": 1
           },
           "usages": [
@@ -1279,7 +1344,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4865,
+            "line": 4867,
             "column": 1
           },
           "usages": [
@@ -1303,7 +1368,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5229,
+            "line": 5231,
             "column": 1
           },
           "usages": [
@@ -1327,7 +1392,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2539,
+            "line": 2541,
             "column": 1
           },
           "usages": [
@@ -1345,7 +1410,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7041,
+            "line": 7043,
             "column": 1
           },
           "usages": [
@@ -1369,7 +1434,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 9272,
+            "line": 9860,
             "column": 1
           },
           "usages": [
@@ -1393,7 +1458,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2789,
+            "line": 2791,
             "column": 1
           },
           "usages": [
@@ -1417,7 +1482,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6313,
+            "line": 6315,
             "column": 1
           },
           "usages": [
@@ -1441,7 +1506,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 712,
+            "line": 714,
             "column": 1
           },
           "usages": [
@@ -1459,7 +1524,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1181,
+            "line": 1183,
             "column": 1
           },
           "usages": [
@@ -1477,7 +1542,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6806,
+            "line": 6808,
             "column": 1
           },
           "usages": [
@@ -1490,12 +1555,30 @@
           ]
         },
         {
+          "name": "useListProjectPipelines",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/client/generated/client.ts",
+            "line": 7669,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/resources/use-pipelines.ts",
+              "line": 7,
+              "column": 10,
+              "expression": "useListProjectPipelines(useProjectId(), {\n    query: { structuralSharing: mergePipelineResponse },\n  })"
+            }
+          ]
+        },
+        {
           "name": "useListProjects",
           "kind": "api-hook",
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2181,
+            "line": 2183,
             "column": 1
           },
           "usages": [
@@ -1519,7 +1602,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7781,
+            "line": 8369,
             "column": 1
           },
           "usages": [
@@ -1537,7 +1620,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8278,
+            "line": 8866,
             "column": 1
           },
           "usages": [
@@ -1645,6 +1728,12 @@
               "line": 5,
               "column": 43,
               "expression": "useProjectId(id)"
+            },
+            {
+              "file": "packages/api/src/resources/use-pipelines.ts",
+              "line": 7,
+              "column": 34,
+              "expression": "useProjectId()"
             },
             {
               "file": "packages/api/src/resources/use-project-generation-jobs.ts",
@@ -2578,6 +2667,7 @@
       "files": [
         "packages/features/chat-agent/src/constants.ts",
         "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
+        "packages/features/chat-agent/src/effects/pipeline-events-effect.tsx",
         "packages/features/chat-agent/src/index.ts",
         "packages/features/chat-agent/src/model/use-chat-composer.ts",
         "packages/features/chat-agent/src/ports/editor-only.tsx",
@@ -2585,12 +2675,16 @@
         "packages/features/chat-agent/src/ui/auto-growing-textarea.tsx",
         "packages/features/chat-agent/src/ui/chat-image-attachments.tsx",
         "packages/features/chat-agent/src/ui/chat-image-input.tsx",
+        "packages/features/chat-agent/src/ui/chat-image.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-code-block.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-link.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown-table.tsx",
         "packages/features/chat-agent/src/ui/chat-markdown.tsx",
+        "packages/features/chat-agent/src/ui/chat-message-group.tsx",
         "packages/features/chat-agent/src/ui/chat-message.tsx",
         "packages/features/chat-agent/src/ui/chat-panel.tsx",
+        "packages/features/chat-agent/src/ui/pipeline-card.tsx",
+        "packages/features/chat-agent/src/ui/pipeline-step.tsx",
         "packages/features/chat-agent/src/ui/responsive-chat-panel.tsx",
         "packages/features/chat-agent/src/ui/sidebar.tsx"
       ],
@@ -2602,13 +2696,19 @@
               "file": "packages/features/chat-agent/src/effects/generation-placement-effect.tsx",
               "line": 3,
               "column": 1
+            },
+            {
+              "name": "PipelineEventsEffect",
+              "file": "packages/features/chat-agent/src/effects/pipeline-events-effect.tsx",
+              "line": 4,
+              "column": 1
             }
           ],
           "sidebar": [
             {
               "name": "ChatSidebar",
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 9,
+              "line": 18,
               "column": 1
             }
           ]
@@ -2670,6 +2770,24 @@
           ]
         },
         {
+          "name": "useConfirmPipeline",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-confirm-pipeline.ts",
+            "line": 9,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 24,
+              "column": 24,
+              "expression": "useConfirmPipeline"
+            }
+          ]
+        },
+        {
           "name": "useEditorActions",
           "kind": "hook",
           "package": "@camera-path/actions",
@@ -2706,18 +2824,36 @@
           ]
         },
         {
+          "name": "usePipelineEvents",
+          "kind": "hook",
+          "package": "@camera-path/actions",
+          "definition": {
+            "file": "packages/actions/src/mutations/chat-agent/use-pipeline-events.ts",
+            "line": 16,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/effects/pipeline-events-effect.tsx",
+              "line": 5,
+              "column": 3,
+              "expression": "usePipelineEvents"
+            }
+          ]
+        },
+        {
           "name": "useSendChatMessageMutation",
           "kind": "hook",
           "package": "@camera-path/actions",
           "definition": {
             "file": "packages/actions/src/mutations/chat-agent/use-send-chat-message.ts",
-            "line": 26,
+            "line": 27,
             "column": 1
           },
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 13,
+              "line": 22,
               "column": 20,
               "expression": "useSendChatMessageMutation"
             }
@@ -2737,7 +2873,7 @@
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 11,
+              "line": 20,
               "column": 23,
               "expression": "useAnchors()"
             }
@@ -2761,7 +2897,7 @@
             },
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 10,
+              "line": 19,
               "column": 19,
               "expression": "useAuth()"
             }
@@ -2779,9 +2915,27 @@
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 12,
+              "line": 21,
               "column": 19,
               "expression": "useChatHistory()"
+            }
+          ]
+        },
+        {
+          "name": "usePipelines",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/resources/use-pipelines.ts",
+            "line": 6,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
+              "line": 23,
+              "column": 21,
+              "expression": "usePipelines()"
             }
           ]
         },
@@ -2817,7 +2971,7 @@
           "usages": [
             {
               "file": "packages/features/chat-agent/src/ui/sidebar.tsx",
-              "line": 13,
+              "line": 22,
               "column": 47,
               "expression": "useProjectId()"
             }

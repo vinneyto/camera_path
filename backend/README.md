@@ -197,7 +197,7 @@ unknown fields and invalid RGB hex colors are rejected. Exactly one source is re
 format and download URL. No geometry or generated model file is stored on the server.
 The client builds centered unit geometry (cube sides 1, sphere diameter 1, cone diameter/height 1
 with its tip along +Y). Existing local TRS defines its placement and dimensions; omitted primitive
-transforms are identity. The agent's `create_scene_primitive` tool uses this same creation path.
+transforms are identity. The agent's `create_scene_primitive` pipeline command uses this same path.
 
 Use `GET/POST /api/v1/projects/{id}/scene-objects` and
 `PATCH/DELETE /api/v1/projects/{id}/scene-objects/{object_id}`. Creation defaults to the
@@ -366,18 +366,49 @@ The backend saves a project-validated selection snapshot with the user message; 
 later does not retarget an earlier request. Original PNG/JPEG/WebP images (up to 20 MB each) are
 staged with `POST /api/v1/projects/{id}/chat/attachments`, uploaded to the returned URL, then validated
 with `POST /api/v1/projects/{id}/chat/attachments/{attachment_id}/complete`. Staging does not publish
-the image in the library. The agent's `create_library_asset` tool publishes it explicitly.
+the image in the library. The `publish_chat_image` pipeline command publishes it explicitly.
 
-The agent can start image generation, inspect jobs/library/scene objects, calculate fitted TRS,
-place/update/delete scene instances, and replace an anchor atomically. Fit uses the stored model
-bbox, library rotation defaults and anchor height; quaternions use XYZW. `replace_anchor_id` in the
-agent's generation tool persists a replacement intent outside the worker input. Completion places
-the generated model and removes the unchanged anchor in the same transaction as asset import.
-Deleted/changed anchors or trajectory references skip placement and retain the generated asset.
-Job details show the placement outcome. `GET /api/v1/projects/{id}/generation-jobs` supplies scene
-refreshes after asynchronous completion. Failed generation preserves the anchor.
+The agent reads scene/library data directly and submits every mutation as a persisted command
+pipeline, including one-command operations. `generate_image` creates or edits a transparent PNG
+through OpenAI (`OPENAI_API_KEY`, `CAMERA_PATH_OPENAI_IMAGE_MODEL`, default `gpt-image-1.5`).
+Generated versions remain staged chat attachments until selected and explicitly published.
+`generate_model` accepts a text prompt or a ready image asset and waits for generation and library
+import. A typical image pipeline is `publish_chat_image` → `generate_model` → `place_model`.
+References such as `{"$ref":"image.asset_id"}` pass outputs between earlier and later steps.
 
-`tests/test_chat_scene_assets.py` and `integration/tests/test_chat_assets.py` exercise these paths
+`place_model` supports an optional `anchor_id`, `fit_to_anchor` (default true) and `replace_anchor`
+(default false). `replace_anchor_with_asset` always replaces the anchor. Fit uses the stored bbox,
+library rotation and anchor height; quaternions use XYZW. Without fit, placement uses the anchor
+base and library scale/rotation. Placement/removal and the step checkpoint commit together.
+Deleted/changed anchors or trajectory references stop placement and retain the generated asset.
+Existing non-pipeline job replacement intents remain supported.
+
+## Command pipelines and step events
+
+`POST /api/v1/projects/{id}/pipelines` accepts `{message_id, definition}`. The source message must
+exist in that project's chat. Definitions contain `schema_version:1`, `title`, `start_mode` and
+ordered `steps` (`id`, `command`, `input`). Supported commands and reference shapes are validated;
+references only point backwards. Definitions are immutable. The default `auto` mode queues work
+immediately; `wait_for_confirmation` waits for
+`POST /api/v1/projects/{id}/pipelines/{pipeline_id}/confirm`. Repeated submission/confirmation is
+idempotent. Chat approval and the UI button use the same saved definition.
+
+The application-lifespan executor runs independently of the model and browser. It checkpoints
+resolved inputs, job IDs, outputs, timestamps and errors. Generation waits release the database;
+after restart the same job is resumed. A failed step stops subsequent steps and preserves earlier
+results. A pipeline does not roll back all previous commands. An interrupted image-provider request
+with an unknown outcome is reported as failed instead of automatically issuing a second billable
+request; the user can submit a new pipeline.
+
+`GET /api/v1/projects/{id}/pipelines` and `.../pipelines/{pipeline_id}` return complete reports.
+`GET .../pipelines/events` sends an SSE `snapshot` and committed `pipeline` events containing
+`pipeline` and `step_id`; event IDs support `Last-Event-ID` replay. Events are saved with the state
+change, so fast consecutive steps are not lost. Reconnection sends current state before replay.
+The client ignores older versions, updates cards immediately and refreshes changed scene data.
+The chat UI provides image enlargement, continuation, confirmation, and copying either the
+definition or the execution JSON. Reports contain resource IDs rather than credentials or file data.
+
+`tests/test_pipelines.py`, `tests/test_chat_scene_assets.py` and the matching integration tests exercise these paths
 with a local Responses API fixture and worker result manifests. They require no real agent key.
 Live natural-language behavior still requires `OPENAI_API_KEY`; no key is needed merely to upload
 images or save selected-object context in chat.

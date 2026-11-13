@@ -93,8 +93,21 @@ class ResponsesHandler(BaseHTTPRequestHandler):
                     "type": "function_call",
                     "id": "fc_fixture",
                     "call_id": "call_fixture",
-                    "name": "set_default_speed",
-                    "arguments": '{"speed": 2.5}',
+                    "name": "submit_pipeline",
+                    "arguments": json.dumps(
+                        {
+                            "definition": {
+                                "title": "Set speed",
+                                "steps": [
+                                    {
+                                        "id": "speed",
+                                        "command": "set_default_speed",
+                                        "input": {"speed": 2.5},
+                                    }
+                                ],
+                            }
+                        }
+                    ),
                 }
             ]
             if self.server.mode == "tool" and not tool_done

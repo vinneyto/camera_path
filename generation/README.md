@@ -128,6 +128,9 @@ in the library. Trellis uses an existing alpha channel, or U2Net to remove an op
 background during preprocessing. EXIF orientation is applied for generation.
 
 The worker publishes a JSON event with the same job ID and AMQP correlation ID.
+A progress event with `status: "running"` is emitted when a valid request starts processing.
+It has no result path or error. Consumers must keep waiting for the terminal result;
+the example request client handles this automatically.
 A successful event has `status: "succeeded"` and `result_path`. A failed event
 has `status: "failed"` and an `error` object with `code` and `message`. Requests
 without a readable UUID receive a null `job_id`. The worker acknowledges the
