@@ -7,6 +7,7 @@ import { useJobResource } from "@camera-path/api/resources";
 import { Badge, Button } from "@camera-path/ui-kit";
 import { JobResultCard } from "./job-result-card";
 import { JobSourceImage } from "./job-source-image";
+import { JOB_TYPE_LABELS } from "@camera-path/types/job-types";
 
 export function JobDetailsPage() {
   const resource = useJobResource();
@@ -80,7 +81,7 @@ export function JobDetailsPage() {
           )}
           {job.type && (
             <p className="text-xs capitalize text-muted-foreground">
-              {job.type}
+              {JOB_TYPE_LABELS[job.type] ?? job.type}
             </p>
           )}
           <JobScenePlacement job={job} />

@@ -48,3 +48,21 @@ def test_start_without_generation_configuration_leaves_no_job(editor):
         json={"type": "generation", "input": {"prompt": "Chair"}, "start": True},
     )
     assert editor.request("GET", "/api/v1/jobs", auth=False).json() == []
+
+
+def test_image_generation_type_and_empty_media_endpoints(editor):
+    job = editor.request(
+        "POST",
+        "/api/v1/jobs",
+        201,
+        json={"type": "image_generation", "input": {"prompt": "A wooden chair"}},
+    ).json()
+    assert job["type"] == "image_generation" and job["status"] == "draft"
+    for suffix in ("image", "source-image"):
+        editor.request("GET", f"/api/v1/jobs/{job['id']}/{suffix}", 404, auth=False)
+    editor.request(
+        "POST",
+        "/api/v1/jobs",
+        503,
+        json={"type": "image_generation", "input": {"prompt": "Chair"}, "start": True},
+    )

@@ -74,6 +74,9 @@ operation allowed without a successful status in the fast run.
 
 ## Coverage and limits
 
+- Image-generation job input validation, persisted drafts, Painter request correlation, source locks,
+  result import after backend restart, replay without duplicate assets, and result/source image reads.
+  Real ML inference is checked separately on the local review stand; it is not a CI dependency.
 - All versioned write operations: unauthenticated and invalid-token requests denied.
   No debug completion/status HTTP routes are exposed with any queue provider.
 - Public reads, public viewer settings, protected session, OpenAPI operation inventory, CORS and structured errors.

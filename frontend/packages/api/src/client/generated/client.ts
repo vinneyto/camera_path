@@ -1112,6 +1112,248 @@ export function useStreamJobStatus<TData = Awaited<ReturnType<typeof streamJobSt
 
 
 
+export type getJobImageResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type getJobImageResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getJobImageResponseSuccess = (getJobImageResponse200) & {
+  headers: Headers;
+};
+export type getJobImageResponseError = (getJobImageResponse422) & {
+  headers: Headers;
+};
+
+export type getJobImageResponse = (getJobImageResponseSuccess | getJobImageResponseError)
+
+export const getGetJobImageUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/jobs/${jobId}/image`
+}
+
+/**
+ * Read a generated PNG, including an unpublished image version from chat.
+ * @summary Get Job Image
+ */
+export const getJobImage = async (jobId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getJobImageResponse> => {
+
+  return orvalFetch<getJobImageResponse>(getGetJobImageUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetJobImageQueryKey = (jobId: string,) => {
+    return [
+    `/api/v1/jobs/${jobId}/image`
+    ] as const;
+    }
+
+
+export const getGetJobImageQueryOptions = <TData = Awaited<ReturnType<typeof getJobImage>>, TError = HTTPValidationError>(jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJobImageQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobImage>>> = ({ signal }) => getJobImage(jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJobImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJobImageQueryResult = NonNullable<Awaited<ReturnType<typeof getJobImage>>>
+export type GetJobImageQueryError = HTTPValidationError
+
+
+export function useGetJobImage<TData = Awaited<ReturnType<typeof getJobImage>>, TError = HTTPValidationError>(
+ jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobImage>>,
+          TError,
+          Awaited<ReturnType<typeof getJobImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobImage<TData = Awaited<ReturnType<typeof getJobImage>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobImage>>,
+          TError,
+          Awaited<ReturnType<typeof getJobImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobImage<TData = Awaited<ReturnType<typeof getJobImage>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Job Image
+ */
+
+export function useGetJobImage<TData = Awaited<ReturnType<typeof getJobImage>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJobImageQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getJobSourceImageResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type getJobSourceImageResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getJobSourceImageResponseSuccess = (getJobSourceImageResponse200) & {
+  headers: Headers;
+};
+export type getJobSourceImageResponseError = (getJobSourceImageResponse422) & {
+  headers: Headers;
+};
+
+export type getJobSourceImageResponse = (getJobSourceImageResponseSuccess | getJobSourceImageResponseError)
+
+export const getGetJobSourceImageUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/jobs/${jobId}/source-image`
+}
+
+/**
+ * Read the surviving original image used as input to this job.
+ * @summary Get Job Source Image
+ */
+export const getJobSourceImage = async (jobId: string, options?: Parameters<typeof orvalFetch>[1]): Promise<getJobSourceImageResponse> => {
+
+  return orvalFetch<getJobSourceImageResponse>(getGetJobSourceImageUrl(jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetJobSourceImageQueryKey = (jobId: string,) => {
+    return [
+    `/api/v1/jobs/${jobId}/source-image`
+    ] as const;
+    }
+
+
+export const getGetJobSourceImageQueryOptions = <TData = Awaited<ReturnType<typeof getJobSourceImage>>, TError = HTTPValidationError>(jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobSourceImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJobSourceImageQueryKey(jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobSourceImage>>> = ({ signal }) => getJobSourceImage(jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJobSourceImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJobSourceImageQueryResult = NonNullable<Awaited<ReturnType<typeof getJobSourceImage>>>
+export type GetJobSourceImageQueryError = HTTPValidationError
+
+
+export function useGetJobSourceImage<TData = Awaited<ReturnType<typeof getJobSourceImage>>, TError = HTTPValidationError>(
+ jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobSourceImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobSourceImage>>,
+          TError,
+          Awaited<ReturnType<typeof getJobSourceImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobSourceImage<TData = Awaited<ReturnType<typeof getJobSourceImage>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobSourceImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobSourceImage>>,
+          TError,
+          Awaited<ReturnType<typeof getJobSourceImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobSourceImage<TData = Awaited<ReturnType<typeof getJobSourceImage>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobSourceImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Job Source Image
+ */
+
+export function useGetJobSourceImage<TData = Awaited<ReturnType<typeof getJobSourceImage>>, TError = HTTPValidationError>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobSourceImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJobSourceImageQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export type listLibraryAssetsResponse200 = {
   data: LibraryAsset[]
   status: 200

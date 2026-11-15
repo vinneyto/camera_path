@@ -9,6 +9,7 @@ from aio_pika.abc import AbstractIncomingMessage
 from aio_pika.connection import make_url
 
 from camera_path.services.generation_models import GenerationRequest, GenerationResult
+from camera_path.services.image_generation_models import ImageGenerationRequest
 from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES, JobCompletionMessage
 from camera_path.services.message_queue import Delivery, GenerationQueue, MessageQueue
 
@@ -156,7 +157,7 @@ class RabbitMQGenerationQueue(RabbitMQMessageQueue, GenerationQueue):
         super().__init__(url, result_queue)
         self.request_queue = request_queue
 
-    async def publish(self, request: GenerationRequest) -> None:
+    async def publish(self, request: GenerationRequest | ImageGenerationRequest) -> None:
         await self._connect()
         await self._channel.declare_queue(self.request_queue, durable=True, timeout=5)
         await self._channel.default_exchange.publish(

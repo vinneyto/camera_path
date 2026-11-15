@@ -7,6 +7,7 @@ import type {
 } from "@camera-path/types/api";
 import { ChatImage } from "./chat-image";
 import { PIPELINE_PHASE_LABELS } from "../constants";
+import Link from "next/link";
 
 export function PipelineStep({
   step,
@@ -44,6 +45,14 @@ export function PipelineStep({
           <p className="text-[10px] text-muted-foreground">
             {(run?.phase && PIPELINE_PHASE_LABELS[run.phase]) || status}
           </p>
+          {run?.job_id && (
+            <Link
+              href={`/jobs/${run.job_id}`}
+              className="text-[10px] text-muted-foreground hover:underline"
+            >
+              View job
+            </Link>
+          )}
           {run?.error && (
             <p
               role="alert"

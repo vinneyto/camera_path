@@ -35,6 +35,7 @@ async def pipeline_app(tmp_path):
     )
     await app.state.project_repository.initialize()
     app.state.job_service.generation_enabled = True
+    app.state.job_service.image_settings = {"provider": "openai", "model": "test-image"}
     project = await app.state.project_service.create_project(ProjectCreate())
     project = await app.state.chat_service.save_user_message(
         project.id, "message-1", "Create a model"
@@ -339,15 +340,15 @@ async def test_generated_image_stays_staged_and_can_be_edited(pipeline_app, monk
     app, project = pipeline_app
     generated = []
 
-    async def fake_generate(project_id, attachment_id, parameters):
+    async def fake_generate(parameters, source):
         raw = io.BytesIO()
-        Image.new("RGBA", (8, 8), (255, 0, 0, 0)).save(raw, format="PNG")
-        generated.append(parameters)
-        return await app.state.pipeline_executor.images.save(
-            project_id, attachment_id, "Chair.png", raw.getvalue()
-        )
+        image = Image.new("RGBA", (8, 8), (255, 0, 0, 0))
+        image.putpixel((4, 4), (255, 0, 0, 255))
+        image.save(raw, format="PNG")
+        generated.append((parameters, source))
+        return raw.getvalue()
 
-    monkeypatch.setattr(app.state.pipeline_executor.images, "generate", fake_generate)
+    monkeypatch.setattr(app.state.image_jobs, "generate", fake_generate)
     pipeline = await create(
         app,
         project,
@@ -362,13 +363,23 @@ async def test_generated_image_stays_staged_and_can_be_edited(pipeline_app, monk
         ],
     )
     await app.state.pipeline_executor.process(pipeline.id)
+    first = await report(app, project, pipeline)
+    assert first.steps[0].status == "waiting"
+    await app.state.image_jobs.process(first.steps[0].job_id)
+    await app.state.pipeline_executor.process(pipeline.id)
+    second = await report(app, project, pipeline)
+    assert second.steps[1].status == "waiting"
+    await app.state.image_jobs.process(second.steps[1].job_id)
+    await app.state.pipeline_executor.process(pipeline.id)
     result = await report(app, project, pipeline)
     assert result.status == "succeeded", result.model_dump()
-    assert generated[1]["source_attachment_id"] == result.steps[0].output["attachment_id"]
+    assert generated[0][1] is None and generated[1][1][1] == "image/png"
+    assert generated[1][0]["image_asset_id"] == result.steps[0].output["asset_id"]
+    assert len(await app.state.job_service.list()) == 2
     assert await app.state.library_service.repository.list_ready() == []
     assert (await app.state.pipeline_service.list(project.id))[0].steps[1].output["image"][
         "name"
-    ] == "Chair.png"
+    ] == "A_chair.png"
 
 
 async def test_live_agent_only_exposes_mutations_through_pipeline(pipeline_app):

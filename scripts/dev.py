@@ -19,8 +19,11 @@ ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
 FRONTEND = ROOT / "frontend"
 GENERATION = ROOT / "generation"
+PAINTER = ROOT / "painter"
 BACKEND_ENV = BACKEND / ".env"
 GENERATION_ENV = GENERATION / ".env"
+PAINTER_ENV = PAINTER / ".env"
+PAINTER_PYTHON = PAINTER / ".venv/bin/python"
 WORKER_PYTHON = GENERATION / ".venv/bin/python"
 TRELLIS_PORT = GENERATION / "trellis-mac-mps"
 TRELLIS_REVISION = "f7c175a8620c2c23923d5b6fca3bf7f53604335f"
@@ -76,6 +79,7 @@ def configure_env():
         update_env(BACKEND_ENV, {"CAMERA_PATH_JWT_SECRET": secrets.token_urlsafe(48)})
     create_env(FRONTEND / ".env.local", FRONTEND / ".env.example")
     create_env(GENERATION_ENV, GENERATION / ".env.example")
+    create_env(PAINTER_ENV, PAINTER / ".env.example")
     clone_id = hashlib.sha256(os.fsencode(ROOT)).hexdigest()[:12]
     prefix = f"camera-path.{clone_id}"
     request_queue = f"{prefix}.generation.requests"
@@ -87,15 +91,27 @@ def configure_env():
             "CAMERA_PATH_RABBITMQ_QUEUE": f"{prefix}.job-completions",
             "CAMERA_PATH_GENERATION_REQUEST_QUEUE": request_queue,
             "CAMERA_PATH_GENERATION_RESULT_QUEUE": result_queue,
-            "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG": effective_env(BACKEND_ENV).get(
-                "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG"
-            )
+            "CAMERA_PATH_PAINTER_REQUEST_QUEUE": f"{prefix}.painter.requests",
+            "CAMERA_PATH_PAINTER_RESULT_QUEUE": f"{prefix}.painter.results",
+            "CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG": effective_env(
+                BACKEND_ENV
+            ).get("CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG")
             or "[180,0,0]",
         },
     )
     update_env(
         GENERATION_ENV,
-        {"GENERATION_REQUEST_QUEUE": request_queue, "GENERATION_RESULT_QUEUE": result_queue},
+        {
+            "GENERATION_REQUEST_QUEUE": request_queue,
+            "GENERATION_RESULT_QUEUE": result_queue,
+        },
+    )
+    update_env(
+        PAINTER_ENV,
+        {
+            "PAINTER_REQUEST_QUEUE": f"{prefix}.painter.requests",
+            "PAINTER_RESULT_QUEUE": f"{prefix}.painter.results",
+        },
     )
     print(f"Configured RabbitMQ queues for {prefix}")
 
@@ -135,7 +151,9 @@ def trellis_paths():
 
 def trellis_backend_settings():
     config = effective_env(GENERATION_ENV)
-    output = Path(config.get("GENERATION_OUTPUT_DIR") or "~/.camera-path/generation").expanduser()
+    output = Path(
+        config.get("GENERATION_OUTPUT_DIR") or "~/.camera-path/generation"
+    ).expanduser()
     return {
         "CAMERA_PATH_MESSAGE_QUEUE": "rabbitmq",
         "CAMERA_PATH_RABBITMQ_URL": config.get("GENERATION_AMQP_URL")
@@ -231,9 +249,63 @@ def setup_trellis():
         update_env(BACKEND_ENV, trellis_backend_settings())
 
 
+def painter_backend_settings():
+    config = effective_env(PAINTER_ENV)
+    output = Path(
+        config.get("PAINTER_OUTPUT_DIR") or "~/.camera-path/painter"
+    ).expanduser()
+    return {
+        "CAMERA_PATH_IMAGE_GENERATION_PROVIDER": "painter",
+        "CAMERA_PATH_MESSAGE_QUEUE": "rabbitmq",
+        "CAMERA_PATH_RABBITMQ_URL": config.get("PAINTER_AMQP_URL")
+        or "amqp://guest:guest@127.0.0.1:5672/",
+        "CAMERA_PATH_PAINTER_OUTPUT_DIRECTORY": str((PAINTER / output).resolve()),
+        "CAMERA_PATH_PAINTER_REQUEST_QUEUE": config.get("PAINTER_REQUEST_QUEUE")
+        or "camera-path.painter.requests",
+        "CAMERA_PATH_PAINTER_RESULT_QUEUE": config.get("PAINTER_RESULT_QUEUE")
+        or "camera-path.painter.results",
+    }
+
+
+def setup_painter():
+    enabled = (
+        effective_env(BACKEND_ENV).get("CAMERA_PATH_IMAGE_GENERATION_PROVIDER")
+        == "painter"
+    )
+    if (platform.system(), platform.machine()) != ("Darwin", "arm64"):
+        if enabled:
+            raise SystemExit("The configured Painter worker requires Apple Silicon.")
+        return
+    if not enabled:
+        answer = input(
+            "Set up Painter for local 2D images (downloads missing weights, about 16 GB) [y/N]? "
+        )
+        if answer.strip().lower() not in ("y", "yes"):
+            return
+    run(
+        "uv",
+        "sync",
+        "--frozen",
+        "--extra",
+        "inference",
+        "--python",
+        "3.12",
+        cwd=PAINTER,
+    )
+    run(PAINTER_PYTHON, PAINTER / "scripts/prepare_model.py", cwd=PAINTER)
+    update_env(BACKEND_ENV, painter_backend_settings())
+
+
 def setup():
     require("uv", "node", "npm", "rustup", "cargo", "rustc")
-    if int(subprocess.check_output(["node", "-p", "process.versions.node.split('.')[0]"])) < 24:
+    if (
+        int(
+            subprocess.check_output(
+                ["node", "-p", "process.versions.node.split('.')[0]"]
+            )
+        )
+        < 24
+    ):
         raise SystemExit("Install Node.js 24 or newer.")
     version = subprocess.check_output(["rustc", "--version"], text=True).split()[1]
     if tuple(map(int, version.split(".")[:2])) < (1, 95):
@@ -250,6 +322,7 @@ def setup():
         migrate()
         create_editor()
         setup_trellis()
+        setup_painter()
     print("Setup complete. Run Dev Start.")
 
 
@@ -262,7 +335,9 @@ def check_trellis_settings():
     output_key = "CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"
     output = settings.generation_output_directory.expanduser().resolve()
     if str(output) != expected[output_key]:
-        raise SystemExit("Match CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY to GENERATION_OUTPUT_DIR.")
+        raise SystemExit(
+            "Match CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY to GENERATION_OUTPUT_DIR."
+        )
     for key in (
         "CAMERA_PATH_RABBITMQ_URL",
         "CAMERA_PATH_GENERATION_REQUEST_QUEUE",
@@ -275,6 +350,24 @@ def check_trellis_settings():
             raise SystemExit(
                 f"Match {key} in backend/.env to the worker settings in generation/.env."
             )
+
+
+def check_painter_settings():
+    from camera_path.config import settings
+
+    if (platform.system(), platform.machine()) != ("Darwin", "arm64"):
+        raise SystemExit("The configured Painter worker requires Apple Silicon.")
+    expected = painter_backend_settings()
+    # Keep serving persisted Painter jobs after switching the default to OpenAI.
+    expected.pop("CAMERA_PATH_IMAGE_GENERATION_PROVIDER")
+    for key, wanted in expected.items():
+        value = getattr(settings, key.removeprefix("CAMERA_PATH_").lower())
+        if key == "CAMERA_PATH_RABBITMQ_URL":
+            value = value.get_secret_value()
+        if key == "CAMERA_PATH_PAINTER_OUTPUT_DIRECTORY":
+            value = str(value.expanduser().resolve()) if value else None
+        if value != wanted:
+            raise SystemExit(f"Match {key} in backend/.env to painter/.env.")
 
 
 def stop_processes(processes):
@@ -299,7 +392,10 @@ def start_infrastructure():
     require("docker")
     # Reuse the standalone Mailpit container from the previous local instructions.
     legacy = subprocess.run(
-        ["docker", "port", "camera-path-mailpit"], capture_output=True, text=True, check=False
+        ["docker", "port", "camera-path-mailpit"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     mailpit_ports = {"1025/tcp -> 127.0.0.1:1025", "8025/tcp -> 127.0.0.1:8025"}
     services = ["rabbitmq"]
@@ -353,6 +449,20 @@ def service_command(service):
                 os.getenv("CAMERA_PATH_DEV_FRONTEND_PORT", "3000"),
             ],
         )
+    if service == "painter":
+        if not effective_env(BACKEND_ENV).get("CAMERA_PATH_PAINTER_OUTPUT_DIRECTORY"):
+            return None
+        check_painter_settings()
+        model = Path(
+            effective_env(PAINTER_ENV).get("PAINTER_MODEL_DIR")
+            or "~/.camera-path/models/flux2-klein-4b"
+        ).expanduser()
+        if (
+            not PAINTER_PYTHON.is_file()
+            or not (PAINTER / model / "painter.json").is_file()
+        ):
+            raise SystemExit("Run Dev Setup to prepare the configured Painter worker.")
+        return PAINTER, os.environ, [PAINTER_PYTHON, "-m", "camera_path_painter"]
     if not effective_env(BACKEND_ENV).get("CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY"):
         return None
     check_trellis_settings()
@@ -371,7 +481,10 @@ def service_command(service):
 def run_service(service):
     command = service_command(service)
     if command is None:
-        print("Trellis is not configured. Run Dev Setup to enable it.", flush=True)
+        print(
+            f"{service.title()} is not configured. Run Dev Setup to enable it.",
+            flush=True,
+        )
         return
     cwd, env, args = command
     print(f"Starting {service}", flush=True)
@@ -381,7 +494,7 @@ def run_service(service):
 
 def start():
     services = []
-    for service in ("backend", "frontend", "trellis"):
+    for service in ("backend", "frontend", "trellis", "painter"):
         command = service_command(service)
         if command is not None:
             services.append((service, *command))
@@ -400,7 +513,9 @@ def start():
     try:
         for name, cwd, env, command in services:
             print(f"Starting {name}", flush=True)
-            processes.append(subprocess.Popen(command, cwd=cwd, env=env, start_new_session=True))
+            processes.append(
+                subprocess.Popen(command, cwd=cwd, env=env, start_new_session=True)
+            )
         while True:
             for (name, *_), proc in zip(services, processes, strict=True):
                 if (status := proc.poll()) is not None:
@@ -411,14 +526,18 @@ def start():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Set up and run the local Camera Path stack.")
+    parser = argparse.ArgumentParser(
+        description="Set up and run the local Camera Path stack."
+    )
     actions = {
         "setup": setup,
         "start": start,
         "migrate": migrate,
         "infrastructure": start_infrastructure,
     }
-    parser.add_argument("action", choices=(*actions, "backend", "frontend", "trellis"))
+    parser.add_argument(
+        "action", choices=(*actions, "backend", "frontend", "trellis", "painter")
+    )
     try:
         # The backend settings load .env from the current working directory.
         os.chdir(BACKEND)

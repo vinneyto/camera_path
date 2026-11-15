@@ -47,9 +47,9 @@ from camera_path.services import (
 )
 from camera_path.services.app_dependencies import AppDependencies
 from camera_path.services.auth import AuthService
-from camera_path.services.chat_image_generation import ChatImageGeneration
 from camera_path.services.generation_integration import GenerationIntegration
 from camera_path.services.generation_models import GENERATION_SOURCE
+from camera_path.services.image_jobs import ImageJobs
 from camera_path.services.job_completion import JobCompletionService
 from camera_path.services.job_consumer import JobCompletionConsumer
 from camera_path.services.jobs import JobService
@@ -175,7 +175,27 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     trajectory_service = TrajectoryService(project_repository, configured.compile_tolerance)
     timeline_service = TimelineService(project_repository)
     chat_service = ChatService(project_repository, library_service)
-    job_service = JobService(library_service, generation_enabled=generation is not None)
+    job_service = JobService(
+        library_service,
+        generation_enabled=generation is not None,
+        image_settings=dependencies.image_job_settings,
+    )
+    image_jobs = ImageJobs(
+        job_service,
+        dependencies.image_generate,
+        queue=dependencies.painter_queue,
+        source=dependencies.import_sources.get("painter"),
+    )
+    image_consumer = (
+        JobCompletionConsumer(
+            dependencies.painter_queue,
+            image_jobs,
+            configured.message_queue_max_attempts,
+            on_rejection=image_jobs.on_rejection,
+        )
+        if dependencies.painter_queue is not None
+        else None
+    )
     agent = TrajectoryAgent(
         project_repository,
         trajectory_service,
@@ -195,9 +215,9 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         pipeline_service,
         trajectory_service,
         agent.scene_tools,
-        ChatImageGeneration(chat_service.attachments, agent.api_key, configured.openai_image_model),
     )
     agent.pipelines = pipeline_service
+    image_jobs.pipelines = pipeline_service
     if generation is not None:
         generation.pipelines = pipeline_service
 
@@ -206,7 +226,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         async with AsyncExitStack() as cleanup:
             if dependencies.owns_repository:
                 cleanup.push_async_callback(project_repository.close)
-            for queue in (message_queue, generation_queue):
+            for queue in (message_queue, generation_queue, dependencies.painter_queue):
                 if queue is not None:
                     cleanup.push_async_callback(queue.aclose)
             initialize = getattr(project_repository, "initialize", None)
@@ -214,12 +234,13 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
                 await initialize()
             tasks = [
                 asyncio.create_task(worker.run())
-                for worker in (consumer, generation_consumer)
+                for worker in (consumer, generation_consumer, image_consumer)
                 if worker is not None
             ]
             tasks.append(asyncio.create_task(pipeline_executor.run()))
             if generation is not None:
                 tasks.append(asyncio.create_task(generation.dispatch()))
+            tasks.append(asyncio.create_task(image_jobs.run()))
             try:
                 yield
             finally:
@@ -273,6 +294,7 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         }
     )
     application.state.message_queue = message_queue
+    application.state.image_jobs = image_jobs
     application.state.job_completion_service = importer
     application.state.job_completion_consumer = consumer
 

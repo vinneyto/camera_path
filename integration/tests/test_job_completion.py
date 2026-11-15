@@ -73,7 +73,7 @@ def test_rabbitmq_completion_multiple_files_and_restart(dev_backend):
     summary = b.request("GET", "/api/v1/jobs", auth=False).json()[0]
     assert summary["id"] == job["id"] and summary["status"] == job["status"] == "succeeded"
     assert summary["asset_count"] == 1 and summary["assets"] == [
-        {"id": asset["id"], "name": "Tree"}
+        {"id": asset["id"], "name": "Tree", "status": "ready"}
     ]
     assert "input" not in summary and "download_url" not in summary["assets"][0]
     assert asset["job_id"] == job["id"]

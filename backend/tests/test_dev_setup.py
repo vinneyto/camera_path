@@ -21,18 +21,37 @@ def test_dev_setup_writes_active_rotation_and_preserves_custom_settings(
     dev = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dev)
     monkeypatch.delenv("CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG", raising=False)
-    for folder in ("backend", "frontend", "generation"):
+    for folder in ("backend", "frontend", "generation", "painter"):
         (tmp_path / folder).mkdir()
         (tmp_path / folder / ".env.example").write_text(configured if folder == "backend" else "")
     monkeypatch.setattr(dev, "ROOT", tmp_path)
-    for key in ("BACKEND", "FRONTEND", "GENERATION"):
+    for key in ("BACKEND", "FRONTEND", "GENERATION", "PAINTER"):
         monkeypatch.setattr(dev, key, tmp_path / key.lower())
     monkeypatch.setattr(dev, "BACKEND_ENV", tmp_path / "backend/.env")
     monkeypatch.setattr(dev, "GENERATION_ENV", tmp_path / "generation/.env")
+    monkeypatch.setattr(dev, "PAINTER_ENV", tmp_path / "painter/.env")
     dev.configure_env()
     dev.configure_env()
     assert dotenv_values(dev.BACKEND_ENV)["CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG"] == expected
     assert any(
         line.startswith("CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=")
         for line in dev.BACKEND_ENV.read_text().splitlines()
+    )
+
+    backend = dotenv_values(dev.BACKEND_ENV)
+    painter = dotenv_values(dev.PAINTER_ENV)
+    generation = dotenv_values(dev.GENERATION_ENV)
+    assert backend["CAMERA_PATH_PAINTER_REQUEST_QUEUE"] == painter["PAINTER_REQUEST_QUEUE"]
+    assert backend["CAMERA_PATH_PAINTER_RESULT_QUEUE"] == painter["PAINTER_RESULT_QUEUE"]
+    assert (
+        len(
+            {
+                backend["CAMERA_PATH_RABBITMQ_QUEUE"],
+                painter["PAINTER_REQUEST_QUEUE"],
+                painter["PAINTER_RESULT_QUEUE"],
+                generation["GENERATION_REQUEST_QUEUE"],
+                generation["GENERATION_RESULT_QUEUE"],
+            }
+        )
+        == 5
     )

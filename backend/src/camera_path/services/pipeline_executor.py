@@ -8,10 +8,9 @@ from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from jsonschema import Draft202012Validator
-from openai import OpenAIError
 from sqlalchemy import select, text, update
 
-from camera_path.persistence.records import JobRecord, LibraryAssetRecord, PipelineRecord
+from camera_path.persistence.records import LibraryAssetRecord, PipelineRecord
 from camera_path.repositories import RevisionConflictError
 from camera_path.services.anchor_replacement import replace_anchor
 from camera_path.services.jobs import JobCreate
@@ -25,9 +24,10 @@ LEASE_SECONDS = 90
 
 
 class PipelineExecutor:
-    def __init__(self, pipelines, trajectory, scene_tools, images):
+    def __init__(self, pipelines, trajectory, scene_tools):
         self.pipelines, self.trajectory = pipelines, trajectory
-        self.scene_tools, self.images = scene_tools, images
+        self.scene_tools = scene_tools
+        self.jobs = scene_tools.jobs
         self.sessions = pipelines.sessions
         self.repository = pipelines.repository
         self.request = None
@@ -150,31 +150,20 @@ class PipelineExecutor:
                         spec,
                         outputs,
                         context,
+                        state,
                     )
                     if output is None:
                         return
                     async with self.sessions.begin() as session:
                         await done(session, output)
                 elif step.command == "generate_image":
-                    attachment_id = str(uuid5(NAMESPACE_URL, f"pipeline:{pipeline_id}:{step.id}"))
-                    image = await self.images.existing(project_id, attachment_id)
-                    if image is None:
-                        if state.get("phase") == "image_request":
-                            raise ValueError(
-                                "Image request was interrupted; its outcome is unknown. "
-                                "Submit a new pipeline to retry."
-                            )
-                        await self._change(pipeline_id, owner, index, phase="image_request")
-                        image = await self.images.generate(project_id, attachment_id, parameters)
+                    output = await self._generate_image(
+                        pipeline_id, owner, index, step, parameters, project_id, state
+                    )
+                    if output is None:
+                        return
                     async with self.sessions.begin() as session:
-                        await done(
-                            session,
-                            {
-                                "attachment_id": image.id,
-                                "image": image.model_dump(),
-                                "anchor_id": parameters.get("anchor_id"),
-                            },
-                        )
+                        await done(session, output)
                 elif step.command in {"publish_chat_image", "create_library_asset"}:
                     asset = await self.scene_tools.attachments.publish(
                         project_id, parameters["attachment_id"], None, self.request
@@ -196,11 +185,7 @@ class PipelineExecutor:
         except asyncio.CancelledError:
             raise
         except Exception as error:
-            detail = (
-                "Image provider request failed"
-                if isinstance(error, OpenAIError)
-                else str(getattr(error, "detail", error))
-            )
+            detail = str(getattr(error, "detail", error))
             logger.warning("Pipeline %s step %s failed: %s", pipeline_id, index, detail)
             await self._change(
                 pipeline_id,
@@ -225,16 +210,14 @@ class PipelineExecutor:
                 )
 
     async def _generate_model(
-        self, pipeline_id, owner, index, step, parameters, project_id, spec, outputs, context
+        self, pipeline_id, owner, index, step, parameters, project_id, spec, outputs, context, state
     ):
         payload = {
             k: parameters[k] for k in ("prompt", "image_asset_id") if parameters.get(k) is not None
         }
         key = f"pipeline:{pipeline_id}:{step.id}"
-        async with self.sessions() as session:
-            job = await session.scalar(select(JobRecord).where(JobRecord.request_key == key))
-            job_id = job.id if job else None
-        if job_id is None:
+        job = await self.jobs.by_request_key(key)
+        if job is None:
             intent = None
             for future in spec.steps[index + 1 :]:
                 if future.command in {"place_model", "replace_anchor_with_asset"}:
@@ -250,37 +233,50 @@ class PipelineExecutor:
                             "pipeline_id": pipeline_id,
                         }
                     break
-            job = await self.scene_tools.jobs.create(
+            job = await self.jobs.create(
                 JobCreate(
                     type="generation", input=payload, start=True, name=parameters.get("name")
                 ),
                 scene_placement=intent,
                 request_key=key,
             )
-            job_id = job.id
+        return await self._job_result(pipeline_id, owner, index, job, state)
+
+    async def _job_result(self, pipeline_id, owner, index, job, state):
+        result = await self.jobs.result(job.id)
+        if result is None and state.get("job_id") != job.id:
             await self._change(
                 pipeline_id,
                 owner,
                 index,
                 status="waiting",
-                job_id=job_id,
-                phase="queued",
+                job_id=job.id,
+                phase="queued" if job.status.value == "queued" else "generating",
             )
-            return None
-        job = await self.scene_tools.jobs.get(job_id)
-        if job.status.value in {"failed", "cancelled"}:
-            raise ValueError(job.error.message if job.error else "Generation did not succeed")
-        if job.status.value != "succeeded":
-            return None
-        async with self.sessions() as session:
-            asset_id = await session.scalar(
-                select(LibraryAssetRecord.id).where(
-                    LibraryAssetRecord.job_id == job_id, LibraryAssetRecord.job_position == 0
+        return result
+
+    async def _generate_image(self, pipeline_id, owner, index, step, parameters, project_id, state):
+        key = f"pipeline:{pipeline_id}:{step.id}"
+        job = await self.jobs.by_request_key(key)
+        if job is None:
+            # Preserve the old paid-request checkpoint when upgrading an existing database.
+            if state.get("phase") == "image_request":
+                raise ValueError(
+                    "Image request was interrupted; its outcome is unknown. "
+                    "Submit a new pipeline to retry."
                 )
-            )
-        if asset_id is None:
-            raise ValueError("Successful generation has no library asset")
-        return {"asset_id": asset_id, "job_id": job_id}
+            attachment_id = str(uuid5(NAMESPACE_URL, key))
+            job = await self.jobs.create_chat_image(project_id, attachment_id, parameters, key)
+        result = await self._job_result(pipeline_id, owner, index, job, state)
+        if result is None:
+            return None
+        image = await self.jobs.chat_image(job.id)
+        return {
+            **result,
+            "attachment_id": image.id,
+            "image": image.model_dump(),
+            "anchor_id": parameters.get("anchor_id"),
+        }
 
     async def _database_command(self, project_id, command, parameters, context, done):
         from camera_path.agent.trajectory_agent import TOOLS, TrajectoryAgent

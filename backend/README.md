@@ -369,8 +369,12 @@ with `POST /api/v1/projects/{id}/chat/attachments/{attachment_id}/complete`. Sta
 the image in the library. The `publish_chat_image` pipeline command publishes it explicitly.
 
 The agent reads scene/library data directly and submits every mutation as a persisted command
-pipeline, including one-command operations. `generate_image` creates or edits a transparent PNG
-through OpenAI (`OPENAI_API_KEY`, `CAMERA_PATH_OPENAI_IMAGE_MODEL`, default `gpt-image-1.5`).
+pipeline, including one-command operations. `generate_image` creates an `image_generation` job for a transparent PNG. The
+backend selects Painter (local FLUX via RabbitMQ) or OpenAI using
+`CAMERA_PATH_IMAGE_GENERATION_PROVIDER=painter|openai|none` (default `openai`).
+OpenAI uses `OPENAI_API_KEY` and `CAMERA_PATH_OPENAI_IMAGE_MODEL` (default `gpt-image-1.5`).
+See [Painter setup](../painter/README.md) for local inference. The pipeline
+executor submits and awaits jobs; it does not call an image SDK or worker directly.
 Generated versions remain staged chat attachments until selected and explicitly published.
 `generate_model` accepts a text prompt or a ready image asset and waits for generation and library
 import. A typical image pipeline is `publish_chat_image` → `generate_model` → `place_model`.
@@ -602,3 +606,31 @@ to correct upside-down Trellis output. The three values are Euler XYZ angles in 
 The backend saves them as library placement defaults on newly generated assets. The PLY
 and its bounding box stay in the original asset coordinates. Set `[0,0,0]` explicitly
 to keep zero rotation through Dev Setup.
+
+### 2D image jobs
+
+`POST /api/v1/jobs` accepts
+`{"type":"image_generation","input":{"prompt":"A wooden chair"},"start":true}`.
+Add `input.image_asset_id` to edit a ready PNG/JPEG/WebP image. The server
+validates this input schema; clients cannot choose providers or submit arbitrary
+worker parameters. The provider, model/revision, seed and inference settings are
+snapshotted in `jobs.execution` at creation. `generation` remains the separate
+3D job type; both use the same create/list/detail/status/error/result lifecycle.
+
+A standalone 2D job publishes its PNG to the library. Chat-created versions use
+pending library assets and ready project attachments, keeping them hidden until
+explicit publication. Jobs and pipeline cards link to each other. The detail page
+can enlarge/download PNGs, including unpublished versions.
+`GET /api/v1/jobs/{job_id}/image` serves a completed result; `/source-image` serves
+a surviving source. Deleting an active job's input is blocked. After completion,
+deletion is allowed and the job retains its original input ID.
+
+Painter has separate request/result queues and a shared local output directory.
+The backend checks job identity, frozen inputs, manifest paths, PNG size and checksum
+before an idempotent library import. Image bytes are never broker payloads.
+Painter and TRELLIS do not call each other: backend pipelines publish the chosen
+image, submit the 3D job, await its library result, then place the model.
+
+OpenAI jobs use durable leases. A saved PNG can be imported after restart without
+a provider call. An interrupted request with an unknown outcome fails explicitly;
+it is not automatically sent again. A new job is required to retry it.

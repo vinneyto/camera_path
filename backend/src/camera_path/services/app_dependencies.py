@@ -1,5 +1,6 @@
 """Provider-independent dependencies supplied to the core application factory."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from camera_path.repositories import ProjectRepository
@@ -17,3 +18,6 @@ class AppDependencies:
     message_queue: MessageQueue | None
     import_sources: dict[str, LibraryStorage]
     generation_queue: GenerationQueue | None = None
+    painter_queue: GenerationQueue | None = None
+    image_generate: Callable[..., Awaitable[bytes]] | None = None
+    image_job_settings: dict | None = None

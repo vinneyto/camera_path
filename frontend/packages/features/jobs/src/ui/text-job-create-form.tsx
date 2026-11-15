@@ -17,20 +17,17 @@ const JobInputEditor = dynamic(() => import("./job-input-editor"), {
   ),
 });
 
-const trellisTemplate = {
-  id: "trellis",
-  name: "Trellis · Text to 3D",
-  type: "generation",
-  input: { prompt: "" },
-} as const;
-
-export function TextJobCreateForm() {
+export function TextJobCreateForm({
+  jobType = "generation",
+}: {
+  jobType?: "generation" | "image_generation";
+}) {
   const router = useRouter();
   const creation = useCreateJobMutation();
   const [name, setName] = useState("");
   const [mode, setMode] = useState<"form" | "json">("form");
   const [source, setSource] = useState(() =>
-    JSON.stringify(trellisTemplate.input, null, 2),
+    JSON.stringify({ prompt: "" }, null, 2),
   );
   const { input, error } = parseGenerationInput(source);
   const busy = creation.isPending || creation.isSuccess;
@@ -40,7 +37,7 @@ export function TextJobCreateForm() {
     if (busy || !input?.prompt.trim()) return;
     creation.mutate(
       {
-        type: trellisTemplate.type,
+        type: jobType,
         input,
         start: true,
         ...(name.trim() ? { name: name.trim() } : {}),

@@ -85,6 +85,7 @@ def with_infrastructure(
         queue = _message_queue(configured)
         import_sources = _import_sources(configured) if queue is not None else {}
         generation_queue = None
+        painter_queue = None
         if configured.generation_output_directory is not None:
             from camera_path.dev.message_queue import RabbitMQGenerationQueue
 
@@ -96,6 +97,38 @@ def with_infrastructure(
                 configured.generation_request_queue,
                 configured.generation_result_queue,
             )
+        if configured.painter_output_directory is not None:
+            from camera_path.dev.message_queue import RabbitMQGenerationQueue
+
+            import_sources["painter"] = LocalLibraryStorage(configured.painter_output_directory)
+            painter_queue = RabbitMQGenerationQueue(
+                configured.rabbitmq_url.get_secret_value(),
+                configured.painter_request_queue,
+                configured.painter_result_queue,
+            )
+        from camera_path.openai.image_generation import OpenAIImageGenerator
+
+        image_key = (
+            configured.openai_api_key.get_secret_value() if configured.openai_api_key else None
+        )
+        image_provider = configured.image_generation_provider
+        image_enabled = (image_provider == "painter" and painter_queue is not None) or (
+            image_provider == "openai" and image_key is not None
+        )
+        image_settings = (
+            {
+                "provider": image_provider,
+                "model": configured.painter_model
+                if image_provider == "painter"
+                else configured.openai_image_model,
+                "revision": configured.painter_revision if image_provider == "painter" else None,
+                "width": 1024,
+                "height": 1024,
+                "steps": 4,
+            }
+            if image_enabled
+            else None
+        )
         dependencies = AppDependencies(
             repository=project_repository,
             owns_repository=repository is None,
@@ -106,6 +139,9 @@ def with_infrastructure(
             message_queue=queue,
             import_sources=import_sources,
             generation_queue=generation_queue,
+            painter_queue=painter_queue,
+            image_generate=OpenAIImageGenerator(image_key).generate,
+            image_job_settings=image_settings,
         )
         application = factory(configured, dependencies)
         if isinstance(dependencies.library_storage, LocalLibraryStorage):

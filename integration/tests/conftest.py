@@ -98,6 +98,7 @@ class Backend:
                 "CAMERA_PATH_AUTH_SMTP_HOST": "127.0.0.1",
                 "CAMERA_PATH_AWS_LIBRARY_STORAGE": "local",
                 "OPENAI_API_KEY": "fixture-not-a-real-key",
+                "CAMERA_PATH_IMAGE_GENERATION_PROVIDER": "none",
                 "OPENAI_BASE_URL": f"http://127.0.0.1:{self.llm.server_port}/v1",
             }
         )

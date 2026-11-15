@@ -467,3 +467,49 @@ it("clears the previous job when navigating to a missing job", async () => {
     screen.getByRole("link", { name: "← Jobs" }).getAttribute("href"),
   ).toBe("/jobs");
 });
+
+it("creates a 2D image job through the common jobs API", async () => {
+  mount("new");
+  fireEvent.change(screen.getByLabelText("Template"), {
+    target: { value: "text-image" },
+  });
+  fireEvent.change(screen.getByLabelText("Prompt"), {
+    target: { value: "A red chair on white" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create and generate" }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith(`/jobs/${id}`));
+  expect(
+    JSON.parse(String(requests.find((r) => r.method === "POST")?.body)),
+  ).toEqual({
+    type: "image_generation",
+    input: { prompt: "A red chair on white" },
+    start: true,
+  });
+});
+
+it("enlarges unpublished chat image results without linking to a missing library page", async () => {
+  job = {
+    ...completed,
+    type: "image_generation",
+    assets: [
+      {
+        ...asset,
+        name: "Chair.png",
+        format: "png",
+        status: "pending",
+        download_url: `/api/v1/jobs/${id}/image`,
+      },
+    ],
+  };
+  mount(id);
+  await screen.findByText("2D image generation");
+  expect(screen.queryByRole("link", { name: "Open in library" })).toBeNull();
+  expect(
+    screen.getByRole("link", { name: "Download PNG" }).getAttribute("href"),
+  ).toBe(`/api/v1/jobs/${id}/image`);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Enlarge Chair.png" }),
+  );
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Close image" }));
+});

@@ -14,6 +14,8 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from camera_path.services.image_generation_models import PAINTER_MODEL, PAINTER_REVISION
+
 DEFAULT_DATABASE_URL = f"sqlite+aiosqlite:///{Path.home() / '.camera-path' / 'camera_path.sqlite3'}"
 
 
@@ -45,6 +47,16 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_model: str = "gpt-5.6-luna"
     openai_image_model: str = "gpt-image-1.5"
+    image_generation_provider: Literal["openai", "painter", "none"] = "openai"
+    painter_model: str = PAINTER_MODEL
+    painter_revision: str = PAINTER_REVISION
+    painter_output_directory: Path | None = None
+    painter_request_queue: str = Field(
+        default="camera-path.painter.requests", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    )
+    painter_result_queue: str = Field(
+        default="camera-path.painter.results", pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    )
     compile_tolerance: float = Field(default=1e-3, gt=0.0)
     database_url: str = DEFAULT_DATABASE_URL
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
@@ -108,18 +120,23 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_queue(self):
+        if self.image_generation_provider == "painter" and self.painter_output_directory is None:
+            raise ValueError("Painter requires CAMERA_PATH_PAINTER_OUTPUT_DIRECTORY")
         if self.message_queue == "rabbitmq":
             url = urlsplit(self.rabbitmq_url.get_secret_value())
             if url.scheme not in {"amqp", "amqps"} or not url.hostname:
                 raise ValueError("RabbitMQ requires an amqp/amqps URL")
-        if self.generation_output_directory is not None:
+        if (
+            self.generation_output_directory is not None
+            or self.painter_output_directory is not None
+        ):
             if self.message_queue != "rabbitmq":
                 raise ValueError("Local generation requires RabbitMQ")
-            queues = (
-                self.rabbitmq_queue,
-                self.generation_request_queue,
-                self.generation_result_queue,
-            )
+            queues = [self.rabbitmq_queue]
+            if self.generation_output_directory is not None:
+                queues.extend((self.generation_request_queue, self.generation_result_queue))
+            if self.painter_output_directory is not None:
+                queues.extend((self.painter_request_queue, self.painter_result_queue))
             # Completion consumers also declare retry and failed queues under these prefixes.
             if any(
                 other == name or other.startswith(f"{name}.") or name.startswith(f"{other}.")
@@ -131,6 +148,8 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "The generation import source is configured by its output directory"
                 )
+            if "painter" in self.library_import_sources:
+                raise ValueError("The painter import source is configured by its output directory")
         if self.message_queue == "sqs" and (
             not self.sqs_queue_url
             or not self.sqs_failure_queue_url

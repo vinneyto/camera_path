@@ -4,8 +4,12 @@ import Link from "next/link";
 import { ArrowRight, Box } from "lucide-react";
 import type { LibraryAsset } from "@camera-path/types/api";
 import { Card } from "@camera-path/ui-kit";
+import { JobImageResult } from "./job-image-result";
 
 export function JobResultCard({ asset }: { asset: LibraryAsset }) {
+  if (["png", "jpg", "jpeg", "webp"].includes(asset.format)) {
+    return <JobImageResult asset={asset} />;
+  }
   return (
     <Link
       href={`/library/${asset.id}`}

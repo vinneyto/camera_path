@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import StreamingResponse
 
 from camera_path.persistence.enums import JobStatus
@@ -41,6 +41,30 @@ async def create_job(data: JobCreate, request: Request) -> Job:
 )
 async def get_job(job_id: str, request: Request) -> Job:
     return await request.app.state.job_service.get(job_id, request)
+
+
+@router.get(
+    "/{job_id}/image",
+    operation_id="getJobImage",
+    description="Read a generated PNG, including an unpublished image version from chat.",
+    response_class=Response,
+    responses={200: {"content": {"image/png": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+async def get_job_image(job_id: str, request: Request):
+    raw, media_type = await request.app.state.job_service.image_content(job_id)
+    return Response(raw, media_type=media_type, headers={"Cache-Control": "no-store"})
+
+
+@router.get(
+    "/{job_id}/source-image",
+    operation_id="getJobSourceImage",
+    description="Read the surviving original image used as input to this job.",
+    response_class=Response,
+    responses={200: {"content": {"image/png": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+async def get_job_source_image(job_id: str, request: Request):
+    raw, media_type = await request.app.state.job_service.image_content(job_id, source=True)
+    return Response(raw, media_type=media_type, headers={"Cache-Control": "no-store"})
 
 
 @router.get(

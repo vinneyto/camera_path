@@ -7,6 +7,15 @@
  */
 
 export type JobCreateInput = {
+  /** @pattern ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
+  image_asset_id?: string;
+  /**
+     * @minLength 1
+     * @maxLength 16000
+     * @pattern \S
+     */
+  prompt: string;
+} | {
   /**
      * @minLength 1
      * @pattern \S

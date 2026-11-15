@@ -196,7 +196,7 @@ class LibraryService:
             in_use = await session.scalar(
                 select(JobRecord.id)
                 .where(
-                    JobRecord.type == "generation",
+                    JobRecord.type.in_(("generation", "image_generation")),
                     JobRecord.status.in_((JobStatus.QUEUED, JobStatus.RUNNING)),
                     JobRecord.input["image_asset_id"].as_string().in_(asset_ids),
                 )
