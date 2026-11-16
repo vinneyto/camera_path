@@ -5,6 +5,7 @@ from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 
 from camera_path.services.generation_models import GenerationRequest, GenerationResult
+from camera_path.services.image_generation_models import ImageGenerationRequest
 from camera_path.services.job_completion_models import JobCompletionMessage
 
 
@@ -37,4 +38,4 @@ class MessageQueue(ABC):
 
 class GenerationQueue(MessageQueue):
     @abstractmethod
-    async def publish(self, request: GenerationRequest) -> None: ...
+    async def publish(self, request: GenerationRequest | ImageGenerationRequest) -> None: ...

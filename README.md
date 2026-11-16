@@ -9,7 +9,8 @@ OpenAPI and the generated frontend client describe the HTTP interface.
 camera_path/
 ├── backend/     # FastAPI application, geometry compiler, agent and tests
 ├── frontend/    # Next.js camera-path editor
-├── generation/  # Standalone Trellis worker
+├── generation/  # Standalone Trellis 3D worker
+├── painter/     # Standalone FLUX 2D worker
 ├── infra/       # AWS deployment
 ├── integration/ # HTTP and RabbitMQ integration tests
 └── rust/sift/   # SIFT detector, WASM module and native CLI
@@ -23,10 +24,10 @@ with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**
 1. **Dev Setup** installs the Python and npm dependencies, prepares the WASM
    toolchain, creates missing environment files and runs the database migrations.
    For a new database it prompts for the editor's email and password. On Apple
-   Silicon it also offers to set up Trellis and download missing text/image model weights.
-2. **Dev Start** launches **Dev Frontend**, **Dev Backend** and **Dev Trellis** in
-   separate terminals. Backend and Trellis tasks first start the shared RabbitMQ
-   and Mailpit containers. Trellis runs when local generation is configured.
+   Silicon it separately offers Trellis (3D) and Painter (2D), including missing weights.
+2. **Dev Start** launches **Dev Frontend**, **Dev Backend**, **Dev Trellis** and **Dev Painter** in
+   separate terminals. Backend and worker tasks first start the shared RabbitMQ
+   and Mailpit containers. Each worker runs when its local generation is configured.
 
 Start, stop or restart each service through its own task and view its logs in its
 dedicated terminal. Use **Tasks: Terminate Task** to stop a service, or choose
@@ -46,7 +47,7 @@ Press Ctrl+C to stop its application processes.
 
 For separate terminals, use `./scripts/dev.sh infrastructure` once, then launch
 `./scripts/dev.sh frontend`, `./scripts/dev.sh backend` and
-`./scripts/dev.sh trellis` in their own terminals.
+`./scripts/dev.sh trellis` and `./scripts/dev.sh painter` in their own terminals.
 
 After pulling a schema change, run just the migrations with `./scripts/dev.sh migrate`.
 New clones use SQLite and filesystem storage under `backend/.dev/`.
@@ -54,7 +55,7 @@ New clones use SQLite and filesystem storage under `backend/.dev/`.
 All clones share the RabbitMQ and Mailpit containers. **Dev Setup** enables RabbitMQ
 and assigns queues with a prefix derived from the clone's absolute path, such as
 `camera-path.a1b2c3d4e5f6.generation.requests`. It writes matching queue names to
-`backend/.env` and `generation/.env` before the editor and Trellis prompts.
+`backend/.env`, `generation/.env` and `painter/.env` before the setup prompts.
 Repeated setup in the same directory keeps the same queue names.
 Rerun **Dev Setup** to update a clone prepared before this change. Messages already
 sent to its previous queues stay in those queues.
@@ -71,7 +72,10 @@ CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/d
 See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)
 for configuration and development commands.
 
-See [generation/README.md](generation/README.md) to run and test the standalone Trellis worker.
+See [generation/README.md](generation/README.md) and [painter/README.md](painter/README.md)
+to run and test the standalone 3D and 2D workers. Choosing Painter during setup
+sets `CAMERA_PATH_IMAGE_GENERATION_PROVIDER=painter`; OpenAI remains available
+through the same image job type when selected in the backend configuration.
 
 ## AWS infrastructure
 

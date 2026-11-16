@@ -66,6 +66,7 @@ export * from './jobCreateType';
 export * from './jobError';
 export * from './jobInput';
 export * from './jobResultSummary';
+export * from './jobResultSummaryStatus';
 export * from './jobScenePlacement';
 export * from './jobScenePlacementStatus';
 export * from './jobStatus';

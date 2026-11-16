@@ -10,5 +10,6 @@ export type JobCreateType = typeof JobCreateType[keyof typeof JobCreateType];
 
 
 export const JobCreateType = {
+  image_generation: 'image_generation',
   generation: 'generation',
 } as const;

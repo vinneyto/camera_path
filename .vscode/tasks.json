@@ -11,7 +11,7 @@
     },
     {
       "label": "Dev Start",
-      "dependsOn": ["Dev Frontend", "Dev Backend", "Dev Trellis"],
+      "dependsOn": ["Dev Frontend", "Dev Backend", "Dev Trellis", "Dev Painter"],
       "dependsOrder": "parallel",
       "isBackground": true,
       "problemMatcher": []
@@ -43,6 +43,17 @@
       "isBackground": true,
       "command": "./scripts/dev.sh",
       "args": ["trellis"],
+      "dependsOn": ["Dev Infrastructure"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev Painter",
+      "type": "shell",
+      "isBackground": true,
+      "command": "./scripts/dev.sh",
+      "args": ["painter"],
       "dependsOn": ["Dev Infrastructure"],
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": { "panel": "dedicated" },

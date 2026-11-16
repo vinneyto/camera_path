@@ -150,6 +150,7 @@ class JobRecord(Base):
     request_key: Mapped[str | None] = mapped_column(Text, unique=True, index=True)
     type: Mapped[str | None] = mapped_column(Text)
     input: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    execution: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     status: Mapped[JobStatus] = mapped_column(
         enum_column(JobStatus, "ck_jobs_status"),
         nullable=False,

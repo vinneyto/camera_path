@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import type { LibraryAsset } from "@camera-path/types/api";
 
 export function JobSourceImage({
@@ -17,10 +16,7 @@ export function JobSourceImage({
         Source image
       </h2>
       {asset ? (
-        <Link
-          href={`/library/${asset.id}`}
-          className="block space-y-2 rounded-lg border p-4 hover:bg-accent/50"
-        >
+        <div className="block space-y-2 rounded-lg border p-4">
           {(asset.thumbnail_url || asset.download_url) && (
             <Image
               src={asset.thumbnail_url || asset.download_url!}
@@ -37,7 +33,7 @@ export function JobSourceImage({
               This image cannot be deleted while generation is active.
             </p>
           )}
-        </Link>
+        </div>
       ) : (
         <p className="rounded-lg border border-dashed p-6 text-xs text-muted-foreground">
           Source image deleted.

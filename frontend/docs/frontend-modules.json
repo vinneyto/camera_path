@@ -1236,7 +1236,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3402,
+            "line": 3644,
             "column": 1
           },
           "usages": [
@@ -1260,7 +1260,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 9991,
+            "line": 10233,
             "column": 1
           },
           "usages": [
@@ -1284,7 +1284,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3766,
+            "line": 4008,
             "column": 1
           },
           "usages": [
@@ -1326,7 +1326,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1629,
+            "line": 1871,
             "column": 1
           },
           "usages": [
@@ -1344,7 +1344,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4867,
+            "line": 5109,
             "column": 1
           },
           "usages": [
@@ -1368,7 +1368,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5231,
+            "line": 5473,
             "column": 1
           },
           "usages": [
@@ -1392,7 +1392,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2541,
+            "line": 2783,
             "column": 1
           },
           "usages": [
@@ -1410,7 +1410,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7043,
+            "line": 7285,
             "column": 1
           },
           "usages": [
@@ -1434,7 +1434,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 9860,
+            "line": 10102,
             "column": 1
           },
           "usages": [
@@ -1458,7 +1458,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2791,
+            "line": 3033,
             "column": 1
           },
           "usages": [
@@ -1482,7 +1482,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6315,
+            "line": 6557,
             "column": 1
           },
           "usages": [
@@ -1524,7 +1524,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1183,
+            "line": 1425,
             "column": 1
           },
           "usages": [
@@ -1542,7 +1542,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6808,
+            "line": 7050,
             "column": 1
           },
           "usages": [
@@ -1560,7 +1560,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7669,
+            "line": 7911,
             "column": 1
           },
           "usages": [
@@ -1578,7 +1578,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2183,
+            "line": 2425,
             "column": 1
           },
           "usages": [
@@ -1602,7 +1602,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8369,
+            "line": 8611,
             "column": 1
           },
           "usages": [
@@ -1620,7 +1620,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8866,
+            "line": 9108,
             "column": 1
           },
           "usages": [
@@ -3318,6 +3318,7 @@
       "files": [
         "packages/features/job-details/src/index.ts",
         "packages/features/job-details/src/ui/job-details-page.tsx",
+        "packages/features/job-details/src/ui/job-image-result.tsx",
         "packages/features/job-details/src/ui/job-result-card.tsx",
         "packages/features/job-details/src/ui/job-scene-placement.tsx",
         "packages/features/job-details/src/ui/job-source-image.tsx"
@@ -3328,7 +3329,7 @@
             {
               "name": "JobDetailsPage",
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 11,
+              "line": 12,
               "column": 1
             }
           ]
@@ -3348,7 +3349,7 @@
           "usages": [
             {
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 12,
+              "line": 13,
               "column": 20,
               "expression": "useJobResource()"
             }
@@ -3427,7 +3428,7 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/text-job-create-form.tsx",
-              "line": 29,
+              "line": 26,
               "column": 20,
               "expression": "useCreateJobMutation"
             }
@@ -6330,6 +6331,7 @@
         "packages/types/src/editor-state.ts",
         "packages/types/src/gpu-views.ts",
         "packages/types/src/index.ts",
+        "packages/types/src/job-types.ts",
         "packages/types/src/path-position.ts",
         "packages/types/src/project.ts",
         "packages/types/src/scene-object-id.ts",
@@ -6359,6 +6361,7 @@
         "packages/ui-kit/src/context-menu.tsx",
         "packages/ui-kit/src/dropdown-menu.tsx",
         "packages/ui-kit/src/editable-provider.tsx",
+        "packages/ui-kit/src/image-preview.tsx",
         "packages/ui-kit/src/index.ts",
         "packages/ui-kit/src/input.tsx",
         "packages/ui-kit/src/lib/cn.ts",

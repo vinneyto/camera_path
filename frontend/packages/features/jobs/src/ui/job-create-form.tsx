@@ -18,11 +18,20 @@ export function JobCreateForm() {
           onChange={(event) => setTemplate(event.target.value)}
           className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs sm:w-auto"
         >
-          <option value="text">Trellis · Text to 3D</option>
-          <option value="image">Trellis · Image to 3D</option>
+          <option value="text">Text to 3D model</option>
+          <option value="image">Image to 3D model</option>
+          <option value="text-image">Text to 2D image</option>
         </select>
       </div>
-      {template === "image" ? <ImageJobCreateForm /> : <TextJobCreateForm />}
+      {template === "image" ? (
+        <ImageJobCreateForm />
+      ) : (
+        <TextJobCreateForm
+          jobType={
+            template === "text-image" ? "image_generation" : "generation"
+          }
+        />
+      )}
     </div>
   );
 }
