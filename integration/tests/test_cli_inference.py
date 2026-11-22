@@ -164,6 +164,8 @@ def test_cli_inference_survives_restart_and_publishes_each_job_once(tmp_path):
             trellis = job(backend, "generation", {"image_asset_id": image})
             claim = turn(backend, socket, bearer, trellis)
             source = claim["input"]["source_image"]
+            job_path = f"{PREFIX}/jobs/{trellis['id']}"
+            assert backend.request("GET", job_path + "/source-image", auth=False).content == PNG
             worker_request(backend, other, "GET", source, 404)
             assert worker_request(backend, bearer, "GET", source).content == PNG
             upload = stage(backend, bearer, trellis, claim, "ply", PLY)
@@ -185,9 +187,12 @@ def test_cli_inference_survives_restart_and_publishes_each_job_once(tmp_path):
                 },
             ).json()
             assert result["status"] == "succeeded" and len(result["asset_ids"]) == 1
-            assert (
-                len(backend.request("GET", PREFIX + "/jobs/" + trellis["id"]).json()["assets"]) == 1
-            )
+            assert len(backend.request("GET", job_path).json()["assets"]) == 1
+            events = backend.request("GET", job_path + "/events", auth=False)
+            assert events.headers["content-type"].startswith("text/event-stream")
+            event, data, *_ = events.text.splitlines()
+            assert event == "event: job-status"
+            assert json.loads(data.removeprefix("data: "))["status"] == "succeeded"
 
             failed = job(backend, "generation", {"prompt": "Failure fixture"})
             claim = turn(backend, socket, bearer, failed)
