@@ -57,6 +57,7 @@ async def images(tmp_path):
     )
     await app.state.project_repository.initialize()
     app.state.job_service.generation_enabled = True
+    app.state.job_service.cli_model = False  # This fixture injects the legacy broker adapter.
     output = LocalLibraryStorage(tmp_path / "generation")
     queue = Queue()
     integration = GenerationIntegration(

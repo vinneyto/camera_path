@@ -82,48 +82,58 @@ class JobImages:
             job = await session.get(JobRecord, job_id)
             if job.status not in ACTIVE:
                 return
-            chat = (job.execution or {}).get("chat")
-            stem = job.name or "Generated image"
-            if stem.lower().endswith(".png"):
-                stem = stem[:-4]
-            name = stem[:196] + ".png"
-            asset = LibraryAssetRecord(
-                id=asset_id,
-                job_id=job.id,
-                job_position=0,
-                name=name,
-                format="png",
-                object_key=key,
-                size_bytes=len(raw),
-                status="pending" if chat else "ready",
-                created_at=datetime.now(UTC),
-                tags=[],
-                files=[
-                    LibraryAssetFileRecord(
-                        id="main",
-                        position=0,
-                        is_primary=True,
-                        object_key=key,
-                        format="png",
-                        size_bytes=len(raw),
-                    )
-                ],
-            )
-            session.add(asset)
-            await session.flush()
-            if chat:
-                session.add(
-                    ChatAttachmentRecord(
-                        id=asset_id,
-                        project_id=chat["project_id"],
-                        asset_id=asset_id,
-                        name=name,
-                        format="png",
-                        ready=True,
-                    )
+            await self.publish(session, job, asset_id, key, len(raw))
+
+    async def publish(self, session, job, asset_id, key, size):
+        """Publish immutable image bytes using the caller's fenced transaction."""
+        chat = (job.execution or {}).get("chat")
+        stem = job.name or "Generated image"
+        if stem.lower().endswith(".png"):
+            stem = stem[:-4]
+        name = stem[:196] + ".png"
+        asset = LibraryAssetRecord(
+            id=asset_id,
+            job_id=job.id,
+            job_position=0,
+            name=name,
+            format="png",
+            object_key=key,
+            size_bytes=size,
+            status="pending" if chat else "ready",
+            created_at=datetime.now(UTC),
+            tags=[],
+            files=[
+                LibraryAssetFileRecord(
+                    id="main",
+                    position=0,
+                    is_primary=True,
+                    object_key=key,
+                    format="png",
+                    size_bytes=size,
                 )
-            job.status = JobStatus.SUCCEEDED
-            job.completed_at = datetime.now(UTC)
-            job.error = None
-            job.generation_dispatch_pending = False
-            job.execution = {**job.execution, "phase": "completed"}
+            ],
+        )
+        session.add(asset)
+        await session.flush()
+        if chat:
+            session.add(
+                ChatAttachmentRecord(
+                    id=asset_id,
+                    project_id=chat["project_id"],
+                    asset_id=asset_id,
+                    name=name,
+                    format="png",
+                    ready=True,
+                )
+            )
+        job.status = JobStatus.SUCCEEDED
+        job.completed_at = datetime.now(UTC)
+        job.error = None
+        job.generation_dispatch_pending = False
+        job.execution = {**(job.execution or {}), "phase": "completed"}
+        return {
+            "job_id": job.id,
+            "status": JobStatus.SUCCEEDED,
+            "asset_ids": [] if chat else [asset_id],
+            "attachment_id": asset_id if chat else None,
+        }

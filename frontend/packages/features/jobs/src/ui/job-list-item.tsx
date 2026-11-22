@@ -4,9 +4,17 @@ import Link from "next/link";
 import { ArrowRight, Box, ImageIcon } from "lucide-react";
 import { JOB_TYPE_LABELS } from "@camera-path/types/job-types";
 import type { JobSummary } from "@camera-path/types/api";
+import type { InferenceStatus } from "@camera-path/types/inference";
+import { inferenceJobLabel } from "@camera-path/types/inference-job-label";
 import { Badge, Card } from "@camera-path/ui-kit";
 
-export function JobListItem({ job }: { job: JobSummary }) {
+export function JobListItem({
+  job,
+  worker,
+}: {
+  job: JobSummary;
+  worker?: InferenceStatus;
+}) {
   const ResultIcon = job.type === "image_generation" ? ImageIcon : Box;
   return (
     <Card className="space-y-4 p-4">
@@ -31,7 +39,7 @@ export function JobListItem({ job }: { job: JobSummary }) {
           </p>
         </Link>
         <Badge
-          className={`shrink-0 capitalize ${
+          className={`shrink-0 ${
             job.status === "failed"
               ? "border-destructive/30 bg-destructive/10 text-destructive"
               : job.status === "succeeded"
@@ -39,7 +47,7 @@ export function JobListItem({ job }: { job: JobSummary }) {
                 : ""
           }`}
         >
-          {job.status}
+          {inferenceJobLabel(job, worker)}
         </Badge>
       </div>
       {job.error && (

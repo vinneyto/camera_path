@@ -157,6 +157,8 @@ async def test_chat_results_stay_hidden_and_cross_project_edit_is_rejected(image
 async def test_painter_dispatch_import_replay_and_manifest_validation(images, tmp_path):
     app, client = images
     jobs = app.state.job_service
+    # Exercise the retained legacy adapter explicitly; new Painter jobs use CLI.
+    jobs.cli_image = False
     jobs.image_settings = {
         "provider": "painter",
         "model": PAINTER_MODEL,

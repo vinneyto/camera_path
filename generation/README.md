@@ -1,5 +1,9 @@
 # Trellis generation worker
 
+> Use the [Camera Path CLI](../README.md#local-development) for new local
+> inference setups. Standalone RabbitMQ instructions below are for legacy
+> compatibility and draining an existing deployment only.
+
 The worker runs the local Apple Silicon Trellis text/image-to-3D port as a separate
 process. Its generation code reads JSON and writes files. A RabbitMQ adapter
 receives requests and publishes results for local development.

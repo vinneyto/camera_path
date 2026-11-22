@@ -1195,6 +1195,8 @@
         "packages/api/src/constants.ts",
         "packages/api/src/identity/auth-provider.tsx",
         "packages/api/src/index.ts",
+        "packages/api/src/inference/decide-cli-authorization.ts",
+        "packages/api/src/inference/use-inference-status.ts",
         "packages/api/src/merge-pipeline-response.ts",
         "packages/api/src/project/index.ts",
         "packages/api/src/project/invalidate-project-resource.ts",
@@ -1231,12 +1233,30 @@
       "actions": [],
       "selectors": [
         {
+          "name": "useAuth",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/identity/auth-provider.tsx",
+            "line": 166,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/api/src/inference/use-inference-status.ts",
+              "line": 8,
+              "column": 23,
+              "expression": "useAuth()"
+            }
+          ]
+        },
+        {
           "name": "useGetAimTimeline",
           "kind": "api-hook",
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3644,
+            "line": 5080,
             "column": 1
           },
           "usages": [
@@ -1260,7 +1280,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 10233,
+            "line": 11669,
             "column": 1
           },
           "usages": [
@@ -1284,7 +1304,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 4008,
+            "line": 5444,
             "column": 1
           },
           "usages": [
@@ -1308,7 +1328,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 948,
+            "line": 2384,
             "column": 1
           },
           "usages": [
@@ -1326,7 +1346,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1871,
+            "line": 3307,
             "column": 1
           },
           "usages": [
@@ -1344,7 +1364,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5109,
+            "line": 6545,
             "column": 1
           },
           "usages": [
@@ -1368,7 +1388,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 5473,
+            "line": 6909,
             "column": 1
           },
           "usages": [
@@ -1392,7 +1412,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2783,
+            "line": 4219,
             "column": 1
           },
           "usages": [
@@ -1410,7 +1430,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7285,
+            "line": 8721,
             "column": 1
           },
           "usages": [
@@ -1434,7 +1454,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 10102,
+            "line": 11538,
             "column": 1
           },
           "usages": [
@@ -1458,7 +1478,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 3033,
+            "line": 4469,
             "column": 1
           },
           "usages": [
@@ -1482,7 +1502,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 6557,
+            "line": 7993,
             "column": 1
           },
           "usages": [
@@ -1506,7 +1526,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 714,
+            "line": 2150,
             "column": 1
           },
           "usages": [
@@ -1524,7 +1544,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 1425,
+            "line": 2861,
             "column": 1
           },
           "usages": [
@@ -1542,7 +1562,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7050,
+            "line": 8486,
             "column": 1
           },
           "usages": [
@@ -1560,7 +1580,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 7911,
+            "line": 9347,
             "column": 1
           },
           "usages": [
@@ -1578,7 +1598,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 2425,
+            "line": 3861,
             "column": 1
           },
           "usages": [
@@ -1602,7 +1622,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 8611,
+            "line": 10047,
             "column": 1
           },
           "usages": [
@@ -1620,7 +1640,7 @@
           "package": "@camera-path/api",
           "definition": {
             "file": "packages/api/src/client/generated/client.ts",
-            "line": 9108,
+            "line": 10544,
             "column": 1
           },
           "usages": [
@@ -3329,7 +3349,7 @@
             {
               "name": "JobDetailsPage",
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 12,
+              "line": 14,
               "column": 1
             }
           ]
@@ -3337,6 +3357,24 @@
       },
       "actions": [],
       "selectors": [
+        {
+          "name": "useInferenceStatus",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/inference/use-inference-status.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/job-details/src/ui/job-details-page.tsx",
+              "line": 17,
+              "column": 30,
+              "expression": "useInferenceStatus(\n    job?.status === \"queued\" && !!job.inference_command,\n  )"
+            }
+          ]
+        },
         {
           "name": "useJobResource",
           "kind": "api-hook",
@@ -3349,7 +3387,7 @@
           "usages": [
             {
               "file": "packages/features/job-details/src/ui/job-details-page.tsx",
-              "line": 13,
+              "line": 15,
               "column": 20,
               "expression": "useJobResource()"
             }
@@ -3383,7 +3421,7 @@
             {
               "name": "JobsPage",
               "file": "packages/features/jobs/src/ui/jobs-page.tsx",
-              "line": 8,
+              "line": 9,
               "column": 1
             }
           ],
@@ -3461,6 +3499,24 @@
           ]
         },
         {
+          "name": "useInferenceStatus",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/inference/use-inference-status.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "packages/features/jobs/src/ui/jobs-page.tsx",
+              "line": 12,
+              "column": 30,
+              "expression": "useInferenceStatus(\n    entries.some((job) => job.status === \"queued\" && job.inference_command),\n  )"
+            }
+          ]
+        },
+        {
           "name": "useJobsCatalog",
           "kind": "api-hook",
           "package": "@camera-path/api",
@@ -3472,7 +3528,7 @@
           "usages": [
             {
               "file": "packages/features/jobs/src/ui/jobs-page.tsx",
-              "line": 9,
+              "line": 10,
               "column": 16,
               "expression": "useJobsCatalog()"
             }
@@ -5393,10 +5449,12 @@
         "apps/host/src/testing/editor-host.tsx",
         "apps/host/src/ui/app-shell/app-shell.tsx",
         "apps/host/src/ui/app-shell/app-sidebar.tsx",
+        "apps/host/src/ui/app-shell/inference-worker-indicator.tsx",
         "apps/host/src/ui/app-shell/mobile-navigation.tsx",
         "apps/host/src/ui/app-shell/navigation-link.tsx",
         "apps/host/src/ui/app-shell/navigation-links.tsx",
         "apps/host/src/ui/app-shell/profile-menu.tsx",
+        "apps/host/src/ui/cli-authorization/cli-authorization.tsx",
         "apps/host/src/ui/commands/workspace-commands.tsx",
         "apps/host/src/ui/feature-page-route.tsx",
         "apps/host/src/ui/job-create-page.tsx",
@@ -5428,6 +5486,7 @@
         "apps/host/src/ui/scene-editor/ui/use-webgpu-availability.ts",
         "src/app/[...featurePath]/page.tsx",
         "src/app/api/v1/[...path]/route.ts",
+        "src/app/cli/authorize/page.tsx",
         "src/app/jobs/[jobId]/page.tsx",
         "src/app/jobs/new/page.tsx",
         "src/app/jobs/page.tsx",
@@ -5719,6 +5778,12 @@
               "expression": "useAuth()"
             },
             {
+              "file": "apps/host/src/ui/cli-authorization/cli-authorization.tsx",
+              "line": 11,
+              "column": 32,
+              "expression": "useAuth()"
+            },
+            {
               "file": "apps/host/src/ui/scene-editor/ui/scene-select-effect.tsx",
               "line": 12,
               "column": 23,
@@ -5765,6 +5830,24 @@
               "line": 13,
               "column": 17,
               "expression": "useCompiledTrajectoryResource()"
+            }
+          ]
+        },
+        {
+          "name": "useInferenceStatus",
+          "kind": "api-hook",
+          "package": "@camera-path/api",
+          "definition": {
+            "file": "packages/api/src/inference/use-inference-status.ts",
+            "line": 7,
+            "column": 1
+          },
+          "usages": [
+            {
+              "file": "apps/host/src/ui/app-shell/inference-worker-indicator.tsx",
+              "line": 7,
+              "column": 31,
+              "expression": "useInferenceStatus()"
             }
           ]
         },
@@ -6331,6 +6414,8 @@
         "packages/types/src/editor-state.ts",
         "packages/types/src/gpu-views.ts",
         "packages/types/src/index.ts",
+        "packages/types/src/inference-job-label.ts",
+        "packages/types/src/inference.ts",
         "packages/types/src/job-types.ts",
         "packages/types/src/path-position.ts",
         "packages/types/src/project.ts",

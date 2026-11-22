@@ -45,7 +45,7 @@ export class BackendStack extends Stack {
     const api = createApi(this, instance, props.domain);
     const config: DeploymentConfig = {
       region: this.region, library_bucket: library.bucketName, backups_bucket: backups.bucketName,
-      auth_email_from: authEmail.sender,
+      auth_email_from: authEmail.sender, cli_web_url: `https://${props.domain.domainName}`,
       jwt_secret: jwt.secretArn, openai_secret: openai.secretArn,
       volume_id: volume.ref, repository: 'https://github.com/vinneyto/camera_path.git',
       api_domain: api.apiDomain, public_ip: api.address.ref, tls_email: props.domain.tlsEmail,

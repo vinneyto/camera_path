@@ -5,6 +5,7 @@ import { Button } from "@camera-path/ui-kit";
 import Link from "next/link";
 import { Camera, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { InferenceWorkerIndicator } from "./inference-worker-indicator";
 import { NavigationLinks } from "./navigation-links";
 import { ProfileMenu } from "./profile-menu";
 
@@ -63,6 +64,7 @@ export function MobileNavigation() {
         <Camera className="size-[18px]" strokeWidth={1.6} aria-hidden="true" />
         Camera Path
       </Link>
+      <InferenceWorkerIndicator />
     </header>
   );
 }

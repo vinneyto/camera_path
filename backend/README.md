@@ -569,36 +569,32 @@ Deleting an image used by any queued/running job returns `409 generation_input_i
 `input_asset` becomes null while `input.image_asset_id` preserves history. Images cannot
 be placed in scenes or receive 3D transform defaults.
 
-For local RabbitMQ generation the backend copies the original into the worker output
-directory, sends its absolute `image_path` and `image_sha256`, and validates the returned
-manifest against those resolved parameters. This also works when the library uses S3.
-The worker removes backgrounds for generation only. The configured default rotation
-applies to generated PLY/SOG outputs from both text and image jobs.
+The command for generation is announced by the backend over a WebSocket to a paired
+`camera-path worker`. The queue and its attempts live in SQLite, not on the device.
+A worker gets source bytes over its scoped REST endpoints, renews a five-minute
+lease, and uploads attempt-scoped artifacts. Dev uses filesystem staging; production
+uses short-lived S3 PUT URLs with signed size/SHA-256. The server validates and
+publishes the artifacts; the worker never writes final library keys.
+
 Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
-status; terminal states have `completed_at`. Successful completion import updates the status
-atomically with the results. Deleting assets does not change job history. Legacy jobs keep their
-IDs/results with null type/input and unknown creation/start times; their completion timestamps
-are preserved. Apply `alembic upgrade head` before running against an existing database.
+status. The editor distinguishes waiting for a suitable worker from ordinary
+queueing. Publication commits with the terminal result; repeating an acknowledged
+completion does not create another asset. After three expired attempts the job
+fails explicitly. Deleting assets does not change job history.
 
-See [the local verification and AWS configuration guide](docs/library-import.md). Run
-`uv run alembic upgrade head` before starting against an existing database. Queue consumption is
-disabled by default; install `uv sync --frozen --extra rabbitmq`, start `docker compose up -d --wait`
-and enable `CAMERA_PATH_MESSAGE_QUEUE=rabbitmq` for local verification. Publish JSON using the
-broker's management API or an AMQP client, without a backend debug API. Ordinary job creation
-still requires the editor. AWS resource setup and live verification are separate manual work.
+Use [Dev Setup and the device login/worker commands](../README.md#local-development).
+Apply `alembic upgrade head` before running against an existing database. The
+standalone backend command is `camera-path-server` (or `python -m camera_path.main`);
+`camera-path` belongs to the worker CLI.
 
-To enable generation from the Jobs form, start the [local Trellis worker](../generation/README.md)
-and set these values in `backend/.env`.
-
-```dotenv
-CAMERA_PATH_MESSAGE_QUEUE=rabbitmq
-CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY=~/.camera-path/generation
-```
-
-The directory must match `GENERATION_OUTPUT_DIR` in the worker's configuration. If you override
-the queue names, set `CAMERA_PATH_GENERATION_REQUEST_QUEUE` and `CAMERA_PATH_GENERATION_RESULT_QUEUE`
-to the same values used by the worker. The backend reads the result manifest and imports the files
-as one library asset with a shared bounding box. The job details page refreshes through SSE.
+**Existing deployments:** stop producers, drain the legacy RabbitMQ generation and
+Painter queues, and back up SQLite before switching. Remove legacy output-directory
+and broker settings from the active backend environment. CLI-mode startup adopts
+previously undispatched queued jobs; previously dispatched or running jobs with an
+unknown outcome fail rather than silently submitting them twice. Explicit OpenAI
+jobs, drafts and terminal history are preserved. The deprecated broker adapters
+are available only with explicit legacy configuration for migration/compatibility.
+The independent [SQS library import](docs/library-import.md) is unaffected.
 
 Dev Setup writes an active `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in
 `backend/.env` when no value is configured, and preserves custom values. You can also set it manually
@@ -625,11 +621,11 @@ can enlarge/download PNGs, including unpublished versions.
 a surviving source. Deleting an active job's input is blocked. After completion,
 deletion is allowed and the job retains its original input ID.
 
-Painter has separate request/result queues and a shared local output directory.
-The backend checks job identity, frozen inputs, manifest paths, PNG size and checksum
-before an idempotent library import. Image bytes are never broker payloads.
-Painter and TRELLIS do not call each other: backend pipelines publish the chosen
-image, submit the 3D job, await its library result, then place the model.
+Painter through the local worker is the default, even if chat has an OpenAI key.
+Set `CAMERA_PATH_IMAGE_GENERATION_PROVIDER=openai` explicitly to use server-side
+OpenAI image generation, or `none` to disable new image jobs. Painter and TRELLIS
+do not call each other: the backend pipeline publishes the chosen image, submits the
+3D job, waits for the library result, and then places the model.
 
 OpenAI jobs use durable leases. A saved PNG can be imported after restart without
 a provider call. An interrupted request with an unknown outcome fails explicitly;

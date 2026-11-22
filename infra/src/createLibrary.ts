@@ -1,4 +1,4 @@
-import { RemovalPolicy, aws_s3 as s3, aws_iam as iam } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, aws_s3 as s3, aws_iam as iam } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 export function createLibrary(scope: Construct, frontendOrigins: string[]): s3.Bucket {
   const library = new s3.Bucket(scope, 'Library', {
@@ -6,6 +6,9 @@ export function createLibrary(scope: Construct, frontendOrigins: string[]): s3.B
     objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
     encryption: s3.BucketEncryption.S3_MANAGED, enforceSSL: true,
     versioned: false, removalPolicy: RemovalPolicy.RETAIN,
+    // Attempt staging is recoverable; never expire published library objects.
+    lifecycleRules: [{ id: 'ExpireInferenceStaging', prefix: 'library/_inference/',
+      expiration: Duration.days(7) }],
     cors: [{ allowedOrigins: frontendOrigins,
       allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD, s3.HttpMethods.PUT, s3.HttpMethods.POST],
       allowedHeaders: ['*'], exposedHeaders: ['ETag', 'Content-Length', 'Content-Range', 'Accept-Ranges'],

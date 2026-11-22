@@ -2,6 +2,7 @@ export const CHAT_MAX_IMAGES = 8;
 export const CHAT_MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 export const CHAT_IMAGE_ACCEPT = "image/png,image/jpeg,image/webp";
 export const PIPELINE_PHASE_LABELS: Record<string, string> = {
+  waiting_for_worker: "Waiting for worker",
   queued: "Queued for generation",
   generating: "Generating",
   importing: "Importing into library",

@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from camera_path.config import settings
+from camera_path.persistence import cli_auth as _cli_auth  # noqa: F401
+from camera_path.persistence import inference_attempt as _inference_attempt  # noqa: F401
+from camera_path.persistence import inference_upload as _inference_upload  # noqa: F401
 from camera_path.persistence.records import Base
 
 config = context.config

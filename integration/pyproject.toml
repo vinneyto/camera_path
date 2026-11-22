@@ -2,7 +2,7 @@
 name = "camera-path-api-contract-tests"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["httpx==0.28.1", "pytest==8.4.2"]
+dependencies = ["httpx==0.28.1", "pytest==8.4.2", "websockets>=15,<17"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

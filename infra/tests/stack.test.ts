@@ -55,6 +55,10 @@ test('public EC2, HTTPS domain and retained encrypted storage without NAT or Clo
   const buckets = Object.values<any>(json.Resources).filter(r => r.Type === 'AWS::S3::Bucket');
   assert.equal(buckets.length, 2);
   for (const bucket of buckets) assert.equal(bucket.DeletionPolicy, 'Retain');
+  const stage = buckets.flatMap(bucket => bucket.Properties.LifecycleConfiguration?.Rules ?? []);
+  const stagedCleanup = stage.find(rule => rule.Id === 'ExpireInferenceStaging');
+  assert.equal(stagedCleanup?.Prefix, 'library/_inference/');
+  assert.equal(stagedCleanup?.ExpirationInDays, 7);
 });
 
 test('release is tied to exact revision, script and instance, without replacing instance for code changes', () => {
@@ -127,11 +131,13 @@ test('SES identity manages DKIM/MAIL FROM DNS and grants only the configured sen
   });
   const release = resources.find(r => r.Type === 'AWS::CloudFormation::CustomResource');
   assert.equal(release.Properties.Config.auth_email_from, 'noreply@example.com');
+  assert.equal(release.Properties.Config.cli_web_url, 'https://example.com');
   const instance = resources.find(r => r.Type === 'AWS::EC2::Instance');
   assert.ok(!JSON.stringify(instance.Properties.UserData).includes('auth_email_from'));
+  assert.ok(!JSON.stringify(instance.Properties.UserData).includes('cli_web_url'));
 });
 
-test('email release settings preserve the pre-SES bootstrap payload byte for byte', () => {
+test('email and CLI release settings preserve the original bootstrap payload byte for byte', () => {
   const legacyConfig = {
     region: 'us-east-1', library_bucket: 'library', backups_bucket: 'backups',
     jwt_secret: 'jwt', openai_secret: 'openai', volume_id: 'vol-test',
@@ -146,7 +152,7 @@ test('email release settings preserve the pre-SES bootstrap payload byte for byt
   for (const sender of ['noreply@example.com', 'editor@example.com']) {
     let commands: string[] = [];
     const instance = { addUserData: (...lines: string[]) => { commands = lines; } } as unknown as ec2.Instance;
-    configureBackend(instance, { ...legacyConfig, auth_email_from: sender });
+    configureBackend(instance, { ...legacyConfig, auth_email_from: sender, cli_web_url: 'https://example.com' });
     assert.deepEqual(commands, expected);
   }
 });

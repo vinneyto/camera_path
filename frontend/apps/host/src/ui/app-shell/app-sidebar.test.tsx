@@ -6,6 +6,10 @@ import { AppSidebar } from "./app-sidebar";
 
 const route = vi.hoisted(() => ({ pathname: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
+vi.mock("./inference-worker-indicator", () => ({
+  InferenceWorkerIndicator: () => null,
+}));
+
 afterEach(cleanup);
 
 it.each([

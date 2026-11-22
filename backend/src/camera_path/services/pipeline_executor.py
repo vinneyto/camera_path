@@ -31,6 +31,7 @@ class PipelineExecutor:
         self.sessions = pipelines.sessions
         self.repository = pipelines.repository
         self.request = None
+        self.inference = None
 
     async def run(self):
         active = {}
@@ -244,14 +245,26 @@ class PipelineExecutor:
 
     async def _job_result(self, pipeline_id, owner, index, job, state):
         result = await self.jobs.result(job.id)
-        if result is None and state.get("job_id") != job.id:
+        if result is not None:
+            return result
+        if job.status.value == "queued":
+            phase = "queued"
+            if (
+                job.inference_command
+                and self.inference is not None
+                and job.inference_command not in self.inference.connected_capabilities()
+            ):
+                phase = "waiting_for_worker"
+        else:
+            phase = "generating"
+        if state.get("job_id") != job.id or (job.inference_command and state.get("phase") != phase):
             await self._change(
                 pipeline_id,
                 owner,
                 index,
                 status="waiting",
                 job_id=job.id,
-                phase="queued" if job.status.value == "queued" else "generating",
+                phase=phase,
             )
         return result
 

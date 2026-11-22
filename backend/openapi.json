@@ -312,6 +312,59 @@
         "title": "ArcLengthSample",
         "type": "object"
       },
+      "ArtifactFile": {
+        "additionalProperties": false,
+        "properties": {
+          "file_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "File Id",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "png",
+              "ply",
+              "sog"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 2147483648.0,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "format",
+          "size_bytes",
+          "sha256"
+        ],
+        "title": "ArtifactFile",
+        "type": "object"
+      },
+      "AttemptRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt_id"
+        ],
+        "title": "AttemptRequest",
+        "type": "object"
+      },
       "BoundingBox": {
         "additionalProperties": false,
         "properties": {
@@ -921,6 +974,90 @@
         "title": "ChatSelection",
         "type": "object"
       },
+      "Claim": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "command": {
+            "enum": [
+              "generate_image",
+              "generate_model"
+            ],
+            "title": "Command",
+            "type": "string"
+          },
+          "input": {
+            "additionalProperties": true,
+            "title": "Input",
+            "type": "object"
+          },
+          "lease_expires_at": {
+            "format": "date-time",
+            "title": "Lease Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lease_expires_at",
+          "attempt_id",
+          "command",
+          "input"
+        ],
+        "title": "Claim",
+        "type": "object"
+      },
+      "ClaimRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_id": {
+            "format": "uuid",
+            "title": "Claim Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id"
+        ],
+        "title": "ClaimRequest",
+        "type": "object"
+      },
+      "CliToken": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "title": "Token Type",
+            "type": "string"
+          },
+          "worker_id": {
+            "title": "Worker Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "worker_id",
+          "expires_in",
+          "expires_at"
+        ],
+        "title": "CliToken",
+        "type": "object"
+      },
       "CompiledCameraKeyframe": {
         "properties": {
           "aim": {
@@ -1166,6 +1303,96 @@
           "camera_track"
         ],
         "title": "CompiledTrajectory",
+        "type": "object"
+      },
+      "CompleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "assets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompletionAsset"
+                },
+                "maxItems": 16,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assets"
+          },
+          "attempt_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "image_upload_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "minLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Upload Id"
+          }
+        },
+        "required": [
+          "attempt_id"
+        ],
+        "title": "CompleteRequest",
+        "type": "object"
+      },
+      "CompletionAsset": {
+        "additionalProperties": false,
+        "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "primary_upload_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Primary Upload Id",
+            "type": "string"
+          },
+          "upload_ids": {
+            "items": {
+              "maxLength": 36,
+              "minLength": 36,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Upload Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "primary_upload_id",
+          "upload_ids"
+        ],
+        "title": "CompletionAsset",
         "type": "object"
       },
       "CubicBezier3D": {
@@ -1433,6 +1660,95 @@
         "title": "DepthOfFieldTimeline",
         "type": "object"
       },
+      "DeviceChallenge": {
+        "properties": {
+          "device_code": {
+            "title": "Device Code",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "interval": {
+            "title": "Interval",
+            "type": "integer"
+          },
+          "user_code": {
+            "title": "User Code",
+            "type": "string"
+          },
+          "verification_uri": {
+            "title": "Verification Uri",
+            "type": "string"
+          },
+          "verification_uri_complete": {
+            "title": "Verification Uri Complete",
+            "type": "string"
+          }
+        },
+        "required": [
+          "device_code",
+          "user_code",
+          "verification_uri",
+          "verification_uri_complete",
+          "expires_in",
+          "interval"
+        ],
+        "title": "DeviceChallenge",
+        "type": "object"
+      },
+      "DeviceDecision": {
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "user_code": {
+            "maxLength": 9,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+            "title": "User Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_code",
+          "approve"
+        ],
+        "title": "DeviceDecision",
+        "type": "object"
+      },
+      "DeviceError": {
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "DeviceError",
+        "type": "object"
+      },
+      "DeviceExchange": {
+        "properties": {
+          "device_code": {
+            "format": "password",
+            "maxLength": 43,
+            "minLength": 43,
+            "title": "Device Code",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "device_code"
+        ],
+        "title": "DeviceExchange",
+        "type": "object"
+      },
       "ErrorResponse": {
         "properties": {
           "code": {
@@ -1463,6 +1779,49 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "Failure": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "Failure",
+        "type": "object"
+      },
+      "FailureRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/Failure"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "error"
+        ],
+        "title": "FailureRequest",
         "type": "object"
       },
       "FieldError": {
@@ -1578,6 +1937,21 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "inference_command": {
+            "anyOf": [
+              {
+                "enum": [
+                  "generate_image",
+                  "generate_model"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Command"
           },
           "input": {
             "anyOf": [
@@ -1930,6 +2304,21 @@
             ],
             "title": "Image Asset Id"
           },
+          "inference_command": {
+            "anyOf": [
+              {
+                "enum": [
+                  "generate_image",
+                  "generate_model"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Command"
+          },
           "name": {
             "anyOf": [
               {
@@ -2005,6 +2394,21 @@
           "assets"
         ],
         "title": "JobSummary",
+        "type": "object"
+      },
+      "Lease": {
+        "additionalProperties": false,
+        "properties": {
+          "lease_expires_at": {
+            "format": "date-time",
+            "title": "Lease Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lease_expires_at"
+        ],
+        "title": "Lease",
         "type": "object"
       },
       "LibraryAsset": {
@@ -3000,6 +3404,76 @@
         "title": "ProjectUpdate",
         "type": "object"
       },
+      "Receipt": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Asset Ids",
+            "type": "array"
+          },
+          "attachment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Id"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "asset_ids"
+        ],
+        "title": "Receipt",
+        "type": "object"
+      },
+      "Registration": {
+        "additionalProperties": false,
+        "properties": {
+          "capabilities": {
+            "items": {
+              "enum": [
+                "generate_image",
+                "generate_model"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "capabilities"
+        ],
+        "title": "Registration",
+        "type": "object"
+      },
       "ResolvedLookAtPointAim": {
         "properties": {
           "kind": {
@@ -3980,6 +4454,126 @@
         "title": "Trajectory",
         "type": "object"
       },
+      "TransportStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "available_capabilities": {
+            "items": {
+              "enum": [
+                "generate_image",
+                "generate_model"
+              ],
+              "type": "string"
+            },
+            "title": "Available Capabilities",
+            "type": "array"
+          },
+          "capabilities": {
+            "items": {
+              "enum": [
+                "generate_image",
+                "generate_model"
+              ],
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "connected",
+          "capabilities",
+          "available_capabilities"
+        ],
+        "title": "TransportStatus",
+        "type": "object"
+      },
+      "UploadDestination": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "file_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "File Id",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "object"
+          },
+          "upload_id": {
+            "title": "Upload Id",
+            "type": "string"
+          },
+          "upload_url": {
+            "title": "Upload Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_id",
+          "upload_id",
+          "upload_url",
+          "headers",
+          "expires_at"
+        ],
+        "title": "UploadDestination",
+        "type": "object"
+      },
+      "UploadRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ArtifactFile"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "files"
+        ],
+        "title": "UploadRequest",
+        "type": "object"
+      },
+      "UploadResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/UploadDestination"
+            },
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "UploadResponse",
+        "type": "object"
+      },
       "UserSettings": {
         "properties": {
           "gaussian_dpr": {
@@ -4114,6 +4708,143 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/cli/decision": {
+      "post": {
+        "description": "Approve or deny a displayed device code as the signed-in editor.",
+        "operationId": "decideCliDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decision",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/cli/device": {
+      "post": {
+        "description": "Issue a short-lived device secret and a separate browser confirmation code.",
+        "operationId": "createCliDevice",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceChallenge"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Device",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/cli/logout": {
+      "post": {
+        "description": "Revoke this worker session without signing the editor out of the browser.",
+        "operationId": "logoutCliWorker",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/cli/token": {
+      "post": {
+        "description": "Poll or exchange an approved device secret for a one-time worker session.",
+        "operationId": "exchangeCliDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceExchange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliToken"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Token",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Verify email/password and send a code; no JWT until confirmation.",
@@ -4295,6 +5026,502 @@
         "summary": "Confirm the one-time email code",
         "tags": [
           "Auth"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/claim": {
+      "post": {
+        "description": "Atomically acquire an available job or repeat the same active claim.",
+        "operationId": "claimInferenceJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Claim",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/complete": {
+      "post": {
+        "description": "Verify staged files and publish a fenced result exactly once.",
+        "operationId": "completeInferenceJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/fail": {
+      "post": {
+        "description": "Record or replay a terminal worker failure without publishing artifacts.",
+        "operationId": "failInferenceJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Fail",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/heartbeat": {
+      "post": {
+        "description": "Renew an unexpired attempt held by this worker.",
+        "operationId": "renewInferenceLease",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttemptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Heartbeat",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/source-image": {
+      "get": {
+        "description": "Read only the source image bound to the active, owned job attempt.",
+        "operationId": "getInferenceSourceImage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Source Image",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/uploads": {
+      "post": {
+        "description": "Reserve staged upload destinations or replay matching reservations.",
+        "operationId": "reserveInferenceUploads",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reserve",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/uploads/{upload_id}": {
+      "put": {
+        "description": "Accept one bounded staged file in local development.",
+        "operationId": "putInferenceUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "upload_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Upload Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Inference Upload",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/status": {
+      "get": {
+        "description": "List connected capabilities and which are currently available to take a job.",
+        "operationId": "getInferenceStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransportStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Status",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/worker": {
+      "put": {
+        "description": "Register the model capabilities readied by this authenticated CLI session.",
+        "operationId": "registerInferenceWorker",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Register",
+        "tags": [
+          "Local inference"
         ]
       }
     },

@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_model: str = "gpt-5.6-luna"
     openai_image_model: str = "gpt-image-1.5"
-    image_generation_provider: Literal["openai", "painter", "none"] = "openai"
+    image_generation_provider: Literal["openai", "painter", "none"] = "painter"
     painter_model: str = PAINTER_MODEL
     painter_revision: str = PAINTER_REVISION
     painter_output_directory: Path | None = None
@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     )
     compile_tolerance: float = Field(default=1e-3, gt=0.0)
     database_url: str = DEFAULT_DATABASE_URL
+    cli_web_url: str = "http://localhost:3000"
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     library_directory: Path = Path.home() / ".camera-path" / "library"
     library_storage: Literal["local", "s3"] = Field(
@@ -120,8 +121,6 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_queue(self):
-        if self.image_generation_provider == "painter" and self.painter_output_directory is None:
-            raise ValueError("Painter requires CAMERA_PATH_PAINTER_OUTPUT_DIRECTORY")
         if self.message_queue == "rabbitmq":
             url = urlsplit(self.rabbitmq_url.get_secret_value())
             if url.scheme not in {"amqp", "amqps"} or not url.hostname:
