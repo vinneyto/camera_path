@@ -3,6 +3,7 @@ import { Slot } from "@camera-path/slots";
 import { TooltipProvider } from "@camera-path/ui-kit";
 import Link from "next/link";
 import { Camera } from "lucide-react";
+import { InferenceWorkerIndicator } from "./inference-worker-indicator";
 import { NavigationLinks } from "./navigation-links";
 import { ProfileMenu } from "./profile-menu";
 
@@ -16,7 +17,7 @@ export function AppSidebar() {
         <Link
           href="/"
           aria-label="Camera Path — Projects"
-          className="mb-5 flex size-8 shrink-0 items-center justify-center rounded-lg text-foreground outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-foreground outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
         >
           <Camera
             className="size-[18px]"
@@ -24,6 +25,9 @@ export function AppSidebar() {
             aria-hidden="true"
           />
         </Link>
+        <div className="relative -mt-1 mb-3">
+          <InferenceWorkerIndicator />
+        </div>
         <NavigationLinks />
         <div className="mt-auto flex flex-col items-center gap-1 pt-6 [&_button]:size-8 [&_button]:rounded-lg [&_svg]:size-4">
           <Slot name="navigation.controls" />

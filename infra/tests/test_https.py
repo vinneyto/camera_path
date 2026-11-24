@@ -36,6 +36,16 @@ class HttpsTests(unittest.TestCase):
             self.assertIn('reload nginx', h.HOOK.read_text())
             self.assertEqual(h.HOOK.stat().st_mode & 0o777, 0o755)
 
+    def test_cli_websocket_does_not_change_regular_proxy_headers(self):
+        https = h.nginx_config('api.example.com').split('server {')[2]
+        commands, normal = https.split('location / {')
+        self.assertIn('location = /api/v1/inference/commands', commands)
+        self.assertIn('proxy_set_header Upgrade $http_upgrade;', commands)
+        self.assertIn('proxy_set_header Connection "upgrade";', commands)
+        self.assertIn('proxy_read_timeout 120s;', commands)
+        self.assertNotIn('proxy_set_header Upgrade', normal)
+        self.assertIn('proxy_buffering off;', normal)
+
     def test_http_only_serves_challenges_or_redirects(self):
         http, https = h.nginx_config('api.example.com').split('server {')[1:]
         self.assertIn('/.well-known/acme-challenge/', http)

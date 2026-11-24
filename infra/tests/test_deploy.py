@@ -151,9 +151,11 @@ class AuthenticationEnvironmentTests(unittest.TestCase):
         with patch.object(d.boto3, "client", return_value=secrets):
             env = d.environment({"region": "us-east-1", "jwt_secret": "jwt",
                                  "openai_secret": "openai", "library_bucket": "library",
-                                 "auth_email_from": "noreply@example.com"})
+                                 "auth_email_from": "noreply@example.com",
+                                 "cli_web_url": "https://example.com"})
         self.assertEqual(env["CAMERA_PATH_ENVIRONMENT"], "production")
         self.assertEqual(env["CAMERA_PATH_AUTH_SECOND_FACTOR"], "email")
         self.assertEqual(env["CAMERA_PATH_AUTH_EMAIL_DELIVERY"], "ses")
         self.assertEqual(env["CAMERA_PATH_AUTH_EMAIL_FROM"], "noreply@example.com")
+        self.assertEqual(env["CAMERA_PATH_CLI_WEB_URL"], "https://example.com")
         self.assertEqual(env["FORWARDED_ALLOW_IPS"], "")

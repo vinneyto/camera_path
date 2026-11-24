@@ -1,5 +1,9 @@
 # Painter: local 2D image jobs
 
+> Use the [Camera Path CLI](../README.md#local-development) for new local
+> inference setups. Standalone RabbitMQ instructions below are for legacy
+> compatibility and draining an existing deployment only.
+
 Independent RabbitMQ worker for transparent PNG generation and editing. It uses
 FLUX.2 klein **4B** (Apache-2.0) and U²-Net background removal. The backend owns
 jobs, the library and command pipelines. Painter never calls the backend or the

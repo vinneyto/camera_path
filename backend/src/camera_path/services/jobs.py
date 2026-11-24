@@ -5,7 +5,7 @@ from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from fastapi import Request
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
 
@@ -14,6 +14,7 @@ from camera_path.persistence.enums import JobStatus
 from camera_path.persistence.records import ChatAttachmentRecord, JobRecord, LibraryAssetRecord
 from camera_path.services.chat_attachments import ChatAttachments
 from camera_path.services.generation_models import GenerationRequest
+from camera_path.services.inference import Command, command_for
 from camera_path.services.io import blocking_io
 from camera_path.services.job_completion_models import MAX_MESSAGE_BYTES
 from camera_path.services.job_inputs import JOB_INPUT_SCHEMAS, validate_job_input
@@ -69,6 +70,22 @@ class JobFields(BaseModel):
     started_at: datetime | None
     completed_at: datetime | None
     scene_placement: JobScenePlacement | None = None
+    inference_command: Command | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def inference_transport(cls, job):
+        if isinstance(job, JobRecord):
+            # Don't expose runner options, tokens or other execution checkpoints.
+            return {
+                **{
+                    key: getattr(job, key)
+                    for key in JobFields.model_fields
+                    if key != "inference_command"
+                },
+                "inference_command": command_for(job),
+            }
+        return job
 
     @field_validator("created_at", "started_at", "completed_at")
     @classmethod
@@ -105,11 +122,14 @@ class JobService:
         generation_enabled: bool = False,
         *,
         image_settings: dict | None = None,
+        cli_image: bool = False,
+        cli_model: bool = False,
     ):
         self.library = library
         self.sessions = library.repository.sessions
         self.generation_enabled = generation_enabled
         self.image_settings = image_settings
+        self.cli_image, self.cli_model = cli_image, cli_model
 
     async def create(
         self,
@@ -137,6 +157,11 @@ class JobService:
             )
             if len(payload.encode()) > MAX_MESSAGE_BYTES:
                 raise LibraryError("generation_request_too_large", 422)
+        local_transport = (
+            self.cli_model
+            if data.type == "generation"
+            else (self.cli_image and (self.image_settings or {}).get("provider") == "painter")
+        )
         job = JobRecord(
             id=job_id,
             scene_placement=scene_placement,
@@ -149,11 +174,14 @@ class JobService:
                 "phase": "queued",
                 "lease_until": 0,
                 "chat": chat_context,
+                **({"transport": "cli"} if local_transport else {}),
             }
             if data.type == "image_generation"
+            else {"transport": "cli"}
+            if local_transport
             else None,
             status=JobStatus.QUEUED if data.start else JobStatus.DRAFT,
-            generation_dispatch_pending=data.start,
+            generation_dispatch_pending=data.start and not local_transport,
             error=None,
             created_at=datetime.now(UTC),
             started_at=None,

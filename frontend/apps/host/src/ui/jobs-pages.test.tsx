@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SlotProvider } from "@camera-path/slots";
 import type { Job, JobSummary, LibraryAsset } from "@camera-path/types/api";
+import type { InferenceStatus } from "@camera-path/types/inference";
 import {
   act,
   cleanup,
@@ -88,6 +89,7 @@ let job: Job;
 let listError: boolean;
 let createError: boolean;
 let detailStatus: number;
+let worker: InferenceStatus;
 const requests: { url: string; method: string; body?: BodyInit | null }[] = [];
 const clients: QueryClient[] = [];
 
@@ -120,6 +122,7 @@ beforeEach(() => {
   listError = false;
   createError = false;
   detailStatus = 200;
+  worker = { connected: false, capabilities: [], available_capabilities: [] };
   push.mockClear();
   requests.length = 0;
   vi.stubGlobal(
@@ -130,6 +133,7 @@ beforeEach(() => {
         method: options.method ?? "GET",
         body: options.body,
       });
+      if (url === "/api/v1/inference/status") return Response.json(worker);
       if (url === "/api/v1/jobs") {
         if (options.method === "POST") {
           return createError
@@ -512,4 +516,25 @@ it("enlarges unpublished chat image results without linking to a missing library
   );
   expect(screen.getByRole("dialog")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Close image" }));
+});
+
+it("updates a queued local job when a compatible worker connects, even if it is busy", async () => {
+  const queued = {
+    ...completedSummary,
+    status: "queued",
+    inference_command: "generate_model",
+    completed_at: null,
+  } as const;
+  jobs = [queued];
+  const { client } = mount();
+  expect(await screen.findByText("Waiting for worker")).toBeTruthy();
+  worker = {
+    connected: true,
+    capabilities: ["generate_model"],
+    available_capabilities: [],
+  };
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: ["inference-status"] });
+  });
+  expect(await screen.findByText("queued")).toBeTruthy();
 });

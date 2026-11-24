@@ -29,6 +29,7 @@ import type {
   Anchor,
   AnchorCreate,
   AnchorUpdate,
+  AttemptRequest,
   CameraKeyframe,
   CameraKeyframeCreate,
   CameraKeyframeUpdate,
@@ -43,17 +44,28 @@ import type {
   ChatHistoryMessage,
   ChatMessage,
   ChatResponse,
+  Claim,
+  ClaimRequest,
+  CliToken,
   CompiledTrajectory,
+  CompleteRequest,
   DeleteScenePointParams,
   DepthOfFieldKeyframe,
   DepthOfFieldKeyframeCreate,
   DepthOfFieldKeyframeUpdate,
   DepthOfFieldTimeline,
+  DeviceChallenge,
+  DeviceDecision,
+  DeviceError,
+  DeviceExchange,
   ErrorResponse,
+  FailureRequest,
+  GetInferenceSourceImageParams,
   HTTPValidationError,
   Job,
   JobCreate,
   JobSummary,
+  Lease,
   LibraryAsset,
   LibraryAssetDefaultsUpdate,
   LibraryAssetsDelete,
@@ -70,6 +82,9 @@ import type {
   ProjectCreate,
   ProjectMetadata,
   ProjectUpdate,
+  PutInferenceUploadParams,
+  Receipt,
+  Registration,
   SceneObject,
   SceneObjectCreate,
   SceneObjectUpdate,
@@ -86,6 +101,9 @@ import type {
   SplineSegmentCreate,
   TokenResponse,
   Trajectory,
+  TransportStatus,
+  UploadRequest,
+  UploadResponse,
   UserSettings,
   UserSettingsUpdate,
   VerifyRequest
@@ -110,6 +128,406 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export type decideCliDeviceResponse204 = {
+  data: void
+  status: 204
+}
+
+export type decideCliDeviceResponse401 = {
+  data: void
+  status: 401
+}
+
+export type decideCliDeviceResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type decideCliDeviceResponseSuccess = (decideCliDeviceResponse204) & {
+  headers: Headers;
+};
+export type decideCliDeviceResponseError = (decideCliDeviceResponse401 | decideCliDeviceResponse422) & {
+  headers: Headers;
+};
+
+export type decideCliDeviceResponse = (decideCliDeviceResponseSuccess | decideCliDeviceResponseError)
+
+export const getDecideCliDeviceUrl = () => {
+
+
+
+
+  return `/api/v1/auth/cli/decision`
+}
+
+/**
+ * Approve or deny a displayed device code as the signed-in editor.
+ * @summary Decision
+ */
+export const decideCliDevice = async (deviceDecision: DeviceDecision, options?: Parameters<typeof orvalFetch>[1]): Promise<decideCliDeviceResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<decideCliDeviceResponse>(getDecideCliDeviceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deviceDecision)
+  }
+);}
+
+
+
+
+
+export const getDecideCliDeviceMutationKey = () => ['decideCliDevice'] as const;
+
+export const getDecideCliDeviceMutationOptions = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideCliDevice>>, TError,DecideCliDeviceMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideCliDevice>>, TError,DecideCliDeviceMutationVariables, TContext> => {
+
+const mutationKey = getDecideCliDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideCliDevice>>, DecideCliDeviceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  decideCliDevice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideCliDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof decideCliDevice>>>
+    export type DecideCliDeviceMutationBody = DeviceDecision
+    export type DecideCliDeviceMutationError = void | HTTPValidationError
+    export type DecideCliDeviceMutationVariables = {data: DeviceDecision}
+
+    /**
+ * @summary Decision
+ */
+export const useDecideCliDevice = <TError = void | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideCliDevice>>, TError,DecideCliDeviceMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof decideCliDevice>>,
+        TError,
+        DecideCliDeviceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDecideCliDeviceMutationOptions(options), queryClient);
+    }
+
+export type createCliDeviceResponse200 = {
+  data: DeviceChallenge
+  status: 200
+}
+
+export type createCliDeviceResponseSuccess = (createCliDeviceResponse200) & {
+  headers: Headers;
+};
+;
+
+export type createCliDeviceResponse = (createCliDeviceResponseSuccess)
+
+export const getCreateCliDeviceUrl = () => {
+
+
+
+
+  return `/api/v1/auth/cli/device`
+}
+
+/**
+ * Issue a short-lived device secret and a separate browser confirmation code.
+ * @summary Device
+ */
+export const createCliDevice = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<createCliDeviceResponse> => {
+
+  return orvalFetch<createCliDeviceResponse>(getCreateCliDeviceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateCliDeviceMutationKey = () => ['createCliDevice'] as const;
+
+export const getCreateCliDeviceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCliDevice>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCliDevice>>, TError,void, TContext> => {
+
+const mutationKey = getCreateCliDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCliDevice>>, void> = () => {
+
+
+          return  createCliDevice(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCliDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof createCliDevice>>>
+
+    export type CreateCliDeviceMutationError = unknown
+
+
+    /**
+ * @summary Device
+ */
+export const useCreateCliDevice = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCliDevice>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCliDevice>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateCliDeviceMutationOptions(options), queryClient);
+    }
+
+export type logoutCliWorkerResponse204 = {
+  data: void
+  status: 204
+}
+
+export type logoutCliWorkerResponseSuccess = (logoutCliWorkerResponse204) & {
+  headers: Headers;
+};
+;
+
+export type logoutCliWorkerResponse = (logoutCliWorkerResponseSuccess)
+
+export const getLogoutCliWorkerUrl = () => {
+
+
+
+
+  return `/api/v1/auth/cli/logout`
+}
+
+/**
+ * Revoke this worker session without signing the editor out of the browser.
+ * @summary Logout
+ */
+export const logoutCliWorker = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<logoutCliWorkerResponse> => {
+
+  return orvalFetch<logoutCliWorkerResponse>(getLogoutCliWorkerUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutCliWorkerMutationKey = () => ['logoutCliWorker'] as const;
+
+export const getLogoutCliWorkerMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutCliWorker>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutCliWorker>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutCliWorkerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutCliWorker>>, void> = () => {
+
+
+          return  logoutCliWorker(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutCliWorkerMutationResult = NonNullable<Awaited<ReturnType<typeof logoutCliWorker>>>
+
+    export type LogoutCliWorkerMutationError = unknown
+
+
+    /**
+ * @summary Logout
+ */
+export const useLogoutCliWorker = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutCliWorker>>, TError,void, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logoutCliWorker>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutCliWorkerMutationOptions(options), queryClient);
+    }
+
+export type exchangeCliDeviceResponse200 = {
+  data: CliToken
+  status: 200
+}
+
+export type exchangeCliDeviceResponse400 = {
+  data: DeviceError
+  status: 400
+}
+
+export type exchangeCliDeviceResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type exchangeCliDeviceResponseSuccess = (exchangeCliDeviceResponse200) & {
+  headers: Headers;
+};
+export type exchangeCliDeviceResponseError = (exchangeCliDeviceResponse400 | exchangeCliDeviceResponse422) & {
+  headers: Headers;
+};
+
+export type exchangeCliDeviceResponse = (exchangeCliDeviceResponseSuccess | exchangeCliDeviceResponseError)
+
+export const getExchangeCliDeviceUrl = () => {
+
+
+
+
+  return `/api/v1/auth/cli/token`
+}
+
+/**
+ * Poll or exchange an approved device secret for a one-time worker session.
+ * @summary Token
+ */
+export const exchangeCliDevice = async (deviceExchange: DeviceExchange, options?: Parameters<typeof orvalFetch>[1]): Promise<exchangeCliDeviceResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<exchangeCliDeviceResponse>(getExchangeCliDeviceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deviceExchange)
+  }
+);}
+
+
+
+
+
+export const getExchangeCliDeviceMutationKey = () => ['exchangeCliDevice'] as const;
+
+export const getExchangeCliDeviceMutationOptions = <TError = DeviceError | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exchangeCliDevice>>, TError,ExchangeCliDeviceMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof exchangeCliDevice>>, TError,ExchangeCliDeviceMutationVariables, TContext> => {
+
+const mutationKey = getExchangeCliDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exchangeCliDevice>>, ExchangeCliDeviceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  exchangeCliDevice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExchangeCliDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof exchangeCliDevice>>>
+    export type ExchangeCliDeviceMutationBody = DeviceExchange
+    export type ExchangeCliDeviceMutationError = DeviceError | HTTPValidationError
+    export type ExchangeCliDeviceMutationVariables = {data: DeviceExchange}
+
+    /**
+ * @summary Token
+ */
+export const useExchangeCliDevice = <TError = DeviceError | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exchangeCliDevice>>, TError,ExchangeCliDeviceMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof exchangeCliDevice>>,
+        TError,
+        ExchangeCliDeviceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getExchangeCliDeviceMutationOptions(options), queryClient);
+    }
 
 export type loginEditorResponse200 = {
   data: TokenResponse | ChallengeResponse
@@ -641,6 +1059,1024 @@ export const useVerifyEditorCode = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getVerifyEditorCodeMutationOptions(options), queryClient);
+    }
+
+export type claimInferenceJobResponse200 = {
+  data: Claim
+  status: 200
+}
+
+export type claimInferenceJobResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type claimInferenceJobResponseSuccess = (claimInferenceJobResponse200) & {
+  headers: Headers;
+};
+export type claimInferenceJobResponseError = (claimInferenceJobResponse422) & {
+  headers: Headers;
+};
+
+export type claimInferenceJobResponse = (claimInferenceJobResponseSuccess | claimInferenceJobResponseError)
+
+export const getClaimInferenceJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/inference/jobs/${jobId}/claim`
+}
+
+/**
+ * Atomically acquire an available job or repeat the same active claim.
+ * @summary Claim
+ */
+export const claimInferenceJob = async (jobId: string,
+    claimRequest: ClaimRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<claimInferenceJobResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<claimInferenceJobResponse>(getClaimInferenceJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(claimRequest)
+  }
+);}
+
+
+
+
+
+export const getClaimInferenceJobMutationKey = () => ['claimInferenceJob'] as const;
+
+export const getClaimInferenceJobMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimInferenceJob>>, TError,ClaimInferenceJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimInferenceJob>>, TError,ClaimInferenceJobMutationVariables, TContext> => {
+
+const mutationKey = getClaimInferenceJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimInferenceJob>>, ClaimInferenceJobMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  claimInferenceJob(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimInferenceJobMutationResult = NonNullable<Awaited<ReturnType<typeof claimInferenceJob>>>
+    export type ClaimInferenceJobMutationBody = ClaimRequest
+    export type ClaimInferenceJobMutationError = HTTPValidationError
+    export type ClaimInferenceJobMutationVariables = {jobId: string;data: ClaimRequest}
+
+    /**
+ * @summary Claim
+ */
+export const useClaimInferenceJob = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimInferenceJob>>, TError,ClaimInferenceJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof claimInferenceJob>>,
+        TError,
+        ClaimInferenceJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getClaimInferenceJobMutationOptions(options), queryClient);
+    }
+
+export type completeInferenceJobResponse200 = {
+  data: Receipt
+  status: 200
+}
+
+export type completeInferenceJobResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type completeInferenceJobResponseSuccess = (completeInferenceJobResponse200) & {
+  headers: Headers;
+};
+export type completeInferenceJobResponseError = (completeInferenceJobResponse422) & {
+  headers: Headers;
+};
+
+export type completeInferenceJobResponse = (completeInferenceJobResponseSuccess | completeInferenceJobResponseError)
+
+export const getCompleteInferenceJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/inference/jobs/${jobId}/complete`
+}
+
+/**
+ * Verify staged files and publish a fenced result exactly once.
+ * @summary Complete
+ */
+export const completeInferenceJob = async (jobId: string,
+    completeRequest: CompleteRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<completeInferenceJobResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<completeInferenceJobResponse>(getCompleteInferenceJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(completeRequest)
+  }
+);}
+
+
+
+
+
+export const getCompleteInferenceJobMutationKey = () => ['completeInferenceJob'] as const;
+
+export const getCompleteInferenceJobMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeInferenceJob>>, TError,CompleteInferenceJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeInferenceJob>>, TError,CompleteInferenceJobMutationVariables, TContext> => {
+
+const mutationKey = getCompleteInferenceJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeInferenceJob>>, CompleteInferenceJobMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  completeInferenceJob(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteInferenceJobMutationResult = NonNullable<Awaited<ReturnType<typeof completeInferenceJob>>>
+    export type CompleteInferenceJobMutationBody = CompleteRequest
+    export type CompleteInferenceJobMutationError = HTTPValidationError
+    export type CompleteInferenceJobMutationVariables = {jobId: string;data: CompleteRequest}
+
+    /**
+ * @summary Complete
+ */
+export const useCompleteInferenceJob = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeInferenceJob>>, TError,CompleteInferenceJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof completeInferenceJob>>,
+        TError,
+        CompleteInferenceJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCompleteInferenceJobMutationOptions(options), queryClient);
+    }
+
+export type failInferenceJobResponse200 = {
+  data: Receipt
+  status: 200
+}
+
+export type failInferenceJobResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type failInferenceJobResponseSuccess = (failInferenceJobResponse200) & {
+  headers: Headers;
+};
+export type failInferenceJobResponseError = (failInferenceJobResponse422) & {
+  headers: Headers;
+};
+
+export type failInferenceJobResponse = (failInferenceJobResponseSuccess | failInferenceJobResponseError)
+
+export const getFailInferenceJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/inference/jobs/${jobId}/fail`
+}
+
+/**
+ * Record or replay a terminal worker failure without publishing artifacts.
+ * @summary Fail
+ */
+export const failInferenceJob = async (jobId: string,
+    failureRequest: FailureRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<failInferenceJobResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<failInferenceJobResponse>(getFailInferenceJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(failureRequest)
+  }
+);}
+
+
+
+
+
+export const getFailInferenceJobMutationKey = () => ['failInferenceJob'] as const;
+
+export const getFailInferenceJobMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof failInferenceJob>>, TError,FailInferenceJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof failInferenceJob>>, TError,FailInferenceJobMutationVariables, TContext> => {
+
+const mutationKey = getFailInferenceJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof failInferenceJob>>, FailInferenceJobMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  failInferenceJob(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FailInferenceJobMutationResult = NonNullable<Awaited<ReturnType<typeof failInferenceJob>>>
+    export type FailInferenceJobMutationBody = FailureRequest
+    export type FailInferenceJobMutationError = HTTPValidationError
+    export type FailInferenceJobMutationVariables = {jobId: string;data: FailureRequest}
+
+    /**
+ * @summary Fail
+ */
+export const useFailInferenceJob = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof failInferenceJob>>, TError,FailInferenceJobMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof failInferenceJob>>,
+        TError,
+        FailInferenceJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFailInferenceJobMutationOptions(options), queryClient);
+    }
+
+export type renewInferenceLeaseResponse200 = {
+  data: Lease
+  status: 200
+}
+
+export type renewInferenceLeaseResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type renewInferenceLeaseResponseSuccess = (renewInferenceLeaseResponse200) & {
+  headers: Headers;
+};
+export type renewInferenceLeaseResponseError = (renewInferenceLeaseResponse422) & {
+  headers: Headers;
+};
+
+export type renewInferenceLeaseResponse = (renewInferenceLeaseResponseSuccess | renewInferenceLeaseResponseError)
+
+export const getRenewInferenceLeaseUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/inference/jobs/${jobId}/heartbeat`
+}
+
+/**
+ * Renew an unexpired attempt held by this worker.
+ * @summary Heartbeat
+ */
+export const renewInferenceLease = async (jobId: string,
+    attemptRequest: AttemptRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<renewInferenceLeaseResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<renewInferenceLeaseResponse>(getRenewInferenceLeaseUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(attemptRequest)
+  }
+);}
+
+
+
+
+
+export const getRenewInferenceLeaseMutationKey = () => ['renewInferenceLease'] as const;
+
+export const getRenewInferenceLeaseMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renewInferenceLease>>, TError,RenewInferenceLeaseMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof renewInferenceLease>>, TError,RenewInferenceLeaseMutationVariables, TContext> => {
+
+const mutationKey = getRenewInferenceLeaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renewInferenceLease>>, RenewInferenceLeaseMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  renewInferenceLease(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenewInferenceLeaseMutationResult = NonNullable<Awaited<ReturnType<typeof renewInferenceLease>>>
+    export type RenewInferenceLeaseMutationBody = AttemptRequest
+    export type RenewInferenceLeaseMutationError = HTTPValidationError
+    export type RenewInferenceLeaseMutationVariables = {jobId: string;data: AttemptRequest}
+
+    /**
+ * @summary Heartbeat
+ */
+export const useRenewInferenceLease = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renewInferenceLease>>, TError,RenewInferenceLeaseMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof renewInferenceLease>>,
+        TError,
+        RenewInferenceLeaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRenewInferenceLeaseMutationOptions(options), queryClient);
+    }
+
+export type getInferenceSourceImageResponse200ImageJpeg = {
+  data: Blob
+  status: 200
+}
+
+export type getInferenceSourceImageResponse200ImagePng = {
+  data: Blob
+  status: 200
+}
+
+export type getInferenceSourceImageResponse200ImageWebp = {
+  data: Blob
+  status: 200
+}
+
+export type getInferenceSourceImageResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getInferenceSourceImageResponseSuccess = (getInferenceSourceImageResponse200ImageJpeg | getInferenceSourceImageResponse200ImagePng | getInferenceSourceImageResponse200ImageWebp) & {
+  headers: Headers;
+};
+export type getInferenceSourceImageResponseError = (getInferenceSourceImageResponse422) & {
+  headers: Headers;
+};
+
+export type getInferenceSourceImageResponse = (getInferenceSourceImageResponseSuccess | getInferenceSourceImageResponseError)
+
+export const getGetInferenceSourceImageUrl = (jobId: string,
+    params: GetInferenceSourceImageParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/inference/jobs/${jobId}/source-image?${stringifiedParams}` : `/api/v1/inference/jobs/${jobId}/source-image`
+}
+
+/**
+ * Read only the source image bound to the active, owned job attempt.
+ * @summary Source Image
+ */
+export const getInferenceSourceImage = async (jobId: string,
+    params: GetInferenceSourceImageParams, options?: Parameters<typeof orvalFetch>[1]): Promise<getInferenceSourceImageResponse> => {
+
+  return orvalFetch<getInferenceSourceImageResponse>(getGetInferenceSourceImageUrl(jobId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInferenceSourceImageQueryKey = (jobId: string,
+    params?: GetInferenceSourceImageParams,) => {
+    return [
+    `/api/v1/inference/jobs/${jobId}/source-image`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetInferenceSourceImageQueryOptions = <TData = Awaited<ReturnType<typeof getInferenceSourceImage>>, TError = HTTPValidationError>(jobId: string,
+    params: GetInferenceSourceImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceSourceImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInferenceSourceImageQueryKey(jobId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInferenceSourceImage>>> = ({ signal }) => getInferenceSourceImage(jobId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInferenceSourceImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetInferenceSourceImageQueryResult = NonNullable<Awaited<ReturnType<typeof getInferenceSourceImage>>>
+export type GetInferenceSourceImageQueryError = HTTPValidationError
+
+
+export function useGetInferenceSourceImage<TData = Awaited<ReturnType<typeof getInferenceSourceImage>>, TError = HTTPValidationError>(
+ jobId: string,
+    params: GetInferenceSourceImageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceSourceImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInferenceSourceImage>>,
+          TError,
+          Awaited<ReturnType<typeof getInferenceSourceImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetInferenceSourceImage<TData = Awaited<ReturnType<typeof getInferenceSourceImage>>, TError = HTTPValidationError>(
+ jobId: string,
+    params: GetInferenceSourceImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceSourceImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInferenceSourceImage>>,
+          TError,
+          Awaited<ReturnType<typeof getInferenceSourceImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetInferenceSourceImage<TData = Awaited<ReturnType<typeof getInferenceSourceImage>>, TError = HTTPValidationError>(
+ jobId: string,
+    params: GetInferenceSourceImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceSourceImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Source Image
+ */
+
+export function useGetInferenceSourceImage<TData = Awaited<ReturnType<typeof getInferenceSourceImage>>, TError = HTTPValidationError>(
+ jobId: string,
+    params: GetInferenceSourceImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceSourceImage>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetInferenceSourceImageQueryOptions(jobId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type reserveInferenceUploadsResponse200 = {
+  data: UploadResponse
+  status: 200
+}
+
+export type reserveInferenceUploadsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type reserveInferenceUploadsResponseSuccess = (reserveInferenceUploadsResponse200) & {
+  headers: Headers;
+};
+export type reserveInferenceUploadsResponseError = (reserveInferenceUploadsResponse422) & {
+  headers: Headers;
+};
+
+export type reserveInferenceUploadsResponse = (reserveInferenceUploadsResponseSuccess | reserveInferenceUploadsResponseError)
+
+export const getReserveInferenceUploadsUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/v1/inference/jobs/${jobId}/uploads`
+}
+
+/**
+ * Reserve staged upload destinations or replay matching reservations.
+ * @summary Reserve
+ */
+export const reserveInferenceUploads = async (jobId: string,
+    uploadRequest: UploadRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<reserveInferenceUploadsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<reserveInferenceUploadsResponse>(getReserveInferenceUploadsUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(uploadRequest)
+  }
+);}
+
+
+
+
+
+export const getReserveInferenceUploadsMutationKey = () => ['reserveInferenceUploads'] as const;
+
+export const getReserveInferenceUploadsMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reserveInferenceUploads>>, TError,ReserveInferenceUploadsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reserveInferenceUploads>>, TError,ReserveInferenceUploadsMutationVariables, TContext> => {
+
+const mutationKey = getReserveInferenceUploadsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reserveInferenceUploads>>, ReserveInferenceUploadsMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  reserveInferenceUploads(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReserveInferenceUploadsMutationResult = NonNullable<Awaited<ReturnType<typeof reserveInferenceUploads>>>
+    export type ReserveInferenceUploadsMutationBody = UploadRequest
+    export type ReserveInferenceUploadsMutationError = HTTPValidationError
+    export type ReserveInferenceUploadsMutationVariables = {jobId: string;data: UploadRequest}
+
+    /**
+ * @summary Reserve
+ */
+export const useReserveInferenceUploads = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reserveInferenceUploads>>, TError,ReserveInferenceUploadsMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reserveInferenceUploads>>,
+        TError,
+        ReserveInferenceUploadsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReserveInferenceUploadsMutationOptions(options), queryClient);
+    }
+
+export type putInferenceUploadResponse204 = {
+  data: void
+  status: 204
+}
+
+export type putInferenceUploadResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type putInferenceUploadResponseSuccess = (putInferenceUploadResponse204) & {
+  headers: Headers;
+};
+export type putInferenceUploadResponseError = (putInferenceUploadResponse422) & {
+  headers: Headers;
+};
+
+export type putInferenceUploadResponse = (putInferenceUploadResponseSuccess | putInferenceUploadResponseError)
+
+export const getPutInferenceUploadUrl = (jobId: string,
+    uploadId: string,
+    params: PutInferenceUploadParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/inference/jobs/${jobId}/uploads/${uploadId}?${stringifiedParams}` : `/api/v1/inference/jobs/${jobId}/uploads/${uploadId}`
+}
+
+/**
+ * Accept one bounded staged file in local development.
+ * @summary Put Inference Upload
+ */
+export const putInferenceUpload = async (jobId: string,
+    uploadId: string,
+    params: PutInferenceUploadParams, options?: Parameters<typeof orvalFetch>[1]): Promise<putInferenceUploadResponse> => {
+
+  return orvalFetch<putInferenceUploadResponse>(getPutInferenceUploadUrl(jobId,uploadId,params),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getPutInferenceUploadMutationKey = () => ['putInferenceUpload'] as const;
+
+export const getPutInferenceUploadMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putInferenceUpload>>, TError,PutInferenceUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putInferenceUpload>>, TError,PutInferenceUploadMutationVariables, TContext> => {
+
+const mutationKey = getPutInferenceUploadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putInferenceUpload>>, PutInferenceUploadMutationVariables> = (props) => {
+          const {jobId,uploadId,params} = props ?? {};
+
+          return  putInferenceUpload(jobId,uploadId,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutInferenceUploadMutationResult = NonNullable<Awaited<ReturnType<typeof putInferenceUpload>>>
+
+    export type PutInferenceUploadMutationError = HTTPValidationError
+    export type PutInferenceUploadMutationVariables = {jobId: string;uploadId: string;params: PutInferenceUploadParams}
+
+    /**
+ * @summary Put Inference Upload
+ */
+export const usePutInferenceUpload = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putInferenceUpload>>, TError,PutInferenceUploadMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putInferenceUpload>>,
+        TError,
+        PutInferenceUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutInferenceUploadMutationOptions(options), queryClient);
+    }
+
+export type getInferenceStatusResponse200 = {
+  data: TransportStatus
+  status: 200
+}
+
+export type getInferenceStatusResponseSuccess = (getInferenceStatusResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getInferenceStatusResponse = (getInferenceStatusResponseSuccess)
+
+export const getGetInferenceStatusUrl = () => {
+
+
+
+
+  return `/api/v1/inference/status`
+}
+
+/**
+ * List connected capabilities and which are currently available to take a job.
+ * @summary Status
+ */
+export const getInferenceStatus = async ( options?: Parameters<typeof orvalFetch>[1]): Promise<getInferenceStatusResponse> => {
+
+  return orvalFetch<getInferenceStatusResponse>(getGetInferenceStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInferenceStatusQueryKey = () => {
+    return [
+    `/api/v1/inference/status`
+    ] as const;
+    }
+
+
+export const getGetInferenceStatusQueryOptions = <TData = Awaited<ReturnType<typeof getInferenceStatus>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceStatus>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInferenceStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInferenceStatus>>> = ({ signal }) => getInferenceStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInferenceStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetInferenceStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getInferenceStatus>>>
+export type GetInferenceStatusQueryError = unknown
+
+
+export function useGetInferenceStatus<TData = Awaited<ReturnType<typeof getInferenceStatus>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInferenceStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getInferenceStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetInferenceStatus<TData = Awaited<ReturnType<typeof getInferenceStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInferenceStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getInferenceStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetInferenceStatus<TData = Awaited<ReturnType<typeof getInferenceStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceStatus>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Status
+ */
+
+export function useGetInferenceStatus<TData = Awaited<ReturnType<typeof getInferenceStatus>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInferenceStatus>>, TError, TData>>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetInferenceStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type registerInferenceWorkerResponse204 = {
+  data: void
+  status: 204
+}
+
+export type registerInferenceWorkerResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type registerInferenceWorkerResponseSuccess = (registerInferenceWorkerResponse204) & {
+  headers: Headers;
+};
+export type registerInferenceWorkerResponseError = (registerInferenceWorkerResponse422) & {
+  headers: Headers;
+};
+
+export type registerInferenceWorkerResponse = (registerInferenceWorkerResponseSuccess | registerInferenceWorkerResponseError)
+
+export const getRegisterInferenceWorkerUrl = () => {
+
+
+
+
+  return `/api/v1/inference/worker`
+}
+
+/**
+ * Register the model capabilities readied by this authenticated CLI session.
+ * @summary Register
+ */
+export const registerInferenceWorker = async (registration: Registration, options?: Parameters<typeof orvalFetch>[1]): Promise<registerInferenceWorkerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return orvalFetch<registerInferenceWorkerResponse>(getRegisterInferenceWorkerUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(registration)
+  }
+);}
+
+
+
+
+
+export const getRegisterInferenceWorkerMutationKey = () => ['registerInferenceWorker'] as const;
+
+export const getRegisterInferenceWorkerMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerInferenceWorker>>, TError,RegisterInferenceWorkerMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerInferenceWorker>>, TError,RegisterInferenceWorkerMutationVariables, TContext> => {
+
+const mutationKey = getRegisterInferenceWorkerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerInferenceWorker>>, RegisterInferenceWorkerMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerInferenceWorker(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterInferenceWorkerMutationResult = NonNullable<Awaited<ReturnType<typeof registerInferenceWorker>>>
+    export type RegisterInferenceWorkerMutationBody = Registration
+    export type RegisterInferenceWorkerMutationError = HTTPValidationError
+    export type RegisterInferenceWorkerMutationVariables = {data: Registration}
+
+    /**
+ * @summary Register
+ */
+export const useRegisterInferenceWorker = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerInferenceWorker>>, TError,RegisterInferenceWorkerMutationVariables, TContext>, request?: SecondParameter<typeof orvalFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registerInferenceWorker>>,
+        TError,
+        RegisterInferenceWorkerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegisterInferenceWorkerMutationOptions(options), queryClient);
     }
 
 export type listJobsResponse200 = {

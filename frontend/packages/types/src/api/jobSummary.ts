@@ -9,6 +9,7 @@ import type { JobError } from './jobError';
 import type { JobResultSummary } from './jobResultSummary';
 import type { JobScenePlacement } from './jobScenePlacement';
 import type { JobStatus } from './jobStatus';
+import type { JobSummaryInferenceCommand } from './jobSummaryInferenceCommand';
 
 export interface JobSummary {
   /** @minimum 0 */
@@ -19,6 +20,7 @@ export interface JobSummary {
   error: JobError | null;
   id: string;
   image_asset_id?: string | null;
+  inference_command?: JobSummaryInferenceCommand;
   /** Explicit job name or an automatic name saved at creation. */
   name: string | null;
   prompt: string | null;

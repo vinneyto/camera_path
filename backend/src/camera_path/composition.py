@@ -112,7 +112,7 @@ def with_infrastructure(
             configured.openai_api_key.get_secret_value() if configured.openai_api_key else None
         )
         image_provider = configured.image_generation_provider
-        image_enabled = (image_provider == "painter" and painter_queue is not None) or (
+        image_enabled = (image_provider == "painter") or (
             image_provider == "openai" and image_key is not None
         )
         image_settings = (

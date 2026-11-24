@@ -27,6 +27,18 @@ def has_library_file_header(key: str, header: bytes) -> bool:
 
 
 class LibraryStorage(ABC):
+    inference_direct_uploads = False
+
+    async def inference_upload_destination(
+        self, key: str, size_bytes: int, sha256: str
+    ) -> tuple[str, dict[str, str], int] | None:
+        """Return a provider upload URL, signed headers and TTL; None uses the dev route."""
+        return None
+
+    def old_local_inference_staging(self, cutoff: float) -> list[str]:
+        """Aged dev staging paths; S3 handles orphans via a lifecycle rule."""
+        return []
+
     def identity(self, key: str) -> str:
         raise NotImplementedError
 

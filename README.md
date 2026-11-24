@@ -9,10 +9,11 @@ OpenAPI and the generated frontend client describe the HTTP interface.
 camera_path/
 ├── backend/     # FastAPI application, geometry compiler, agent and tests
 ├── frontend/    # Next.js camera-path editor
-├── generation/  # Standalone Trellis 3D worker
-├── painter/     # Standalone FLUX 2D worker
+├── cli/         # Camera Path device login and local inference worker
+├── generation/  # Trellis 3D model runner
+├── painter/     # FLUX 2D model runner
 ├── infra/       # AWS deployment
-├── integration/ # HTTP and RabbitMQ integration tests
+├── integration/ # HTTP integration and legacy compatibility tests
 └── rust/sift/   # SIFT detector, WASM module and native CLI
 ```
 
@@ -24,58 +25,57 @@ with Compose. Open the repository root in VS Code and choose **Tasks: Run Task**
 1. **Dev Setup** installs the Python and npm dependencies, prepares the WASM
    toolchain, creates missing environment files and runs the database migrations.
    For a new database it prompts for the editor's email and password. On Apple
-   Silicon it separately offers Trellis (3D) and Painter (2D), including missing weights.
-2. **Dev Start** launches **Dev Frontend**, **Dev Backend**, **Dev Trellis** and **Dev Painter** in
-   separate terminals. Backend and worker tasks first start the shared RabbitMQ
-   and Mailpit containers. Each worker runs when its local generation is configured.
+   Silicon it offers to prepare the Painter and Trellis model environments and weights.
+2. **Dev Start** launches **Dev Frontend**, **Dev Backend**, and Mailpit. Inference
+   is optional and runs in a separate **Dev Local Inference** task after device login.
+3. Open [the editor](http://127.0.0.1:3000), and use [Mailpit](http://127.0.0.1:8025)
+   if an email code is needed. Sign in to the CLI against this dev instance:
 
-Start, stop or restart each service through its own task and view its logs in its
-dedicated terminal. Use **Tasks: Terminate Task** to stop a service, or choose
-**All** to stop all running tasks.
+   ```bash
+   uv run --project cli camera-path --profile dev login
+   ```
 
-Open [the editor](http://127.0.0.1:3000) and use
-[Mailpit](http://127.0.0.1:8025) to read the email confirmation code. The backend API
-listens on `127.0.0.1:8000`. RabbitMQ and Mailpit stay up between launches.
+   Compare the code in the terminal and browser before approving. Run
+   **Dev Local Inference**, or use the CLI manually:
 
-From the repository root, the terminal launcher also supports starting the full stack.
-Press Ctrl+C to stop its application processes.
+   ```bash
+   uv run --project cli camera-path --profile dev worker
+   ```
+
+   One worker handles both prepared model families serially. Missing model
+   weights can be downloaded separately with:
+
+   ```bash
+   uv run --project cli camera-path download-weights
+   ```
+
+Run the application from a terminal instead with `./scripts/dev.sh setup` and
+`./scripts/dev.sh start`. Ctrl+C stops its application processes. Mailpit stays
+up. For separate terminals, run `./scripts/dev.sh infrastructure` once, then
+`./scripts/dev.sh frontend` and `./scripts/dev.sh backend`.
+
+New clones use SQLite and file storage under `backend/.dev/`. If you are
+switching an existing RabbitMQ dev clone, let its existing workers drain and
+stop them first, then run **Dev Setup** to change that clone to the CLI transport.
+Do not run old and new workers for the same jobs during cutover. The setup
+preserves an existing explicit image provider selection; set
+`CAMERA_PATH_IMAGE_GENERATION_PROVIDER=painter` in `backend/.env` for local
+Painter, `openai` for explicit server-side image generation, or `none` to
+disable image jobs. This selection is separate from the chat model. Independent
+SQS library imports are not changed by the CLI.
+
+Choose unique ports if running dev clones simultaneously. Set the same
+environment for app start, CLI login and worker:
 
 ```bash
-./scripts/dev.sh setup
+export CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019
 ./scripts/dev.sh start
 ```
 
-For separate terminals, use `./scripts/dev.sh infrastructure` once, then launch
-`./scripts/dev.sh frontend`, `./scripts/dev.sh backend` and
-`./scripts/dev.sh trellis` and `./scripts/dev.sh painter` in their own terminals.
-
-After pulling a schema change, run just the migrations with `./scripts/dev.sh migrate`.
-New clones use SQLite and filesystem storage under `backend/.dev/`.
-
-All clones share the RabbitMQ and Mailpit containers. **Dev Setup** enables RabbitMQ
-and assigns queues with a prefix derived from the clone's absolute path, such as
-`camera-path.a1b2c3d4e5f6.generation.requests`. It writes matching queue names to
-`backend/.env`, `generation/.env` and `painter/.env` before the setup prompts.
-Repeated setup in the same directory keeps the same queue names.
-Rerun **Dev Setup** to update a clone prepared before this change. Messages already
-sent to its previous queues stay in those queues.
-
-Opting in to Trellis also configures the backend's broker URL and output path to
-match `generation/.env`. Dev Setup also enables `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]`
-for new generated assets when no rotation is configured, and preserves custom values.
-For simultaneous local instances, choose different HTTP ports.
-
-```bash
-CAMERA_PATH_DEV_BACKEND_PORT=8019 CAMERA_PATH_DEV_FRONTEND_PORT=3019 ./scripts/dev.sh start
-```
-
-See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md)
-for configuration and development commands.
-
-See [generation/README.md](generation/README.md) and [painter/README.md](painter/README.md)
-to run and test the standalone 3D and 2D workers. Choosing Painter during setup
-sets `CAMERA_PATH_IMAGE_GENERATION_PROVIDER=painter`; OpenAI remains available
-through the same image job type when selected in the backend configuration.
+Always pass `--profile dev` during development; the CLI otherwise targets
+production. After pulling a schema change, run `./scripts/dev.sh migrate`.
+See [backend](backend/README.md) and [frontend](frontend/README.md) setup docs
+and the [Trellis](generation/README.md) and [Painter](painter/README.md) runner docs.
 
 ## AWS infrastructure
 

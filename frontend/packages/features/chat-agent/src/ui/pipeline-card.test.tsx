@@ -81,3 +81,18 @@ it("copies the actual execution including resolved inputs, job ID and error", as
   await screen.findByText("Execution JSON copied");
   expect(JSON.parse(writeText.mock.calls[0][0])).toEqual(failed);
 });
+
+it("renders Waiting for worker from the queued inference step", () => {
+  render(
+    <PipelineCard
+      pipeline={{
+        ...pipeline,
+        status: "running",
+        steps: [
+          { id: "model", status: "waiting", phase: "waiting_for_worker" },
+        ],
+      }}
+    />,
+  );
+  expect(screen.getByText("Waiting for worker")).toBeTruthy();
+});

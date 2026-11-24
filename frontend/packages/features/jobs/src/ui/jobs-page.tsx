@@ -1,6 +1,7 @@
 "use client";
 
 import { useJobsCatalog } from "@camera-path/api/resources";
+import { useInferenceStatus } from "@camera-path/api/inference/use-inference-status";
 import { Button } from "@camera-path/ui-kit";
 import { CreateJobButton } from "./create-job-button";
 import { JobListItem } from "./job-list-item";
@@ -8,6 +9,9 @@ import { JobListItem } from "./job-list-item";
 export function JobsPage() {
   const jobs = useJobsCatalog();
   const entries = jobs.data?.data ?? [];
+  const { status: worker } = useInferenceStatus(
+    entries.some((job) => job.status === "queued" && job.inference_command),
+  );
 
   return (
     <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-5 py-12">
@@ -48,7 +52,7 @@ export function JobsPage() {
             <ul className="space-y-2" aria-label="Jobs">
               {entries.map((job) => (
                 <li key={job.id}>
-                  <JobListItem job={job} />
+                  <JobListItem job={job} worker={worker} />
                 </li>
               ))}
             </ul>
