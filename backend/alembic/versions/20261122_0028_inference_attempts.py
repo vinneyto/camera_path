@@ -3,6 +3,7 @@
 import sqlalchemy as sa
 
 from alembic import op
+from camera_path.persistence.migration_schema import ensure_index, ensure_table
 
 revision = "20261122_0028"
 down_revision = "20261122_0027"
@@ -11,7 +12,7 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
+    ensure_table(
         "inference_attempts",
         sa.Column("id", sa.Text(), primary_key=True),
         sa.Column(
@@ -28,15 +29,15 @@ def upgrade():
         sa.UniqueConstraint("job_id", "ordinal", name="uq_inference_attempt_ordinal"),
     )
     for key in ("job", "worker"):
-        op.create_index(
+        ensure_index(
             f"uq_inference_active_{key}",
             "inference_attempts",
             [f"{key}_id"],
             unique=True,
-            sqlite_where=sa.text("state = 'active'"),
+            where="state = 'active'",
         )
-    op.create_index("ix_inference_expiry", "inference_attempts", ["state", "lease_expires_at"])
-    op.create_table(
+    ensure_index("ix_inference_expiry", "inference_attempts", ["state", "lease_expires_at"])
+    ensure_table(
         "inference_uploads",
         sa.Column("id", sa.Text(), primary_key=True),
         sa.Column(

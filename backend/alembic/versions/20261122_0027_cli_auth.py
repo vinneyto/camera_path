@@ -3,6 +3,7 @@
 import sqlalchemy as sa
 
 from alembic import op
+from camera_path.persistence.migration_schema import ensure_table
 
 revision = "20261122_0027"
 down_revision = "20261115_0026"
@@ -11,7 +12,7 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
+    ensure_table(
         "cli_devices",
         sa.Column("device_digest", sa.Text(), primary_key=True),
         sa.Column("user_digest", sa.Text(), nullable=False, unique=True),
@@ -21,7 +22,7 @@ def upgrade():
         sa.Column("interval", sa.Integer(), nullable=False),
         sa.Column("approved", sa.Boolean(), nullable=True),
     )
-    op.create_table(
+    ensure_table(
         "cli_sessions",
         sa.Column("token_digest", sa.Text(), primary_key=True),
         sa.Column("worker_id", sa.Text(), nullable=False, unique=True),
