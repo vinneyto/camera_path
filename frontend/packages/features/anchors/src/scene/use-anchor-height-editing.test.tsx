@@ -18,6 +18,8 @@ it.each([
   { selected: "model", ending: "release" },
   { selected: null, ending: "cancel" },
   { selected: "model", ending: "cancel" },
+  { selected: "anchor:comment", ending: "release" },
+  { selected: "anchor:comment", ending: "cancel" },
 ])(
   "keeps selection $selected unchanged through an anchor drag and $ending",
   async ({ selected, ending }) => {
@@ -45,6 +47,8 @@ it.each([
       return {
         button: 0,
         pointerId: 7,
+        clientX: 100,
+        clientY: -y * 100,
         target,
         ray: new Ray(new Vector3(0, y, 3), new Vector3(0, 0, -1)),
         stopPropagation: vi.fn(),
@@ -75,11 +79,7 @@ it.each([
     }
     act(() => trigger("onPointerDown", 0.5));
     expect(store.getState().sceneInteraction.selectedObjectId).toBe(selected);
-    expect(result.current.preview).toEqual({
-      anchorId: anchor.id,
-      dragging: true,
-      lift: 0.5,
-    });
+    expect(result.current.preview).toBeNull();
     expect(store.getState().tool.activeTool).toBe("anchor-height");
     expect(target.setPointerCapture).toHaveBeenCalledWith(7);
     act(() => trigger("onPointerMove", 1.5));

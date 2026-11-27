@@ -37,6 +37,7 @@ export async function proxyApiRequest(
     "if-match",
     "range",
     "if-range",
+    "last-event-id",
   ]) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);

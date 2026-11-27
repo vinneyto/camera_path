@@ -4,8 +4,11 @@ on:
   pull_request:
     paths:
       - "backend/**"
+      - "cli/**"
       - "integration/**"
       - "generation/**"
+      - "painter/**"
+      - "scripts/**"
       - ".github/workflows/backend.yml"
   workflow_dispatch:
     inputs:
@@ -18,6 +21,27 @@ permissions:
   contents: read
 
 jobs:
+  cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.3"
+      - name: Local CLI transport and model-runner tests (no weights)
+        run: uv run --frozen --project cli pytest cli/tests
+
+  painter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.10.3"
+      - run: uv sync --frozen --project painter
+      - name: Painter request, replay and PNG integrity tests
+        run: painter/.venv/bin/python -m unittest discover -s painter/tests
+
   generation:
     runs-on: ubuntu-latest
     steps:

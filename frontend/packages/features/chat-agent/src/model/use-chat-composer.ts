@@ -1,6 +1,10 @@
 "use client";
 import type { Anchor } from "@camera-path/types/project";
+import { useEditorActions } from "@camera-path/actions";
+import { useChatComposerState } from "@camera-path/store";
 import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
+
+import { CHAT_MAX_IMAGES, CHAT_MAX_IMAGE_BYTES } from "../constants";
 
 interface ChatComposerOptions {
   pending: boolean;
@@ -8,12 +12,17 @@ interface ChatComposerOptions {
     id: string,
     message: string,
     onAccepted: () => void,
+    files?: File[],
   ) => Promise<void>;
 }
 
 // Lives above the responsive panel so its draft and retry ID survive closing or resizing.
 export function useChatComposer({ pending, onSend }: ChatComposerOptions) {
-  const [message, setMessage] = useState("");
+  const { message } = useChatComposerState();
+  const { changeChatMessage, acceptChatMessage, referenceChatObject } =
+    useEditorActions();
+  const [files, setFiles] = useState<File[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const draftIdRef = useRef<string | null>(null);
   const submittedTextRef = useRef<string | null>(null);
 
@@ -22,14 +31,25 @@ export function useChatComposer({ pending, onSend }: ChatComposerOptions) {
     const text = message.trim();
     if (!text || pending) return;
     const submittedMessage = message;
+    const submittedFiles = files;
+    if (submittedTextRef.current !== null && submittedTextRef.current !== text)
+      draftIdRef.current = null;
     const messageId = draftIdRef.current ?? crypto.randomUUID();
     draftIdRef.current = messageId;
     submittedTextRef.current = text;
-    void onSend(messageId, text, () => {
-      draftIdRef.current = null;
-      submittedTextRef.current = null;
-      setMessage((current) => (current === submittedMessage ? "" : current));
-    });
+    void onSend(
+      messageId,
+      text,
+      () => {
+        draftIdRef.current = null;
+        submittedTextRef.current = null;
+        acceptChatMessage(submittedMessage);
+        setFiles((current) =>
+          current.filter((file) => !submittedFiles.includes(file)),
+        );
+      },
+      submittedFiles,
+    );
   }
 
   function changeMessage(nextMessage: string) {
@@ -40,7 +60,7 @@ export function useChatComposer({ pending, onSend }: ChatComposerOptions) {
       draftIdRef.current = null;
       submittedTextRef.current = null;
     }
-    setMessage(nextMessage);
+    changeChatMessage(nextMessage);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -55,11 +75,41 @@ export function useChatComposer({ pending, onSend }: ChatComposerOptions) {
   }
 
   function insertAnchor(anchor: Anchor) {
-    setMessage(
-      (current) =>
-        `${current}${current && !current.endsWith(" ") ? " " : ""}@${anchor.label} `,
-    );
+    referenceChatObject(anchor.label);
   }
 
-  return { message, submit, changeMessage, handleKeyDown, insertAnchor };
+  function addFiles(next: File[]) {
+    if (
+      files.length + next.length > CHAT_MAX_IMAGES ||
+      next.some(
+        (file) =>
+          file.size > CHAT_MAX_IMAGE_BYTES ||
+          !["image/png", "image/jpeg", "image/webp"].includes(file.type),
+      )
+    ) {
+      setAttachmentError(
+        "Attach up to 8 PNG, JPEG or WebP images, at most 20 MB each.",
+      );
+      return;
+    }
+    draftIdRef.current = null;
+    setAttachmentError(null);
+    setFiles((current) => [...current, ...next]);
+  }
+  function removeFile(index: number) {
+    draftIdRef.current = null;
+    setFiles((current) => current.filter((_, i) => i !== index));
+    setAttachmentError(null);
+  }
+  return {
+    message,
+    submit,
+    changeMessage,
+    handleKeyDown,
+    insertAnchor,
+    files,
+    addFiles,
+    removeFile,
+    attachmentError,
+  };
 }

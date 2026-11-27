@@ -3,11 +3,18 @@ import re
 import pytest
 from conftest import CONTRACT, OPERATIONS
 
+# Both login flows start before an editor or worker session has been issued.
+PUBLIC_AUTH_WRITES = {
+    "/api/v1/auth/login",
+    "/api/v1/auth/verify",
+    "/api/v1/auth/resend",
+    "/api/v1/auth/cli/device",
+    "/api/v1/auth/cli/token",
+}
 PROTECTED = [
     (method, path)
     for method, path, _ in OPERATIONS
-    if method != "GET"
-    and path not in {"/api/v1/auth/login", "/api/v1/auth/verify", "/api/v1/auth/resend"}
+    if method != "GET" and path not in PUBLIC_AUTH_WRITES
 ]
 
 

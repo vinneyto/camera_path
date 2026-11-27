@@ -40,11 +40,36 @@ def test_invalid_job_input_does_not_create_partial_job(editor, body):
     assert b.request("GET", "/api/v1/jobs", auth=False).json() == []
 
 
-def test_start_without_generation_configuration_leaves_no_job(editor):
+def test_generation_queues_without_a_connected_worker_and_survives_restart(editor):
+    job = editor.request(
+        "POST",
+        "/api/v1/jobs",
+        201,
+        json={"type": "generation", "input": {"prompt": "Chair"}, "start": True},
+    ).json()
+    assert job["status"] == "queued"
+    assert job["inference_command"] == "generate_model"
+    assert job["started_at"] is None and job["assets"] == []
+    assert editor.request("GET", "/api/v1/inference/status").json()["connected"] is False
+
+    editor.stop()
+    editor.start()
+    assert editor.request("GET", f"/api/v1/jobs/{job['id']}", auth=False).json() == job
+
+
+def test_image_generation_type_and_empty_media_endpoints(editor):
+    job = editor.request(
+        "POST",
+        "/api/v1/jobs",
+        201,
+        json={"type": "image_generation", "input": {"prompt": "A wooden chair"}},
+    ).json()
+    assert job["type"] == "image_generation" and job["status"] == "draft"
+    for suffix in ("image", "source-image"):
+        editor.request("GET", f"/api/v1/jobs/{job['id']}/{suffix}", 404, auth=False)
     editor.request(
         "POST",
         "/api/v1/jobs",
         503,
-        json={"type": "generation", "input": {"prompt": "Chair"}, "start": True},
+        json={"type": "image_generation", "input": {"prompt": "Chair"}, "start": True},
     )
-    assert editor.request("GET", "/api/v1/jobs", auth=False).json() == []

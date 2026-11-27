@@ -3,7 +3,10 @@ import { useAuth } from "@camera-path/api/identity/auth-provider";
 import { useSceneModels } from "@camera-path/api/resources";
 import { useCameraState, useEditorTool } from "@camera-path/store";
 
-import { useSceneObjectActionMutation } from "@camera-path/actions";
+import {
+  useSceneObjectActionMutation,
+  useSceneObjectTransform,
+} from "@camera-path/actions";
 import type { SceneSurfaceReady } from "@camera-path/scene-runtime/surface";
 import { SurfaceTargetRing } from "@camera-path/scene-runtime/three/surface-target-ring";
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
@@ -36,6 +39,7 @@ export function SceneModels() {
   const viewport = useViewportServices();
   const surfaceEvents = useSurfaceEvents();
   const action = useSceneObjectActionMutation();
+  const transform = useSceneObjectTransform();
   const placement = useCloudPlacementInteraction({
     clouds,
     onPlace: async (assetId, position) => {
@@ -143,7 +147,7 @@ export function SceneModels() {
         report(id, null);
       }
   }, [clouds, report]);
-  const error = action.error ?? query.error;
+  const error = transform.error ?? action.error ?? query.error;
   useEffect(() => {
     viewport.setMessage(
       "scene-models.error",
@@ -155,6 +159,12 @@ export function SceneModels() {
     <>
       <SceneClouds
         clouds={clouds}
+        transformInteraction={transform}
+        transformEditable={
+          canEdit &&
+          mode === "orbit" &&
+          (tool.activeTool === null || tool.activeTool === "object-transform")
+        }
         preview={canEdit && mode === "orbit" ? placement.preview : null}
         placed={placement.placed}
         resourceKeyForCloud={placement.resourceKeyForCloud}

@@ -3,6 +3,12 @@
 import { useChatComposer } from "@camera-path/feature-chat-agent/model/use-chat-composer";
 import { ResponsiveChatPanel } from "@camera-path/feature-chat-agent/ui/responsive-chat-panel";
 import {
+  createEditorActions,
+  EditorActionsProvider,
+} from "@camera-path/actions";
+import { createEditorStore, EditorStoreProvider } from "@camera-path/store";
+import { useState } from "react";
+import {
   act,
   cleanup,
   fireEvent,
@@ -26,6 +32,18 @@ const onSend = vi.fn<
 >(async () => {});
 
 function Panel({ pending = false }: { pending?: boolean }) {
+  const [store] = useState(createEditorStore);
+  const [actions] = useState(() => createEditorActions(store));
+  return (
+    <EditorStoreProvider store={store}>
+      <EditorActionsProvider actions={actions}>
+        <ComposerPanel pending={pending} />
+      </EditorActionsProvider>
+    </EditorStoreProvider>
+  );
+}
+
+function ComposerPanel({ pending = false }: { pending?: boolean }) {
   const composer = useChatComposer({ pending, onSend });
   return (
     <ResponsiveChatPanel

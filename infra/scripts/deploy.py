@@ -168,6 +168,7 @@ def environment(config):
         "CAMERA_PATH_AUTH_SECOND_FACTOR": "email",
         "CAMERA_PATH_AUTH_EMAIL_DELIVERY": "ses",
         "CAMERA_PATH_AUTH_EMAIL_FROM": config["auth_email_from"],
+        "CAMERA_PATH_CLI_WEB_URL": config["cli_web_url"],
         # Existing systemd units also pick this up: never trust forwarded IPs.
         "FORWARDED_ALLOW_IPS": "",
     }

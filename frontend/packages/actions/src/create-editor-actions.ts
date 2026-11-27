@@ -4,13 +4,15 @@ import type {
   CameraMode,
   CameraType,
   EditorTool,
+  SceneWidgetMode,
 } from "@camera-path/types/editor-state";
 import type { SceneObjectUpdate } from "@camera-path/types/scene-object-update";
+import { appendChatReference } from "./append-chat-reference";
 /** Stable, ordinary Zustand actions, owned by the same project lifetime as the store. */
 export function createEditorActions(store: EditorStoreApi) {
   const updateObject = (
     field: "hoveredObjectId" | "selectedObjectId",
-    { id, ifCurrentId }: SceneObjectUpdate,
+    { id, ifCurrentId, name }: SceneObjectUpdate & { name?: string },
   ) =>
     store.setState((state) => {
       const current = state.sceneInteraction[field];
@@ -19,12 +21,65 @@ export function createEditorActions(store: EditorStoreApi) {
         current === id
       )
         return state;
-      return { sceneInteraction: { ...state.sceneInteraction, [field]: id } };
+      return {
+        sceneInteraction: { ...state.sceneInteraction, [field]: id },
+        ...(field === "selectedObjectId" && id && name
+          ? {
+              chatComposer: {
+                message: appendChatReference(state.chatComposer.message, name),
+              },
+            }
+          : {}),
+      };
     });
   return {
+    changeChatMessage: (message: string) =>
+      store.setState({ chatComposer: { message } }),
+    acceptChatMessage: (submitted: string) =>
+      store.setState((state) =>
+        state.chatComposer.message === submitted
+          ? { chatComposer: { message: "" } }
+          : state,
+      ),
+    referenceChatObject: (name: string) =>
+      store.setState((state) => ({
+        chatComposer: {
+          message: appendChatReference(state.chatComposer.message, name),
+        },
+      })),
+    clearRemovedSceneObjects: (ids: readonly string[]) => {
+      const removed = new Set(ids);
+      store.setState((state) => {
+        const interaction = state.sceneInteraction;
+        const clearHover =
+          interaction.hoveredObjectId !== null &&
+          removed.has(interaction.hoveredObjectId);
+        const clearSelection =
+          interaction.selectedObjectId !== null &&
+          removed.has(interaction.selectedObjectId);
+        if (!clearHover && !clearSelection) return state;
+        return {
+          sceneInteraction: {
+            ...interaction,
+            ...(clearHover ? { hoveredObjectId: null } : {}),
+            ...(clearSelection ? { selectedObjectId: null } : {}),
+          },
+        };
+      });
+    },
+    finishObjectTransform: () =>
+      store.setState((state) =>
+        state.tool.activeTool === "object-transform"
+          ? { tool: { ...state.tool, activeTool: null } }
+          : state,
+      ),
+    setSceneWidget: (widget: SceneWidgetMode) =>
+      store.setState((state) => ({
+        sceneInteraction: { ...state.sceneInteraction, widget },
+      })),
     hoverObject: (input: SceneObjectUpdate) =>
       updateObject("hoveredObjectId", input),
-    selectObject: (input: SceneObjectUpdate) =>
+    selectObject: (input: SceneObjectUpdate & { name?: string }) =>
       updateObject("selectedObjectId", input),
     setCameraMode: (cameraMode: CameraMode) =>
       store.setState((state) => ({

@@ -1,5 +1,7 @@
 "use client";
 import { useMemo } from "react";
+import { Matrix4, Quaternion } from "three";
+import type { SceneObjectTransformInteraction } from "@camera-path/types/scene-object-transform";
 import { resolveSceneObjectTransforms } from "./resolve-scene-object-transforms";
 import { createPlacementPreviewCloud } from "@camera-path/feature-scene-models/scene/create-placement-preview-cloud";
 import { CloudSceneObject } from "@camera-path/feature-scene-models/scene/cloud-scene-object";
@@ -7,7 +9,11 @@ import type { PlacementPreview } from "@camera-path/feature-scene-models/scene/u
 import type { SceneSurfaceProps } from "@camera-path/scene-runtime/surface/model/scene-surface-types";
 import type { SceneObject } from "@camera-path/types/api";
 
+import { PrimitiveSceneObject } from "./primitive-scene-object";
+
 interface SceneCloudsProps {
+  transformInteraction?: SceneObjectTransformInteraction;
+  transformEditable?: boolean;
   clouds: SceneObject[];
   preview: PlacementPreview | null;
   placed: PlacementPreview | null;
@@ -28,9 +34,13 @@ interface SceneCloudsProps {
   onError: (id: string, error: Error) => void;
   onLoading: (id: string) => void;
 }
+const ROOT_MATRIX = new Matrix4();
+const ROOT_ROTATION = new Quaternion();
 
 export function SceneClouds({
   clouds,
+  transformInteraction,
+  transformEditable = false,
   preview,
   placed,
   resourceKeyForCloud,
@@ -40,20 +50,30 @@ export function SceneClouds({
   onError,
   onLoading,
 }: SceneCloudsProps) {
-  // Stable world matrices keep loading leases and bounds notifications stable.
+  const draft = transformInteraction?.preview;
+  const displayClouds = useMemo(
+    () =>
+      draft
+        ? clouds.map((cloud) =>
+            cloud.id === draft.id ? { ...cloud, ...draft.transform } : cloud,
+          )
+        : clouds,
+    [clouds, draft],
+  );
+  // Stable world matrices prevent repeated bounds notifications.
   const transforms = useMemo(
     () =>
       resolveSceneObjectTransforms([
-        ...clouds,
+        ...displayClouds,
         ...[preview, placed]
           .filter(
             (candidate): candidate is PlacementPreview => candidate !== null,
           )
           .map(createPlacementPreviewCloud),
       ]),
-    [clouds, preview, placed],
+    [displayClouds, preview, placed],
   );
-  const entries = clouds.map((cloud) => ({
+  const entries = displayClouds.map((cloud) => ({
     cloud,
     resourceKey: resourceKeyForCloud(cloud.id),
     preview: false,
@@ -71,20 +91,37 @@ export function SceneClouds({
   }
   // A resource keeps one React/R3F owner throughout preview -> saved cloud.
   // Mounting a second primitive for the same object loses R3F pointer registration.
-  return entries.map(({ cloud, resourceKey, preview }) => (
-    <CloudSceneObject
-      key={resourceKey ?? cloud.id}
-      cloud={cloud}
-      worldMatrix={transforms.get(cloud.id)!.matrix}
-      effectiveVisible={transforms.get(cloud.id)!.visible}
-      hoverable={!preview}
-      selectable={!preview}
-      resourceKey={resourceKey}
-      raycastable={!preview && transforms.get(cloud.id)!.visible && interactive}
-      onReady={preview ? undefined : (surface) => onReady(cloud.id, surface)}
-      onLoading={preview ? undefined : () => onLoading(cloud.id)}
-      onError={preview ? undefined : (error) => onError(cloud.id, error)}
-      {...(preview ? {} : surfaceEvents)}
-    />
-  ));
+  return entries.map(({ cloud, resourceKey, preview }) => {
+    const Component = cloud.primitive ? PrimitiveSceneObject : CloudSceneObject;
+    return (
+      <Component
+        key={resourceKey ?? cloud.id}
+        cloud={cloud}
+        worldMatrix={transforms.get(cloud.id)!.matrix}
+        parentMatrix={
+          cloud.parent_id
+            ? transforms.get(cloud.parent_id)!.matrix
+            : ROOT_MATRIX
+        }
+        parentRotation={
+          cloud.parent_id
+            ? transforms.get(cloud.parent_id)!.rotation
+            : ROOT_ROTATION
+        }
+        transformInteraction={transformInteraction}
+        transformEditable={!preview && transformEditable}
+        effectiveVisible={transforms.get(cloud.id)!.visible}
+        hoverable={!preview}
+        selectable={!preview}
+        resourceKey={resourceKey}
+        raycastable={
+          !preview && transforms.get(cloud.id)!.visible && interactive
+        }
+        onReady={preview ? undefined : (surface) => onReady(cloud.id, surface)}
+        onLoading={preview ? undefined : () => onLoading(cloud.id)}
+        onError={preview ? undefined : (error) => onError(cloud.id, error)}
+        {...(preview ? {} : surfaceEvents)}
+      />
+    );
+  });
 }

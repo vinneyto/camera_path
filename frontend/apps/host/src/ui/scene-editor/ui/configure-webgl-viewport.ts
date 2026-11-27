@@ -3,6 +3,7 @@ import {
   configureInteractiveRaycasterLayers,
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
+  RENDER_PIPELINE_DECORATION_LAYER,
 } from "@camera-path/render-pipeline";
 
 export function configureWebGlViewport({
@@ -12,5 +13,6 @@ export function configureWebGlViewport({
   // WebGPU renders these layers in separate passes; WebGL draws one scene.
   camera.layers.enable(RENDER_PIPELINE_OVERLAY_LAYER);
   camera.layers.enable(RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER);
+  camera.layers.enable(RENDER_PIPELINE_DECORATION_LAYER);
   configureInteractiveRaycasterLayers(raycaster);
 }

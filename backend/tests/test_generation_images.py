@@ -26,6 +26,25 @@ class Queue:
         self.requests.append(request.model_dump())
 
 
+async def test_worker_progress_marks_job_running_without_completing_it(images):
+    _, client, integration, *_ = images
+    job = (
+        await client.post(
+            "/api/v1/jobs",
+            json={"type": "generation", "input": {"prompt": "A chair"}, "start": True},
+        )
+    ).json()
+    event = GenerationResult(schema_version=1, job_id=job["id"], status="running")
+    await integration.register(event)
+    running = (await client.get(f"/api/v1/jobs/{job['id']}")).json()
+    assert running["status"] == "running" and running["started_at"]
+    assert running["completed_at"] is None and running["assets"] == []
+    await integration.register(event)
+    assert (await client.get(f"/api/v1/jobs/{job['id']}")).json()["started_at"] == running[
+        "started_at"
+    ]
+
+
 @pytest.fixture
 async def images(tmp_path):
     app = create_editor_app(
@@ -38,6 +57,7 @@ async def images(tmp_path):
     )
     await app.state.project_repository.initialize()
     app.state.job_service.generation_enabled = True
+    app.state.job_service.cli_model = False  # This fixture injects the legacy broker adapter.
     output = LocalLibraryStorage(tmp_path / "generation")
     queue = Queue()
     integration = GenerationIntegration(

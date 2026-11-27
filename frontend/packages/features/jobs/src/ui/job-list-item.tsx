@@ -1,11 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Box } from "lucide-react";
+import { ArrowRight, Box, ImageIcon } from "lucide-react";
+import { JOB_TYPE_LABELS } from "@camera-path/types/job-types";
 import type { JobSummary } from "@camera-path/types/api";
+import type { InferenceStatus } from "@camera-path/types/inference";
+import { inferenceJobLabel } from "@camera-path/types/inference-job-label";
 import { Badge, Card } from "@camera-path/ui-kit";
 
-export function JobListItem({ job }: { job: JobSummary }) {
+export function JobListItem({
+  job,
+  worker,
+}: {
+  job: JobSummary;
+  worker?: InferenceStatus;
+}) {
+  const ResultIcon = job.type === "image_generation" ? ImageIcon : Box;
   return (
     <Card className="space-y-4 p-4">
       <div className="flex items-start justify-between gap-4">
@@ -15,7 +25,9 @@ export function JobListItem({ job }: { job: JobSummary }) {
         >
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="capitalize">
-              {job.type ?? "Type not specified"}
+              {job.type
+                ? (JOB_TYPE_LABELS[job.type] ?? job.type)
+                : "Type not specified"}
             </span>
             <ArrowRight className="size-3.5" aria-hidden />
           </div>
@@ -27,7 +39,7 @@ export function JobListItem({ job }: { job: JobSummary }) {
           </p>
         </Link>
         <Badge
-          className={`shrink-0 capitalize ${
+          className={`shrink-0 ${
             job.status === "failed"
               ? "border-destructive/30 bg-destructive/10 text-destructive"
               : job.status === "succeeded"
@@ -35,7 +47,7 @@ export function JobListItem({ job }: { job: JobSummary }) {
                 : ""
           }`}
         >
-          {job.status}
+          {inferenceJobLabel(job, worker)}
         </Badge>
       </div>
       {job.error && (
@@ -58,10 +70,14 @@ export function JobListItem({ job }: { job: JobSummary }) {
           {job.assets.map((asset) => (
             <li key={asset.id}>
               <Link
-                href={`/library/${asset.id}`}
+                href={
+                  asset.status === "pending"
+                    ? `/jobs/${job.id}`
+                    : `/library/${asset.id}`
+                }
                 className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Box
+                <ResultIcon
                   className="size-3.5 shrink-0 text-muted-foreground"
                   aria-hidden
                 />

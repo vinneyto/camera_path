@@ -415,3 +415,18 @@ async def test_mismatched_format_signature_is_not_promoted(storage, key, header)
     adapter, stub = storage
     inspect_response(stub, key=f"library/_uploads/{key}", header=header)
     assert not await adapter.finalize_upload(key, 4)
+
+
+async def test_cli_presign_targets_staging_and_signs_exact_size_and_digest(storage):
+    adapter, _ = storage
+    key = "_inference/job/attempt/result.ply"
+    url, headers, ttl = await adapter.inference_upload_destination(key, 4, "00" * 32)
+    parsed = urlparse(url)
+    assert parsed.path.endswith(f"/library/{key}")
+    params = parse_qs(parsed.query)
+    assert params["X-Amz-SignedHeaders"] == ["content-length;host;x-amz-checksum-sha256"]
+    assert params["X-Amz-Expires"] == [str(ttl)] == ["300"]
+    assert headers == {
+        "Content-Length": "4",
+        "x-amz-checksum-sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    }

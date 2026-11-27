@@ -1,5 +1,7 @@
 import json
 
+from test_pipelines import wait_pipeline
+
 
 def test_user_messages_idempotency_conflict_and_clear(editor):
     p = editor.project()
@@ -25,6 +27,7 @@ def test_agent_calls_external_http_peer_executes_tool_and_persists_history(edito
     assert r.json()["answer"] == "Fixture answer"
     assert "compiled" in r.json()
     assert len(b.llm.requests) == 2
+    assert wait_pipeline(p)["status"] == "succeeded"
     assert p.get("/motion").json()["default_speed"] == 2.5
     assert p.get("/anchors").json() == [a]
     history = p.get("/chat/messages").json()

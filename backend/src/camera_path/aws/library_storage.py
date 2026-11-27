@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from base64 import b64encode
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any, TypeVar
@@ -25,6 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 class S3LibraryStorage(LibraryStorage):
+    inference_direct_uploads = True
+
     def __init__(self, client: Any, bucket: str, prefix: str = "library/", ttl: int = 300):
         self.client = client
         self.bucket = bucket
@@ -170,6 +173,28 @@ class S3LibraryStorage(LibraryStorage):
                 raise
         except (BotoCoreError, ClientError) as error:
             raise LibraryStorageError("S3 operation failed") from error
+
+    async def inference_upload_destination(self, key: str, size_bytes: int, sha256: str):
+        if not key.startswith("_inference/"):
+            raise ValueError("Invalid inference staging key")
+        checksum = b64encode(bytes.fromhex(sha256)).decode("ascii")
+        ttl = min(self.ttl, 300)
+        # Retries of this URL can only write the same declared bytes. Publication
+        # copies that verified byte stream to a separate, unsigned library object.
+        url = await self._run(
+            lambda: self.client.generate_presigned_url(
+                "put_object",
+                Params={
+                    "Bucket": self.bucket,
+                    "Key": self._ready_key(key),
+                    "ContentLength": size_bytes,
+                    "ChecksumSHA256": checksum,
+                },
+                ExpiresIn=ttl,
+                HttpMethod="PUT",
+            )
+        )
+        return url, {"Content-Length": str(size_bytes), "x-amz-checksum-sha256": checksum}, ttl
 
     async def upload_url(self, asset_id: str, key: str, request: Request) -> str:
         return await self._run(

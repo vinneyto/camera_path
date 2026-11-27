@@ -83,6 +83,9 @@ class ProjectRecord(Base):
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     revision: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    scene_object_sequence: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
 
 
 class LibraryAssetRecord(Base):
@@ -143,8 +146,11 @@ class JobRecord(Base):
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str | None] = mapped_column(Text)
+    scene_placement: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    request_key: Mapped[str | None] = mapped_column(Text, unique=True, index=True)
     type: Mapped[str | None] = mapped_column(Text)
     input: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    execution: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
     status: Mapped[JobStatus] = mapped_column(
         enum_column(JobStatus, "ck_jobs_status"),
         nullable=False,
@@ -212,20 +218,28 @@ class SceneObjectRecord(Base):
         ),
         CheckConstraint("parent_id IS NULL OR parent_id != id", name="ck_scene_objects_parent"),
         CheckConstraint(
+            "(primitive IS NOT NULL AND library_asset_id IS NULL AND library_asset_file_id IS NULL)"
+            " OR (primitive IS NULL AND library_asset_id IS NOT NULL"
+            " AND library_asset_file_id IS NOT NULL)",
+            name="ck_scene_objects_source",
+        ),
+        CheckConstraint(
             "scale_x > 0 AND scale_y > 0 AND scale_z > 0", name="ck_scene_objects_scale"
         ),
         Index("ix_scene_objects_parent", "project_id", "parent_id"),
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
     project_id: Mapped[str] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     parent_id: Mapped[str | None] = mapped_column(Text)
-    library_asset_id: Mapped[str] = mapped_column(
-        ForeignKey("library_assets.id", ondelete="RESTRICT"), nullable=False, index=True
+    library_asset_id: Mapped[str | None] = mapped_column(
+        ForeignKey("library_assets.id", ondelete="RESTRICT"), index=True
     )
-    library_asset_file_id: Mapped[str] = mapped_column(Text, nullable=False)
+    library_asset_file_id: Mapped[str | None] = mapped_column(Text)
+    primitive: Mapped[str | None] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
     visible: Mapped[bool] = mapped_column(nullable=False, default=True)
     position_x: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
@@ -554,6 +568,43 @@ class ChatMessageRecord(ProjectChildRecord, Base):
         enum_column(ChatRole, "ck_chat_messages_role"), nullable=False
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    context: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+
+
+class ChatAttachmentRecord(ProjectChildRecord, Base):
+    __tablename__ = "chat_attachments"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    asset_id: Mapped[str | None] = mapped_column(
+        ForeignKey("library_assets.id", ondelete="SET NULL"), index=True
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    format: Mapped[str] = mapped_column(Text, nullable=False)
+    ready: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class PipelineRecord(ProjectChildRecord, Base):
+    __tablename__ = "command_pipelines"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    message_id: Mapped[str] = mapped_column(Text, nullable=False)
+    request_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    definition: Mapped[dict] = mapped_column(JSON, nullable=False)
+    steps: Mapped[list] = mapped_column(JSON, nullable=False)
+    context: Mapped[dict] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    lease_owner: Mapped[str | None] = mapped_column(Text)
+    lease_until: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+
+
+class PipelineEventRecord(ProjectChildRecord, Base):
+    __tablename__ = "pipeline_events"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    pipeline_id: Mapped[str] = mapped_column(
+        ForeignKey("command_pipelines.id", ondelete="CASCADE"), nullable=False
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
 
 
 class AuthChallengeRecord(Base):

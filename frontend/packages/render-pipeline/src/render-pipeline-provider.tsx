@@ -24,6 +24,7 @@ import {
   RENDER_PIPELINE_OVERLAY_LAYER,
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
+  RENDER_PIPELINE_DECORATION_LAYER,
 } from "./render-pipeline-scene-layers";
 import type {
   RenderPipelineContextValue,
@@ -185,6 +186,7 @@ export function RenderPipelineProvider({ children }: PropsWithChildren) {
     overlayLayers.set(RENDER_PIPELINE_OVERLAY_LAYER);
     const preSplatLayers = new Layers();
     preSplatLayers.set(RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER);
+    preSplatLayers.enable(RENDER_PIPELINE_DECORATION_LAYER);
 
     const opaque = scenePass(scene, camera);
     opaque.opaque = true;

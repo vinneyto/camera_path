@@ -19,6 +19,23 @@ providers, the full feature/slot map and review entrypoints.
 - `trajectory-math` contains pure geometry and motion functions; `scene-runtime` contains renderer
   adapters and neutral viewport services; `ui-kit` contains shared UI and theme.
 
+## LiDAR data path
+
+Both viewport renderers capture six floating-point depth faces at the trajectory sensor pose.
+Depth merging and angular sampling stay on the GPU; the shared `SceneDepthLidar` only schedules
+scans and passes a pose matrix. The resulting R32F range texture uses zero for misses, with
+integer texel (0,0) representing the highest-elevation, first-azimuth bin.
+
+Instanced analytic spheres fetch their centers from this texture in the shader. Each sphere
+uses four vertices, ray/sphere intersection, surface lighting and fragment depth; there are
+no per-hit JavaScript calculations or instance-matrix uploads. Scans run at most 20 Hz, and
+GPU completion fences prevent more than one scan from being queued at a time.
+
+`capture()` and `readRanges()` are explicit diagnostic/export readbacks. Live visualization
+uses `render()` and never invokes them. Spark still performs its own Gaussian-sort readback;
+the WebGPU Gaussian library can read a small status counter. These internal operations do not
+transfer LiDAR depth or hit positions to the CPU.
+
 ## Run
 
 The project viewport defaults to Spark/WebGL. To use Three.js WebGPU and `3dgs-tile-webgpu`,
@@ -76,6 +93,11 @@ The proxy keeps JWTs in HttpOnly cookies, validates Origin on writes, forwards r
 streams binary local uploads/downloads and SSE for chat and jobs, and rewrites local content URLs to itself.
 Signed S3 URLs stay direct browser transfers. Production cookies require HTTPS.
 The backend must have `OPENAI_API_KEY` configured for chat; project and anchor APIs work without it.
+Generated/edited chat images use `CAMERA_PATH_OPENAI_IMAGE_MODEL` on the backend. The chat renders
+persisted command pipelines (including single actions), step states and generated image versions.
+SSE delivers each completed step and restores current state on reconnect. Pipelines start
+automatically unless the user asks to wait; pending definitions can be confirmed in chat or with
+the card button. Each card can copy its definition or full execution JSON for debugging.
 
 Orval generates the API client and TanStack Query hooks from `backend/openapi.json` under
 `packages/api/src/client/generated` and the DTO types under `packages/types/src/api`.
@@ -97,8 +119,12 @@ npm test
 npm run build
 ```
 
-Click the Gaussian cloud to create a labeled path anchor. Insert the resulting anchor token into
-chat, ask the agent to build a spline or spiral, then click the rendered trajectory to open its
+Use the anchor placement tool to create a labeled path anchor. Click an anchor's invisible cylinder
+or upper pin to append `@label` to the chat draft without selecting the anchor; dragging the pin
+changes its height without inserting a mention. Selecting a model or trajectory appends `@name`
+once when selection changes. The draft is scoped to the project and survives closing the mobile
+chat. User messages use these explicit text references, without hidden current-selection context.
+Ask the agent to build a spline or spiral, then click the rendered trajectory to open its
 speed and camera-aim panels. Playback uses the compiled speed profile and camera direction track.
 
 ### Navigation cameras

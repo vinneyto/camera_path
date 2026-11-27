@@ -1,6 +1,7 @@
 export { useAimTimeline } from "./use-aim-timeline";
 export { useAnchors } from "./use-anchors";
 export { useChatHistory } from "./use-chat-history";
+export { usePipelines } from "./use-pipelines";
 export { useCompiledTrajectoryResource } from "./use-compiled-trajectory-resource";
 export { useDepthOfFieldTimeline } from "./use-depth-of-field-timeline";
 export { useLibraryAssetResource } from "./use-library-asset-resource";
@@ -10,6 +11,7 @@ export { useJobResource } from "./use-job-resource";
 export { useLidarTimelineResource } from "./use-lidar-timeline-resource";
 export { useOrientationTimeline } from "./use-orientation-timeline";
 export { useProjectsCatalog } from "./use-projects-catalog";
+export { useProjectGenerationJobs } from "./use-project-generation-jobs";
 export { useSceneModels } from "./use-scene-models";
 export { useScenePoints } from "./use-scene-points";
 export { useSpeedTimeline } from "./use-speed-timeline";

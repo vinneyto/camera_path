@@ -7,7 +7,7 @@ if [[ "${1:-}" == setup ]]; then
     echo "Install uv and make it available on PATH." >&2
     exit 1
   fi
-  uv sync --project backend --frozen --extra aws --extra rabbitmq
+  uv sync --project backend --frozen --extra aws
 fi
 
 if [[ ! -x backend/.venv/bin/python ]]; then

@@ -1,6 +1,7 @@
 "use client";
 import {
   configureInteractiveRaycasterLayers,
+  CLICKABLE,
   SELECTABLE,
 } from "@camera-path/render-pipeline";
 import { POINTER_BUTTON } from "@camera-path/ui-kit/constants";
@@ -14,13 +15,16 @@ import { raycastSceneAtPointer } from "./raycast-scene-at-pointer";
 export function SceneSelect({
   enabled,
   onSelect,
+  onActivate,
 }: {
   enabled: boolean;
   onSelect: (id: string | null) => void;
+  onActivate?: (id: string) => void;
 }) {
   const get = useThree((state) => state.get);
   const canvas = useThree((state) => state.gl.domElement);
   const notify = useEffectEvent(onSelect);
+  const activate = useEffectEvent((id: string) => onActivate?.(id));
   useEffect(() => {
     if (!enabled) return;
     const raycaster = new Raycaster();
@@ -70,8 +74,12 @@ export function SceneSelect({
         return;
       const object = findInteractiveSceneObject(
         raycastSceneAtPointer(raycaster, get(), rect, event),
-        SELECTABLE,
+        [CLICKABLE, SELECTABLE],
       );
+      if (object?.layers.isEnabled(CLICKABLE)) {
+        activate(object.userData.sceneObjectID);
+        return;
+      }
       notify(object?.userData.sceneObjectID ?? null);
     }
     const target = canvas.ownerDocument.defaultView!;

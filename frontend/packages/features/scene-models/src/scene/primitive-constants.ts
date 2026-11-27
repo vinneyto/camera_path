@@ -1,0 +1,7 @@
+export const PRIMITIVE_DEFAULT_COLOR = "#60a5fa";
+export const PRIMITIVE_SIZE = 1;
+export const PRIMITIVE_RADIUS = PRIMITIVE_SIZE / 2;
+export const PRIMITIVE_RADIAL_SEGMENTS = 32;
+export const PRIMITIVE_HEIGHT_SEGMENTS = 24;
+export const PRIMITIVE_HOVER_GAIN = 1.2;
+export const PRIMITIVE_SELECTED_GAIN = 1.4;

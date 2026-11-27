@@ -19,6 +19,7 @@ from camera_path.persistence.records import (
     LibraryAssetFileRecord,
     LibraryAssetRecord,
 )
+from camera_path.services.anchor_replacement import apply_job_placement
 from camera_path.services.io import blocking_io
 from camera_path.services.job_completion_models import JobCompletionMessage
 from camera_path.services.library import LibraryService
@@ -148,7 +149,11 @@ class JobCompletionService:
         message: JobCompletionMessage,
         *,
         default_rotation_deg: tuple[float, float, float] | None = None,
+        guard=None,
+        finalize=None,
     ) -> str:
+        if guard is not None:
+            return await self._complete_pending(message, default_rotation_deg, guard, finalize)
         if await self._completed(message.job_id):
             return message.job_id
         try:
@@ -161,7 +166,11 @@ class JobCompletionService:
             raise
 
     async def _complete_pending(
-        self, message: JobCompletionMessage, default_rotation_deg: tuple[float, float, float] | None
+        self,
+        message: JobCompletionMessage,
+        default_rotation_deg: tuple[float, float, float] | None,
+        guard=None,
+        finalize=None,
     ) -> str:
         rotation_x, rotation_y, rotation_z = default_rotation_deg or (0.0, 0.0, 0.0)
         results, identities = [], set()
@@ -203,7 +212,11 @@ class JobCompletionService:
                 await self.library.check_thumbnail(asset.thumbnail_key)
             async with self.sessions.begin() as session:
                 await session.execute(text("BEGIN IMMEDIATE"))
-                job = await session.get(JobRecord, message.job_id)
+                job = (
+                    await session.get(JobRecord, message.job_id)
+                    if guard is None
+                    else await guard(session)
+                )
                 if job is None:
                     raise LibraryError("job_not_found", 404)
                 if job.completed_at is not None:
@@ -221,11 +234,14 @@ class JobCompletionService:
                     target_keys
                 ):
                     raise LibraryError("library_import_object_conflict", 422)
+                asset_ids = []
                 for position, (asset, files) in enumerate(results):
                     primary = next((f, k) for f, _, k, _ in files if f.id == asset.primary_file_id)
+                    asset_id = str(uuid4())
+                    asset_ids.append(asset_id)
                     session.add(
                         LibraryAssetRecord(
-                            id=str(uuid4()),
+                            id=asset_id,
                             job_id=job.id,
                             job_position=position,
                             name=asset.name,
@@ -254,9 +270,30 @@ class JobCompletionService:
                             ],
                         )
                     )
+                await session.flush()
+                if job.scene_placement:
+                    generated = await session.scalar(
+                        select(LibraryAssetRecord).where(
+                            LibraryAssetRecord.job_id == job.id,
+                            LibraryAssetRecord.job_position == 0,
+                        )
+                    )
+                    if generated is not None:
+                        await apply_job_placement(session, job, generated)
                 job.status = "succeeded"
                 job.generation_dispatch_pending = False
                 job.error = None
                 job.completed_at = datetime.now(UTC)
+                if finalize is not None:
+                    await finalize(
+                        session,
+                        job,
+                        {
+                            "job_id": job.id,
+                            "status": "succeeded",
+                            "asset_ids": asset_ids,
+                            "attachment_id": None,
+                        },
+                    )
                 await session.flush()
             return message.job_id

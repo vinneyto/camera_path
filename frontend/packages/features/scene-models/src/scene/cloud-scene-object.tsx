@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
-import { Vector3, type Matrix4 } from "three";
-import { SceneObject as SceneObjectRoot } from "@camera-path/scene-runtime/interaction/scene-object";
+import { Vector3, type Matrix4, type Quaternion } from "three";
+import { SceneObjectInteractor } from "@camera-path/scene-runtime/interaction/scene-object-interactor";
+import type { SceneObjectTransformInteraction } from "@camera-path/types/scene-object-transform";
 
 import {
   SceneSurface,
@@ -13,9 +14,16 @@ import type { SceneObject } from "@camera-path/types/api";
 import { CloudLoadingRing } from "./cloud-loading-ring";
 import { transformSceneObjectBounds } from "./transform-scene-object-bounds";
 
-interface CloudSceneObjectProps extends Omit<SceneSurfaceProps, "source"> {
+export interface CloudSceneObjectProps extends Omit<
+  SceneSurfaceProps,
+  "source"
+> {
   cloud: SceneObject;
   worldMatrix: Matrix4;
+  parentMatrix: Matrix4;
+  parentRotation: Quaternion;
+  transformInteraction?: SceneObjectTransformInteraction;
+  transformEditable?: boolean;
   effectiveVisible: boolean;
   hoverable?: boolean;
   selectable?: boolean;
@@ -24,6 +32,10 @@ interface CloudSceneObjectProps extends Omit<SceneSurfaceProps, "source"> {
 export function CloudSceneObject({
   cloud,
   worldMatrix,
+  parentMatrix,
+  parentRotation,
+  transformInteraction,
+  transformEditable = false,
   effectiveVisible,
   hoverable = true,
   selectable = true,
@@ -34,19 +46,17 @@ export function CloudSceneObject({
   onProgress,
   ...props
 }: CloudSceneObjectProps) {
-  // Source and initial pose identities are consumed by the resource lease effect.
-  const source = useMemo(
-    () => ({
+  // Source identity is consumed by the resource lease effect.
+  const source = useMemo(() => {
+    if (!cloud.download_url || !cloud.format)
+      throw new Error("Missing library model source");
+    return {
       kind: "url" as const,
       url: cloud.download_url,
       format: cloud.format,
-    }),
-    [cloud.download_url, cloud.format],
-  );
-  const initialWorldMatrix = useMemo(
-    () => worldMatrix.toArray(),
-    [worldMatrix],
-  );
+    };
+  }, [cloud.download_url, cloud.format]);
+  const initialWorldMatrix = worldMatrix.toArray();
   const [bounds, setBounds] = useState<SceneSurfaceBounds | null>(null);
   const [load, setLoad] = useState<{
     source: typeof source;
@@ -63,12 +73,15 @@ export function CloudSceneObject({
   }, [bounds, worldMatrix, effectiveVisible]);
   return (
     <>
-      <SceneObjectRoot
-        sceneObjectID={cloud.id}
+      <SceneObjectInteractor
+        model={cloud}
+        worldMatrix={worldMatrix}
+        parentMatrix={parentMatrix}
+        parentRotation={parentRotation}
+        interaction={transformInteraction}
+        editable={transformEditable && effectiveVisible && !loading}
         hoverable={hoverable && effectiveVisible}
         selectable={selectable && effectiveVisible}
-        matrix={worldMatrix}
-        matrixAutoUpdate={false}
         visible={effectiveVisible}
       >
         {({ hovered, selected }) => (
@@ -107,7 +120,7 @@ export function CloudSceneObject({
             }}
           />
         )}
-      </SceneObjectRoot>
+      </SceneObjectInteractor>
       {loading && effectiveVisible && (
         <CloudLoadingRing
           position={new Vector3().setFromMatrixPosition(worldMatrix).toArray()}

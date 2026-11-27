@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-camera-path = "camera_path.main:run"
+camera-path-server = "camera_path.main:run"
 db-populate = "camera_path.seed:run"
 openapi-export = "camera_path.export_openapi:run"
 editor-create = "camera_path.auth_cli:run"

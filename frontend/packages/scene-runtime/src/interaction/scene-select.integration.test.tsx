@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { HOVERABLE, SELECTABLE } from "@camera-path/render-pipeline";
+import { CLICKABLE, HOVERABLE, SELECTABLE } from "@camera-path/render-pipeline";
 import { createEditorStore, EditorStoreProvider } from "@camera-path/store";
 import { createRoot, extend } from "@react-three/fiber";
 import { act, StrictMode, type ReactNode } from "react";
@@ -30,6 +30,7 @@ async function createScene() {
       sceneInteraction: { ...state.sceneInteraction, selectedObjectId: id },
     })),
   );
+  const onActivate = vi.fn();
   const root = createRoot(canvas);
   await root.configure({
     scene,
@@ -48,12 +49,17 @@ async function createScene() {
     scene,
     store,
     onSelect,
+    onActivate,
     async render(children: ReactNode, enabled = true) {
       await act(async () => {
         root.render(
           <StrictMode>
             <EditorStoreProvider store={store}>
-              <SceneSelect enabled={enabled} onSelect={onSelect} />
+              <SceneSelect
+                enabled={enabled}
+                onSelect={onSelect}
+                onActivate={onActivate}
+              />
               {children}
             </EditorStoreProvider>
           </StrictMode>,
@@ -158,6 +164,58 @@ it("selects the nearest marked ancestor of only the first actual hit, independen
     await test.pointer("pointerdown", { clientX: 105 });
     await test.pointer("pointerup", { clientX: 105 });
     expect(test.selected()).toBeNull();
+  } finally {
+    await test.unmount();
+  }
+});
+
+it("activates a clickable ancestor without selecting it or falling through an occluder", async () => {
+  const test = await createScene();
+  try {
+    await test.render(
+      <SceneObject sceneObjectID="model">
+        {() => (
+          <SceneObject
+            sceneObjectID="anchor:a"
+            name="clickable"
+            selectable={false}
+            clickable
+          >
+            {() => (
+              <mesh>
+                <boxGeometry />
+                <meshBasicMaterial />
+              </mesh>
+            )}
+          </SceneObject>
+        )}
+      </SceneObject>,
+    );
+    expect(
+      test.scene.getObjectByName("clickable")!.layers.isEnabled(CLICKABLE),
+    ).toBe(true);
+    expect(
+      test.scene.getObjectByName("clickable")!.layers.isEnabled(SELECTABLE),
+    ).toBe(false);
+    await test.pointer("pointerdown");
+    await test.pointer("pointerup");
+    expect(test.onActivate).toHaveBeenCalledExactlyOnceWith("anchor:a");
+    expect(test.onSelect).not.toHaveBeenCalled();
+    test.onActivate.mockClear();
+    await test.pointer("pointerdown");
+    await test.pointer("pointermove", { clientX: 85 });
+    await test.pointer("pointerup", { clientX: 85 });
+    expect(test.onActivate).not.toHaveBeenCalled();
+    const blocker = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
+    blocker.position.z = 2;
+    test.scene.add(blocker);
+    await test.pointer("pointerdown");
+    await test.pointer("pointerup");
+    expect(test.onActivate).not.toHaveBeenCalled();
+    expect(test.onSelect).toHaveBeenCalledExactlyOnceWith(null);
+    test.scene.remove(blocker);
+    blocker.geometry.dispose();
+    blocker.material.dispose();
   } finally {
     await test.unmount();
   }

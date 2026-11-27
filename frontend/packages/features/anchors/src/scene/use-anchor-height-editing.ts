@@ -2,13 +2,16 @@
 import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 
-import { useSetActiveEditorTool } from "@camera-path/actions";
+import { useEditorActions, useSetActiveEditorTool } from "@camera-path/actions";
 import type { Anchor } from "@camera-path/types/project";
 import { useActiveEditorTool } from "../ports/use-active-editor-tool";
 import { useHoveredAnchor } from "../ports/use-hovered-anchor";
 
 import { getWorldYAxisLift } from "@camera-path/feature-anchors/lib/get-world-y-axis-lift";
-import { ANCHOR_TRANSFORM_PRECISION } from "../constants";
+import {
+  ANCHOR_HEIGHT_DRAG_THRESHOLD_PX,
+  ANCHOR_TRANSFORM_PRECISION,
+} from "../constants";
 import { POINTER_BUTTON } from "@camera-path/ui-kit/constants";
 
 interface AnchorHeightPreview {
@@ -26,8 +29,13 @@ interface AnchorHeightDrag {
   anchorId: string;
   grabOffset: number;
   lift: number;
+  initialLift: number;
+  startX: number;
+  startY: number;
+  dragging: boolean;
   pointerId: number;
   target: Element | null;
+  view: Window | null;
 }
 
 type AnchorInteractionProps = Pick<
@@ -40,13 +48,9 @@ export function useAnchorHeightEditing({
   onCommit,
 }: UseAnchorHeightEditingOptions) {
   const activeTool = useActiveEditorTool();
-  const {
-    clearHoveredAnchor,
-    hoveredAnchorId,
-    selectedAnchorId,
-    clearSelectedAnchor,
-  } = useHoveredAnchor();
+  const { clearHoveredAnchor, hoveredAnchorId } = useHoveredAnchor();
   const setActiveTool = useSetActiveEditorTool();
+  const { referenceChatObject } = useEditorActions();
   const dragRef = useRef<AnchorHeightDrag | null>(null);
   const [preview, setPreview] = useState<AnchorHeightPreview | null>(null);
 
@@ -69,6 +73,32 @@ export function useAnchorHeightEditing({
   }, [activeTool, setActiveTool]);
 
   useEffect(() => {
+    if (activeTool !== "anchor-height") return;
+    const drag = dragRef.current;
+    const view = drag?.view;
+    if (!drag || !view) return;
+    // R3F clears hover on pointercancel without forwarding it to mesh handlers.
+    const cancel = (event: Event) => {
+      if (
+        dragRef.current !== drag ||
+        (event.type === "pointercancel" &&
+          (event as PointerEvent).pointerId !== drag.pointerId)
+      )
+        return;
+      drag.target?.releasePointerCapture?.(drag.pointerId);
+      dragRef.current = null;
+      setPreview(null);
+      setActiveTool(null);
+    };
+    view.addEventListener("pointercancel", cancel, true);
+    view.addEventListener("blur", cancel);
+    return () => {
+      view.removeEventListener("pointercancel", cancel, true);
+      view.removeEventListener("blur", cancel);
+    };
+  }, [activeTool, setActiveTool]);
+
+  useEffect(() => {
     if (
       hoveredAnchorId !== null &&
       !anchors.some((anchor) => anchor.id === hoveredAnchorId)
@@ -76,14 +106,6 @@ export function useAnchorHeightEditing({
       clearHoveredAnchor(hoveredAnchorId);
     }
   }, [anchors, clearHoveredAnchor, hoveredAnchorId]);
-
-  useEffect(() => {
-    if (
-      selectedAnchorId !== null &&
-      !anchors.some((anchor) => anchor.id === selectedAnchorId)
-    )
-      clearSelectedAnchor(selectedAnchorId);
-  }, [anchors, selectedAnchorId, clearSelectedAnchor]);
 
   function handlePointerDown(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
     if (activeTool !== null || event.button !== POINTER_BUTTON.primary) return;
@@ -96,11 +118,24 @@ export function useAnchorHeightEditing({
       anchorId: anchor.id,
       grabOffset: pointerLift === null ? 0 : pointerLift - anchor.lift,
       lift: anchor.lift,
+      initialLift: anchor.lift,
+      startX: event.clientX,
+      startY: event.clientY,
+      dragging: false,
       pointerId: event.pointerId,
       target,
+      view:
+        (event.nativeEvent.target as Element | null)?.ownerDocument
+          ?.defaultView ?? null,
     };
-    setPreview({ anchorId: anchor.id, dragging: true, lift: anchor.lift });
     setActiveTool("anchor-height");
+  }
+
+  function hasDragged(drag: AnchorHeightDrag, event: ThreeEvent<PointerEvent>) {
+    drag.dragging ||=
+      Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >
+      ANCHOR_HEIGHT_DRAG_THRESHOLD_PX;
+    return drag.dragging;
   }
 
   function handlePointerMove(anchor: Anchor, event: ThreeEvent<PointerEvent>) {
@@ -108,6 +143,7 @@ export function useAnchorHeightEditing({
     if (drag?.anchorId !== anchor.id || drag.pointerId !== event.pointerId)
       return;
     event.stopPropagation();
+    if (!hasDragged(drag, event)) return;
     const pointerLift = getWorldYAxisLift(event.ray, anchor.surface_position);
     if (pointerLift === null) return;
     const lift = Math.max(0, pointerLift - drag.grabOffset);
@@ -122,9 +158,18 @@ export function useAnchorHeightEditing({
     event.stopPropagation();
     drag.target?.releasePointerCapture?.(drag.pointerId);
     dragRef.current = null;
-    const lift = Number(drag.lift.toFixed(ANCHOR_TRANSFORM_PRECISION));
-    setPreview({ anchorId: anchor.id, dragging: false, lift });
     setActiveTool(null);
+    if (!hasDragged(drag, event)) {
+      setPreview(null);
+      referenceChatObject(anchor.label);
+      return;
+    }
+    const lift = Number(drag.lift.toFixed(ANCHOR_TRANSFORM_PRECISION));
+    if (lift === drag.initialLift) {
+      setPreview(null);
+      return;
+    }
+    setPreview({ anchorId: anchor.id, dragging: false, lift });
     void onCommit(anchor.id, lift).finally(() => {
       setPreview((current) =>
         current?.anchorId === anchor.id && !current.dragging ? null : current,
@@ -159,7 +204,6 @@ export function useAnchorHeightEditing({
     activeAnchor,
     getAnchorInteractionProps,
     hoveredAnchorId,
-    selectedAnchorId,
     preview,
   };
 }

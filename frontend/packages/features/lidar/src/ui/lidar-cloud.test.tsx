@@ -42,6 +42,7 @@ it("uses the trajectory pose independently of the viewing camera and releases ch
   const createLidar = vi.fn(() => {
     const sensor = {
       object: new Object3D(),
+      update: vi.fn(),
       dispose: vi.fn(),
       setPose: vi.fn(),
     };

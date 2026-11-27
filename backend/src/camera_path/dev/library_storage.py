@@ -117,6 +117,18 @@ class LocalLibraryStorage(LibraryStorage):
         with suppress(OSError):
             staged.parent.rmdir()
 
+    def old_local_inference_staging(self, cutoff: float) -> list[str]:
+        root = self.path("_inference")
+        results = []
+        for path in root.glob("*/*/*"):
+            try:
+                metadata = path.lstat()
+                if stat.S_ISREG(metadata.st_mode) and metadata.st_mtime < cutoff:
+                    results.append(path.relative_to(self.directory).as_posix())
+            except FileNotFoundError:
+                continue
+        return results
+
     def import_markers(self) -> list[str]:
         return [f"_imports/{p.name}" for p in (self.directory / "_imports").glob("*.json")]
 

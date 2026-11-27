@@ -50,7 +50,13 @@ describe("TileGaussianRenderingBackend pass", () => {
       registerLayer: vi.fn(() => vi.fn()),
     } as unknown as SceneRenderPipeline);
     const error = new Error("stop after entering the model queue");
-    const loadBuffer = vi.fn().mockRejectedValue(error);
+    const loadBuffer = vi.fn(async (buffer: ArrayBuffer) => {
+      // The real worker takes ownership. The retained source must remain reusable
+      // when LiDAR settings change or a second independent capture is created.
+      structuredClone(buffer, { transfer: [buffer] });
+      throw error;
+    });
+    const source = new Uint8Array([1, 2, 3, 4]).buffer;
     Object.assign((backend as unknown as { store: object }).store, {
       loadBuffer,
     });
@@ -58,7 +64,7 @@ describe("TileGaussianRenderingBackend pass", () => {
       Array.from({ length: 3 }, () =>
         backend.createCloud({
           kind: "buffer",
-          buffer: new ArrayBuffer(0),
+          buffer: source,
           name: "test.ply",
         }),
       ),
@@ -69,6 +75,7 @@ describe("TileGaussianRenderingBackend pass", () => {
       Array.from({ length: 3 }, () => ({ status: "rejected", reason: error })),
     );
     expect(loadBuffer).toHaveBeenCalledTimes(3);
+    expect([...new Uint8Array(source)]).toEqual([1, 2, 3, 4]);
     backend.dispose();
   });
 

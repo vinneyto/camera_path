@@ -10,7 +10,11 @@ import { Button } from "@camera-path/ui-kit";
 
 import { AnchorReferencePicker } from "@camera-path/feature-chat-agent/ui/anchor-reference-picker";
 import { AutoGrowingTextarea } from "@camera-path/feature-chat-agent/ui/auto-growing-textarea";
-import { ChatMessage } from "@camera-path/feature-chat-agent/ui/chat-message";
+import { ChatMessageGroup } from "./chat-message-group";
+import type { ChatAttachment, Pipeline } from "@camera-path/types/api";
+
+import { ChatImageInput } from "./chat-image-input";
+import { ChatImageAttachments } from "./chat-image-attachments";
 
 export interface ChatPanelProps {
   anchors: Anchor[];
@@ -19,6 +23,9 @@ export interface ChatPanelProps {
   pending: boolean;
   composer: ReturnType<typeof useChatComposer>;
   headerAction?: ReactNode;
+  pipelines?: Pipeline[];
+  onConfirm?: (id: string) => void;
+  onContinue?: (image: ChatAttachment, anchorId?: string | null) => void;
 }
 
 export function ChatPanel({
@@ -28,6 +35,9 @@ export function ChatPanel({
   pending,
   composer,
   headerAction,
+  pipelines = [],
+  onConfirm,
+  onContinue,
 }: ChatPanelProps) {
   const { message, submit, changeMessage, handleKeyDown, insertAnchor } =
     composer;
@@ -43,7 +53,7 @@ export function ChatPanel({
         <div>
           <h2 className="text-xs font-semibold">Trajectory agent</h2>
           <p className="text-[10px] text-muted-foreground">
-            Build and refine the current path
+            Build the scene and camera path
           </p>
         </div>
         {headerAction}
@@ -56,12 +66,19 @@ export function ChatPanel({
           </div>
         )}
         {messages.map((item) => (
-          <ChatMessage {...item} key={item.id} />
+          <ChatMessageGroup
+            key={item.id}
+            message={item}
+            pipelines={pipelines.filter((p) => p.message_id === item.id)}
+            onConfirm={onConfirm}
+            onContinue={onContinue}
+            disabled={pending}
+          />
         ))}
         {pending && (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-muted-foreground">
             <LoaderCircle className="size-3.5 animate-spin" /> Agent is editing
-            the trajectory…
+            the scene…
           </div>
         )}
         <div ref={endRef} />
@@ -74,6 +91,18 @@ export function ChatPanel({
           <fieldset disabled={pending}>
             <AnchorReferencePicker anchors={anchors} onSelect={insertAnchor} />
           </fieldset>
+          {composer.files.length > 0 && (
+            <ChatImageAttachments
+              files={composer.files}
+              disabled={pending}
+              onRemove={composer.removeFile}
+            />
+          )}
+          {composer.attachmentError && (
+            <p className="text-[10px] text-destructive">
+              {composer.attachmentError}
+            </p>
+          )}
           {error && (
             <p className="text-[10px] leading-4 text-destructive">{error}</p>
           )}
@@ -87,7 +116,12 @@ export function ChatPanel({
               placeholder="Create a smooth path from @A through @B…"
               value={message}
             />
-            <div className="flex justify-end px-1.5 pb-1.5">
+            <div className="flex items-center justify-end gap-1.5 px-1.5 pb-1.5">
+              <ChatImageInput
+                files={composer.files}
+                disabled={pending}
+                onAdd={composer.addFiles}
+              />
               <Button
                 aria-label="Send message"
                 disabled={pending || !message.trim()}

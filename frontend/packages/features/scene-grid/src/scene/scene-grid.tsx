@@ -1,6 +1,6 @@
 "use client";
 import type { ThreeEvent } from "@react-three/fiber";
-import { DoubleSide, Mesh } from "three";
+import { DoubleSide, Layers, Mesh } from "three";
 
 import type {
   SceneSurfaceHit,
@@ -9,6 +9,7 @@ import type {
 import {
   RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER,
   RENDER_PIPELINE_SCENE_LAYER,
+  RENDER_PIPELINE_DECORATION_LAYER,
   useOptionalRenderPipeline,
 } from "@camera-path/render-pipeline";
 import type { Vec3 } from "@camera-path/types/project";
@@ -40,20 +41,18 @@ export function SceneGrid({
   placementEvents,
 }: SceneGridProps) {
   const pipeline = useOptionalRenderPipeline();
+  const placementLayer = pipeline
+    ? RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER
+    : RENDER_PIPELINE_SCENE_LAYER;
+  const planeLayers = new Layers();
+  planeLayers.set(RENDER_PIPELINE_DECORATION_LAYER);
+  if (interactive) planeLayers.enable(placementLayer);
+  const lineLayers = new Layers();
+  lineLayers.set(RENDER_PIPELINE_DECORATION_LAYER);
   const appearance = selectSceneGridAppearance({
     dark,
     webgpu: pipeline !== null,
   });
-
-  function assignRenderLayer(object: {
-    layers: { set: (layer: number) => void };
-  }) {
-    object.layers.set(
-      pipeline
-        ? RENDER_PIPELINE_PRE_SPLAT_TRANSPARENT_LAYER
-        : RENDER_PIPELINE_SCENE_LAYER,
-    );
-  }
 
   function isFrontmost(event: ThreeEvent<PointerEvent>) {
     return event.intersections[0]?.object === event.object;
@@ -68,6 +67,7 @@ export function SceneGrid({
   return (
     <group>
       <mesh
+        layers={planeLayers}
         onPointerCancel={placementEvents.onPointerCancel}
         onPointerDown={(event) => {
           if (isFrontmost(event))
@@ -78,7 +78,6 @@ export function SceneGrid({
             placementEvents.onSurfacePointerMove?.(hit(event), event);
         }}
         onPointerOut={placementEvents.onPointerOut}
-        onUpdate={assignRenderLayer}
         onPointerUp={(event) => {
           if (isFrontmost(event))
             placementEvents.onSurfacePointerUp?.(hit(event), event);
@@ -99,7 +98,7 @@ export function SceneGrid({
       </mesh>
       <gridHelper
         args={[SCENE_GRID_SIZE, SCENE_GRID_DIVISIONS]}
-        onUpdate={assignRenderLayer}
+        layers={lineLayers}
         raycast={() => undefined}
         renderOrder={appearance.renderOrder.lines}
       >

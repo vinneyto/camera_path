@@ -6,7 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { JobError } from './jobError';
+import type { JobInferenceCommand } from './jobInferenceCommand';
 import type { JobInput } from './jobInput';
+import type { JobScenePlacement } from './jobScenePlacement';
 import type { JobStatus } from './jobStatus';
 import type { LibraryAsset } from './libraryAsset';
 
@@ -16,10 +18,12 @@ export interface Job {
   created_at: string | null;
   error: JobError | null;
   id: string;
+  inference_command?: JobInferenceCommand;
   input: JobInput;
   input_asset?: LibraryAsset | null;
   /** Explicit job name or an automatic name saved at creation. */
   name: string | null;
+  scene_placement?: JobScenePlacement | null;
   started_at: string | null;
   status: JobStatus;
   type: string | null;

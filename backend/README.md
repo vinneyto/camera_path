@@ -185,10 +185,19 @@ localStorage. The same proxy works locally and on Vercel; only its server-side b
 
 ### Scene objects
 
-`scene_objects` stores project-owned instances of ready library files. Each object has
+`scene_objects` stores project-owned library instances or client-rendered primitives. Each object has
 `parent_id`, local `position: [x,y,z]`, normalized `quaternion: [x,y,z,w]`, positive
 `scale: [x,y,z]`, `library_asset_id`, `library_asset_file_id`, `sort_order` and `visible`.
 The client composes world matrices and inherited visibility from the hierarchy.
+
+A primitive has a nullable TEXT `primitive` containing a validated JSON string, for example
+`{"type":"sphere","color":"#60a5fa"}`. Supported types are `cube`, `sphere` and `cone`;
+unknown fields and invalid RGB hex colors are rejected. Exactly one source is required:
+`primitive`, or a library asset/file reference. Primitive instances have null library IDs,
+format and download URL. No geometry or generated model file is stored on the server.
+The client builds centered unit geometry (cube sides 1, sphere diameter 1, cone diameter/height 1
+with its tip along +Y). Existing local TRS defines its placement and dimensions; omitted primitive
+transforms are identity. The agent's `create_scene_primitive` pipeline command uses this same path.
 
 Use `GET/POST /api/v1/projects/{id}/scene-objects` and
 `PATCH/DELETE /api/v1/projects/{id}/scene-objects/{object_id}`. Creation defaults to the
@@ -347,6 +356,67 @@ quaternion.
 Deleting a referenced scene point returns `409` unless `?cascade=true` is supplied; cascade also
 deletes its camera keys. Mutations advance one shared project revision.
 
+## Scene context and image attachments in chat
+
+Chat message bodies accept optional `selected_object_id` and `attachment_ids` (up to eight).
+The editor uses explicit `@label` / `@instance name` references in message text and does not send
+the current selection as hidden context. The agent resolves names against the project's anchors
+and scene instances. API clients may still supply a selection snapshot explicitly.
+The backend saves a project-validated selection snapshot with the user message; changing selection
+later does not retarget an earlier request. Original PNG/JPEG/WebP images (up to 20 MB each) are
+staged with `POST /api/v1/projects/{id}/chat/attachments`, uploaded to the returned URL, then validated
+with `POST /api/v1/projects/{id}/chat/attachments/{attachment_id}/complete`. Staging does not publish
+the image in the library. The `publish_chat_image` pipeline command publishes it explicitly.
+
+The agent reads scene/library data directly and submits every mutation as a persisted command
+pipeline, including one-command operations. `generate_image` creates an `image_generation` job for a transparent PNG. The
+backend selects Painter (local FLUX via RabbitMQ) or OpenAI using
+`CAMERA_PATH_IMAGE_GENERATION_PROVIDER=painter|openai|none` (default `openai`).
+OpenAI uses `OPENAI_API_KEY` and `CAMERA_PATH_OPENAI_IMAGE_MODEL` (default `gpt-image-1.5`).
+See [Painter setup](../painter/README.md) for local inference. The pipeline
+executor submits and awaits jobs; it does not call an image SDK or worker directly.
+Generated versions remain staged chat attachments until selected and explicitly published.
+`generate_model` accepts a text prompt or a ready image asset and waits for generation and library
+import. A typical image pipeline is `publish_chat_image` → `generate_model` → `place_model`.
+References such as `{"$ref":"image.asset_id"}` pass outputs between earlier and later steps.
+
+`place_model` supports an optional `anchor_id`, `fit_to_anchor` (default true) and `replace_anchor`
+(default false). `replace_anchor_with_asset` always replaces the anchor. Fit uses the stored bbox,
+library rotation and anchor height; quaternions use XYZW. Without fit, placement uses the anchor
+base and library scale/rotation. Placement/removal and the step checkpoint commit together.
+Deleted/changed anchors or trajectory references stop placement and retain the generated asset.
+Existing non-pipeline job replacement intents remain supported.
+
+## Command pipelines and step events
+
+`POST /api/v1/projects/{id}/pipelines` accepts `{message_id, definition}`. The source message must
+exist in that project's chat. Definitions contain `schema_version:1`, `title`, `start_mode` and
+ordered `steps` (`id`, `command`, `input`). Supported commands and reference shapes are validated;
+references only point backwards. Definitions are immutable. The default `auto` mode queues work
+immediately; `wait_for_confirmation` waits for
+`POST /api/v1/projects/{id}/pipelines/{pipeline_id}/confirm`. Repeated submission/confirmation is
+idempotent. Chat approval and the UI button use the same saved definition.
+
+The application-lifespan executor runs independently of the model and browser. It checkpoints
+resolved inputs, job IDs, outputs, timestamps and errors. Generation waits release the database;
+after restart the same job is resumed. A failed step stops subsequent steps and preserves earlier
+results. A pipeline does not roll back all previous commands. An interrupted image-provider request
+with an unknown outcome is reported as failed instead of automatically issuing a second billable
+request; the user can submit a new pipeline.
+
+`GET /api/v1/projects/{id}/pipelines` and `.../pipelines/{pipeline_id}` return complete reports.
+`GET .../pipelines/events` sends an SSE `snapshot` and committed `pipeline` events containing
+`pipeline` and `step_id`; event IDs support `Last-Event-ID` replay. Events are saved with the state
+change, so fast consecutive steps are not lost. Reconnection sends current state before replay.
+The client ignores older versions, updates cards immediately and refreshes changed scene data.
+The chat UI provides image enlargement, continuation, confirmation, and copying either the
+definition or the execution JSON. Reports contain resource IDs rather than credentials or file data.
+
+`tests/test_pipelines.py`, `tests/test_chat_scene_assets.py` and the matching integration tests exercise these paths
+with a local Responses API fixture and worker result manifests. They require no real agent key.
+Live natural-language behavior still requires `OPENAI_API_KEY`; no key is needed merely to upload
+images or save selected-object context in chat.
+
 ## Streaming chat
 
 `POST /api/v1/projects/{id}/chat/messages/stream` accepts the same JSON body as the regular chat endpoint
@@ -499,36 +569,32 @@ Deleting an image used by any queued/running job returns `409 generation_input_i
 `input_asset` becomes null while `input.image_asset_id` preserves history. Images cannot
 be placed in scenes or receive 3D transform defaults.
 
-For local RabbitMQ generation the backend copies the original into the worker output
-directory, sends its absolute `image_path` and `image_sha256`, and validates the returned
-manifest against those resolved parameters. This also works when the library uses S3.
-The worker removes backgrounds for generation only. The configured default rotation
-applies to generated PLY/SOG outputs from both text and image jobs.
+The command for generation is announced by the backend over a WebSocket to a paired
+`camera-path worker`. The queue and its attempts live in SQLite, not on the device.
+A worker gets source bytes over its scoped REST endpoints, renews a five-minute
+lease, and uploads attempt-scoped artifacts. Dev uses filesystem staging; production
+uses short-lived S3 PUT URLs with signed size/SHA-256. The server validates and
+publishes the artifacts; the worker never writes final library keys.
+
 Jobs have `draft`, `queued`, `running`, `succeeded`, `failed` or `cancelled`
-status; terminal states have `completed_at`. Successful completion import updates the status
-atomically with the results. Deleting assets does not change job history. Legacy jobs keep their
-IDs/results with null type/input and unknown creation/start times; their completion timestamps
-are preserved. Apply `alembic upgrade head` before running against an existing database.
+status. The editor distinguishes waiting for a suitable worker from ordinary
+queueing. Publication commits with the terminal result; repeating an acknowledged
+completion does not create another asset. After three expired attempts the job
+fails explicitly. Deleting assets does not change job history.
 
-See [the local verification and AWS configuration guide](docs/library-import.md). Run
-`uv run alembic upgrade head` before starting against an existing database. Queue consumption is
-disabled by default; install `uv sync --frozen --extra rabbitmq`, start `docker compose up -d --wait`
-and enable `CAMERA_PATH_MESSAGE_QUEUE=rabbitmq` for local verification. Publish JSON using the
-broker's management API or an AMQP client, without a backend debug API. Ordinary job creation
-still requires the editor. AWS resource setup and live verification are separate manual work.
+Use [Dev Setup and the device login/worker commands](../README.md#local-development).
+Apply `alembic upgrade head` before running against an existing database. The
+standalone backend command is `camera-path-server` (or `python -m camera_path.main`);
+`camera-path` belongs to the worker CLI.
 
-To enable generation from the Jobs form, start the [local Trellis worker](../generation/README.md)
-and set these values in `backend/.env`.
-
-```dotenv
-CAMERA_PATH_MESSAGE_QUEUE=rabbitmq
-CAMERA_PATH_GENERATION_OUTPUT_DIRECTORY=~/.camera-path/generation
-```
-
-The directory must match `GENERATION_OUTPUT_DIR` in the worker's configuration. If you override
-the queue names, set `CAMERA_PATH_GENERATION_REQUEST_QUEUE` and `CAMERA_PATH_GENERATION_RESULT_QUEUE`
-to the same values used by the worker. The backend reads the result manifest and imports the files
-as one library asset with a shared bounding box. The job details page refreshes through SSE.
+**Existing deployments:** stop producers, drain the legacy RabbitMQ generation and
+Painter queues, and back up SQLite before switching. Remove legacy output-directory
+and broker settings from the active backend environment. CLI-mode startup adopts
+previously undispatched queued jobs; previously dispatched or running jobs with an
+unknown outcome fail rather than silently submitting them twice. Explicit OpenAI
+jobs, drafts and terminal history are preserved. The deprecated broker adapters
+are available only with explicit legacy configuration for migration/compatibility.
+The independent [SQS library import](docs/library-import.md) is unaffected.
 
 Dev Setup writes an active `CAMERA_PATH_GENERATION_DEFAULT_ROTATION_DEG=[180,0,0]` in
 `backend/.env` when no value is configured, and preserves custom values. You can also set it manually
@@ -536,3 +602,31 @@ to correct upside-down Trellis output. The three values are Euler XYZ angles in 
 The backend saves them as library placement defaults on newly generated assets. The PLY
 and its bounding box stay in the original asset coordinates. Set `[0,0,0]` explicitly
 to keep zero rotation through Dev Setup.
+
+### 2D image jobs
+
+`POST /api/v1/jobs` accepts
+`{"type":"image_generation","input":{"prompt":"A wooden chair"},"start":true}`.
+Add `input.image_asset_id` to edit a ready PNG/JPEG/WebP image. The server
+validates this input schema; clients cannot choose providers or submit arbitrary
+worker parameters. The provider, model/revision, seed and inference settings are
+snapshotted in `jobs.execution` at creation. `generation` remains the separate
+3D job type; both use the same create/list/detail/status/error/result lifecycle.
+
+A standalone 2D job publishes its PNG to the library. Chat-created versions use
+pending library assets and ready project attachments, keeping them hidden until
+explicit publication. Jobs and pipeline cards link to each other. The detail page
+can enlarge/download PNGs, including unpublished versions.
+`GET /api/v1/jobs/{job_id}/image` serves a completed result; `/source-image` serves
+a surviving source. Deleting an active job's input is blocked. After completion,
+deletion is allowed and the job retains its original input ID.
+
+Painter through the local worker is the default, even if chat has an OpenAI key.
+Set `CAMERA_PATH_IMAGE_GENERATION_PROVIDER=openai` explicitly to use server-side
+OpenAI image generation, or `none` to disable new image jobs. Painter and TRELLIS
+do not call each other: the backend pipeline publishes the chosen image, submits the
+3D job, waits for the library result, and then places the model.
+
+OpenAI jobs use durable leases. A saved PNG can be imported after restart without
+a provider call. An interrupted request with an unknown outcome fails explicitly;
+it is not automatically sent again. A new job is required to retry it.

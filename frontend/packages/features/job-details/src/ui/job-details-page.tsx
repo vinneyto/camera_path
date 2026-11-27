@@ -1,15 +1,22 @@
 "use client";
+import { JobScenePlacement } from "./job-scene-placement";
 
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import { useJobResource } from "@camera-path/api/resources";
+import { useInferenceStatus } from "@camera-path/api/inference/use-inference-status";
+import { inferenceJobLabel } from "@camera-path/types/inference-job-label";
 import { Badge, Button } from "@camera-path/ui-kit";
 import { JobResultCard } from "./job-result-card";
 import { JobSourceImage } from "./job-source-image";
+import { JOB_TYPE_LABELS } from "@camera-path/types/job-types";
 
 export function JobDetailsPage() {
   const resource = useJobResource();
   const job = resource.data?.status === 200 ? resource.data.data : undefined;
+  const { status: worker } = useInferenceStatus(
+    job?.status === "queued" && !!job.inference_command,
+  );
 
   return (
     <main className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-5 py-12">
@@ -59,7 +66,7 @@ export function JobDetailsPage() {
             className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
             aria-live="polite"
           >
-            <Badge className="capitalize">{job.status}</Badge>
+            <Badge>{inferenceJobLabel(job, worker)}</Badge>
             {job.completed_at ? (
               <time dateTime={job.completed_at}>
                 {new Date(job.completed_at).toLocaleString()}
@@ -79,9 +86,10 @@ export function JobDetailsPage() {
           )}
           {job.type && (
             <p className="text-xs capitalize text-muted-foreground">
-              {job.type}
+              {JOB_TYPE_LABELS[job.type] ?? job.type}
             </p>
           )}
+          <JobScenePlacement job={job} />
           {job.input && (
             <details className="rounded-lg border p-4 text-xs">
               <summary className="cursor-pointer font-medium">

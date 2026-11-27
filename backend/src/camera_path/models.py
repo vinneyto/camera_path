@@ -231,10 +231,27 @@ class MotionProfileUpdate(BaseModel):
     default_speed: float = Field(gt=0.0)
 
 
+class ChatSelection(BaseModel):
+    scene_object_id: str
+    kind: Literal["anchor", "model", "scene_point", "trajectory"]
+    resource_id: str
+    name: str
+
+
+class ChatAttachment(BaseModel):
+    id: str
+    name: str
+    format: Literal["png", "jpg", "jpeg", "webp"]
+    url: str
+    library_asset_id: str | None = None
+
+
 class ChatHistoryMessage(BaseModel):
     id: str = Field(default_factory=new_id)
     role: Literal["user", "assistant"]
     content: str
+    selected_object: ChatSelection | None = None
+    attachments: list[ChatAttachment] = Field(default_factory=list)
 
 
 class Project(BaseModel):
@@ -364,6 +381,8 @@ class CompiledTrajectory(BaseModel):
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=new_id)
     message: str = Field(min_length=1, max_length=10_000)
+    selected_object_id: str | None = Field(default=None, max_length=200)
+    attachment_ids: list[str] = Field(default_factory=list, max_length=8)
 
 
 class ChatResult(BaseModel):

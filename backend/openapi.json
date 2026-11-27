@@ -312,6 +312,59 @@
         "title": "ArcLengthSample",
         "type": "object"
       },
+      "ArtifactFile": {
+        "additionalProperties": false,
+        "properties": {
+          "file_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "File Id",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "png",
+              "ply",
+              "sog"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 2147483648.0,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "format",
+          "size_bytes",
+          "sha256"
+        ],
+        "title": "ArtifactFile",
+        "type": "object"
+      },
+      "AttemptRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt_id"
+        ],
+        "title": "AttemptRequest",
+        "type": "object"
+      },
       "BoundingBox": {
         "additionalProperties": false,
         "properties": {
@@ -743,8 +796,60 @@
         "title": "ChallengeResponse",
         "type": "object"
       },
+      "ChatAttachment": {
+        "properties": {
+          "format": {
+            "enum": [
+              "png",
+              "jpg",
+              "jpeg",
+              "webp"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "library_asset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Asset Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "url"
+        ],
+        "title": "ChatAttachment",
+        "type": "object"
+      },
       "ChatHistoryMessage": {
         "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/ChatAttachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "content": {
             "title": "Content",
             "type": "string"
@@ -760,6 +865,16 @@
             ],
             "title": "Role",
             "type": "string"
+          },
+          "selected_object": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChatSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -771,6 +886,14 @@
       },
       "ChatMessage": {
         "properties": {
+          "attachment_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Attachment Ids",
+            "type": "array"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -780,6 +903,18 @@
             "minLength": 1,
             "title": "Message",
             "type": "string"
+          },
+          "selected_object_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Object Id"
           }
         },
         "required": [
@@ -803,6 +938,124 @@
           "compiled"
         ],
         "title": "ChatResponse",
+        "type": "object"
+      },
+      "ChatSelection": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "anchor",
+              "model",
+              "scene_point",
+              "trajectory"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "scene_object_id": {
+            "title": "Scene Object Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_object_id",
+          "kind",
+          "resource_id",
+          "name"
+        ],
+        "title": "ChatSelection",
+        "type": "object"
+      },
+      "Claim": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "command": {
+            "enum": [
+              "generate_image",
+              "generate_model"
+            ],
+            "title": "Command",
+            "type": "string"
+          },
+          "input": {
+            "additionalProperties": true,
+            "title": "Input",
+            "type": "object"
+          },
+          "lease_expires_at": {
+            "format": "date-time",
+            "title": "Lease Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lease_expires_at",
+          "attempt_id",
+          "command",
+          "input"
+        ],
+        "title": "Claim",
+        "type": "object"
+      },
+      "ClaimRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_id": {
+            "format": "uuid",
+            "title": "Claim Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id"
+        ],
+        "title": "ClaimRequest",
+        "type": "object"
+      },
+      "CliToken": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "title": "Token Type",
+            "type": "string"
+          },
+          "worker_id": {
+            "title": "Worker Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "worker_id",
+          "expires_in",
+          "expires_at"
+        ],
+        "title": "CliToken",
         "type": "object"
       },
       "CompiledCameraKeyframe": {
@@ -1050,6 +1303,96 @@
           "camera_track"
         ],
         "title": "CompiledTrajectory",
+        "type": "object"
+      },
+      "CompleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "assets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompletionAsset"
+                },
+                "maxItems": 16,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assets"
+          },
+          "attempt_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "image_upload_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "minLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Upload Id"
+          }
+        },
+        "required": [
+          "attempt_id"
+        ],
+        "title": "CompleteRequest",
+        "type": "object"
+      },
+      "CompletionAsset": {
+        "additionalProperties": false,
+        "properties": {
+          "bbox": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "primary_upload_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Primary Upload Id",
+            "type": "string"
+          },
+          "upload_ids": {
+            "items": {
+              "maxLength": 36,
+              "minLength": 36,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Upload Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "primary_upload_id",
+          "upload_ids"
+        ],
+        "title": "CompletionAsset",
         "type": "object"
       },
       "CubicBezier3D": {
@@ -1317,6 +1660,95 @@
         "title": "DepthOfFieldTimeline",
         "type": "object"
       },
+      "DeviceChallenge": {
+        "properties": {
+          "device_code": {
+            "title": "Device Code",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "interval": {
+            "title": "Interval",
+            "type": "integer"
+          },
+          "user_code": {
+            "title": "User Code",
+            "type": "string"
+          },
+          "verification_uri": {
+            "title": "Verification Uri",
+            "type": "string"
+          },
+          "verification_uri_complete": {
+            "title": "Verification Uri Complete",
+            "type": "string"
+          }
+        },
+        "required": [
+          "device_code",
+          "user_code",
+          "verification_uri",
+          "verification_uri_complete",
+          "expires_in",
+          "interval"
+        ],
+        "title": "DeviceChallenge",
+        "type": "object"
+      },
+      "DeviceDecision": {
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "user_code": {
+            "maxLength": 9,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+            "title": "User Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_code",
+          "approve"
+        ],
+        "title": "DeviceDecision",
+        "type": "object"
+      },
+      "DeviceError": {
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "DeviceError",
+        "type": "object"
+      },
+      "DeviceExchange": {
+        "properties": {
+          "device_code": {
+            "format": "password",
+            "maxLength": 43,
+            "minLength": 43,
+            "title": "Device Code",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "device_code"
+        ],
+        "title": "DeviceExchange",
+        "type": "object"
+      },
       "ErrorResponse": {
         "properties": {
           "code": {
@@ -1347,6 +1779,49 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "Failure": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "Failure",
+        "type": "object"
+      },
+      "FailureRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/Failure"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "error"
+        ],
+        "title": "FailureRequest",
         "type": "object"
       },
       "FieldError": {
@@ -1463,6 +1938,21 @@
             "title": "Id",
             "type": "string"
           },
+          "inference_command": {
+            "anyOf": [
+              {
+                "enum": [
+                  "generate_image",
+                  "generate_model"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Command"
+          },
           "input": {
             "anyOf": [
               {
@@ -1497,6 +1987,16 @@
             ],
             "description": "Explicit job name or an automatic name saved at creation.",
             "title": "Name"
+          },
+          "scene_placement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobScenePlacement"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "started_at": {
             "anyOf": [
@@ -1546,6 +2046,26 @@
           "input": {
             "additionalProperties": true,
             "oneOf": [
+              {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "additionalProperties": false,
+                "properties": {
+                  "image_asset_id": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "maxLength": 16000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "prompt"
+                ],
+                "type": "object"
+              },
               {
                 "$schema": "https://json-schema.org/draft/2020-12/schema",
                 "oneOf": [
@@ -1601,6 +2121,7 @@
           },
           "type": {
             "enum": [
+              "image_generation",
               "generation"
             ],
             "title": "Type",
@@ -1641,6 +2162,15 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "status": {
+            "default": "ready",
+            "enum": [
+              "pending",
+              "ready"
+            ],
+            "title": "Status",
+            "type": "string"
           }
         },
         "required": [
@@ -1648,6 +2178,55 @@
           "name"
         ],
         "title": "JobResultSummary",
+        "type": "object"
+      },
+      "JobScenePlacement": {
+        "properties": {
+          "anchor": {
+            "$ref": "#/components/schemas/Anchor"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "scene_object_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene Object Id"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "succeeded",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "anchor",
+          "status"
+        ],
+        "title": "JobScenePlacement",
         "type": "object"
       },
       "JobStatus": {
@@ -1725,6 +2304,21 @@
             ],
             "title": "Image Asset Id"
           },
+          "inference_command": {
+            "anyOf": [
+              {
+                "enum": [
+                  "generate_image",
+                  "generate_model"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Command"
+          },
           "name": {
             "anyOf": [
               {
@@ -1748,6 +2342,16 @@
               }
             ],
             "title": "Prompt"
+          },
+          "scene_placement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobScenePlacement"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "started_at": {
             "anyOf": [
@@ -1790,6 +2394,21 @@
           "assets"
         ],
         "title": "JobSummary",
+        "type": "object"
+      },
+      "Lease": {
+        "additionalProperties": false,
+        "properties": {
+          "lease_expires_at": {
+            "format": "date-time",
+            "title": "Lease Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lease_expires_at"
+        ],
+        "title": "Lease",
         "type": "object"
       },
       "LibraryAsset": {
@@ -2466,6 +3085,264 @@
         "title": "OrientationTimeline",
         "type": "object"
       },
+      "Pipeline": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/PipelineDefinition"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "awaiting_confirmation",
+              "queued",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineStepRun"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "message_id",
+          "definition",
+          "status",
+          "steps",
+          "created_at",
+          "updated_at",
+          "version"
+        ],
+        "title": "Pipeline",
+        "type": "object"
+      },
+      "PipelineCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/PipelineDefinition"
+          },
+          "message_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Message Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message_id",
+          "definition"
+        ],
+        "title": "PipelineCreate",
+        "type": "object"
+      },
+      "PipelineDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "start_mode": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "wait_for_confirmation"
+            ],
+            "title": "Start Mode",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineStep"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Steps",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "steps"
+        ],
+        "title": "PipelineDefinition",
+        "type": "object"
+      },
+      "PipelineStep": {
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "title": "Command",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "input": {
+            "additionalProperties": true,
+            "title": "Input",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "command",
+          "input"
+        ],
+        "title": "PipelineStep",
+        "type": "object"
+      },
+      "PipelineStepRun": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "default": "pending",
+            "enum": [
+              "pending",
+              "running",
+              "waiting",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "PipelineStepRun",
+        "type": "object"
+      },
       "ProjectCreate": {
         "properties": {
           "name": {
@@ -2525,6 +3402,76 @@
           "name"
         ],
         "title": "ProjectUpdate",
+        "type": "object"
+      },
+      "Receipt": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Asset Ids",
+            "type": "array"
+          },
+          "attachment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Id"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "asset_ids"
+        ],
+        "title": "Receipt",
+        "type": "object"
+      },
+      "Registration": {
+        "additionalProperties": false,
+        "properties": {
+          "capabilities": {
+            "items": {
+              "enum": [
+                "generate_image",
+                "generate_model"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "schema_version": {
+            "const": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "capabilities"
+        ],
+        "title": "Registration",
         "type": "object"
       },
       "ResolvedLookAtPointAim": {
@@ -2604,28 +3551,56 @@
       "SceneObject": {
         "properties": {
           "download_url": {
-            "title": "Download Url",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
           },
           "format": {
-            "enum": [
-              "ply",
-              "sog"
+            "anyOf": [
+              {
+                "enum": [
+                  "ply",
+                  "sog"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Format",
-            "type": "string"
+            "title": "Format"
           },
           "id": {
             "title": "Id",
             "type": "string"
           },
           "library_asset_file_id": {
-            "title": "Library Asset File Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Asset File Id"
           },
           "library_asset_id": {
-            "title": "Library Asset Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Asset Id"
           },
           "name": {
             "title": "Name",
@@ -2658,6 +3633,17 @@
             ],
             "title": "Position",
             "type": "array"
+          },
+          "primitive": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primitive"
           },
           "project_id": {
             "title": "Project Id",
@@ -2745,8 +3731,15 @@
             "title": "Library Asset File Id"
           },
           "library_asset_id": {
-            "title": "Library Asset Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Asset Id"
           },
           "parent_id": {
             "anyOf": [
@@ -2782,6 +3775,17 @@
               }
             ],
             "title": "Position"
+          },
+          "primitive": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primitive"
           },
           "quaternion": {
             "anyOf": [
@@ -2838,9 +3842,6 @@
             "title": "Scale"
           }
         },
-        "required": [
-          "library_asset_id"
-        ],
         "title": "SceneObjectCreate",
         "type": "object"
       },
@@ -3453,6 +4454,126 @@
         "title": "Trajectory",
         "type": "object"
       },
+      "TransportStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "available_capabilities": {
+            "items": {
+              "enum": [
+                "generate_image",
+                "generate_model"
+              ],
+              "type": "string"
+            },
+            "title": "Available Capabilities",
+            "type": "array"
+          },
+          "capabilities": {
+            "items": {
+              "enum": [
+                "generate_image",
+                "generate_model"
+              ],
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "connected",
+          "capabilities",
+          "available_capabilities"
+        ],
+        "title": "TransportStatus",
+        "type": "object"
+      },
+      "UploadDestination": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "file_id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "File Id",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "object"
+          },
+          "upload_id": {
+            "title": "Upload Id",
+            "type": "string"
+          },
+          "upload_url": {
+            "title": "Upload Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_id",
+          "upload_id",
+          "upload_url",
+          "headers",
+          "expires_at"
+        ],
+        "title": "UploadDestination",
+        "type": "object"
+      },
+      "UploadRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ArtifactFile"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "files"
+        ],
+        "title": "UploadRequest",
+        "type": "object"
+      },
+      "UploadResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/UploadDestination"
+            },
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "UploadResponse",
+        "type": "object"
+      },
       "UserSettings": {
         "properties": {
           "gaussian_dpr": {
@@ -3587,6 +4708,143 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/cli/decision": {
+      "post": {
+        "description": "Approve or deny a displayed device code as the signed-in editor.",
+        "operationId": "decideCliDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decision",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/cli/device": {
+      "post": {
+        "description": "Issue a short-lived device secret and a separate browser confirmation code.",
+        "operationId": "createCliDevice",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceChallenge"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Device",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/cli/logout": {
+      "post": {
+        "description": "Revoke this worker session without signing the editor out of the browser.",
+        "operationId": "logoutCliWorker",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/cli/token": {
+      "post": {
+        "description": "Poll or exchange an approved device secret for a one-time worker session.",
+        "operationId": "exchangeCliDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceExchange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliToken"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Token",
+        "tags": [
+          "CLI authentication"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Verify email/password and send a code; no JWT until confirmation.",
@@ -3771,6 +5029,502 @@
         ]
       }
     },
+    "/api/v1/inference/jobs/{job_id}/claim": {
+      "post": {
+        "description": "Atomically acquire an available job or repeat the same active claim.",
+        "operationId": "claimInferenceJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Claim",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/complete": {
+      "post": {
+        "description": "Verify staged files and publish a fenced result exactly once.",
+        "operationId": "completeInferenceJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/fail": {
+      "post": {
+        "description": "Record or replay a terminal worker failure without publishing artifacts.",
+        "operationId": "failInferenceJob",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Fail",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/heartbeat": {
+      "post": {
+        "description": "Renew an unexpired attempt held by this worker.",
+        "operationId": "renewInferenceLease",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttemptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Heartbeat",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/source-image": {
+      "get": {
+        "description": "Read only the source image bound to the active, owned job attempt.",
+        "operationId": "getInferenceSourceImage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Source Image",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/uploads": {
+      "post": {
+        "description": "Reserve staged upload destinations or replay matching reservations.",
+        "operationId": "reserveInferenceUploads",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reserve",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}/uploads/{upload_id}": {
+      "put": {
+        "description": "Accept one bounded staged file in local development.",
+        "operationId": "putInferenceUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "upload_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Upload Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Inference Upload",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/status": {
+      "get": {
+        "description": "List connected capabilities and which are currently available to take a job.",
+        "operationId": "getInferenceStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransportStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Status",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
+    "/api/v1/inference/worker": {
+      "put": {
+        "description": "Register the model capabilities readied by this authenticated CLI session.",
+        "operationId": "registerInferenceWorker",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Register",
+        "tags": [
+          "Local inference"
+        ]
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "description": "List all job types, newest first, with status, prompt, errors and result links.",
@@ -3926,6 +5680,94 @@
           }
         },
         "summary": "Stream Job Status",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}/image": {
+      "get": {
+        "description": "Read a generated PNG, including an unpublished image version from chat.",
+        "operationId": "getJobImage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job Image",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}/source-image": {
+      "get": {
+        "description": "Read the surviving original image used as input to this job.",
+        "operationId": "getJobSourceImage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job Source Image",
         "tags": [
           "Jobs"
         ]
@@ -7156,6 +8998,172 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/chat/attachments": {
+      "post": {
+        "description": "Stage an original chat image without publishing it in the library.",
+        "operationId": "createChatAttachmentUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryUploadCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryUpload"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Attachment",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/attachments/{attachment_id}/complete": {
+      "post": {
+        "description": "Validate a staged image and make it available to this project conversation.",
+        "operationId": "completeChatAttachmentUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatAttachment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete Attachment",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/chat/attachments/{attachment_id}/content": {
+      "get": {
+        "description": "Read a validated original chat image by its project-scoped attachment ID.",
+        "operationId": "getChatAttachmentContent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attachment Content",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/chat/messages": {
       "get": {
         "description": "Return the complete chat history for the first API version.",
@@ -7507,6 +9515,54 @@
         "summary": "Save a user chat message",
         "tags": [
           "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/generation-jobs": {
+      "get": {
+        "description": "List generation jobs with durable scene-placement intents for this project.",
+        "operationId": "listProjectGenerationJobs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobSummary"
+                  },
+                  "title": "Response Listprojectgenerationjobs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Generation Jobs",
+        "tags": [
+          "Chat",
+          "Jobs"
         ]
       }
     },
@@ -8093,6 +10149,298 @@
         "summary": "Update a speed keyframe",
         "tags": [
           "Timelines"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/pipelines": {
+      "get": {
+        "description": "List saved command definitions and complete execution reports for this project.",
+        "operationId": "listProjectPipelines",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Pipeline"
+                  },
+                  "title": "Response Listprojectpipelines",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Pipelines",
+        "tags": [
+          "Chat"
+        ]
+      },
+      "post": {
+        "description": "Validate and save an immutable command pipeline; auto mode queues execution immediately.",
+        "operationId": "createProjectPipeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pipeline"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Pipeline",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/pipelines/events": {
+      "get": {
+        "description": "SSE snapshot followed by durable pipeline/step events. Supports Last-Event-ID.",
+        "operationId": "streamPipelineEvents",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "last-event-id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pipeline Events",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/pipelines/{pipeline_id}": {
+      "get": {
+        "description": "Read a project-scoped pipeline definition, resolved inputs, results and errors.",
+        "operationId": "getProjectPipeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pipeline_id",
+            "required": true,
+            "schema": {
+              "title": "Pipeline Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pipeline"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Pipeline",
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/pipelines/{pipeline_id}/confirm": {
+      "post": {
+        "description": "Queue the exact pending definition once; repeated confirmation is idempotent.",
+        "operationId": "confirmProjectPipeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pipeline_id",
+            "required": true,
+            "schema": {
+              "title": "Pipeline Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "examples": [
+                "\"4\""
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pipeline"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Valid editor JWT required."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Confirm Pipeline",
+        "tags": [
+          "Chat"
         ]
       }
     },

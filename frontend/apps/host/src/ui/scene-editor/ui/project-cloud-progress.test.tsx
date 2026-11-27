@@ -10,7 +10,14 @@ import type {
 import type { SceneObject } from "@camera-path/types/api";
 import { createRoot, extend } from "@react-three/fiber";
 import { act } from "react";
-import { Group, Matrix4, Object3D, Scene, type WebGLRenderer } from "three";
+import {
+  Group,
+  Matrix4,
+  Object3D,
+  Quaternion,
+  Scene,
+  type WebGLRenderer,
+} from "three";
 import { afterEach, expect, it, vi } from "vitest";
 import { createEditorStore, EditorStoreProvider } from "@camera-path/store";
 
@@ -79,6 +86,8 @@ it("loads a cloud through many streamed progress events without nested React upd
           <SceneSurfaceProvider backend={backend}>
             <CloudSceneObject
               cloud={cloud}
+              parentMatrix={new Matrix4()}
+              parentRotation={new Quaternion()}
               worldMatrix={new Matrix4()}
               effectiveVisible={true}
               onReady={ready}
@@ -119,6 +128,8 @@ it("loads a cloud through many streamed progress events without nested React upd
           <SceneSurfaceProvider backend={backend}>
             <CloudSceneObject
               cloud={cloud}
+              parentMatrix={new Matrix4()}
+              parentRotation={new Quaternion()}
               worldMatrix={new Matrix4().makeTranslation(5, 0, 0)}
               effectiveVisible={true}
               onReady={ready}

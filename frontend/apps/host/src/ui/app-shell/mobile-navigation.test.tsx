@@ -11,6 +11,10 @@ import { afterEach, expect, it, vi } from "vitest";
 import { MobileNavigation } from "./mobile-navigation";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/library/cloud" }));
+vi.mock("./inference-worker-indicator", () => ({
+  InferenceWorkerIndicator: () => null,
+}));
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

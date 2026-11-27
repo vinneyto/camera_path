@@ -15,6 +15,8 @@ import {
   ANCHOR_MARKER_HIT_SEGMENTS,
 } from "../constants";
 import { selectAnchorMarkerAppearance } from "../selectors/select-anchor-marker-appearance";
+import { AnchorSelectionCollider } from "./anchor-selection-collider";
+import { AnchorGenerationIndicator } from "./anchor-generation-indicator";
 
 export interface AnchorMarkerProps extends Omit<
   ThreeElements["group"],
@@ -24,6 +26,8 @@ export interface AnchorMarkerProps extends Omit<
   hovered?: boolean;
   selected?: boolean;
   dragging?: boolean;
+  selectable?: boolean;
+  generationPending?: boolean;
 }
 
 export function AnchorMarkerContent({
@@ -31,6 +35,12 @@ export function AnchorMarkerContent({
   hovered = false,
   selected = false,
   dragging = false,
+  selectable = false,
+  generationPending = false,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   ...groupProps
 }: AnchorMarkerProps) {
   const axis =
@@ -45,8 +55,7 @@ export function AnchorMarkerContent({
   ];
 
   const interactive =
-    groupProps.onContextMenu !== undefined ||
-    groupProps.onPointerDown !== undefined;
+    groupProps.onContextMenu !== undefined || onPointerDown !== undefined;
   const appearance = selectAnchorMarkerAppearance({
     hovered,
     selected,
@@ -59,8 +68,16 @@ export function AnchorMarkerContent({
         highlighted={appearance.highlighted}
         position={surfaceOffset}
       />
-      {interactive && (
-        <mesh position={ANCHOR_MARKER_HIT_POSITION}>
+      {selectable && <AnchorSelectionCollider surfaceOffset={surfaceOffset} />}
+      {(interactive || selectable) && (
+        <mesh
+          name="anchor-height-handle"
+          position={ANCHOR_MARKER_HIT_POSITION}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+        >
           <sphereGeometry
             args={[
               ANCHOR_MARKER_HIT_RADIUS,
@@ -77,6 +94,7 @@ export function AnchorMarkerContent({
         zIndexRange={ANCHOR_ICON_Z_INDEX_RANGE}
       >
         <div className="relative size-0 select-none">
+          {generationPending && <AnchorGenerationIndicator />}
           <MapPin
             aria-hidden
             className={cn(

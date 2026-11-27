@@ -5,6 +5,19 @@ from jsonschema import Draft202012Validator
 from camera_path.services.library_metadata import LibraryError
 
 JOB_INPUT_SCHEMAS = {
+    "image_generation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["prompt"],
+        "properties": {
+            "prompt": {"type": "string", "minLength": 1, "maxLength": 16000, "pattern": r"\S"},
+            "image_asset_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            },
+        },
+        "additionalProperties": False,
+    },
     "generation": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "oneOf": [

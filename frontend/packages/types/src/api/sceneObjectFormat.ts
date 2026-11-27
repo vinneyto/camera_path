@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type SceneObjectFormat = typeof SceneObjectFormat[keyof typeof SceneObjectFormat];
+export type SceneObjectFormat = typeof SceneObjectFormat[keyof typeof SceneObjectFormat] | null;
 
 
 export const SceneObjectFormat = {

@@ -36,7 +36,7 @@ class TrajectoryService(ServiceBase):
     def compile_draft(self, project: Project) -> CompiledTrajectory:
         return compile_project(project, tolerance=self.compile_tolerance)
 
-    async def save_agent_draft(self, draft: Project, expected: int) -> Project:
+    async def save_agent_draft(self, draft: Project, expected: int, *, on_commit=None) -> Project:
         """Commit the resources changed by a multi-command agent turn atomically."""
         async with self._transaction(draft, expected) as session:
             before = await self.repository._load(session, draft.id)
@@ -104,6 +104,8 @@ class TrajectoryService(ServiceBase):
                 await ScenePointRepository(session).replace(draft.id, draft.scene_points)
             if before.chat_history != draft.chat_history:
                 await ChatMessageRepository(session).replace(draft.id, draft.chat_history)
+            if on_commit is not None:
+                await on_commit(session)
         return draft
 
     async def _save_trajectory(

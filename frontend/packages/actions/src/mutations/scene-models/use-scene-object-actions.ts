@@ -10,6 +10,7 @@ import {
   updateSceneObject,
 } from "@camera-path/api/client/generated/client";
 import type { SceneObjectUpdate } from "@camera-path/types/api";
+import { useEditorActions } from "../../actions-provider";
 
 type Action =
   | { type: "add"; assetId: string; position?: [number, number, number] }
@@ -19,6 +20,7 @@ type Action =
 export function useSceneObjectActions(explicitProjectId?: string) {
   const projectId = useProjectId(explicitProjectId);
   const queryClient = useQueryClient();
+  const actions = useEditorActions();
   return useMutation({
     mutationFn: async (action: Action) => {
       if (action.type === "add")
@@ -31,6 +33,10 @@ export function useSceneObjectActions(explicitProjectId?: string) {
       if (action.type === "remove")
         return deleteSceneObject(projectId, action.cloudId);
       return updateSceneObject(projectId, action.cloudId, action.changes);
+    },
+    onSuccess: (_, action) => {
+      if (action.type === "remove")
+        actions.clearRemovedSceneObjects([action.cloudId]);
     },
     onSettled: async () => {
       await Promise.all([

@@ -39,3 +39,8 @@ export { useDeleteSpeedTimeline as useDeleteSpeedTimelineMutation } from "./muta
 export { useDeleteAimTimeline as useDeleteAimTimelineMutation } from "./mutations/camera-aim/use-delete-aim-timeline";
 
 export { useDeleteOrientationTimeline as useDeleteOrientationTimelineMutation } from "./mutations/camera-orientation/use-delete-orientation-timeline";
+export { useSceneObjectTransform } from "./mutations/scene-models/use-scene-object-transform";
+export { useSceneObjectLifecycle } from "./mutations/scene-models/use-scene-object-lifecycle";
+export { useGenerationPlacementUpdates } from "./mutations/chat-agent/use-generation-placement-updates";
+export { usePipelineEvents } from "./mutations/chat-agent/use-pipeline-events";
+export { useConfirmPipeline } from "./mutations/chat-agent/use-confirm-pipeline";

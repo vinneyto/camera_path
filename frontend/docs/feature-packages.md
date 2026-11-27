@@ -22,7 +22,9 @@
 
 Хост создаёт `QueryClient`, а для каждого открытого проекта — отдельные `createEditorStore()`
 и `createEditorActions(store)`. Они передаются обычным React providers. Zustand хранит
-camera mode, playback, active tool, pending cloud и единые hovered/selected object IDs.
+camera mode, playback, active tool, pending cloud, единые hovered/selected object IDs и текст
+черновика чата (`chatComposer`). Клики по якорям добавляют упоминания через общие actions,
+не меняя selection; смена выбранной модели добавляет её `@name`.
 Данные сервера остаются в React Query; фичи читают их через API hooks, без второй копии в Zustand.
 API provider сессии и preferences и provider темы монтируются на уровне приложения.
 
@@ -214,7 +216,10 @@ Provider владеет базовыми scene passes и финальным `Ren
 зарегистрированные layers/effects в порядке `order` и выполняет рендер через `useFrame` с priority `1`.
 Создание/освобождение pipeline и базовых passes остаётся в одном layout effect.
 Конкретные Gaussian/LiDAR passes, worker и renderer-specific поведение остаются в `scene-runtime`
-и соответствующих адаптерах. Создание LiDAR sensor остаётся в renderer adapter. Ресурсы сенсора создаются и освобождаются в одном effect,
+и соответствующих адаптерах. Оба адаптера предоставляют `createDepthCapture`: шесть float32
+изображений view-Z всей сцены. Общий `SceneDepthLidar` переводит их в угловую текстуру
+дальности и инстансы попаданий. Фича передаёт позу и запускает общий update с priority `-1`;
+захват не зависит от главного Gaussian pass. Ресурсы сенсора создаются и освобождаются в одном effect,
 включая replay Strict Mode и смену разрешения.
 
 Общие viewport services предоставляют поверхность для picking, события OrbitControls,
@@ -285,7 +290,7 @@ npm run format:check
 
 Фичи получают только разделы через `useCameraState()` (`camera`),
 `usePlaybackState()` (`playback`), `useEditorTool()` (`tool`) и
-`useSceneInteraction()` (`sceneInteraction`). Хуки подписываются на соответствующий
+`useSceneInteraction()` (`sceneInteraction`), `useChatComposerState()` (`chatComposer`). Хуки подписываются на соответствующий
 раздел Zustand; обновление другого раздела не вызывает перерисовку подписчика.
 `useProjectId` и `useAssetId` остаются хуками resource scope.
 

@@ -16,6 +16,10 @@ vi.mock("@host/composition/feature-pages", () => ({
   ],
 }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/tools/demo" }));
+vi.mock("./inference-worker-indicator", () => ({
+  InferenceWorkerIndicator: () => null,
+}));
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

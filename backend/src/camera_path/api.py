@@ -14,6 +14,7 @@ from scalar_fastapi import get_scalar_api_reference
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from camera_path.agent import TrajectoryAgent
+from camera_path.agent.scene_tools import SceneAgentTools
 from camera_path.composition import API_PREFIX, with_infrastructure
 from camera_path.config import Settings
 from camera_path.repositories import (
@@ -27,9 +28,13 @@ from camera_path.repositories.scene_object import SceneObjectRepository
 from camera_path.repositories.user_settings import UserSettingsRepository
 from camera_path.routers.api import router as business_router
 from camera_path.routers.auth import router as auth_router
+from camera_path.routers.chat_attachments import router as chat_attachment_router
+from camera_path.routers.cli_auth import router as cli_auth_router
 from camera_path.routers.dependencies import PreconditionRequiredError
+from camera_path.routers.inference import router as inference_router
 from camera_path.routers.jobs import router as jobs_router
 from camera_path.routers.library import router as library_router
+from camera_path.routers.pipelines import router as pipeline_router
 from camera_path.routers.profile import router as profile_router
 from camera_path.routers.resources import router as resource_router
 from camera_path.routers.scene_objects import router as scene_object_router
@@ -44,14 +49,20 @@ from camera_path.services import (
 )
 from camera_path.services.app_dependencies import AppDependencies
 from camera_path.services.auth import AuthService
+from camera_path.services.cli_auth import CliAuthService
 from camera_path.services.generation_integration import GenerationIntegration
 from camera_path.services.generation_models import GENERATION_SOURCE
+from camera_path.services.image_jobs import ImageJobs
+from camera_path.services.inference import InferenceService
+from camera_path.services.inference_artifacts import InferenceArtifacts
 from camera_path.services.job_completion import JobCompletionService
 from camera_path.services.job_consumer import JobCompletionConsumer
 from camera_path.services.jobs import JobService
 from camera_path.services.library import LibraryService
 from camera_path.services.library_metadata import LibraryError
 from camera_path.services.library_storage import LibraryStorageError
+from camera_path.services.pipeline_executor import PipelineExecutor
+from camera_path.services.pipelines import PipelineService
 from camera_path.services.scene_objects import SceneObjectService
 from camera_path.services.user_settings import UserSettingsService
 from camera_path.trajectory import GeometryError
@@ -168,33 +179,84 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
     scene_point_service = ScenePointService(project_repository)
     trajectory_service = TrajectoryService(project_repository, configured.compile_tolerance)
     timeline_service = TimelineService(project_repository)
-    chat_service = ChatService(project_repository)
+    chat_service = ChatService(project_repository, library_service)
+    cli_model = generation_queue is None
+    cli_image = dependencies.painter_queue is None
+    job_service = JobService(
+        library_service,
+        generation_enabled=True,
+        image_settings=dependencies.image_job_settings,
+        cli_image=cli_image,
+        cli_model=cli_model,
+    )
+    inference = InferenceService(job_service)
+    inference_artifacts = InferenceArtifacts(
+        job_service, default_rotation_deg=configured.generation_default_rotation_deg
+    )
+    image_jobs = ImageJobs(
+        job_service,
+        dependencies.image_generate,
+        queue=dependencies.painter_queue,
+        source=dependencies.import_sources.get("painter"),
+    )
+    image_consumer = (
+        JobCompletionConsumer(
+            dependencies.painter_queue,
+            image_jobs,
+            configured.message_queue_max_attempts,
+            on_rejection=image_jobs.on_rejection,
+        )
+        if dependencies.painter_queue is not None
+        else None
+    )
     agent = TrajectoryAgent(
         project_repository,
         trajectory_service,
         chat_service,
         configured.openai_model,
         configured.openai_api_key.get_secret_value() if configured.openai_api_key else None,
+        scene_tools=SceneAgentTools(
+            project_repository,
+            library_service,
+            job_service,
+            scene_object_service,
+            chat_service.attachments,
+        ),
     )
+    pipeline_service = PipelineService(project_repository)
+    pipeline_executor = PipelineExecutor(
+        pipeline_service,
+        trajectory_service,
+        agent.scene_tools,
+    )
+    agent.pipelines = pipeline_service
+    pipeline_executor.inference = inference
+    image_jobs.pipelines = pipeline_service
+    if generation is not None:
+        generation.pipelines = pipeline_service
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         async with AsyncExitStack() as cleanup:
             if dependencies.owns_repository:
                 cleanup.push_async_callback(project_repository.close)
-            for queue in (message_queue, generation_queue):
+            for queue in (message_queue, generation_queue, dependencies.painter_queue):
                 if queue is not None:
                     cleanup.push_async_callback(queue.aclose)
             initialize = getattr(project_repository, "initialize", None)
             if initialize is not None:
                 await initialize()
+            await inference.activate(image=cli_image, model=cli_model)
             tasks = [
                 asyncio.create_task(worker.run())
-                for worker in (consumer, generation_consumer)
+                for worker in (consumer, generation_consumer, image_consumer)
                 if worker is not None
             ]
+            tasks.append(asyncio.create_task(pipeline_executor.run()))
+            tasks.append(asyncio.create_task(inference.run(inference_artifacts)))
             if generation is not None:
                 tasks.append(asyncio.create_task(generation.dispatch()))
+            tasks.append(asyncio.create_task(image_jobs.run()))
             try:
                 yield
             finally:
@@ -233,7 +295,22 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
         ],
     )
     application.state.project_service = project_service
+    application.state.pipeline_service = pipeline_service
+    application.state.pipeline_executor = pipeline_executor
+    pipeline_executor.request = Request(
+        {
+            "type": "http",
+            "app": application,
+            "router": application.router,
+            "scheme": "http",
+            "server": ("localhost", 80),
+            "path": "/",
+            "root_path": "",
+            "headers": [],
+        }
+    )
     application.state.message_queue = message_queue
+    application.state.image_jobs = image_jobs
     application.state.job_completion_service = importer
     application.state.job_completion_consumer = consumer
 
@@ -251,15 +328,18 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
             content=_error_content(request, "storage_unavailable", "Library storage unavailable"),
         )
 
-    application.state.job_service = JobService(
-        library_service, generation_enabled=generation is not None
-    )
+    application.state.job_service = job_service
     application.state.library_service = library_service
     application.state.scene_object_service = scene_object_service
     application.state.project_repository = project_repository
     application.state.auth_service = AuthService(
         AuthRepository(project_repository.session_factory), configured, dependencies.email_sender
     )
+    application.state.cli_auth_service = CliAuthService(
+        application.state.auth_service, configured.cli_web_url
+    )
+    application.state.inference = inference
+    application.state.inference_artifacts = inference_artifacts
     application.state.dev_user_id = configured.dev_user_id
     application.state.user_settings_service = UserSettingsService(
         UserSettingsRepository(project_repository.session_factory)
@@ -377,8 +457,12 @@ def create_app(configured: Settings, dependencies: AppDependencies) -> FastAPI:
 
     application.include_router(resource_router, prefix=API_PREFIX)
     application.include_router(auth_router, prefix=API_PREFIX)
+    application.include_router(cli_auth_router, prefix=API_PREFIX)
+    application.include_router(inference_router, prefix=API_PREFIX)
     application.include_router(library_router, prefix=API_PREFIX)
+    application.include_router(chat_attachment_router, prefix=API_PREFIX)
     application.include_router(jobs_router, prefix=API_PREFIX)
+    application.include_router(pipeline_router, prefix=API_PREFIX)
     application.include_router(scene_object_router, prefix=API_PREFIX)
     application.include_router(profile_router, prefix=API_PREFIX)
     application.include_router(business_router, include_in_schema=False)

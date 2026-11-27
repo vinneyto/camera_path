@@ -49,6 +49,7 @@ export function LidarCloud({ settings }: { settings: LidarKeyframe }) {
     current.camera.up.fromArray(value.up);
     current.camera.updateMatrixWorld();
     current.sensor.setPose(current.camera);
+    current.sensor.update(scene);
   }, -1);
   return null;
 }

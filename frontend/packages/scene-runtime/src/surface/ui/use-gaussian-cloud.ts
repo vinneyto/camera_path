@@ -62,12 +62,14 @@ export function useGaussianCloud({
   const notifyProgress = useEffectEvent((value: GaussianCloudLoadProgress) => {
     onProgress?.(value);
   });
+  // A pose is a hint for a new resource, never part of its loading identity.
+  const getInitialWorldMatrix = useEffectEvent(() => initialWorldMatrix);
 
   useEffect(() => {
     let active = true;
     const lease = cache.acquire(
       source,
-      { name, worldMatrix: initialWorldMatrix },
+      { name, worldMatrix: getInitialWorldMatrix() },
       resourceKey,
     );
     const unsubscribeProgress = lease.subscribeProgress((value) => {
@@ -95,7 +97,7 @@ export function useGaussianCloud({
       unsubscribeProgress();
       lease.release();
     };
-  }, [cache, name, initialWorldMatrix, resourceKey, source]);
+  }, [cache, name, resourceKey, source]);
 
   const progress =
     progressState &&

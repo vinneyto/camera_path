@@ -7,10 +7,16 @@ import { useCameraState } from "./use-camera-state";
 import { usePlaybackState } from "./use-playback-state";
 import { useEditorTool } from "./use-editor-tool";
 import { useSceneInteraction } from "./use-scene-interaction";
+import { useChatComposerState } from "./use-chat-composer-state";
 
 afterEach(cleanup);
 
 it.each([
+  {
+    section: "chatComposer" as const,
+    hook: useChatComposerState,
+    next: { message: "Place @Chair 01 at @A" },
+  },
   {
     section: "camera" as const,
     hook: useCameraState,

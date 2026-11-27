@@ -27,6 +27,26 @@ normal code release: inspect `cdk diff` before applying it. A retained volume is
 automatically rediscovered after deleting and recreating the stack; restoration or
 resource import is required. Keep the deployment ID stable for an environment.
 
+## Local inference in production
+
+The backend keeps generation jobs and artifact metadata on EC2/SQLite, but
+Painter and Trellis inference runs in the editor's Apple Silicon CLI worker.
+Nothing in the AWS stack launches a model worker. Point the CLI at the web
+editor and direct API deployment (the default production profile uses
+`https://camerapath.dev` and `https://api.camerapath.dev`).
+
+The SSM release supplies the web origin used for device authorization without
+changing EC2 bootstrap user data. Nginx upgrades
+`/api/v1/inference/commands` to WebSocket, separate from existing HTTP/SSE
+routes. API requests still use the normal HTTPS proxy. Do not attach AWS
+credentials to the CLI; artifact transfer uses short-lived URLs issued for the
+active job attempt. The S3 lifecycle expires only orphaned attempt staging
+under `library/_inference/` after seven days; published assets are unaffected.
+
+Before cutting over a legacy installation, let its RabbitMQ workers finish
+accepted jobs and stop those workers. Do not deploy legacy and CLI consumers
+against the same jobs. The independent SQS library import path is unaffected.
+
 ## Prepare and deploy
 
 Run from `infra/` with Node.js 24 and AWS CLI credentials authorized to deploy CDK.
