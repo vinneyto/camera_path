@@ -4,6 +4,7 @@ export type EditorTool =
   "anchor" | "anchor-height" | "cloud" | "object-transform";
 export type SceneWidgetMode = "position" | "rotation";
 export type CameraMode = "orbit" | "trajectory";
+export type CameraType = "orbit" | "freeFlight";
 export interface ToolState {
   readonly activeTool: EditorTool | null;
   readonly pendingCloud: LibraryAsset | null;

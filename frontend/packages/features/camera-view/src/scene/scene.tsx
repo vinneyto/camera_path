@@ -1,6 +1,10 @@
 "use client";
 import { useCompiledTrajectoryResource } from "@camera-path/api/resources";
-import { useEditorTool, usePlaybackState } from "@camera-path/store";
+import {
+  useCameraState,
+  useEditorTool,
+  usePlaybackState,
+} from "@camera-path/store";
 
 import { useSceneServices } from "@camera-path/scene-runtime/viewport/scene-services-provider";
 import { useViewportServices } from "@camera-path/scene-runtime/viewport/viewport-provider";
@@ -12,11 +16,15 @@ import { CameraViewOffset } from "./camera-view-offset";
 import { PlaybackCamera } from "./playback-camera";
 import { TrajectoryCameraControl } from "./trajectory-camera-control";
 import { useStopOrbitControlsInertia } from "./use-stop-orbit-controls-inertia";
+import { FreeFlightCamera } from "./free-flight-camera";
 export function CameraViewScene() {
   const trajectory = useCompiledTrajectoryResource().data?.data;
   const playback = usePlaybackState();
   const tool = useEditorTool().activeTool;
   const { cameraMode, setCameraMode } = useCameraMode();
+  const { cameraType } = useCameraState();
+  const orbitEnabled =
+    cameraMode === "orbit" && cameraType === "orbit" && tool === null;
   const services = useSceneServices();
   const controls = useRef<OrbitControlsImpl>(null);
   const viewport = useViewportServices();
@@ -24,16 +32,29 @@ export function CameraViewScene() {
   useEffect(() => {
     if (cameraMode !== "orbit") viewport.closeMenu();
   }, [cameraMode, viewport]);
-  useStopOrbitControlsInertia(
-    controls,
-    cameraMode === "orbit" && tool !== null,
-  );
+  useStopOrbitControlsInertia(controls, !orbitEnabled);
   useEffect(() => {
     if (cameraMode === "trajectory" && !available) setCameraMode("orbit");
   }, [cameraMode, available, setCameraMode]);
   return (
     <>
       <CameraViewOffset bottomInset={services.bottomInset} />
+      <OrbitControls
+        enabled={orbitEnabled}
+        makeDefault
+        maxDistance={Infinity}
+        minDistance={0.001}
+        ref={controls}
+        target={services.orbitTarget}
+        onChange={() => viewport.events.emit("controlsChange", undefined)}
+        onStart={() => viewport.events.emit("controlsStart", undefined)}
+        onEnd={() => {
+          if (controls.current)
+            services.setOrbitTarget(
+              controls.current.target.toArray() as [number, number, number],
+            );
+        }}
+      />
       {cameraMode === "orbit" ? (
         <>
           {available && trajectory && (
@@ -42,22 +63,9 @@ export function CameraViewScene() {
               pathPosition={playback.pathPosition}
             />
           )}
-          <OrbitControls
-            enabled={tool === null}
-            makeDefault
-            maxDistance={Infinity}
-            minDistance={0.001}
-            ref={controls}
-            target={services.orbitTarget}
-            onChange={() => viewport.events.emit("controlsChange", undefined)}
-            onStart={() => viewport.events.emit("controlsStart", undefined)}
-            onEnd={() => {
-              if (controls.current)
-                services.setOrbitTarget(
-                  controls.current.target.toArray() as [number, number, number],
-                );
-            }}
-          />
+          {cameraType === "freeFlight" && (
+            <FreeFlightCamera enabled={tool === null} />
+          )}
         </>
       ) : (
         available && <TrajectoryCameraControl />

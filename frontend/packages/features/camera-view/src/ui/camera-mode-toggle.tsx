@@ -1,5 +1,6 @@
 "use client";
-import { Camera, Orbit } from "lucide-react";
+import { Camera, Orbit, Plane } from "lucide-react";
+import { useCameraState } from "@camera-path/store";
 
 import { Button } from "@camera-path/ui-kit";
 
@@ -16,9 +17,12 @@ export function CameraModeToggle({
   trajectoryAvailable,
 }: CameraModeToggleProps) {
   const { cameraMode, setCameraMode } = useCameraMode();
+  const { cameraType } = useCameraState();
+  const freeFlight = cameraType === "freeFlight";
+  const NavigationIcon = freeFlight ? Plane : Orbit;
   const trajectoryMode = cameraMode === "trajectory";
   const label = trajectoryMode
-    ? "Return to orbit camera"
+    ? `Return to ${freeFlight ? "free flight" : "orbit"} camera`
     : "View from trajectory camera";
   const nextMode = trajectoryMode ? "orbit" : "trajectory";
 
@@ -45,11 +49,15 @@ export function CameraModeToggle({
       variant={trajectoryMode ? "default" : "outline"}
     >
       {trajectoryMode ? (
-        <Orbit className="size-3.5" />
+        <NavigationIcon className="size-3.5" />
       ) : (
         <Camera className="size-3.5" />
       )}
-      {trajectoryMode ? "Orbit view" : "Camera view"}
+      {trajectoryMode
+        ? freeFlight
+          ? "FreeFlight view"
+          : "Orbit view"
+        : "Camera view"}
     </Button>
   );
 }
